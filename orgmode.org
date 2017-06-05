@@ -1,0 +1,84 @@
+org-mode
+~~~~~~~~
+
+this emacs mode has a dedicated page, because it will change the way i make notes and organize information in my life
+
+it is plain-text like txt, but better
+
+build on top of outline mode
+the entire document can be organized as a hierarchial structure
+
+we can define headlines and use tab to toggle expand them
+
+* top level headline
+** second level
+some text in the second level.
+
+TAB and STAB (shift+tab)
+use Shift-arrow to assign priority
+
+for globally expanding/dexpanding, we do c-u tab
+
+ --> c-c c-n --> to move to next heading
+ --> m-ret --> insert new heading with same level
+ --> m-s-ret --> insert new todo with same level
+ --> m-left/right --> promote/demote heading level
+ --> m-s-left/right --> promote/demote tree level
+
+example:
+
+    ** Lord of the Rings
+    My fav scenes are (in this order)
+    1) The attack
+    2) The flight
+       1. awesome in book as well
+       2. nice actors
+    Important actors:
+    - Tom Cruise :: he was awesome
+    - Mark Shawn :: he is awesome as well
+
+
+[[link][desc]] is for links
+to open the link, C-c C-o
+
+you can have more info in the links as well. for eg, in the file link:
+[[file:~/Downloads/new.py::12]] --> when you open it, emacs moves to line no 12
+[[file:~/Downloads/new.py::some_text]] --> when you open it, emacs moves to line with some_text
+
+internal links:
+ones that don't look like a url, they are internal in the current file
+[[#my-custom-id]] --> this will link to the entry with the property CUSTOM_ID set to "my-custom-id"
+
+[[some_text]] --> this will link to headline (something else too?) that reads some_text
+
+
+to view the sparse view --> C-c /
+
+organize todos in a list, then enter [/] or [%] in the headline and finally,
+to get the fraction or percentage, use C-c C-c
+
+checkboxes - [ ]
+here also, you can do [/]
+to check the status of the checkbox having children, go to it and do C-c C-c
+
+tags
+they can be mentioned at the end of any headline
+being and end with a single colon ":"
+eg: * read sicp :work:
+** read taoup :work:book:
+
+properties - they are key-value pairs associated with an entry
+
+{ to print any variable, use (message var-name) }
+
+capture notes when working - C-c c
+archive the todos when they are done: C-c a
+
+highlight code by this:
+
+#+begin_src python
+
+def main():
+  print "Hello %s" % ("what's the problem")
+
+#+end_src

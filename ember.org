@@ -1,0 +1,305 @@
+# First front end framework. 
+* Introduction
+
+ember new project_name starts new project
+
+cd project_name
+ember server starts the server
+
+by default, ember serves on 4200 port
+
+generate a new template using:
+    ember generate template application
+the "application" template is always on screen when the application is loaded
+
+it is a hbs file
+
+ember auto reloads the page on creation of new template
+
+you create routes using ... yes, the cli
+    ember generate route scientists
+
+this produces this log:
+
+    installing route - action ONE
+      create app/routes/scientists.js // this file stores the logic of the route
+      create app/templates/scientists.hbs //this file is the template for the route 
+    updating router - action TWO
+      add route scientists // adds the entry for scientists in the projects route.js (which is like project's urls.py)
+    installing route-test - action THREE
+      create tests/unit/routes/scientists-test.js // adds an empty unit test for this route
+
+Here, scientists is like an app in django and ember_quickstart is like the project
+
+we can now edit the newly created template (hbs) to show content on visiting /scientists
+
+we see that the scientists.hbs template is rendered on the "application" template (due to the {{outlet}})
+
+we can specify a model for the route by changing app/routes/scientists.js
+so, we write this there:
+
+    import Ember from 'ember';
+    export default Ember.Route.extend({
+        model() { // the model hook 
+            return ['Name One', 'Name One', 'Name One', 'Name One', ];
+        }
+    });
+this will add the data in the model, now we have to render it in the template
+
+        <ul>
+          {{#each model as |scientist|}}
+            <li>{{scientist}}</li>
+          {{/each}}
+        </ul>
+
+this is the handlebars code, which is used for templating
+
+you can divide your templates into files to share the common parts (like in base.html and then, extending from it)
+
+this piece of template is called components
+make it using
+        ember generate component people-list
+
+now, copying the template rendering code in this file, and defining the variables in scientists.hbs
+whereas the actual data is in scientists.js file
+
+so, we can create a new route for famous programmers
+    ember generate route programmers
+
+and adding this in the programmers.hbs:
+        {{ people-list title="List of scientists" people=model }}
+
+and the data in programmers.js:
+        model() {
+            return ['prog one', 'prog one', 'prog one', 'prog one'];
+        }
+
+ 
+# if your ember crashed, restarting it is compulasry or it might behave erratically and
+# you may end up wasting a lot of time trying to figure out what happened
+
+
+** core concepts of ember
+
+we have a url, say localhost:4200/rentals
+this url is mapped to a route via router.js - which is like urlconf for the entire project
+eg code from our app so far:
+        Router.map(function() {
+          this.route('scientists');
+          this.route('programmers');
+        });
+
+we then have the route handler(that has the logic basically)  that loads a template and a model for the route (just like the views)
+it lives in routes/scientists.js, routes/programmers.js etc
+eg code:
+        import Ember from 'ember';
+
+        export default Ember.Route.extend({
+            model() {
+                return ['Name One', 'Name One', 'Name One', 'Name One'];
+            }
+        });
+
+here, we are not loading the model but we are just returning some data
+in real world application, the model persists to the web server.
+
+we also have a template that accesses the model data and loads components
+
+components are parts of the application that are common and so we put them in seperate files
+so that they are reusuable. they live in templates/components/<comp_name>.hbs
+
+components are just templates that are reusuable
+
+# components get their logic file and template file, just like routes
+# the only difference is that they don't get an entry in the routes.js file
+# if you want only an template, use ember g template my-template
+
+the route handler is like a view in django
+ember templates use the syntax of a js project called "handlebars" which helps you create templates.
+it is a famous way to create templates in js, so ember uses it's syntax
+
+you can provide templates with a "component" (which is a reusuable piece of template) or "route" which is a view, that can access other templates or models
+
+Hi {{ name }}!
+here, "name" is a property provided by the template's context
+
+each template has an associated controller, which provides the template with it's context. so, the controller would have the "name" property. by default, ember provides you with a controller, which acts as a pass thru controller. 
+
+the controller is just a js file that you can put your template's custom logic in. it's name must be the same as the name of the template which it intents to serve
+
+double braches ({{}}) can also contain helpers and components
+
+models are what they are, they are used to persist data
+they can persist to the web server or even to the browser's local storage
+
+        """
+        the templates describes how a UI looks
+        the component behaves how the UI behaves
+        """
+
+components - it has two parts - a template written in Handlebars and a source file written in JS that defines the behavior
+
+eg, in a rental app, we can have a all-rentals component that shows all the properties and a rental-tile that shows an
+individual rental. it can have functions to do something, like increase the price by 10%
+
+the dir structure that is generated by ember new <project_name>
+        |--app
+        |--bower_components
+        |--config
+        |--dist
+        |--node_modules
+        |--public
+        |--tests
+        |--tmp
+        |--vendor
+
+        bower.json
+        ember-cli-build.js
+        package.json
+        README.md
+        testem.js
+
+1. app
+this dir contains your project's models, components, routes, templatse and styles
+
+2. bower_components
+bower is a dependency management tool, all it's components are installed in the bower_components
+if we add stuff like bootstrap, jquery etc, they will be added here
+the file bower.json is thus like requirements.txt
+
+        {
+          "name": "ember-quickstart",
+          "dependencies": {
+            "ember": "~2.7.0",
+            "ember-cli-shims": "0.1.1",
+            "ember-qunit-notifications": "0.1.0"
+          }
+        }
+
+
+
+3. config
+it contains enviornment.js that is like settings.py
+
+4. dist
+when the app is build for deployment, the output files will be created here
+
+5. node_modules
+npm is a package manager for node (it stands for node package manager)
+ember needs several node.js modules for operation. the package.json file maintains the list of current
+npm dependencies for the app
+any ember cli addons come here
+it also has config for the project like license, version, desc etc
+
+6. public
+contains static asses like images and fonts
+
+7. vendor
+here, the front-end dependencies that aren't manages by Bower go (eg, JS, CSS)
+
+8. tests
+automated tests for the app go here in this dir. testem.js is the ember cli's test runner
+
+9. tmp
+here, the temporary files live
+
+10. ember-cli-build.js
+this is like a makefile which describes how the cli should build the app.
+
+
+after making changes in bower.json, you can install it using bower install
+and if you update package.json, do npm install
+
+the default welcome screen is replaces once you create applicaiton.hbs
+
+
+** building an rental app
+
+adding a about route first
+        ember generate route about orr
+        ember g route about
+
+it will creates the about.js(the route handler), about.hbs (template), add the about route to project's route.js
+and create the about-test.js file
+
+by default, the "about" route loads the "about.hbs" template
+
+in our templates, we can use the link-to to create hyperlink buttons to other pages. we specify the route name
+like so:
+      {{#link-to 'contact' class="button"}}
+        Get Started!
+      {{/link-to}}
+
+this is all hbs syntax, get familiar with it!
+we can create an "index" route as well. this does not need an entry in the app's route.js
+
+let's provide a custom banner for the site. creating a template for the same
+        ember g template application
+
+when the application.hbs exists, anything that is put here is show in every page of the application
+the {{ outlet }} is where all the templates will be rendered
+
+recall the route handlers are responsible for loading the model data
+so, let's add our hardcoded data to index.js
+
+note, model() is same as writing model:function()
+we have added the model() as a hook. this will be called when the user enters index route
+
+        import Ember from 'ember';
+        let rentals = [{
+          id: 1,
+          title: 'Grand Old Mansion',
+          owner: 'Veruca Salt',
+          city: 'San Francisco',
+          type: 'Estate',
+          bedrooms: 15,
+          image: 'https://upload.wikimedia.org/wikipedia/commons/c/cb/Crane_estate_(5).jpg'
+        }];
+        export default Ember.Route.extend({
+          model() {
+            return rentals;
+          }
+        });
+what this model hook does is, it passes the rentals json and passes it to our index template as the
+model property
+in the template, we can iterate thru add the entries in the model and display them.
+this way:
+        {{#each model as |rental|}}
+        {{ rental.owner }}, 
+        {{ rental.title }}
+        {{/each}}
+
+we can also add addons to ember
+they are catalogued on emberobserver.com
+
+in our app, we'll take advantage of two addons, ember-cli-tutorial-style, ember-cli mirage
+ember-cli-tutorial-style creates a file called ember-tutorial.css and puts it in the verdor dir. the
+ember cli takes it and puts it in the vendor.css file
+install it using:
+        ember install ember-cli-tutorial-style
+
+ember addons are npm packages, ember install installs them in the node_modules dir and the package.json is
+updated as expected. we will need to restart the server after this
+
+ember-cli-mirage is a client http stubbing library that is used for acceptance testing
+this can be setup to send test data when ever the user goes to a certain url (or as well call it here, route)
+
+* Fresh Start
+
+components - have both .js and .hbs for logic and templates
+controllers - additional logic for the templates
+they get the model and they can add additional parameters to it
+
+So, there is a variable in the template(index.hbs) called isDisabled
+we also have a file called index.js (which is the controller for that template, i.e. has the logic for that template)
+
+there, we define the 2 additional variables for the model that the components js file returns
+isDisabled and emailAddress
+now, when they are changed, the Ember.computed and Ember.observer functions are called
+
+#+begin_src js
+emailAddressChanged: Ember.observer('emailAddress', function() {
+    console.log('observer is called: ', this.get('emailAddress'));
+})
+#+end_src
+

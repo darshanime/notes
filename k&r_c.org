@@ -1,0 +1,326 @@
+C has basic data types, variable scoping etc
+
+it does not deal with composite objects such as strings, sets, lists, arrays etc
+no heap, no gc
+
+c offers only single threaded control flow
+c is a small language, it can be learned quickly. use it to the maximum to get its real benefits
+
+ansi-c was the new defination for the language that was set as the standard after the recommendations
+of the ansi committe
+it introduced a library to go with c
+
+since the data types and the control structures provided and used by C are supported directly by most
+computers, the run time library for c is small
+
+c is not a strongly typed language
+its type-checking has strengthened
+
+c has a standard library after the ansi committe which has io functionality
+the ansi standard defines the official syntax and semantics of c
+
+hello world!
+
+#include <stdio.h>
+main()
+{
+ printf("hello, world\n");
+}
+
+compile using gcc -o hello hello.c
+
+the c program consists only of 2 things - functions and variables
+it doesnt have classes, metaclasses etc
+
+we used a function called main in the above example
+the execution starts from main() function (like in Java)
+note, we imported the standard input output library
+we communicing data between functions via arguments
+printf is a library function
+
+#includef <stdio.h>
+
+main() {
+       int fahr, celsius;
+       int lower;
+
+       lower = 0;
+       while (fahr<=upper) {
+             e = 5*(fahr*32)/9;
+             printf("%d\t%d\n", fahr, celsius);
+             fahr=fahr+step;
+             }
+      }
+
+comments are:
+/*
+
+*/
+
+in c, all variables must be declared before they are used
+we have these datatypes: char,short, long, double,
+char is a single byte
+
+single statement without braces, or braces for multiple statements
+integer division trucates, the fractional part is removed
+the first arguemnt for printf is a string and the succeding arguments are replacements for the %s in the string
+
+printf is not a part of C itself. there is no output or input defined in C itself
+
+%6.1f means that 6 characters before the decimal, 1 after it
+%.2f means 2 after the decimal, unlimited before it
+
+%d is for integers
+%f is for floats
+%o octal
+%x hexadecimal
+%c character
+%s string
+%% to print %
+
+the for statement is like java as well
+
+int i;
+for (i=0; i<100; i++)
+    printf("as");
+
+
+a general rule - in any context where it is permissible to use the value of a variable of some type,
+you can use a simpler form of that variable
+
+magic numbers are numbers that control the terminating conditions etc in the script
+we should define them early in the script
+eg: #define LOWER 0
+note, no semicolon when they end
+
+we can print one char at a time using putchar
+getchar reads the enxt char and returns it as its value
+
+program to write back what is read:
+#include <stdio.h>
+
+main() {
+       char c = getchar()
+       while (c!= EOF){
+             putchar(c);
+             c = getchar();
+       }
+}
+
+what looks like a character on the screen is stored inside as a bit pattern (which is decided based on the encoding
+followed)
+
+when there is no more data to get, getchar returns EOF, a special value
+if we had used char to store the characters above, it wouldnt have been able to store EOF
+EOF is an integer defined in stdio.h
+
+EOF has value of -1
+
+to print long integer, use %ld
+%f is for float and double
+%0.f prints only the integer part of the float
+
+for(nc=0;getchar()!=EOF, ++nc)
+; //this is a null statement, for the for loop body
+
+if (c=='\n')
+++n1;
+
+you can do: printf('%i', 'A'); to get 65 printed (ascii coding)
+\n is 10 in ascii, it is a single character
+
+note we could do that because we use single quotes, if we use double quotes, it wont be done,
+it will be treated as a char
+
+wc is a word count utility of unix, it is just an elaborate c program that counts the words
+it is written in c, maybe? yes, most probably
+
+c has arrays
+int ndigit[10]; just like in java
+zero indexed they are
+
+with properly designed functions, it is possible to ignore how a job is done, knowing what is done is sufficient
+
+write a function this way:
+
+int power(int base, int n):
+{
+    int i, p;
+    p = 1;
+    for (i=1; i<=n; i++)
+        p = p*base;
+    return p;
+}
+
+int is the return type, power is the funciton name
+
+parameter - variable named in the paraenthesized list in a function definaton
+above, base and n were paramenters
+
+argument - value used in a call of the function
+eg: power(a, b), a and b are arguments
+
+we can have an empty return statement which returns the control to the calling funciton, without any value
+the main function too must return values to the enviornment that calls it - 0 for normal termination, other values for other things
+
+we must also declare the function in the main to be able to use it, by providing the function prototype
+eg: int power(int, int);
+or better, give argument names as well, int power(int base, int exponent);
+
+in C, arguments are passed "by value"
+and not by reference as in java. recall python also has pass by reference, but some datatypes like strings are immutable so,
+they become pass by value effectively
+
+we can still pass by reference if we pass the pointer to the varialbe
+
+when we pass an array as an argument, the address of the beginning of the array is passed. 
+
+#include <stdio.h>
+
+#define MAXLINE 1000
+
+int getLine(char Line[], int maxline);
+void copy(char to[], char from[]);
+
+main()
+{
+    int len;
+    int max;
+    char line[MAXLINE];
+    char longest[MAXLINE];
+
+    max=0;
+    while((len=getline(line, MAXLINE))>0)
+        if (len>max){
+           max=len;
+           copy(longest, line);
+        }
+    if (max>0)
+       printf("%s", longest);
+    return 0;
+}
+
+    Now creating the functions getline and copy
+    int getline(char s[], int lim)
+    {
+        int c, i;
+        for (i=0;i<lim-1 && (c=getchar())!=EOF && c!='\n'; ++i)
+            s[i]=c;
+        if (c=='\n') {
+           s[i]=c;
+           ++1;
+        }
+        s[i]='\0';
+        return i;
+}
+
+    void copy(char[] to, char[] from){
+         int a=0;
+         while((to[i]=from[i])!='\0')
+            ++i;
+}
+
+\0 is the null character, its value is 0
+used to denote the end of something - eg, strings etc
+
+reverse a string in c:
+#include <stdio.h>
+#define MAXLINE 1000
+
+main()
+{
+    char line[MAXLINE]
+    int i=0;
+    char c;
+    for (i=0; (c=getchar())!=EOF; i++){
+          line[i] = c;
+    }
+    while(i>0){
+        putchar(line[i]);
+        --i;
+    }
+}
+
+variables that are defined in a function have their scope limited to that function
+they life is limited to the life of the function creating them, so they are called "variables local to that
+function" or automatic variables
+
+you can have external variables as well.
+if you define them outside the main, they can be called by any function
+
+function prototype of a function that doesn't take any arguments and return anything
+void fn_name(void)
+
+if you want to use the external variable in any function, you have to mention it using
+extern int variableName;
+however, you dont have to do this if you place the variable before the function defination
+hence, common pratice - define all the external functions before any function defination
+
+if the code is split across several files, collect all the external variables and functions in a file called
+*header* and include it in each source file using #include
+the suffix .h is conventional for header names
+eg: the functions of the standard library are declared in stdio.h header file
+
+defination of a variable - when the variable is created or assigned storage
+declaration of a varialbe - variable type is stated, but no storage is assigned
+
+c comments do not nest
+
+there are two types of integer types - signed and unsigned
+we have long double type for extra precision
+enumerations are part of the language
+we can define objects as const which prevents anyone from changing them
+
+the basic datatypes in C:
+    char - a single byte, for holding one character
+           1 byte - 8 bits - 256 possibilities, so any character included
+    int  - an integer
+    float - a float
+    double
+
+short and long apply to integers
+
+short is 16 bits, long is 32 bits
+int is either 16 or 32
+we also have signed or unsigned ints
+signed means the varialbe has sign, can be negative
+unsigned means only 0 and positive
+
+so, in 1 byte, unsigned can be 0 t0 256
+and signed can be -128 - 127
+
+the header files limits.h and float.h contain symbolic constants for all these sizes
+
+l is long
+ul is unsigned long
+similarty f and uf
+
+integer can also be defined in octal and hexadecimal
+leading zero means octa
+leading 0x means hexadecimal
+so, 31 can be written as 037 in octal
+and 0x1f or 0x1F in hex
+to make them long or unsigned, follow them by L or U respectively
+
+also, characters in a single quotation means we are referring to their ascii codes
+so, 48 == 'o'
+also, '\n' is one character only
+
+we can also represent an arbitary byte sized bit pattern is: \ooo
+where ooo is one to three digits of octal
+or, \xhh where hh are 2 hexadecimals.
+so:
+
+#define VTAB '\013' // ascii code 3*1+1*8+0*64 - 11
+is same as:
+#define VTAB '\xb' //b in hex is 11
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,2207 @@
+The current version is emacs24
+install it using 
+    sudo apt-get install emacs24
+
+C-f Forward one character
+C-n Next line
+    
+C-b Back one character
+C-p Previous line
+
+C-a Beginning of line
+M-f Forward one word
+M-a Previous sentence
+M-v Previous screen
+M-< Beginning of buffer
+    
+C-e End of line
+M-b Back one word
+M-e Next sentence
+C-v Next screen
+M-> End of buffer
+
+C-u 3 C-p   Back 3 lines
+C-u 10 C-f  Forward 10 characters
+M-1 M-0 C-f Forward 10 characters
+C-u C-n Forward 4 lines
+C-u C-u C-n Forward 16 lines
+C-u C-u C-u C-n Forward 64 lines
+
+the control key is the main thing here
+also, secondary key is alt
+next screen; cv, previous screen mv
+
+v is for view - c is control
+c - l : center the text around the cursor
+
+####### MOVING AROUND
+
+move lines: 
+    c-p previous
+    c-n next
+
+Move chars in the same line
+    c-f forward
+    c-b backward
+
+move words in the same line:
+    a-f
+    a-b
+
+each line ends with a newline, that char is how the lines are stored in the files, as seperated
+
+****
+    Meta is used to operate on units defined by the language (words, sentences, paras etc)
+    Control is used for the basic units - characters, lines etc
+
+*****
+
+e is for end, a is for append/beginning
+c-a beginning of line, c-e end of line //as in line 75
+a-a beginning of sentence, a-e end of sentence //sentence is where the fullstop is for eg
+
+where the cursor is located - known as the point
+
+**most of the commands have a repeat count
+c-u <number> then  command
+
+this is called prefix argument because the argument is types before the command
+
+but prefix arguments can also be used as a flag by some other commands to edit their behaviour
+
+recall, c-v was to go up or down a screenful, but if you give it a flag, it becomes exactly like
+c-u <number> c-n
+
+c-g is to quit - use if emacs is forzen, a command is taking too long to execute etc
+
+c-x is for command related to windows, files, buffers and related things
+so:
+ c-x 1 
+kills all windows, and keeps only 1
+
+type 25 'a's using
+c-u 25 a
+
+In emacs, the cursor is not fine, it is a block, covering one character
+and it beaves as if it is on the left hand side of the rectangular block
+
+######## DELETING
+
+delete chars:
+    del -> delete the char before the pointer, also, c-d - this deletes the highlighted block effectively
+
+delete words:
+    M-<del>, or M-d delete words
+
+delete lines
+    c-k kill from cursor to end of line
+    m-k kill from cursor to end of sentence
+
+you can do selections using C-space
+after you have marked your text, you can process it in any way - delete it, capitalize it etc
+
+again, delete 3 lines: c-u 3 c-k
+yanking is c-y
+yanking is pasting, killing is cutting, deleteing is deleting
+copying is m-k
+
+get back deleted stuff using undo
+
+you have several clipboards so to speak
+so, cut line 1 using c-k
+now, line 2 using c-k
+
+to paste line 1, use c-y (will paste line 2), now, do m-y to get line 1
+repeat to get older lines
+
+Undoing is c /
+also, c-x u
+also, c _
+
+########## FILES
+open a file
+c-x c-f filename
+
+save a file
+c-x c-s
+
+you can create a new file by searching for an empty file and editing it and saving it
+
+opening multiple files --> each file is sotred in an object called "buffer"
+finding a file makes a new buffer in emacs
+
+get a list of buffers using c-x c-b
+get rid of the list by c-x 1
+
+there can only be one active buffer, if you to switch to editing another file, use c-x c-f filename or simply, 
+
+c-x b
+here, type the name of the file you want to switch to
+
+go to message buffer:
+c-x b *Messages*
+
+if you dont type the exact name, it creats a new buffer with the wrong name
+
+the changes in a file is saved in that buffer
+to save the buffer without visiting it, do: c-x s
+to save the file, go to it, c-x c-s
+
+so, save buffers and not files, they are easier
+
+c-x is for "Extended"
+you can extend the command set to create custom shortcuts
+
+c-z is to suspend emacs temporarily
+c x c c is to close emacs
+
+resume it using %emacs (the emacs process has shifted in the background with c-z)
+
+There are many C-x commands.  Here is a list of the ones you have learned:
+
+    C-x C-f     Find file
+    C-x C-s     Save file
+    C-x s       Save some buffers
+    C-x C-b     List buffers
+    C-x b       Switch buffer
+    C-x C-c     Quit Emacs
+    C-x 1       Delete all but one window
+    C-x u       Undo 
+    C-/         Undo
+
+arguments that are used even less are named.
+
+eg: m-x replace-string <return/enter>
+it replaces the occurances after the cursor
+
+emacs autosaves your files
+they begin and end with #
+so: #hello.py#
+
+to recover the auto-save file, 
+m-x recover-file <return>
+
+######### GUI components
+
+The mode line has the filename, the scrollbar status
+there are editing modes also
+
+there is text-mode, funamental mode etc
+
+m-x to change to funamental mode
+
+view the documentation on your current mode
+
+     c-h m
+
+recall c-l is to realign the text
+
+auto fill more wraps a long line to a new line
+m - x auto-fill-mode
+
+auto-fill-mode is a minor mode
+
+########## Searching
+
+c-s for forward search
+c-r for reverse search
+
+Multiple windows
+
+to move the line with the cursor to the top - c-l c-l 
+to get it to bottom, one more c-l
+to where it was, one more c-l
+
+C-x 2 splits the windows in 2
+c-x 3 splits them in 2 windows, vertically split
+
+to scroll the other window without changing to that window
+c m v
+
+c-x o --> move to the other window
+
+to get rid of the other window, c-x 1
+
+(If you had typed C-x 1 in the bottom window, that would get rid
+of the top one.  Think of this command as "Keep just one
+window--the window I am already in.")
+
+what "frames" mean to emacs is "windows" for everyone else
+
+you can create a frame:
+m-x make-frame
+delete it by:
+m-x delete-frame
+
+basic help:
+     c-h c <command name>
+
+     >> Type C-h c C-p.
+
+    The message should be something like this:
+
+        C-p runs the command previous-line
+more help:
+    c-h k c-p
+
+help on a function:
+    c-h f fnname
+eg: c h f previous_line
+
+difference b/w c-y and m-y
+
+___________________________________
+
+Tuhdo EMACS mini tutorial
+
+emacs is a programming platform, not just a text editor
+
+em - emacs
+emw - emacs --no-window
+
+every interaction is a function execution - when you press a key, the `self-insert-command` is executed
+
+normal function or macros:
+    care about them if you want to modify existing behavious
+
+commands - interactiev functions
+
+M-x is bound to execute-extended-command
+
+c-x c-f is find-file
+Hence, you can either do c-x c-f or do:
+    m-x find-file
+
+for prefixes of commands are c-x, m-x etc - they come before the commands
+if you want to check all the commands that use c-x as a prefix for example, do: c-x "c-h"
+
+
+c-g executes `keyboard-quit`
+
+"o" is used in built-in tools such as dired, ibuffer etc
+
+c-x prefix is for the defaults, global bindings etc
+c-c prefix is for the usr to define
+c-u 2 is same as c-2
+
+m-x info OR c-h i is for the information manual, the official documentation
+
+point is the current cursor
+
+find-file-at-point --> if your point is on a filepath, you can open it using 
+Mx ffap
+
+Ido mode
+interactively do things
+
+mx ido-mode
+this makes the prompt interactive by providing options as you open the file for eg
+
+Helm helps in autocompletion and narrowing
+
+c-x c-s executes save-buffer
+you can also do the same with m-x save buffer
+
+save as is m-x write-file or c-x c-w
+
+c-x k kills the buffer
+c-x k <name> works too
+
+
+only one major mode can be active at a time, this is used for syntax highlighting etc
+
+there are many minor modes
+
+you can have a lot of buffers, including email buffers etc
+
+c x c-b executes list-buffers
+
+you can instead use the ibuffer which is superior
+set the keybinding to that:
+    (global-set-key (kdb "C-x C-b") 'ibuffer)
+
+write this in the *scratch* buffer and M-x eval-buffer for the setup to take effect
+
+you can open a lot of files by using wildcards
+eg: c-x c-f *.c
+
+
+you can have a lot files open at once, say you have open thousands of c files and thousands of lisp files
+
+you can do c-x c-b to open the list of buffers, (assuming you have the ibuffer mode on)
+
+now, you can apply filters to the list of buffers.
+
+the prefix "/" is used to group all the filtering commands in ibuffer
+you can a list of major modes that the buffers exist in using TAB
+
+ibuffer is for interactive buffer
+
+when you open it, all the buffers are listed under Default
+now, lets group them into 2 groups - 1 for c and 1 for lisp
+/m <name of mode>
+then, you see all the modes that belong to <name of mode>, group them
+using /g <name of group>
+
+// removes the filter
+
+c-x o executes the other window command
+c-x 1 closes the buffer that doesnt have the point, the other buffer
+to close the active buffer, c-x 0
+
+the astrisk near the name of the buffer mark means that buffer has been modified
+
+in the ibuffer prompt, pressing g refershes the list
+
+you can mark buffers using m
+then, a to view the marked buffers
+c-x s to save the marked buffers
+c-x d to close the marked buffers
+c-x v to discard the changes in the marked buffers
+
+unmark it using `u`
+
+also, can open it using ret, e, 
+
+dont forget to bind the c-x c-b to ibuffer
+
+quit by q, there are many other commands:
+     /m add a filter by major mode
+     /n filter by buffer name
+     /c filter by buffer content
+     /f filter by filename
+     // remove all filters
+
+group commands:
+      /g create groups from filters
+      tab move to the next filter group
+      /\ remove all active filter group
+      /x delete previously saved groups
+
+sorting commands:
+	s a sort by alphabet
+	s f by filename
+	s v last viewing time
+	s s size
+	s m majot modes
+
+exactly similar to the buffer management commands is the bookmark management commands. the differrence is that the prefix is not c-x but c-x r
+hence, to list the bookmarks, we do c-x r l
+
+to create a new bookmark, c-x r m (m for mark)
+i just created a bookmark!
+it is used to go back to a place in code, just like what a bookmark does!
+
+reiterating - 
+c-f forward one char
+c-b backward one char
+c-n next line
+c-p previous line
+c-a beginning of line
+c-e end of line
+m-f forward one word
+m-b backward one word
+c-v page down
+m-v page up
+m-a beginning of sentance
+m-e end of sentance
+c-l recenter screen
+m < move to start of buffer
+m > end of buffer
+
+these are the recommanded keybindings, not necessarily on by default
+
+c-m f bings to `forward-sexp` that moves forward over a balanced expression
+
+c-m b is `backward-sexp` backward one balanced expression - example brackets
+
+c-m-k kills the expression kill-sexp
+c-m-t for transposing expression
+c-m spc - mark the expression, put mark after the following expr
+
+kill == cut for emacs
+c-d cut a char at point
+c-k kill the line from the point to the end
+m-k kill the sentence
+
+also works in terminal!
+so, you type a command and decide that it is wrong, do a c-a to go to the beggining and then c-k to terminate it
+
+in emacs, del is your backspace
+
+auto complete also works, like in sublime text, to autocomple words, you say TAB, here, it is m-/
+m-; comment, uncomment
+
+when you kill something, it is put into the kill ring
+insert the most recently killed content by c-y
+yank is paste in emacs
+
+c-y to paste the most recent thing. then, m-y to cycle thru the earlier cut things
+
+c-h v kill-ring
+shows the value of the kill-ring - all the content stored in it
+
+you can have bookmarks inside the editor. this can be done by marking the regions, use c-spc to mark places
+
+c-spc twice to mark a place, you can mark multiple places and then,
+to back to them, use c-u c-spc
+
+when you select a region:
+     c-w to cut it
+     m-w to copy it
+     c-y to paste it
+
+when you pasted the stuff, to go back to original place, use
+c-u spc
+this is possible because emacs puts a mark on the place just before
+you copied/pasted/yanked
+
+c-x c-x is bound to exchange-point-and-mark
+so, you can mark at A, and then scroll down or up to another mark and
+then, do c-x c-x to select the region between your last mark and
+the current cursor place
+
+again, c-u c-spc to go back to the previous region
+
+emacs stores buffer marks in a list, enabling you to cycle thru the
+marks easily
+
+
+mark rings are local to each buffer
+
+there is also a global mark ring, access it using:
+      c-x c-spc instead of c-u c-spc
+
+i just closed the pc without saving the file, then, when i reopened
+emacs, i got the prompt asking if i would like to restore my session,
+the command was m-x restore-session
+after i opened this particular file with out using the restore-session,
+i could do m-x restore-this-file or something to get it back
+
+searching
+c-s incremental search - invokes isearch-forward
+c-r isearch-backward
+isearch can be performed anywhere, on the ibuffer too
+
+when searching, you can move to the end of the word by c-w
+say, you want to search for hello world
+place your pointer at h, c-s c-w, you'll get hello into the prompt, again, c-w you'll get world as well
+
+you can visit the previously searched content using c-s m-p(or n)
+c-s c-s is regex search
+
+feed symbol(word etc) at point to search using m-s .
+
+m-s o is for `occur`
+m-s h . highlight-symbol-at-point - this stays highlighted
+m-s h l highlight-lines-matching-regexp
+m-s h r highlight accoring to regexp
+m-s h-u unhighlight regexp
+
+occur shows all the matched strings in a seperate buffer called as
+*occur*
+m-s o (either in the isearch or outside it)
+so, you search using c-s <symbols> and you find there are thousands of
+entries, do: m-s o to get them in a seperate buffer
+m-g n/p goes to the next or previous matches
+
+or you can always use c-x z to repeat previous command
+that is, press z to get the matches
+
+in the *occur* buffer, you can do c-p, c-n to go to the previous and next entries. o opens the match at the point
+e is for occur-edit-mode
+then, you can edit anywhere in the occur buffer.
+c-o opens the line but keeps the cursor in the occur buffer
+g refreshes the buffer in case of any updates to file contents
+c-> end of buffer
+c-< start of buffer
+
+for any help, use c-h m to view the documentation on your current mode
+pokemon
+string replace
+m-% executes query-replace
+it asks for : string to be replaced
+string to replace
+
+use ! to replace all mathces
+
+this works only for text below the cursor, not below it, remember
+you can do 'y' to interactively replace, n to reject that repeat instance
+
+you can search in multiple buffers as well using multi-occur
+here, enter the buffers, you can view the list of buffers using c-x c-b and type them in...
+shows the matches in each buffer and total matches as well
+
+m-x rgrep allows you to run the external grep command
+
+you get the result in the *grep* buffer, you can move around in it using
+m-g p/n
+
+you can paste by c-s-v as well, and c-y is always there
+
+**OQ
+(currently rgrep is not working, bash not found, FIX!)
+
+*grep* buffer has its own shortcuts for scrolling, opening matched files etc
+
+as, always, once in the *grep* buffer, you can do c-h m to get the help
+on the shortcuts
+
+
+the modeline is the grey line near the bottom that shows the
+emcasLearnings.txt name, line number etc
+(Text) is the major mode
+emcasLearnings.txt is the buffer name
+-UUU is the charset - UTF-8 it means
+** - two astrix if the buffer is modified
+-- is not modified
+% if read only but modified
+%% read only, not modified
+
+F1 is the selected frame name
+there can be two emacs windows on your pc, then they will have different
+names
+
+in the gui version, there is only a dash, the frames are there only in
+the terminal version
+
+it is:
+cs:ch-fr buf pos line (major minor)
+hence, cs chatset is u --> utf-8
+ch - buffer is modified
+fr - it is frame one
+fr - emcasLearnings.txt is the current buffer active
+pos - Bot incicates i am at the bottom, otherwise you'll get a percentage
+there
+line - L576
+Text - major mode
+
+MiniBuffer
+The small area at the bottom of the emacs screen
+they read the arguments from the user there
+
+     everything is a function - find-file is as well, it asks
+     for arguments in the minibuffer.
+
+     find-file is an interactive function aka command
+
+when inputting in the minibuffer, use m-p/n for previous or next argument
+from your history
+
+m-r searches for the input that matches the supplied regexp
+
+minibuffer can be used with outputs as well - it also serves the role of
+the echo area
+
+frame in emacs - an application window
+you can have seperate frames to hold different parts of emacs,
+eg you can ask your minibuffer to go in a seperate frame
+
+example the function - find-file-other-frame (c-x 5 f)
+opens the file in other frame
+
+this opens another frame on top of this one:/ i was expecting to have
+it open in another window
+
+c-x 5 is the prefix for `different frame` related stuff
+so:
+	c-x 5 c-f opens a file in another frame
+	c-x 5 c-o opens another frame
+	c-x 5 0 kill the frame with pointer
+	c-x 5 1 kill other frames
+	c-x 5 2 create other frame
+	c-x 5 r open file for read only in another frame
+
+we can split the frame area into multiple areas called "windows"
+a frame can be divided into as many windows as required
+
+  c-x 2 is for split-window-below
+  c-x 3 is for split-window-right
+  
+  if you do both, you'll have three windows
+
+  each window can hold a buffer
+  c-x o is to cycle thru the windows, bound to `other-window`
+
+in emacs, <next> is PageDown and <prior> is PageUp
+M-<next>/<prior> is used to `scroll-other-window`
+the "other-window" is the one you visit when you do c-x o
+
+ you can cycle the other window by m-pgdown
+
+so, c-x 3/4 opens another window with same buffer but:
+c-x 4 is the common prefix for opening things in other buffer 
+
+    c-x 4 c-f find-file-other-window and move cursor there
+    c-x 4 c-o display-buffer - this asks for a buffer from the
+    	      buffer list and opens it in another window
+    c-x 4 0 kill other buffer and window
+
+    c-x 4 b switch the current buffer in another window and give
+    it another name
+
+    c x 4 c clone the current buffer and give it another name
+
+    c x 4 d -- open a dired (directory edit?) buffer in another window
+    dired is a builtin file manager in emacs
+
+    c x 4 m -- compose mail other window
+
+    c-x 4 r open read only file other window
+
+    m-<next>/<prior> - scroll other window
+
+ Dont forget:
+      if you want to know all the key bindings that have c-x 4 as their
+      prefix, you can do c-x 4 c-h!
+
+all these keysbindings - eg: c-x 4 d are bound to functions
+eg: c-x 4 is bound to `dired-other-window` which is a 2 line fn:
+
+;;;###autoload (define-key ctl-x-4-map "d" 'dired-other-window)
+;;;###autoload
+(defun dired-other-window (dirname &optional switches)
+  "\"Edit\" directory DIRNAME.  Like `dired' but selects in another window."
+  (interactive (dired-read-dir-and-switches "in other window "))
+  (switch-to-buffer-other-window (dired-noselect dirname switches)))
+
+
+recall, c-x 5 is the prefix for frame/(window) commands
+also, within each frame, you can have multiple windows open, that can
+be done using c-x 3 for example
+
+
+c-x 4 is the prefix for opening things in another buffer (window)
+so:
+
+	c-x 4 c-f opens a file in another buffer
+    	c-x 4 c-o is for display-buffer, this selects a buffer and
+	displays it in another window but does not move the cursor there
+
+	c-x 4 b opens a buffer in place of the current one, to open
+	it in a new window, use c-x 4 b
+
+	c-x 4 d open dired in another window
+	c-x 4 m compose mail in other window
+	
+in the terminal, if you try to do c-4 c-f it wont work, this is because you cant use control with digit keys,
+there you have to use: c-u 4 c-f
+
+c-u c-f is by default 4 chars forward, and powers of 4 hence.
+
+	
+Dired
+~~~~~
+~~~~~
+
+c-x d - select the dir of your choice and start dired in that dir
+c-x 4 d - start dired in another window
+
+once in dired, you dont need c-p/n etc, directly do p,n etc
+c-s works as usual
+
+4 n moves the cursor 4 lines down
+
+create new files using c-x c-f, new dir using +
+f or e or RET --> open current file at point
+o --> open file in another window
+  this one is common eveywhere:
+       c-o open file in another window but do not select that window
+
+dired navigation - ^ goes to parent dir
+when ever you open a file, dired opens a buffer holding its parent
+dir
+
+use ibuffer to manage buffers
+recall, /m to filter by mode name
+/g to group the filtered results
+
+also, recall you can mark files, using m
+% m - mark all the files whose names match a supplied regexp
+% g - mark all the files whose contents match the supplied regexp
+      same as using Grep
+
+
+File management
+~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~
+** all these work in the dired **
+
+C - prompt for a location to cope the file at point
+R - prompt for a location to rename/move a file at point
+(same as mv in shell)
+H - prompt for a location to create a hard link
+S - symbolic link
+M - change permission bits for a file at point or marked files
+    (chmod?)
+
+//pratice this please//
+
+i just discovered a new function and its binding
+c-x l showed me the lines in this file
+i check the function to which this keycombo is bound, by
+c-x c-h and i looked for c-x l there, it was bound to count-lines-page
+
+I am not able to execute the bash functions, it says /usr/local/bin/bash? not found, (eg in dired,
+you can do !ls to execute ls for eg)
+
+move onto a dir, and press i to insert its contents underneath the listting of the current entry
+this way, you can search for files in both the dirs now
+
+you can save your direds in bookmarks and retrieve them later
+recall, the shortcut for the bookmark was c-x r <something>
+
+registers
+~~~~~~~~~
+~~~~~~~~~
+
+they are like cookies, they store bits of information that can be retrieved later
+they can be named only with a single character, so, a-zA-Z0-9
+
+they can store text, screen layout, filename etc
+
+to jump to a register, c-x r j <regname>
+so, the prefix is c-x r
+view all with c-x r c-h
+
+c-x r w saves the window configuration - window-configuration-to-register
+c-x r f saves the frame configuration (multiple instances of emcas, and all their windows configuration)
+      	this is for frame-configuration-to-register
+	
+this asks for a name, type it and it is saved
+when you want to retrieve it, just do c-x r j <name> and the layout is restored
+
+when you do m-/ for autocomplete, it shows the possible candidates from all the open buffers
+
+Hence, you can switch between multiple projects with supreme ease. each configuration must be realted to a project
+
+the prefix c-x 5 is for frames
+
+copy text into register:
+c-x r s <regname> copy-to-register
+get it back: insert-register
+c-x r i <regname>
+
+this works seamlessly
+you can save position of the point (cusor) as well using
+c-x r <spc> regname
+recall spc is the generic keyword for point, it is used to mark when killing/yanking as well
+some character
+
+you can save number into the register as well
+c-u number c-x r n regname
+increment it by:
+c-u number c-x r + regname
+
+
+Macros
+~~~~~~
+~~~~~~
+
+they are used to record your actions in emacs and play them back later
+f3 OR c-x ( - start recording a macro
+f4 OR c-x ) - end recording a macro
+f4 OR c-x e - play back a macro
+
+when you want to repeat anything 5 time, you do c-u 5 <something>
+if you want to repeat it till the end of file, you do c-u 0 <somehting>
+
+to apply it to a region, select it and then do: c-x c-k r
+
+they macros is saved in the keyboard macro ring - there is only one macro ring defined for all the buffers
+
+c-x c-k == macro commands
+
+*********************************
+I just installed my first third party file in emacs. there wasnt much of installation really, it was just
+downloading and putting it in the right place
+i first cloned the git repo, got the file, put it in .emacs.d/list
+and added that path to the emacs load-path and imported the file
+the file defined a mode, which i set to on
+
+i did this in the .emacs file which wasnt there, so, i created it
+the entire content of that file as of now:
+
+    (add-to-list 'load-path' "~/.emacs.d/lisp")
+    (require 'simpleclip)
+    (simpleclip-mode 1)
+
+that's it
+
+the .emacs file is the code that is executed when emacs loads, it can be placed in either:
+~/.emacs or ~/.emacs.d/init.el
+
+this mode helps copy the external clipboard contents into emacs using super
+
+*********************************
+
+recall : change mode using m-x modename
+
+after installating this package, simpleclip, i can copy in and out of emacs
+this doesnt work in the terminal instance(emw) but does in the gui version
+
+super-C to copy, super-V to paste
+
+continuing with the tutorial:
+
+aaaaabbbbbbbccccccdddddd
+aaaaabbbbbbbccccccdddddd
+aaaaabbbbbbbccccccdddddd
+aaaaabbbbbbbccccccdddddd
+aaaaabbbbbbbccccccdddddd
+aaaaabbbbbbbccccccdddddd
+aaaaabbbbbbbccccccdddddd
+aaaaabbbbbbbccccccdddddd
+aaaaabbbbbbbccccccdddddd
+aaaaabbbbbbbccccccdddddd
+aaaaabbbbbbbccccccdddddd
+aaaaabbbbbbbccccccdddddd
+aaaaabbbbbbbccccccdddddd
+aaaaabbbbbbbccccccdddddd
+
+was transformed to:
+
+aaaaa bbbbbbb cccccc dddddd
+aaaaa bbbbbbb cccccc dddddd
+aaaaa bbbbbbb cccccc dddddd
+aaaaa bbbbbbb cccccc dddddd
+aaaaa bbbbbbb cccccc dddddd
+aaaaa bbbbbbb cccccc dddddd
+aaaaa bbbbbbb cccccc dddddd
+aaaaa bbbbbbb cccccc dddddd
+aaaaa bbbbbbb cccccc dddddd
+aaaaa bbbbbbb cccccc dddddd
+aaaaa bbbbbbb cccccc dddddd
+aaaaa bbbbbbb cccccc dddddd
+aaaaa bbbbbbb cccccc dddddd
+aaaaa bbbbbbb cccccc dddddd
+
+using macros
+
+to seperate this into seperate groups of chars, we use macros
+using the terminal version didnt accept the c-u 0 f4 command, nor does it take in the simpleclip thingy
+it does actually, just that it is:
+   C-<insert> for copy
+   S-<delete> for cut
+   S-<insert> for paste
+
+which isn't that bad frankly
+
+the macros are powerful and in need of extreme text manipulations, you can combine them with registers and all
+sorts of complex searches, repalces etc to get the right thing working
+make sure to place the point to the correct place before you stop recording, then, you'll just need to press
+f4 and not move the cursor each time
+
+c-x c-k c-k execute the keyboard macro which is at the head of the ring (the last macro)
+c-x c-k c-n next macro, c-p for previous macro
+
+**whenever you have repetitive editing tasks, think of using macros
+you can also use them where you only have to enter one keyboard input and everything else is repetative
+and the input is simple eg, numbers starting from 0 to 100
+
+you can save macros and bind them to key as well (which lasts for the duration of the session)
+you can load your macros using (load-file "~/.emacs.d/macros") in your emacs.init, this loads the single file,
+
+you can edit your macro as well: c-x c-k c-e
+view all the keyboard bindings for macros using
+c-x c-k c-h
+
+you can create macros to open some files, change dir also
+
+Version Control
+~~~~~~~~~~~~~~~
+c - x v is the prefix for all version control things
+use c - x v c-h to view the listing
+
+version control is useless here, do it in the terminal
+or use, magit which makes this process better
+
+you can put code in *scratch*, and run m-x eval buffer
+this processed the entire *scratch* buffer,
+
+so, if you have this in your *scratch* for eg:
+
+(require 'package)
+(add-to-list 'package-archives
+       '("melpa" . "http://melpa.milkbox.net/packages/") t)
+
+you can do m-x eval-buffer
+then, m-x list-package
+
+here, you'll get all the packages that can be installed
+use c-s to search for the one you need
+them mark it for installation using i, then press x to install
+
+once it is done, it would have added functions which you can execute
+using m-x fn_name
+you can also bind keys to it for easy access in the future
+
+then, add this into *scratch*:
+
+(add-hook 'c-mode-common-hook
+    (lambda ()
+      (when (derived-mode-p 'c-mode 'c++-mode 'java-mode 'asm-mode)
+  (ggtags-mode 1))))
+
+what this does is, whenever the c-mode, c++-mode or java-mode is on,
+also start the ggtags mode
+
+another example:
+     (add-hook 'dired-mode-hook 'ggtags-mode)
+
+this activates the dired-mode-hook when the ggtags-mode is on
+
+also, you should't use .emacs, but .emacs.d/init.el as then, you'll be
+able to put it on github
+
+ggtags helps you find files very quickly even in a large repo
+by creating an index database of all the files
+
+each pacakge has its set of functions and keybindings that
+
+what does c-m do? *OQ
+
+open file in another window: c-x 4 c-f
+
+TUTORIAL PART TWO:
+
+we can try out elisp code by getting the intrepreter by:
+m-x ielm
+
+Racket, Clojure are both lisp dialects
+
+things to understand in lisp:
+anything in a list is an atom, it cant be broken down more,
+it is the smallest piece of data
+
+list contains atoms,
+anything that is in the paranthesis is a list
+
+list can be used either as code for porcessing something
+or as data to be processed
+
+atom aka datatypes
+numbers, (int and float)
+string "hello"
+NIL or () -- null
+symbol - reference to something, keyword
+
+each symbol has:
+     print name (its name as string)
+     value
+     function (its function defination, if its a fn)
+     property-list (list of key, value pairs)
+
+buffer-file-name is both a funciton and a variable
+
+checking the symbol-value of any symbol:
+(symbol-value 'buffer-file-name)
+this would return NIL since this buffer isn't associated
+with any other file yet
+
+ELEMENTS IN A list are seperated with a whitespace
+
+(...) is list that has code you want executed
+'(...) is list with data - then it becomes similar to the
+       list in python, java etc
+
+
+'(1 2 3)
+is a list of 3 numbers
+
+'()
+an empty list, an atom
+
+'(if a b c)
+a list that holds 4 symbols - if, a, b, c
+
+(if a b c)
+is an if expression
+
+'(+ 1 2)
+is a list with 4 symbols - +, 1, 2
+
+(+ 1 2)
+is a function call(+ is a function) with 1, 2 as arguments
+
+hence, both data and code are lists
+code can be data, data can be code
+
+to avoid confusion, lists with data are called lists and lists with
+code are called lisp form
+
+'(...) for creating data and (...) for creating code;
+you hold things in '(...) and you process things in (...)
+
+lisp forms are of three types:
+
+function form -
+(+ 1 2) is a function form, 1, 2 are the parameters to the + function
+if the first element is a valid function, the function will be
+called along with everything else as arguments
+
+    the inner most parts are executed before the outer ones OR
+    	      	   	 OR
+    args are evaluated from left to right ??
+    
+so:
+
+    (+ 1 (+ 2 3) (* 3 4) (/ 4 2))
+
+becomes - (+ 2 3) --> 5, rest 12, 2
+finally: (+ 1 5 12 2)
+so, output: 20
+
+special form-
+it has special evaluation rules and/or syntax
+eg: if then else
+
+(if condition  ;; condition is a valid Lisp form
+    ...do something if true...
+  ...do something if false...)
+
+if is not a function since we have evaluate the conditions and
+take action accoring to it
+
+most forms are functions, except if, and, or etc
+
+macro form-
+macro form is a function, but different. when you call a macro,
+the macro generates lisp code, which is then executed
+
+they are just functions without any syntax, so, they'll get
+converted to correct syntax when you execute the micro
+
+'(...) is syntatic sugar for what is under the hood just:
+    (quote ...)
+
+bottomline : there are two things - lists (with data) and lisp forms.
+there are three kinds of lisp forms, (function form, special form,
+macro form). the first element in the form gets executed with the
+rest as parameters
+
+all syntax errors in lisp come from:
+    unbalanced paranethsis
+    if you mess up the syntax rules you defined for your own language
+
+
+this is the only syntax error, everything else is semantic errors
+like: using non existing variables, array index out of range etc
+
+so, if you forget the ;, or the correct syntax of the if else loop,
+it is syntax error, if you mess the logic, it may result in semantic
+error
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Part III - Customizing and Extending Emacs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+(message "how about%d" (+ 10 10))
+would be evaulated to...you know what
+message is a function
+
+to think about it, the if else conditional is also a
+function but it is handled by emacs in a different way, hence we call it
+special. `and` is also a special form.
+once emcas sees that the first element is `and`, it evaluates
+the rest of the elements from left to right till it encounters a false
+
+you can also define your own mini syntax and enclose it as a macro
+the first element is created by the function defmacro, and if that is
+the case, emacs passes the rest of the list as data
+
+those different forms are just under one category: function.
+Function form is a regular function;
+special form is a function with its own rule;
+macro form is a function that generates code.
+
+Data is of two types:
+     atomic - primitives such as a number, string, symbol, NIL
+     non atomic - if you put ' before the form, it becomes non atomic data
+
+emacs also has array, hashtable etc
+
+popular functions:
+For help on any function, use c-h f
+For help on any variable, use c-h v
+
+you can install packages in two ways:
+    m-x list-packages
+    mark the ones you want with i, then x to install them
+    put the initialization code in init.el if needed (eg, if you want
+    to enable them on startup for eg)
+    done
+	this method automatically puts the required files in .emacs.d dir
+
+
+    open *scratch* pad and put the code linking to the package url in it
+    and then, eval-buffer
+    this also downloads the code and puts it in the .emacs.d folder
+    you might want to put the init code into the init.el file
+
+
+    download the repo yourself, put the files in the correct dir, make sure the
+    dir is in the emacs path and then put in the init.el code
+
+
+1. (setq [ symbol value ])
+this is used to set the value of the setting parameter. think of it as
+an api for changing the settings.el file which holds the settings
+
+eg:
+	(setq global-mark-ring-max 50000)
+
+can have multiple values, the last one is taken
+
+2. load
+
+   (load (substitute-in-file-name "$HOME/.emacs.d/module"))
+
+this loads the file which is looked up in the load-file variable
+
+the full syntax is:
+(load FILE &optional NOERROR NOMESSAGE NOSUFFIX MUST-SUFFIX)
+
+
+3. require
+
+this is for installed packages. the feature must "load" itself,
+if it is not loaded, then the filename is loaded
+
+   (require FEATURE &optional FILENAME NOERROR)
+
+example: to load the volatile-highlights package after installing it:
+
+   (require 'volatile-highlights)
+
+for any feature to be callable with the require function, it must
+have the "provide" function provided at the end of the file
+
+4. provide
+
+use this function at the end of the file to make it a loadable module
+callable by require
+
+eg:
+	(provide 'setup-editing)
+
+as the last line of setup-editing will make be compatible with require
+and it wont be able to load with "load" anymore
+
+5. add-to-list
+
+the full syntax is:
+    (add-to-list list/var element)
+
+so, to add to load-path, ~/.emacs.d/personal, we do:
+
+(add-to-list 'load-path "~/.emacs.d/personal") ; add personal to load-path,
+                                               ; so "load" function can search for files in it
+
+6. add-hook
+
+a "hook" is a list of functions which are executed when some event happens
+consider this:
+
+   (add-hook 'prog-mode-hook 'linum-mode)
+
+here, 'prog-Mode-Hook is the hook which has the list of functions that need to be executed
+when the user enters the programming mode (the prog-mode is the root of all different programming modes
+like c-mode, asm-mode, emacs-lisp-mode, java-mode...), this mode is activated as well (linum-mode shows
+the line numbers)
+
+7. global-set-key
+
+this command is used to bind a key to a function
+
+example:
+(global-set-key (kbd "C-x C-b") 'ibuffer) ;; bind "C-x C-b" to ibuffer command
+(global-set-key "\C-x\C-b" 'ibuffer)  ;; bind "C-x C-b to ibuffer command, but modifier 
+                                      ;; keys must be escaped with the backslash
+(global-set-key [?\C-x?\C-b] 'ibuffer) ;; use vector instead of a string [[ vector is array in other lngs]]
+
+to avoid escaping characters and all, use "kdb" function - it recorgnizes 
+C-x, <f2>, left, right, up, down etc
+
+local binding if defined, takes precedence over the global-key
+
+8. define-key
+
+   (define-key KEYMAP KEY DEF)
+
+the define-key binds a DEF (usually a command) to a key sequence KEY
+
+    this is exactly the opposite of global-set-key, it bound the key to a function, here a function to a key
+
+here, when the keys are pressed, emacs runs the associated functions
+KEYMAP stores the list of bindings from KEY and DEF
+
+they are custom bindings for different modes
+
+     (define-key dired-mode-map (kdb "e") 'wdired-change-to-wdired-mode)
+
+here, the key e is bound to 'wdired-Change-To-Wdired-Mode
+here - the keymap is dired-mode-map
+note: most of the keymaps, have this suffix - "-mode-map"
+
+9. defalias
+
+   (defalias SYMBOL DEFINATION)
+defalias is used to define an alias for command(function)
+
+	 (defalias 'yes-or-no-p' 'y-or-n-p)
+	 (defalias 'list-buffers' 'ibuffer) ;; this would effectively
+	 remove all access to the vanilla list-buffers, (given you also set the global-set-key)
+
+10. mapc
+
+this works like the map funciton works in python
+     (mapc FUNCTION SEQUENCE)
+
+maps calls the FUNCTION on each element of the sequence SEQUENCE
+     (mapc 'load(directory-filels "~/.emacs.d/custom" t ".*\.el"))
+
+hence, all the files in custom dir are loaded
+
+
+11. defun
+this is a lisp macro that is used to define a function
+
+     (defun demo ()
+     	    (message "hello world" number string))
+
+to make this funciton available in M-x:
+
+     (defun demo ()
+     	    (interactive)
+     	    (message "hello world" number string))
+
+interactive is a speacial form
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+recalling:
+	c-m is the prefix for navigating pairs
+
+c-m-f - forward-sexp - move forward over a balanced expression
+c-m-b - backward-sexp
+c-m-k - kills the sexp forward
+c-m-t - transpose-sexps
+c-m-spc - mark-sexp
+
+reiterating -
+emacs loads one of the three when it loads -
+      ~/.emacs
+      ~/.emacs.d/init
+      ~/.emacs.d/init.el
+
+c-x c-e is for eval-last-sexp
+c-m-i - completion at point
+
+as always, c-h f for functions, c-h v for variables
+
+emacs has a package manager which gets the packages from
+the package archive. there are 3 package archives in emacs:
+    built-in - limited/not up to date
+    marmalade - used before melpa
+    melpa - most packages, most recent packages
+
+you need to add mepla to your init.el, it is not available
+by default, you need to add it
+
+(require 'package)
+(add-to-list 'package-archives
+  '("melpa" . "http://melpa.milkbox.net/packages/") t)
+
+
+now, after it is added, use m-x list-package to list
+mark using i, delete using d, execute using x
+
+U to update all packages
+f to filter packages
+h to display help
+
+the settings should be in appropriate files
+so:
+
+    setup-editing.el for Editing group.
+    setup-convenience.el for Convenience group.
+    setup-files.el for Files group.
+    setup-text.el for Text group.
+    setup-data.el for Data group.
+    setup-external.el for External group.
+    setup-communication.el for Communication group.
+    setup-programming.el for Programming group.
+    setup-applications.el for Application group.
+    setup-development.el for Development group.
+    setup-environment.el for Environment group.
+    setup-faces.el for Faces group.
+    setup-help.el for Help group.
+    setup-multimedia.el for Multimedia group.
+    setup-local.el for Local group. 
+
+say you create a folder ~/.emacs.d/custom
+you can load that folder in your init using:
+
+    (mapc 'load (directory-files "~/.emacs.d/custom" t ".*\.el"))
+
+and then importing/loading the files using
+
+    (require 'setup-programming)
+    (require 'setup-text)
+    (require 'setup-local)
+
+
+packages:
+
+1. workgroups2
+
+   it restores the work config when you want - the windows, buffers etc
+
+c-c z is the default prefix
+
+each window configuration is a workspace
+
+view all the binding using c-c z c-h
+
+there are multiple levels of key bindings:
+      local, minor mode, major mode, global
+      so, when we see the c-c z c-h, we view the minor mode keybindings
+      there are no global bindings for c-c z (as can be seen with c-c z c-h or a little
+      more info c-c z ?)
+
+we can enter the settings config in setup-editing.el, use
+   (provide 'setup-editing) and load the module in the init file
+
+
+2. duplicate-thing
+
+this is to duplicate the current line, selection etc
+
+the key binded is m-x (c for copy)
+to make five copies, use c-u 5 m-c
+
+3. volatile-highlights
+
+this will highlight for a few seconds the yanked region
+
+
+4. smartparens
+this will smartly auto-assist with paraents etc
+if you try to put the config and load the init file, without
+installing the package first, we will get a load error that looks
+more like a warning just
+
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+HELM
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+the main purpose of helm is "incremental completion and selection
+narrowing framework"
+
+prelude has heml, but it is not enabled by default
+
+with helm:
+you enter the parts of the files you want to search for,
+these are called as patterns
+
+navigate the mathces using the normal
+c-n, c-p
+change pages using c-v, m-v
+
+mark the candidates using c-spc, select all with m-a
+c-c c-i to insert the marked candidates into the current buffer
+
+c-t toggles horizontal mode
+
+in vanilla emacs when opening files - press TAB to get list of
+candidates - in ido, list of candidates already there but
+TAB rotates the foremost one, completes it - in helm, the candidates
+are already there, no need of tabbing
+
+on execution of the first helm command, you enter a helm session
+a dedicated helm session is always open
+
+3 commands most important:
+  TAB used to access the action menu
+
+  c-z executes helm-execute-persistent-action - an action you use
+  without quitting the session
+
+  in some sessions, commands such as helm-find-files, helm-mini
+  you can select more than one candidates and execute actions on
+  them eg, grep, open
+
+for help, use c-c ? --> this is the same as c-c c-h
+shows the functions bound to c-c prefix
+
+c-c p is the prefix for projectile
+c-c z is the prefix for workspace
+
+helm is awesome because you find the file first and then
+decide what to do with it again
+for eg: in vanilla emacs - c-x c-f opens a file
+lets say you decide midway that you want to open the file
+in another window - you c-g to cancel and then again execute
+c-x 4 c-f and redo the entire thing
+
+in helm, you find the file first and the decide what to do with it
+
+
+fuzzy matching is when you need to enter only initials
+for eg:
+driver/edac/i5100_edac.c you can enter dedi51
+
+but in helm, you can only enter i51 and you can get the files that
+match the expression
+
+operate on text on point - generally, it just cuts the selected
+region - here, the word is put into the editing buffer
+
+m-n yanks the symbol at point
+
+c-h is the prefix for helm
+so, c-h c-h or c-h ? lists all the helm functions
+
+c-h f runs describe-function
+c-h v runs describe-variable
+
+the helm buffer is be resized automatically if you use golden-ratio
+package
+
+helm can help you master emacs with:
+     (global-set-key (kbd "M-x") 'helm-M-x)
+
+now, you can do this:
+     type "li pa"
+     this will show list-package as the top entry, beside it,
+     it's key combo, and on TAB, its help menu
+
+
+some of the functions:
+helm-show-kill-ring shows the kill ring as well, rest all is the same
+safe to replace with default thingy:
+
+     (global-set-key (kdb "M-y") 'helm.show-kill-ring)
+
+you can view it even now by c-h v (used to describe varialbe)
+and type kill-ring. c-h f kill-ring just shows the details
+about the function
+
+when you go to a which has a filepath, you can open it using c-x c-f which
+is bound to the `helm-find-files`.
+
+you can search for files, and then use c-s to search in the listings
+
+helm-resume
+
+c-c h b
+
+this will resume the previous helm session along with the previous patterns in prompt
+
+helm-all-mark-rings
+
+allows you to view the content of both the local and global mark rings in a friendly
+interface
+
+
+helm-register
+this shows the registers, ret or tab enters the value of the highlighted register
+
+c-c h x
+
+helm-surfraw
+c-c h s
+surfs google, stackoverflow etc
+
+helm-google-suggest
+c-c h g
+gets search suggestions from Google
+
+helm-calcul-expression
+c-c h c-
+calculate things
+
+magit is a big and important package
+m-x magit-status --> git status
+once in the status buffer:
+     s to stage files
+     c c to commit, c-c c-c to save the commit msg
+     b b to switch branches
+
+P P to git push
+F F to git pull
+use TAB and not RET to select
+
+use $ to view the raw git commands
+
+Projectile with helm
+the ultimate combo, or so they promised. Let's see!
+
+prefix is c-c p
+recall helm has c-c h
+
+The all in one command
+c-c p h
+
+the above command will help you find a file, open it etc
+but before that, you need to switch to the project
+
+c-c p p
+helm-projectile-switch-projectile
+
+this is the entrance to all the projects
+next time, you dont have to cd to your project, just do
+helm-projectile-switch-project and select the name
+
+this shows the projectile projects - projectile projects either
+are git repos, or have a .projectile file in them
+when you press RET on the selected entry, the action specified in the projectile-switch-project-action
+gets executed
+default is projectile-find-file. we can bind it to helm-projectile as this will open the project
+in another buffer, leaving the present one as it is
+
+THE ONLY FIND FILE COMMAND YOU NEED NOW:
+helm-projectile-find-file
+c-c p f
+
+this lists all the files in the project and you can start searching, grepping, renaming, deleting etc
+search for files, open multiple ones using m-space,
+c-c o open file in another window
+
+use c-c r to open file as root
+
+rename files using m-r
+cope files using m-c
+delete files using m-d
+
+helm-projectile-find-dir - c-c p d
+opens dired in the current project
+
+take a look at other commands using c-c p c-h
+
+____
+
+when you select a file, you can open it in a different window using
+     c-c o
+it opens in a horizontal window split, you can change it to vertical using
+c-c |
+_____
+
+to not kill the entire line after the mark, but only till the closing expression, do c-m-k
+_____
+
+to go back to previous mark set, do c-u c-spc
+______
+
+we could go to any class using c-c c-j which shows the imenu
+if you click at the class, you can see the functions etc in it
+
+using semantic-mode, to go to any function/dependency/class defination, use c-c h i
+or m-x helm-semantic-or-imenu
+forget c-c c-j, user c-c h i
+
+if you want to delete a word [and you are many spaces or lines below it]
+do this: c-backspace
+it deletes the last word
+
+to create a new virtualenv:
+cd ~/ENV
+virtualenv <name>
+
+add entry in private.sh
+restart the terminal
+
+if there is a link in the code/text that you want to open,
+move there and do c-x c-f enter
+
+to select a region, either use ctrl-spc and then move lines
+or do just switch on the capslock and then navigate as ye wish
+
+if at the current point, you want to insert another file, simply do "ctrl-x i"
+it will ask for a file to insert there
+
+use this to print the lines of code in the project you just cloned from
+GH
+    find . -name '*.php' | xargs wc -l
+
+
+now, if you see elastic_search in stores in fluentd plugin for deis
+it has:
+
+cat << EOF >> $FLUENTD_CONF
+<store>
+  @type elasticsearch
+  num_threads ${FLUENTD_FLUSH_THREADS}
+</store>
+EOF
+
+this can be broken down into
+{(cat << EOF) >> $FLUENTD_CONF}
+so, till EOF, we will read and then cat it
+which is put into the file addressed at FLUENT_CONF
+
+this has the convience of not wrinting multiple lines in the cat statement itself
+i.e. cat "hello" >> $FLUENTD_CONF is okay for a word or two, not for a lot of text
+
+Magit
+~~~~~
+~~~~~
+
+I --> start magit
+~~~~~~~~~~~~~~~~~
+
+start with "m-x magit status" or "c-x g s"
+shows the magit-mode buffer
+here, you can do all sort of git stuff - commit, push etc
+
+it shows a list of files under heading (Untracked, Unstaged changes, Staged changes)
+hitting <tab> on any file shows the diff
+M-S to show all, M-H to hide all
+
+II --> select files for staging
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+at any file in the untracked files section, do s to stage it,
+i to ignore it, k to delete it
+(if the point is on the header, it will do the act for every file in the section
+
+C-u S --> anywhere will stage everything (untracked files + changes in tracked files)
+
+Unstaged changes:
+s --> stage the file
+S --> stage all changes
+u --> unstage
+U --> unstage allow
+
+recall wishing that it was possible to commit only a part of the file
+magit allows that
+
+expand everything - M-S
+then, navigate to the diff, press s to stage it
+
+III --> commit staged files
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+after deciding the files to stage,
+use c to write a commit message
+then, C-c C-c to commit the changes
+
+
+IV --> push changes
+~~~~~~~~~~~~~~~~~~~
+
+
+General:
+~~~~~~~~
+l l --> view logs (to see more than 100 logs, do c-u e)
+ret on any commit in the log to view it
+a --> apply any commit to your current branch (cherry-pick) (wont commit)
+A --> this will apply and commit
+v --> revert commit on point
+
+view the diff b/w commits
+mark first commit using "."
+and go to 2nd one and do =
+
+
+
+Terminal tips
+man, you can run loops on the terminal!
+so, the terminal is just a bash intrepreter
+you can write a script, and run it or you can run the
+individual lines directly on the terminal, it's the same!
+
+consider this, I had the wav vocab files from the phone
+and wanted to convert them to mp3
+
+this works:
+
+ for f in *.wav; do lame --vbr-new -V 3 "$f" "${f%.wav}.mp3"; done
+
+it will cycle thru the files and convert them!
+
+when in a file, you can do "R" (captial r) to rename the file
+
+the common place "cd" has a back button
+so, if you are going back and forth b/w two dirs,
+use this: "cd -"
+
+I tried to search for how to expand everything in the tree when using
+c-x c-j (which is bound to direx:jump-to-directory)
+this is just one function of the file m2ym/direx-el which we are using
+(of course, it may be designed to be an entry point to the file and everything else
+might be providing utility to this one method but still...)
+i cannot figure out how to expand everything
+but, i did c-h m and this showed the help tab showing the active modes
+and there is a list of all the commands of direx with their key bindings
+
+tree shows the normal files, to see all files (even hidden ones, starting with .)
+tree -a
+tree -d to print dirs
+tree -f to print full path prefix for each file
+
+all this is from man tree, we should probably stop writing naaive tips like this now,
+level up!
+
+I have some unsaved files and then I did tree -a
+ nginx
+- config
+---nginx.conf -> radar@radar-Inspiron-5420.3650:1477455076
+---#nginx.conf#
+
+the text with nginx.conf shows user@host.process_number:some_number
+so, I did this:
+(mycroft) elk master*-> ps -ef | grep 3650
+UID      PID    PPID  C STIME  TTY       TIME   CMD
+radar     3650  2250  0 09:53 pts/18   00:01:12 emacs
+radar     3738  3650  0 09:54 ?        00:00:00 /usr/bin/aspell -a -m -B --encoding=utf-8
+radar    12149 10778  0 12:08 pts/19   00:00:00 grep 3650
+
+pid - process id
+ppid - parent process id
+and sure enough, the process 3650 belongs to emacs
+
+i added a file but it wasn;t getting displayed in the c-x c-j buffer
+so, i did m-x revert buffer and it was there
+(eval buffer did not work, that is to execute some code)
+
+when doing c-c p f (to open files from this project)
+it will show the matches and recentf
+to go down, do c-o
+
+open recently opened files using m-x helm-recentf
+
+uptil now, I used to do tree and then write the info about each file when exploring a new project
+from now onwards, I do "git ls-files". this will print them nicely in a list
+
+to find the size of any particular file/dir, do this:
+du -sh <file/dir name>
+(disk usage --summarize --human-readable)
+
+to redo the last search, press c-s twice
+
+
+just installed elpy, had anand help me out
+
+1. installed virtualenvwrapper
+now, all my virtual envs line in ~/.virtualenvs and to activate them, i need to do
+workon mycroft for eg
+
+2. in my init, i did (pyvenv-workon "mycroft"), so, i don't need to start mycroft and then
+start emacs, i can just start it on it's own. just "em" in the terminal
+
+3. when on any function, it will show it's argument signature
+for eg:
+    first_name = forms.CharField()
+when i am at closing bracket, it shows:
+CharField(max_length=None, ....)
+
+4. to jump to the source of any function defined in django for example
+(or any where else, )
+go that that keyword and do m-.
+to come back, do m-,
+
+5. to view the doc of any function, go there and do c-c c-d when on that function
+
+recreating the envs, there are some problems (wrong setting of old virtualenv env variables)
+
+rmrm ~/.virtualenvs
+mkvirtualenv --python=/usr/bin/python3 mycroft
+
+and again i was getting this error:
+virtualenvwrapper.user_scripts could not run "/home/radar/.virtualenvs/mycroft/bin/preactivate": [Errno 2] No such file or directory
+
+i looked at that file and saw what it contains
+#!/usr/local/bin/bash
+
+this is incorrect. there is bash intrepreter there. this value is put there due to the ds's dotfiles
+i changed it to point to /bin/bash
+i got /bin/bash from "which bash"
+
+~~~~~~~~
+to view the key bindings, use m-x helm-descbinds
+there you can see the bindings of all the active modes, you can ever narrow search
+
+to view a list of flycheck (flake8) errors in a file, do m-x flycheck-list-errors
+it will open a new buffer
+
+    i did a SO search for navigating html using emacs, i got this answer:
+    And if you're using sgml-mode or its derivatives (e.g. html-mode):
+    sgml-skip-tag-forward is an interactive compiled Lisp function in ``sgml-mode.el'`.
+    It is bound to C-c C-f
+
+so, i did c-h m to see the active modes
+it showed sgml-html, so i went to the  opening tag of the area i wanted to delete
+and <spc> c-c c-f
+and deleted the region
+
+make a new environment using mkvirtualenv --python=/usr/bin/python3 <name>
+
+so, i was pep8tifying scrapy. and in the tox file, i put this: ignore E501
+this is the error code for extra long lines. we ignored it. and suddenly,
+i wasn't getting the error in emacs as well!
+also, whoever writes code for scrapy won't get the long line error warning!
+
+this is because all the editors maybe use flake8 command line tool or some variant of it,
+which looks at the config and decides what to report. look at this: stackoverflow.com/q/37614726/
+
+type google.com and after the 'm' in com, type TAB, it says pinging google.com (Commerical)
+**OQ: what's that man?
+
+if you are at any symbol and you want to select it, do M-m
+to expand the selection, do M-m again. I just found this while using M-n to find
+the next occurrence of the symbol
+
+
+I wanted to add a project to my account, that without using the frontend(irene)
+so, i put the aliases:
+
+alias ak='appknox'
+alias akl='appknox --host localhost:8000 --no-secure'
+
+now, i can use "akl" for local testing
+also, to query random urls, I am using httpie
+
+the views which have @token_required, they need authorization
+from the django-tokenapi README.md:
+
+you can either use the GET or POST and send the user, token in the request parameters
+
+or we can use the HTTP Basic Authorization
+how?
+by including the user and token in the Authorization header according to the basic
+access authentication scheme. To construct the Authorization header:
+
+    Combine user id and token into string "user:token"
+    Encode resulting string using Base64
+    Prepend "Basic " (including the trailing space) to the resulting Base64 encoded string
+
+If, in the same request, you provide credentials via both request parameters and the Authorization header, the Authorization header will be used for authentication.
+
+now, httpie (and requests which is used for our cli tool) both support basic auth out of the box
+so, i can simply do:
+    http localhost:8000/api/projects --auth 5:4ih-cb4b672694981ab7311f
+
+here, 5 is the user id and after the colon we have the token
+this is encoded in base64 by httpie and it looks like this in the request:
+
+    GET /api/projects HTTP/1.1
+    Accept: */*
+    Accept-Encoding: gzip, deflate
+    Authorization: Basic NTo0aWgtY2I0YjY3MjY5NDk4MWFiNzMxMWY=  //this is the base64 encoding
+    Connection: keep-alive
+    Host: localhost:8000
+    User-Agent: HTTPie/0.9.9
+
+eg: 
+http --auth 5:4ih-cb4b672694981ab7311f :8000/api/signed_url 
+http --auth 5:4ih-cb4b672694981ab7311f :8000/api/login username=darshanime password=test1234 -f
+(the -f flag is for serializing the command line data as form-fields. checking the docs for
+request.POST, we see that it returns
+
+"
+A dictionary-like object containing all given HTTP POST parameters, providing
+that the request contains form data.
+"
+
+without the -f flag, the parameters are sent in the post body, which can be read by
+django using request.body
+
+
+EMACS LISP
+~~~~~~~~~~
+~~~~~~~~~~
+
+
+lisp is prefix notation
+so, the syntax is, (function_name arg1 arg2 arg3 ... )
+eg:
+
+(+ x y z)
+(* (+ x y) y)
+(foo (+ 3 4) (+ 5 6))
+
+
+infix notation:
+x+y+z
+(x+y)*y
+foo(3+4, 5+6)
+
+lisp has lists --> (hello there)
+a list containing two symbols
+
+(1 2 xyz) --> 2 numbers and a symbol
+() --> empty list
+
+expression --> any piece of lisp code/datastructure
+
+evaluating a lisp expression is effectively accessing the lisp object it refers to
+so, evaluating strings gives the same string back
+evaluating a function gives its value
+
+eg: (global-set-key keysequence command)
+or, (global-set-key "M-?" 'help-command)
+here, the args given to function global-set-key are "M-?" help-command
+
+the quote on help-command is to not evaluate the function
+
+if a symbol appears in the first position of a list, it's the name of a function to execute
+else, it is a variable whoes values are retrived and passed to the function
+
+to define a variable:
+(setq x 'help-command)     this sets the variable x to hold the symbol help-command
+(global-set-key "M-?" x)
+
+'expr is just shorthand for (quote expr)    --> which when evaluated returns the expr
+
+sexp --> symbolic expression (aka lisp expression)
+
+to add an item to a list,
+(put 'eval-expression 'disabled-nil)
+here, we add the symbol 
+
+to search for all the emacs's variables and functions that contain the word "delete":
+M-x apropos RET delete RET
+
+
+defining functions:
+1. defination begins with defun
+
+(defun <function_name> ([parameter list])
+     ...
+     )
+
+example:
+(defun hello_world ()
+       )
+
+when you call a function, you pass it arguments. in the function defination, you define what
+parameters it expects.
+
+having (interactive arg-descriptor) means the function can be invoked interactively i.e. using M-x command_name
+and thus via a keybinding too
+
+to call any function (interactive or not), use (function arg ...) as we already studied
+
+so, functions:
+
+(defun simple_echo (message)
+       "this will simply echo the message"
+       (interactive "p") // here, the "p" has a special meaning
+       (message))
+
+`p` is for numeric prefix argument
+https://www.gnu.org/software/emacs/manual/html_node/elisp/Interactive-Codes.html#Interactive-Codes
+
+another example of interactive:
+(interactive "P\nbFrobnicate buffer: ")
+
+`P` is for rawprefix argument
+note, the P is  there in the starting of the string
+
+
+to make an argument optional,
+(defun simple_echo (&optional n)
+       (interactive "p")
+
+lisp has "nil", for falsey. as is ()
+(nil = () effectively)
+
+
+listp -> test wheater its argument is a list
+eg:
+(lispt 1)
+nil
+(lispt ())
+t
+(lispt (1 2))
+invalid function 1
+
+(listp (cons 1 2))
+t
+{cons is used to make lists}
+
+(listp (list 2 3))
+t
+
+"t" is reserved keyword, it means truth
+
+so:
+(if n
+    (other-window n)
+(other-window 1))
+
+can be reduced to: (other-window (if n n 1))
+also eg: (if 1 "yup" "nope")
+"yup"
+
+hence:
+(if a a //if a is true, return a
+    (if b b // ELSE, if b is true return b 
+        (if y y z))) // ELSE, if y is true, return y else z
+
+(if a a b) ----> same as ----> (or a b)
+the or function evaluates each arg and returns the first non-nil value else returns nil
+
+also, "and" evaluates each arg until it finds nil, if it does, it returns nil else it
+returns the last arg
+
+so:
+(other-window (or n 1))
+
+(defalias 'function1 'function2)
+now, we can use function1 to refer to function2
+
+
+~~~~
+so, fundamental task of defining a function and binding it to a key:
+
+(defun point-to-top()
+       "move the cursor aka point to top of screen"
+       (interactive)
+       (move-to-window-line 0))
+
+(global-set-key "M-q" 'point-to-top)
+
+~~~~
+** there is a subtle difference between (- n) and -1
+(- n) returns -n,
+eg, (- 4) returns -4
+and -1 is the negative integer (so, (- 1) is same as -1)
+
+in UNIX - symbolic link or symlink is a file that refers to another file
+(it is just an alias for that file)
+
+say, you can to execute a function whenever you open a new file.
+we can add the function to a list and call all the members of the list when the file is opened
+lets call the list "hook"
+
+example: write-file-hooks is a list of functions that are executed by emacs after any buffer is saved
+post-command-hook is a list of functions that are called after every interactive command
+find-file-hooks  --> called after a new file is visited
+
+so, to make the file read-only when opening a symlink file:
+
+(defun read-only-if-symlink ()
+  (if (file-symlink-p buffer-file-name)
+      (progn
+        (setq buffer-read-only t)
+        (message "File is a symlink"))))
+
+here note:
+1. we are using the inbuilt file-symlink-p function that takes the filename as the argument
+the filename is stored in the buffer-file-name variable, defined by emacs
+the variable is a buffer-local variable, it has a different value in each buffer
+
+((in lisp, functions that return true/false aka boolean predicate and end with a "p"))
+
+2. lisp allows only one expression in the "then" part of the if-then-else statement
+(its like the if-else of java without the braces and no braces allowed)
+so, we use progn
+it is an expression that evaluates each of its subexpressions and returns the value
+of the last one
+
+now, we can add the hook -->
+(add-hook 'find-file-hooks 'read-only-if-symlink)
+
+we can also define nameless functions, using lambda in place of defun
+so,
+
+(lambda ()
+  (if (file-symlink-p buffer-file-name)
+      (progn
+        (setq buffer-read-only t)
+        (message "File is a symlink"))))
+
+use it directly in the add-hooks sexp
+(add-hook 'find-file-hooks
+          '(lambda ()
+             (if (file-symlink-p buffer-file-name)
+                 (progn
+                   (setq buffer-read-only t)
+                   (message "File is a symlink")))))
+
+to remove functions from the hook ->
+(remove-hook 'find-file-hooks 'read-only-if-symlink)
+
+to define local variables (aka temporary variables, with scope only in the present function),
+we use "let"
+example:
+(let ((var1 "var1")
+      (var2 "var2"))
+  (message var1)
+  (message var2))
+"var2"
+
+here, we are defining two variables, var1 and var2
+message is used to print the variables
+
+but the output is only "var2".
+**OQ: i wonder why
+
+if-else in lisp:
+    (if something:
+        <what to do if true in one line>
+      <what to do if false in one line>)
+
+note the 2 types of indentation, one for if block, other for else block
+
+so, lets write a function that visits the target file when you visit the symlink file
+program logic:
+check the file name, if it is nil --> say, not opening a file
+check if the file name is that of a symlink --> open the symlink else, say, cannot open the symlink
+
+(defun visit-target-instead ()
+  "Replace this buffer with a buffer visiting the link target."
+  (interactive)
+  (if buffer-file-name //the entire if-true, else-true lies inside the if paranthesis
+      (let ((target (file-symlink-p buffer-file-name))) // the next if also lies in the paranthesis
+                                                        if defines 2 varialbes. one called target
+                                                        that is the buffer name
+                                                        and in the other defination, we visit a new file or give an error
+        (if target
+            (find-alternate-file target)
+          (error "Not visiting a symlink")))
+    (error "Not visiting a file")))
+
+
+advice - they are like decorators, they get executed before/after a function is called
+(before advice gets executed before the function, after advice after)
+
+syntax: (defadvice <name_of_function_to_advice> <list_of_args> &rest BODY)
+
+eg:
+(defadvice switch-to-buffer (before existing-buffer activate compile)
+  "when interactive, switch to existing buffers only"
+  (interactive "b"))
+
+the body of the advice has the docstring and it's own interactive declaration to replace the of
+switch-to-buffer.
+the switch-to-buffer accepts any string as buffer-name argument. here, "b" means the name of existing
+buffers only.
+
+so, we solved the problem using advice, by only changing the advice
+that's too restrictive :top:
+to allow a new buffer, we do this:
+(interactive
+  (list (read-buffer "switch to buffer: //read-buffer prompts the user for a buffer name, we are giving the 
+                     (other-buffer) //read-buffer 2 args,default buffer to switch-which is what is returned by other-buffer here
+                     (null current-prefix-arg)))) // and a boolean stating wheat her to restrict to existing buffers.
+                     here, null returns true if arg is nil.
+
+cooperating commands
+~~~~~~~~~~~~~~~~~~~~
+**from any place, M-u runs upcase-word, (as found out by c-h k M-u)
+use it to upercase commands
+
+how to save info in one command and retrieve it in another?
+ - using variables
+ - using markers, symbol properties
+
+
+
+
+
+

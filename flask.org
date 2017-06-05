@@ -1,0 +1,403 @@
+flask is just the barebones server
+to add functionality, you need to install the addons.
+eg for forms:
+pip install flask-wtf
+
+our project structure looks like:
+app
+    static
+    templates
+tmp
+
+All flask apps are instances of Flask class
+
+from flask import Flask
+
+app = Flask(__name__)
+
+If you are wondering why the import statement is at the end and not at the beginning of the script as it is always done, the reason is to avoid circular references, because you are going to see that the views module needs to import the app variable defined in this script. Putting the import at the end avoids the circular import error.
+
+in flask, the views are the handlers that respond to requests from web browsers or other clients.  In Flask handlers are written as Python functions. Each view function is mapped to one or more request URLs.
+
+
+in views.py:
+from app import app
+
+@app.route('/') //route decorators create mappings from the urls "/" and "/index" to this function
+@app.route('/index')
+def index():
+    return "Hello, World!"
+
+finally, we have the run.py
+
+#!flask/bin/python
+from app import app
+app.run(debug=True)
+
+
+here, we used the index view to return html to the page. to the request. 
+what if we wanted to return better html?
+
+you could do something like:
+
+from app import app
+
+@app.route('/')
+@app.route('/index')
+def index():
+    user = {'nickname': 'Miguel'}  # fake user
+    return '''
+<html>
+  <head>
+    <title>Home Page</title>
+  </head>
+  <body>
+    <h1>Hello, ''' + user['nickname'] + '''</h1>
+  </body>
+</html>
+'''
+
+this is insane, better option: TEMPLATES
+
+They help you keep the logic of your project different frm the layout and presentation.
+
+let's write a template:
+app/templates/index.html
+
+<html>
+  <head>
+    <title>{{ title }} - microblog</title>
+  </head>
+  <body>
+      <h1>Hello, {{ user.nickname }}!</h1>
+  </body>
+</html>
+
+Here, we have regular html but the dynamic part is enclosed with {{...}}
+how can we define these variables?
+we can define them in our index view function
+
+
+@app.route('/')
+def index():
+    user = {"name":"darshan"}#fake user
+    return render_template('index.html', title='Home', user=user)
+
+Now, the template index.html will receive these variables and display the right thing at the required place.
+
+note, the first argument to the render_template is the template filename - and all the template arguments
+
+In django, we had the DTL - Django template language - here, flask uses Jinja2 templating engine.
+
+the thing that makes Jinja2 powerful is that it supports control statements too
+inside: {%...%} blocks
+
+now:
+index.html:
+
+<html>
+<head>
+{% if title %}
+<title> {{title}} - microblog </title>
+{% else %}
+<title> Welcome! </title>
+{% endif %}
+
+</head> </body>
+
+we can loop too in the Jinja2 template language.
+
+    {% for post in posts %}
+    <div><p>{{ post.author.nickname }} says: <b>{{ post.body }}</b></p></div>
+    {% endfor %}
+
+we can use Jinja2's template inheritance feature, which allows us to move the parts of the page layout that are common to all templates and put them in a base template from which all other templates are derived.
+
+eg: we can put the navigation template in a base template and include/extend it everywhere
+
+
+In this template we use the block control statement to define the place where the derived templates can insert themselves. Blocks are given a unique name, and their content can be replaced or enhanced in derived templates.
+
+so, we have the common part put away in base.html
+
+<html>
+  <head>
+    {% if title %}
+    <title>{{ title }} - microblog</title>
+    {% else %}
+    <title>Welcome to microblog</title>
+    {% endif %}
+  </head>
+  <body>
+    <div>Microblog: <a href="/index">Home</a></div>
+    <hr>
+    {% block content %}{% endblock %} //this is the editable part of the base.html template
+  </body>
+</html>
+
+and in index.html, we just change the content block - rest is all the same
+
+{% extends "base.html" %}
+{% block content %}
+    <h1>Hi, {{ user.nickname }}!</h1>
+    {% for post in posts %}
+    <div><p>{{ post.author.nickname }} says: <b>{{ post.body }}</b></p></div>
+    {% endfor %}
+{% endblock %}
+
+
+for web forms, we will use flask-wtf exception
+
+we can create a config.py file - with :
+WTF_CSRF_ENABLED = True
+SECRET_KEY = 'you-will-never-guess'
+
+The WTF_CSRF_ENABLED setting activates the cross-site request forgery prevention
+
+we have to tell flask about the config file in the __init__.py
+app.config.from_object('config')
+
+
+web forms are represented as flask-wtf classes.
+subclasses from the base class Form
+
+we can write the forms in: forms.py
+
+from flask.ext.wtf import Form
+from wtforms import StringField, BooleanField
+from wtforms.validators import DataRequired
+
+class LoginForm(Form):
+    openid = StringField("openid", validators=[DataRequired()])
+    remember_me = BooleanField("remember_me", default=False)
+
+
+we are extending the Form class note
+The DataRequired validator simply checks that the field is not submitted empty. There are many more validators included with Flask-WTF
+
+form template - the LoginForm class will render the html on its own, we just need to concentrate on the layout
+
+<!-- extend from base layout -->
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>Sign In</h1>
+  <form action="" method="post" name="login">
+      {{ form.hidden_tag() }}
+      <p>
+          Please enter your OpenID:<br>
+          {{ form.openid(size=80) }}<br>
+      </p>
+      <p>{{ form.remember_me }} Remember Me</p>
+      <p><input type="submit" value="Sign In"></p>
+  </form>
+{% endblock %}
+
+the template expects a form object
+
+we need to code a view that renders the form.
+
+from flask import render_template, flash, redirect
+from app import app
+from .forms import LoginForm
+
+# index view function suppressed for brevity
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+    return render_template('login.html', 
+                           title='Sign In',
+                           form=form)
+
+note that we send the instance of the loginForm to the template
+the methods says that the login view accepts GET and POST requests
+
+
+The validate_on_submit method does all the form processing work.
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        flash('Login requested for OpenID="%s", remember_me=%s' %
+              (form.openid.data, str(form.remember_me.data)))
+        return redirect('/index')
+    return render_template('login.html', 
+                           title='Sign In',
+                           form=form)
+
+[the flash function is used to show a message on the next page presented to the user]
+
+When validate_on_submit is called as part of a form submission request, it will gather all the data, run all the validators attached to fields, and if everything is all right it will return True, indicating that the data is valid and can be processed. This is your indication that this data is safe to incorporate into the application.
+
+If at least one field fails validation then the function will return False and that will cause the form to be rendered back to the user, and this will give the user a chance to correct any mistakes. We will see later how to show an error message when validation fails.
+
+
+we can display the errors in data entry by the user: 
+          Please enter your OpenID:<br>
+          {{ form.openid(size=80) }}<br>
+          {% for error in form.openid.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+          {% endfor %}<br>
+
+
+          As a general rule, any fields that have validators attached will have errors added under form.field_name.errors.In our case we use form.openid.errors. 
+
+    if in the settings or config file, we have a dict defined at say: 
+    A_DICT = {balh:balh}, we can access it like:
+    varOne = app.config['A_DICT']
+
+    for more complex data manipulation:
+    we can put in a JS function too:
+
+    <html>
+
+<script type="text/javascript">
+function set_openid(openid, pr)
+{
+    u = openid.search('<username>')
+    if (u != -1) {
+        // openid requires username
+        user = prompt('Enter your ' + pr + ' username:')
+        openid = openid.substr(0, u) + user
+    }
+    form = document.forms['login'];
+    form.elements['openid'].value = openid
+}
+</script>
+
+...rest of html
+
+
+call it like this:
+
+        |{% for pr in providers %}
+          <a href="javascript:set_openid('{{ pr.url }}', '{{ pr.name }}');">{{ pr.name }}</a> |
+        {% endfor %}
+
+
+databases
+we can use Flask-SQLAlchemy - it is a wrapper for the SQLAlchemy project - which is an ORM
+
+ORMs allow database applications to work with objects instead of tables and SQL. 
+
+to track changes in database as our applicaiton grows, we can use migrations
+We are going to use SQLAlchemy-migrate to keep track of database updates for us. It adds a bit of work to get a database started, but that is a small price to pay for never having to worry about manual database migrations.
+
+
+The sqlite databases are the most convenient choice for small applications, as each database is stored in a single file and there is no need to start a database server.
+
+The SQLALCHEMY_DATABASE_URI is required by the Flask-SQLAlchemy extension. This is the path of our database file.
+
+The SQLALCHEMY_MIGRATE_REPO is the folder where we will store the SQLAlchemy-migrate data files.
+
+we start it like this, in the __init__.py
+db = SQLAlchemy(app)
+we create the db object which is our database
+we are also importing from app import models
+
+
+
+The data that we will store in our database will be represented by a collection of classes that are referred to as the database models. The ORM layer will do the translations required to map objects created from these classes into rows in the proper database table.
+
+in models.py:
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nickname = db.Column(db.String(64), index=True, unique=True)
+    email = db.Column(db.String(120), index=True, unique=True)
+
+    def __repr__(self):
+        return '<User %r>' % (self.nickname)
+
+note, the User class is the databse, and the class variables of User are the several fields in the class databse
+
+
+The __repr__ method tells Python how to print objects of this class. We will use this for debugging.
+
+ We will consider any changes to the structure of the app database a migration,
+
+
+ BOOTSTRAP
+
+ bootstrap defines several custom html tags that can be used
+
+ also, you can use their custom tabs and assign them classes for them to be rendered nicely
+  eg:
+
+   <blockquote class="blockquote-reverse">
+    <p>For 50 years, WWF has been protecting the future of nature. The world's leading conservation organization, WWF works in 100 countries and is supported by 1.2 million members in the United States and close to 5 million globally.</p>
+    <footer>From WWF's website</footer>
+  </blockquote>
+
+
+we can also assign classes to text, to make it stand out
+<p class="text-muted">This text is muted.</p>
+
+
+How to use tables?
+
+
+
+<div class="container"> //creating one of the two available container classes
+  <h2>Striped Rows</h2>
+  <p>The .table-striped class adds zebra-stripes to a table:</p>            
+  <table class="table table-striped"> //assigning the class to the table
+    <thead> //the column names for the table
+      <tr>
+        <th>Firstname</th>
+        <th>Lastname</th>
+        <th>Email</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>John</td>
+        <td>Doe</td>
+        <td>john@example.com</td>
+      </tr>
+      <tr>
+        <td>Mary</td>
+        <td>Moe</td>
+        <td>mary@example.com</td>
+      </tr>
+      <tr>
+        <td>July</td>
+        <td>Dooley</td>
+        <td>july@example.com</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+
+You can display images too, with rounded corners for example
+
+ <img src="cinqueterre.jpg" class="img-rounded" alt="Cinque Terre" width="304" height="236">
+
+ the "well" adds some padding around the text
+
+ <div class="well">Basic Well</div>
+
+ <div class="well well-sm">Small Well</div>
+<div class="well well-lg">Large Well</div>
+
+we have 7 types of buttons:
+<button type="button" class="btn btn-default">Default</button>
+
+
+
+We have dropdowns as well:
+
+ <div class="dropdown">
+  <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Dropdown Example
+  <span class="caret"></span></button>
+  <ul class="dropdown-menu">
+    <li><a href="#">HTML</a></li>
+    <li><a href="#">CSS</a></li>
+    <li><a href="#">JavaScript</a></li>
+  </ul>
+</div>  
+

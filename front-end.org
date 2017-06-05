@@ -1,0 +1,478 @@
+p is for paragraphs
+<p> i'm a para </p>
+
+html comments -
+<!--
+<h1> this is a comment </h1>
+-->
+
+
+"lorem ipsum text" is a placeholder used by web developers - this is randomly scraped from a famous passage by Cicero of Rome
+
+change the color of tags individually by using :
+<h2 style="color:blue"> this is a heading </h2>
+
+you just changed a property of the h2 element - you changed it by giviing it an inline style
+you can also style tags and place all your css there
+
+you need a selector for h2 elements. eg - 
+<style>
+    h2 {
+       color: red;  //this selects all the h2 elements
+    }
+</style>
+
+
+css classes
+
+you can create classes that define a set of styles and reuse them everywhere
+The CSS classes start with a period
+
+<style>
+    .blue-text {
+       color: blue;
+    }
+</style>
+
+now, use it like this:
+<h2 class="blue-text"> this is a title </h2>
+
+
+Here, we used the CSS' color property.
+there is also - font-size: 30px;
+font-family: Sans-serif;
+
+get the google font putting at the top of your page:
+
+<link href="https://fonts.googleapis.com/css?family=Lobster" rel="stylesheet" type="text/css">
+then, it can be used normally - font-familt: Lobster;
+
+mentioning a series of forms allows you to degrade to one in case it is not there
+
+imgages use the <img> tag
+sizing can be controlled by the width property
+
+.large-image {
+ width:50px;
+}
+
+css properties worth mentioning:
+    border-color:red;
+    border-width:5px;
+    border-style:solid;
+
+put this in a class and use away:
+
+  .thin-red-border {
+    border-color: red;
+    border-width: 5px;
+    border-style: solid;
+    border-radius: 10px; (or 50% makes it perfectly circular)
+  }
+
+you can apply multiple classes to an tag by using space as the delimeter
+so, <div class="class1 class2"> blah </div>
+
+
+you can use the "a" (anchor) tag to link to external pages
+use # to indicate dead links
+turn an image into a link by wrapping the img tag with a tags
+
+lists are ul for unordered lists
+li - list element
+
+also, ol for ordered lists
+<ul>
+  <li>cat nip</li>
+  <li>laser pointers</li>
+  <li>lasagna</li>
+</ul>
+
+we have for text input the <input type="text"> field
+set the placeholder by - placeholder="some text" attribute of the text input
+
+form element
+<form action="/url where you want to submit the data">
+</form>
+
+add the submit button to send the data to action
+<button type="submit">this button submits the form</button>
+
+the type of the button should be submit
+
+in html5, if you use the required parameter the user cant submit without entering a value there
+
+   <input type="text" placeholder="cat photo URL" required>
+
+radio buttons -
+
+
+<label>
+  <input type="radio" name="indoor-outdoor"> Indoor
+</label>
+<label>
+  <input type="radio" name="indoor-outdoor"> Outdoor
+</label>
+
+check box -
+  <label><input type="checkbox" name="personality"> Indoor</label>
+  <label><input type="checkbox" name="personality"> Outdoor</label>
+  <label><input type="checkbox" name="personality"> Outdoor</label>
+
+to have one checked, use checked
+
+div element - aka division element
+this is a general purpose container for other elements
+used to pass CSS of its own class to all the elements it contains
+
+another property:
+background-color: green;
+
+ID
+in addition to class, each HTML element also has the id attribute
+they should be unique - it is good pratice
+eg: <h2 id="cat-photo-app">
+
+they are used to identify the elements for manipulation by jQuery etc
+you can also apply css to it, by selecting it using - #
+so,
+
+#cat-photo-app {
+ background-color: green;
+}
+
+Padding elements
+
+ALL html elements are little rectangels
+and you can control their 3 important parameters:
+padding, margin, border
+
+padding  -  amount of space between element and its border - more the padding, more the border speads away, giving space to the element
+margin - the space between its border and the surrounding elements - if the margin is too large, it will appear smaller
+         margin can be negative as well, the element will grow disproptaionately large
+
+you can have different padding on each side as well
+padding-top
+padding-right
+padding-left
+padding-bottom
+
+similarly, margin-left/right/top/bottom
+
+you can specify them all in one go by using clockwise notation - eg - padding: 10px 20px 10px 20px;
+
+each html page has a body element
+there can be conflicting styles for any element
+the second class declared in the css will take precedence over the first one
+the order in which the classes are mentioned in the class="class1 class2" attribute doesn't matter
+
+so, browsers read css from top to bottom
+id selectors take precedence over the classes
+so,
+<style>
+  body {
+    background-color: black;
+    font-family: Monospace;
+    color: green;
+  }
+  .pink-text {
+    color: pink;
+  }
+  .blue-text {
+    color: blue;
+  }
+  
+  #orange-text {
+  color: orange;
+}
+</style>
+<h1 class="pink-text blue-text" id="orange-text">Hello World!</h1>
+
+
+so, orange-text > blue-text > pink-text
+
+the id declarations override class declarations. the in-line style declarations override the id declarations
+finally, there is the !important tag that overrides everything else
+something like:
+color: red !important;
+
+we can use hex decimals to choose colors. binary is base 2, decimal is base 10, hex is base 16
+so, 0-9, A, B, C, D, E, F
+
+we use 6 hexadecimal digits to represent colors - 2 for each r, g, b
+so, #000000 is black
+#ffffff is white
+#ff0000 is red and so on
+we can combine and we have (16*16)*(16*16)*(16*16) combinations - 16 million in total
+16777216 to be precise
+
+we can reduce the options by having only 1 hex number for each color
+so, #F00 is red. now, there are only 16*16*16 combinations - 4096 options.
+finally, we have the rgb to show color: rgb(255, 0, 0) is red
+
+white is rgb(255, 255, 255)
+
+hence, using rgb, we have 256*256*256 combinations - the same as with hex
+
+Bootstrap
+include it using
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css"/>
+
+to get started, enclose your divs in "container-fluid"
+to make the image responsive, use the "img-responsive" class in the img tag
+to center text, assign the h2/p/div the text-center class
+to create pretty buttons, use button tag with class "btn". assigning "btn-block" will make them
+as wide as the page width (the old "btn" class should be there as well)
+there are many different kinds of buttons - append to classes - btn-primary
+
+bootstrap uses a responsive grid system. the total should equal 12. so, you can have:
+.col-md-1 12 times - 12 small size elements
+.col-md 4 .col-md-8 etc
+
+each cols should be placed in rows. so, have:
+
+     <div class="row">
+     <div class="col-md-4">blah</div>
+     <div class="col-md-8">blah</div>
+     </div>
+
+here, md means medium
+we can also have xs for xtra small
+
+you can put text-primary for h1/p etc
+
+spans are used to create inline elements
+
+we can use font awesome, a library that has cool icons as vector graphics
+use it by adding this:
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css"/>
+earlier, we had the i element to make italics, u for underline, bold for bold
+add font awesome classes to the i element to turn it into an icon
+eg: <i class="fa fa-info-circle"></i>
+
+so, eg:
+<button class="btn btn-block btn-primary">
+        <i class="fa fa-thumbs-up"></i>
+          Like
+</button>
+
+you can use col-xs-* on form elements as well
+text input in the form can have - form-control class
+
+in bootstrap, the divs are used to create "row"s and "col-md-*"s and the entire thing under "container-fluid" div
+the bootstrap "well" class gives depth to the content inside it
+
+the need of creating classes is two fold - to apply css and to be able to select the element using jQuery
+
+jQuery
+add js to the page inside the <script> tag. the browser will run whatever is in this tag
+
+$(document).ready(function() {
+   //code
+});
+
+Here, we select the document, and on the ready callback, we run the ananymous function which has "//code"
+
+all jquery statements start with $ sign -- aka, dollar sign operator or bling
+jQuery often selects an html element with selector, and does somehting with it
+
+eg, to make all the buttons bounce, do:
+$("button").addClass("animated bounce");
+we added the css involved with the class "animated bounce" to the buttons
+the addClass is used to add classes to the selected elements
+
+to select the elements which belong to the class "well" we do:
+   $(".well")
+   just like in css, we use the dot before the name
+
+you can also select elements using the id - use the #, just like in CSS
+so, $("#target2") selects the element with id target2
+
+hence, we have three way of selecting elements:
+       1. by their type $("button")
+       2. by their class $(".className")
+       3. by their id $("#idName")
+
+So, since our css is nicely in classes, we can easily make a button primary by for eg:
+(".btn").addClass("btn-primary");
+
+there is also the removeClass, which is complementry to addClass
+
+we can directly change the css as well:
+$("#target1").css("color", "blue");
+
+you can even change the properties of elements, eg, src property of img tag - by the prop method
+disable a button - $("button").prop("disabled", true);
+
+you can change the text between the starting and end tags of an element and its html too
+change the html using -
+       $("h3").html("<u>what ever was h3 earlier, replaced with this underlined comment</u>");
+
+change the text using -
+       $("h3").text("the html will be treated as a string, if passed");
+
+remove an element using jQuery can be done with .remove()
+move elements from one div to another: use appendTo() to select html elements and append to another element
+$("#target2").appendTo("#left-well");
+it is a cut operation, removed from the original place
+
+copying is cloning+cutting
+so, $("#target2").clone().appendTo("#left-well");
+
+here, we did function chaining
+
+each elements has a parent element - for eg, some button may be in a div which may be in body
+parent() selects the parent of whatever element is selected
+eg: $("#left-well").parent().css("background-color", "blue")
+
+target the children using - children()
+eg: $("#left-well").children().css("color", "blue")
+
+select a specific child of an element -
+       css has a selector called - target:nth-child(n)
+
+so, $(".target:nth-child(3)").addClass("animated bounce");
+will make the 3rd element in each div bounce
+this works too; $(".target:odd")
+
+the body element can be selected with, $("body")
+
+JavaScript
+~~~~~~~~~~
+~~~~~~~~~~
+
+comments in JS:
+// or /* */
+
+camel case has first letter small, so:
+ProperCamelCase is wrong, properCamelcase is right
+
+whats the difference b/w \r and \n?
+
+string are immutable in js
+
+
+CSS - cascading style sheets
+~~~~~~~~~~
+~~~~~~~~~~
+
+language that describes the style of an html document
+
+body {
+     background-color: lightblue;
+}
+
+this uses the element selector to select the <body> tag and sets its background-color to lightblue
+lines end with semi colon
+
+css selectors - element name, id, class, attribute and more
+
+element selector:
+        body {//css}
+
+id selector:
+   #para1 {//css}
+
+class selector:
+      .center {//css}
+
+element+class selector:
+   p.center {//css}
+<p class="center large">This paragraph refers to two classes.</p>
+
+
+multiple selectors allowed
+h1, h2, p {//css}
+
+css /* comment */
+
+3 ways to insert css:
+external style sheet -  <link rel="stylesheet" type="text/css" href="mystyle.css">
+internal style sheet -
+<style>
+body {
+    background-color: linen;
+}
+
+h1 {
+    color: maroon;
+    margin-left: 40px;
+}
+</style>
+
+inline -  <h1 style="color:blue;margin-left:30px;">This is a heading.</h1>
+
+
+order of priority:
+    Inline style (inside an HTML element)
+    External and internal style sheets (in the head section)
+    Browser default
+
+colors are specified in 3 ways:
+    a valid color name - like "red"
+    an RGB value - like "rgb(255, 0, 0)"
+    a HEX value - like "#ff0000" - 2 nibbles (a byte - 256 values) for each rgb
+
+borders, background etc have extensive style commands
+
+MARGIN
+         margin - used to generate space around elements - the whitespace outside the border
+you have margin-top, margin-right etc
+You can set the margin property to auto to horizontally center the element within its container.
+inherit to inherit the value from the parent
+The CSS padding properties are used to generate space around content.
+
+PADDING
+        The padding clears an area around the content (inside the border) of an element.
+you have properties similar to the margin properties (padding-top, padding-right etc)
+
+height and width
+The height and width properties are used to set the height and width of an element.
+The height and width can be set to auto (this is default. Means that the browser calculates the height and width), or be specified in length values, like px, cm, etc., or in percent (%) of the containing block.
+
+Box model
+Explanation of the different parts:
+    Content - The content of the box, where text and images appear
+    Padding - Clears an area around the content. The padding is transparent
+    Border - A border that goes around the padding and content
+    Margin - Clears an area outside the border. The margin is transparent
+
+When you set the width and height properties of an element with CSS, you just set the width and height of the content area. To calculate the full size of an element, you must also add padding, borders and margins.
+
+
+The text-align property is used to set the horizontal alignment of a text.
+A text can be left or right aligned, centered, or justified.
+The line-height property is used to specify the space between lines
+
+p {
+    font-family: "Times New Roman", Times, serif;
+}
+
+1em is equal to the current font size. The default text size in browsers is 16px. So, the default size of 1em is 16px.
+The size can be calculated from pixels to em using this formula: pixels/16=em
+
+styling links
+The four links states are:
+    a:link - a normal, unvisited link
+    a:visited - a link the user has visited
+    a:hover - a link when the user mouses over it
+    a:active - a link the moment it is clicked
+
+to remove underlines from links:
+a:link {
+    text-decoration: none;
+}
+
+The position property specifies the type of positioning method used for an element.
+
+There are four different position values:
+    static - default
+    relative
+    fixed
+    absolute
+
+after setting the position, use top, bottom, left, right etc
+
+An element with position: fixed; is positioned relative to the viewport, which means it always stays in the same place even if the page is scrolled. The top, right, bottom, and left properties are used to position the element
+
+overflow is when the text is too big for the element

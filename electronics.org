@@ -50,10 +50,3 @@ we use a diamond shape (rhombus) to show for a non constant voltage source
 
 now as the amplifier amplifies, it needs a power source to function
 the amplifier can have limits, and if the amplified output is higher than the limits, the output is capped to the limit
-
-
-
-
-
-
- 

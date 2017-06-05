@@ -50,7 +50,7 @@ put the script tag in the head generally
 JS is a scripting language
 you can use other types of scripting languages apart from JS. eg, VBScript, ASP.NET AJAX
 
-web browsers can run JS due to a JS intrepreter inside them. JS is an interpreted language, Java is a compiled language. 
+web browsers can run JS due to a JS intrepreter inside them. JS is an interpreted language, Java is a compiled language.
 
 JS has "events" that trigger a piece of JS code when somehting happens.
 
@@ -71,11 +71,11 @@ when a button is clicked - onclick
 
 <body onload="alert('Hello');">
 alert is a builtin function that creates the dialogue box
-we added the onload event handler and attached a greeting to it. 
+we added the onload event handler and attached a greeting to it.
 
 here, we read it as this: the onload is an attribute of the body tag
 
-the events come from the browser. for example, a key press is an event that the browser sends to the js function with all the necessary data. 
+the events come from the browser. for example, a key press is an event that the browser sends to the js function with all the necessary data.
 the events are triggered by the browser, you respond to them or not, it doesnt matter
 
 we can put JS code directly in an event handler too, like we did for the onload event.
@@ -86,7 +86,7 @@ function touchRock() {
     var userName = prompt("whats the name");
     if (userName) {
     alert("nice to meet you" + userName);
-    //now, lets change the image as well, 
+    //now, lets change the image as well,
     //we use the id of the image and change its source to a new image
     document.getElementById("rockImg").src = "new_image.png";
     }
@@ -107,9 +107,9 @@ var is the keyword to indicate that you are creating a new variable
 you can craete constants using const keyword
 const TAX=10.2;
 
-In JS, you dont have to define the type of a variable. JS finds that out itself.  
+In JS, you dont have to define the type of a variable. JS finds that out itself.
 
-Varialbes, constants and other JS syntax constructs are identified in scripts using unique names known as identifiers. 
+Varialbes, constants and other JS syntax constructs are identified in scripts using unique names known as identifiers.
 variable names can start with a letter, an underscore, or a dollar sign
 
 we use lowerCamelCase to name multiword varialbes
@@ -134,7 +134,7 @@ parseInt("4") //this becomes 4
 the way to access a web page element with JS is the id attribute of the HTML tag.
 we use the getElementById function of the document class to get the element.
 
-this gives you the element object. you can access the data of this object using 
+this gives you the element object. you can access the data of this object using
 document.getElementById("idName").value;
 
 isNaN(document.getElementById("name").value);
@@ -158,7 +158,7 @@ we can set timers, so that JS code is triggered after certain time has eclapsed.
 there are two types of timers:
 one time and interval
 use one time:
-setTimeout("alert('ok');",1000); 
+setTimeout("alert('ok');",1000);
 
 this returns the timer id, which is used by clearInterval() if you need to stop it.
 
@@ -170,7 +170,7 @@ the document's body represents the visible part of the page - the client height 
 a web client is the browser
 within the browser, the client is the area of the browser window where the page appears
 
-for every element of the page, theres a style object. 
+for every element of the page, theres a style object.
 so, document.getElementById("rockImg").style.height ="100px"
 //this is the height of the rock image we are chaning it to 100px
 
@@ -233,7 +233,7 @@ the dollar sign is used by jquery to grab an element on the page. recall, there 
 
 
 we have jQuery's append function that is used to append the html content to the previous one.
-eg: 
+eg:
     $('#header').append("what up");
 this will add "what up" to the html of element with id "header"
 
@@ -252,7 +252,7 @@ variables in js:
     var myObject = {};
 
     "string".replace("s", "b");
-    brting //replaces the first instance only 
+    brting //replaces the first instance only
 
     true - false
     non zero number - 0
@@ -265,9 +265,9 @@ variables in js:
 
     var myArray = ["item1", "item2"]
 
-    they can be heterogenous as well - 
+    they can be heterogenous as well -
     var myArray = [
-        "item1", 
+        "item1",
         {
             name:'name',
             job:'job'
@@ -286,7 +286,7 @@ variables in js:
         "age":22
         };
 
-    myObj is an object, 
+    myObj is an object,
     also, to access it: myObj.name, or myObj['name']
 
     the object is purely json currently, it can have lists as the values as well
@@ -315,7 +315,7 @@ variables in js:
 
     while (condition){
         doSomething();
-    }     
+    }
 
     for (initialization;condition;mutator){
         doSomething();
@@ -340,7 +340,7 @@ variables in js:
             //code
         }
 
-        Called the same way. 
+        Called the same way.
 
         Now, consider this:
         $(document).click(function(loc) {
@@ -365,10 +365,6 @@ variables in js:
         you can have functions in objects like so:
             projects.display = function(){
                 //code
-            }        
+            }
 
         encapsulation this is - because we are holding the function object inside the project object
-
-
-
-

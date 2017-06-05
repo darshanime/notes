@@ -2,18 +2,18 @@
 
 1. what is dbms?
 database management system
-it helps us :   
+it helps us :
 store data, query data, maniputlate data.
 
 row/tuple - column/attribute
 
-relational database - data is stored in tables and the tables are related with each other. 
+relational database - data is stored in tables and the tables are related with each other.
 
 2. we have a primary key
 it uniquely identifies each record in the table
 
 3. candidate key
-In a table, there may be more than one field that uniquely identifies a record. All such 
+In a table, there may be more than one field that uniquely identifies a record. All such
 fields are called candidate keys.
 
 4. alternate key
@@ -32,7 +32,7 @@ create table learner
 7. insert data into table
  insert into learner values (1, 'raj');
 
-8. statements in mysql are not case sensitive. 
+8. statements in mysql are not case sensitive.
 
 9. view data from table
 select name from learner;
@@ -47,7 +47,7 @@ time() [hh:mm:ss, eg: 12:31:31]
 data defination language {DDL}, data manipulation language{DML}
 
 12. DDL
-create database, create table, alter table, drop table. 
+create database, create table, alter table, drop table.
 
 13. DML
 select, update, delete, insert into
@@ -92,7 +92,7 @@ SELECT Marks1 AS "Marks Secured" FROM Student;
 SELECT Marks1 "Marks Secured" FROM Student; [as is optinal]
 
 19. display external data
-SELECT  Rollno,Name,'has  secured  marks',marks1  FROM 
+SELECT  Rollno,Name,'has  secured  marks',marks1  FROM
 student;
 
 20. using where clause.
@@ -103,10 +103,10 @@ select name from students where city = 'pune' and marks>90;
 options : and, or, not
 select name from employee where not(designation='manager');
 
-SELECT Name,TotalMarks FROM Candidate WHERE 
+SELECT Name,TotalMarks FROM Candidate WHERE
 writtenmarks>80 || Interviewmarks>10;
 
-SELECT Name,TotalMarks FROM Candidate WHERE 
+SELECT Name,TotalMarks FROM Candidate WHERE
 writtenmarks>80 && Interviewmarks>10;
 
 21. select * from employee where firstname = 'amit' and (lastname='sharma' or lastname='verma');
@@ -158,7 +158,7 @@ insert into students values('da', 12, null); //this will insert null in marks
 INSERT INTO my_table (idate) VALUES ('97-05-05');
 
 you can also use curdate() for the current date
-Standard time format is "hh:mm:ss". 
+Standard time format is "hh:mm:ss".
 
 29. update statement
 update tablename set columnname=value [where condition];
@@ -171,10 +171,10 @@ delete from student; //emptyies the table
 delete from student where name='dadaa';
 
 31. functions in mysql
-single row functions [numeric, string, date and time] and 
+single row functions [numeric, string, date and time] and
 multiple row functions [sum(), avg(), count()]
 
-numeric - 
+numeric -
 
 1. pow - select pow(3, 2);
 select pow(salary, 2) from employees where rollno=3;
@@ -184,7 +184,7 @@ or, select round(2.12, 1); - 2.1,
 
 3. truncate(x, d); -- truncate x to d decimal places
 
-string - 
+string -
 1. length(str) -- select length('hello');
 
 2. concat(str1, str2) -- select concat(firstname, ' ', lastname) as fullname from students;
@@ -219,16 +219,16 @@ select sysdate(), sleep(20), sysdate();
 //here, we will get a diff of 20 secs, this shwos the current time
 
 32. we have multi row functions also
-eg: max(), min(), sum(), count()[returns the number of non null values in the column], 
+eg: max(), min(), sum(), count()[returns the number of non null values in the column],
 select max(price) from shoes;
 select count(distinct type) from shoes;
-select count(margin) from shoes where margi>5; 
+select count(margin) from shoes where margi>5;
 //FIRST THE NUMBER OF ENTRIES ARE OBTAINED THAT SATISFY THE GIVEN CONDITION AND THEN, THE SUM/COUNT OPERATOR IS APPLIED
 
 33. GROUP BY
 select type,max(price), min(price), sum(qty) from shoes group by type;
 
-34. HAVING 
+34. HAVING
 sometimes we want to further filter the group by results. so, we can use HAVING for that.
 select avg(qty) from shoes group by shoe_type having sum(qty)>500;
 
@@ -266,7 +266,7 @@ order by order_no;
 the property that no entry in a foreign key column of a table can be made unless it mathces a primary key in the corresponding related table in called referential integrity.
 
 38. union
-union is the opetation of combining the outputs of two select statements. it can be done only if the outputs have the same number of columns and datatypes of the corresponding columns are the same. 
+union is the opetation of combining the outputs of two select statements. it can be done only if the outputs have the same number of columns and datatypes of the corresponding columns are the same.
 select name from class12 union select name from class11;
 
 select name from class12 union all select name from class11;
@@ -284,7 +284,7 @@ Union does not display any duplicate rows unless ALL is specified with it
 
 40. creating a table with the constraints
 create table student (
-rollno int primary key, 
+rollno int primary key,
 name varchar(50) not null,
 marks int non null
 );

@@ -7,7 +7,7 @@ say, there are 3 tasks that need to be performed
 1. synchronous model
 ~~~~~~~~~~~~~~~~~~~~
 they can be done one after the other, this is the synchronous model.
-simplest model, but slow 
+simplest model, but slow
 
 2. multi-thread/processes
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -293,9 +293,9 @@ that is why the reactor has the addReader method.
 
 def addReader(reader):
     """
-    I add reader to the set of file descriptors to get 
+    I add reader to the set of file descriptors to get
     read events for.
-    @param reader: An L{IReadDescriptor} provider that 
+    @param reader: An L{IReadDescriptor} provider that
     will be checked for
     read events until it is removed from the reactor wi
     th
@@ -400,7 +400,7 @@ the host is always 127.0.0.1
 port is 1001, 1002, 1003
 factory is the instance of class that implements the ClientFactory (t.i.protocol.ClientFactory)
     This is the Protocol factory that allows us to spawn Protocol objects on demand for each connection (Transport instance)
-    it has the attribute protocol which is assigned the PoetryProtocol class and 
+    it has the attribute protocol which is assigned the PoetryProtocol class and
         PoetryProtocol class that implements the Protocol interface
         it is very clean with the methods dataReceived, connectionLost
     the protocol factory has the clientConnectionFailed method also.
@@ -888,7 +888,7 @@ also, we have - startService(), stopService()
 service can be sorted into collections, that are started or stopped together
 
 also we have setServiceParent to add a service to a collection
-the services can be organized into heriarchies. 
+the services can be organized into heriarchies.
 for the collections we have IServiceCollection. the collection is just a plain container
 class with methods to - get service's name (getServiceNamed), iterate over services,
 add/remove service from collection
@@ -974,7 +974,7 @@ example:
 
 
 so, the generator is just a series of callbacks, just like in deferreds. just like the callbacks, the generators
-can also receive results/Failures. 
+can also receive results/Failures.
 
 we can write our callback functions in a series, just like with the generator
 eg:
@@ -1131,4 +1131,3 @@ the cancel is used for the connectionLost of the proxyserviceprotocol (the proxy
 when an outer deferred returns an inner deferred and you cancel the outer deferred, it cancels the inner deferred
 this causes the cancel function to run of the inner deferred(if provided) or else it's errback chain. after it is done,
 the outer deferred's errback chain is run.
-

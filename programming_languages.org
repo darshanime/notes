@@ -25,10 +25,10 @@ how are the objects of ruby different from say, java, python etc?
 we will be able to appreciate that if we grasp the essence of the languages
 
 *** desugaring
-"desugar" -> remove the syntactic sugar and get the essence. 
+"desugar" -> remove the syntactic sugar and get the essence.
 eg, AND, OR, XOR etc can all be implemented by NAND --> that is desugaring
 
-another eg: 
+another eg:
 exponentiation --> repeated multiplication
 multiplication --> repeated addition
 addition --> repeated +1
@@ -40,7 +40,7 @@ so, all operators ---> { desugaring } --> +1, -1 (in loops)
 another eg, Programming language --> { desugar } --> turing machine (or Lambda calcaus)
 so, we can desugar to multiple things
 
-in this course --> we will take the language, desugar it to it's essence, implement the 
+in this course --> we will take the language, desugar it to it's essence, implement the
 essence (write an intrepreter that understands it)
 
 *** feature set, syntax are different
@@ -50,14 +50,3 @@ you can make it indentation based, braces based etc
 
 * Lecture 2
 ~~~~~~~~~~~~
-
-
-
-
-
-
-
-
-
-
-

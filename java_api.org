@@ -6,8 +6,8 @@ String[] tokens = a.split(",");
 remeber that tokens array can be accesed just like python list - tokens[0] etc.
 also, they are ordered
 
-2. java.util.ArrayList 
-java.util.Formatter, Calender, Scanner, 
+2. java.util.ArrayList
+java.util.Formatter, Calender, Scanner,
 
 3. to read in user input, Scanner object is created and System.in is passed to the constructor.
 Scanner in = new Scanner(System.in);
@@ -54,9 +54,9 @@ class StringBuffer{
 example of usuage:
 class HashMap2
 {
-    public String makeSentence(String[] words) {            
+    public String makeSentence(String[] words) {
         StringBuffer sentence = new StringBuffer();
-        for (String w : words) sentence.append(w);        
+        for (String w : words) sentence.append(w);
         return sentence.toString();
     }
 
@@ -108,7 +108,7 @@ Note, it is <str.length(), not <= --> this is because of zero indexing.
     6. char is defined with a single quote ONLY. it cannot be in a double quote.
 
 
-12. Given a String, how to convert it into a array of characters (char[]) and back?  
+12. Given a String, how to convert it into a array of characters (char[]) and back?
 
 This can be done this way:
 String str = "hello";
@@ -126,14 +126,14 @@ In java, we can do this too !
 char[] a = {'a', 'b', 'c'};
 for (char i:a)
 {
-    System.out.println(i)    
+    System.out.println(i)
 }
 
 14. we can have the matrix like this:
 this is basically a 2d array
-int[][] image, 
+int[][] image,
 
-15. do we have a tuple like data type in java ? i'd love to store things like (1, 2) etc. this can be avoided if we have one index as continous like (0, 1), (1, 5), (2, 6) - then we can store things in an array with the index as one element and the other as the value in it. 
+15. do we have a tuple like data type in java ? i'd love to store things like (1, 2) etc. this can be avoided if we have one index as continous like (0, 1), (1, 5), (2, 6) - then we can store things in an array with the index as one element and the other as the value in it.
 however, if we wish to store things like (1, 2), (4, 6) etc we can maintain two ArrayLists. and store the required values in the synconized indices. This way, you are not restricted to two values, you can do three, four, ... values too.
 
 16. Explicit is better than implicit. do not use ArrayList if you know the size of the array - then use an array just. Also, consider this:
@@ -164,7 +164,7 @@ bool value = 5 > 2 ? true:false;
 21. chatAt method
 "abcd".charAt(2) --> c
 
-22. ** "true" to true : 
+22. ** "true" to true :
 boolean value_ = new Boolean("true").booleanValue();
 turning a primitive into a string :
 int a = 4;
@@ -172,7 +172,7 @@ String a_stringed = 4 + "";
 or, also :
 String a_stringed = Integer.toString(a);
 
-23. example usage of threads 
+23. example usage of threads
 class One
 {
     public static void main(String[] arga)
@@ -196,7 +196,7 @@ class MyRunnable implements Runnable
     }
 }
 
-24. java Collections cannot sort 
+24. java Collections cannot sort
 Integer[] one_ = {1, 4, 6, 12, 2, 9, 3};
      ArrayList<Integer> a_int = new ArrayList<Integer>();
      a_int.add(2);
@@ -207,14 +207,14 @@ Integer[] one_ = {1, 4, 6, 12, 2, 9, 3};
         System.out.println(d);
      }
 
-     collections cant sort int, it can sort ArrayList however. 
+     collections cant sort int, it can sort ArrayList however.
      but, they can be sorted by:
      java.util.Arrays.sort(one_);
 
-25. Most programmers start coding the first thing that comes to their mind. this is not optimal. what you shoudl do is, work up a solution on paper, check that it is optimal, check its correctness, write the edge cases, only when all that is done, start coding - you will be able to complete the problem in a wizzy then. 
+25. Most programmers start coding the first thing that comes to their mind. this is not optimal. what you shoudl do is, work up a solution on paper, check that it is optimal, check its correctness, write the edge cases, only when all that is done, start coding - you will be able to complete the problem in a wizzy then.
 
 26. hashmap and hashtable
-hashmap is not thread safe, so do not use it in multi threaded programs. 
+hashmap is not thread safe, so do not use it in multi threaded programs.
 hastable is thread safe, use in multithreaded programs
 
 hashmap allows one null key and many null values
@@ -224,9 +224,9 @@ hashmap iterated using iterator
 hashtable itertated using enumerator.
 
     HashMap hashmapobj = new HashMap();
-    hashmapobj.put("Alive is ", "awesome");  
-    hashmapobj.put("Love", "yourself"); 
-    System.out.println("HashMap object output :"+hashmapobj);   
+    hashmapobj.put("Alive is ", "awesome");
+    hashmapobj.put("Love", "yourself");
+    System.out.println("HashMap object output :"+hashmapobj);
 
 hashset is a proper python set.
 it does not store key value pairs, just a stores keys.
@@ -241,7 +241,7 @@ if (hset.contains("three"))
     //code
 }
 
-27. the difference above in HashMap and HashSet is a more generic one and arises elsewhere too, TreeMap and TreeSet. 
+27. the difference above in HashMap and HashSet is a more generic one and arises elsewhere too, TreeMap and TreeSet.
 The main difference is that HashMap/TreeMap implement the Map interface and TreeSet/HashSet implements the Set interface.
 
 28. you can define a sorting order - the natural sorting order is as defined by Comparable interface and custom sorting order defined by Comparator interface. Both TreeSet and TreeMap have overloaded constructor that accpet a comparator, which will be used to sort and compare the elements in them.
@@ -275,7 +275,7 @@ while(iter.hasNext())
     iter.remove(); //this will remove the item from the arraylist too
 }
 
-30. Heaps and BSTs are both binary trees. 
+30. Heaps and BSTs are both binary trees.
 The difference is that heaps implement the heap property - the children are smaller or larger than the parent
 the binary search tree implements the bst property - all elements smaller that the key in the left subtree and all elements greater than the key in the right subtree
 
@@ -341,7 +341,7 @@ for (Map.Entry<Integer, Integer> entry : map.entrySet())
 
 HENCE:
 for any map, to get the list of keys:
-map.keySet(). 
+map.keySet().
 use it like this:
 for (Integer key : map.keySet())
 
@@ -359,7 +359,7 @@ while (iter.hasNext())
 {
     Map.Entry<Integer, Integer> entry = iter.next();
     key = entry.getKey(), value = entry.getValue();
-} 
+}
 
 """
 This is generic to any array,
@@ -463,7 +463,7 @@ for (Object ob : ll)
 Iterator<String> iter = ll.iterator();
 while (iter.hasNext())
 {
-    print iter.next();    
+    print iter.next();
 }
 
 to remove it:
@@ -491,10 +491,10 @@ Double d = rbl.get("one");
 
 47. the TreeMap, just like the HashMap/HashTable and store Map.Entry object, that object's key can be obtained by (lets call the object me), me.getKey() and value by me.getValue()
 
-48. common sources of error, 
+48. common sources of error,
 when you get back the item from the list, it may be a generic type, you may need to type cast it.
 
-49. So, when you wish to sort arrays, 
+49. So, when you wish to sort arrays,
 just do java.util.Arrays.sort(arrayName);
 simple
 
@@ -516,9 +516,9 @@ then, Collections.sort(intAL, new SortPlZ());
 
 This will sort the arraylist
 
-ALSO, note that the Comparator type is <Integer>, this is because we will get giving Integers as arguments to 
+ALSO, note that the Comparator type is <Integer>, this is because we will get giving Integers as arguments to
 
-50. to check if a string A is a substring of B, 
+50. to check if a string A is a substring of B,
 we can do: stringA.contains(stringB)
 
 51. say you have an arraylist, and you want to sort it and then do a binary search so that the lookups are fast.
@@ -602,14 +602,14 @@ public static searchNode(BSTNode root, int target)
     {
         if (root.data==target) return root;
         prev = root;
-        if (root.data>target) 
+        if (root.data>target)
         {
             root = root.right;
         } else {
             root = root.left;
         }
     }
-    return null; //the value not found. 
+    return null; //the value not found.
 }
 
 public static searchNode(BSTNode root, int target)
@@ -620,7 +620,7 @@ public static searchNode(BSTNode root, int target)
 
 public static insert(BSTNode root, int insertThis)
 {
-    //we will search for the value and on reaching the null, we will insert it there. 
+    //we will search for the value and on reaching the null, we will insert it there.
     //this code will go in the return null part of searchNode.
     BSTNode temp = new BSTNode(target);
     if (left) { prev.left = temp;}
@@ -640,7 +640,7 @@ say we have 5 nodes
 A --> B --> C
 we will have an arrayList<Vertex> -- or better yet, an array of type Vertex.
 
-BASICALLY, we have an array of Vertex. each entry has a Vertex object which has two instance variables. First one is the name of the vertex (A, B, C, D etc), and the other is the pointer to the head of the Linkedlist which houses one Neighbour node for each edge from that vertex. The Neighbour node has vertexNum of the vertex the edge points to and also the next one from there. (the value of the vertex it points to can be found in Neighbour.next.name) the LL has only the Neighbours for that node. 
+BASICALLY, we have an array of Vertex. each entry has a Vertex object which has two instance variables. First one is the name of the vertex (A, B, C, D etc), and the other is the pointer to the head of the Linkedlist which houses one Neighbour node for each edge from that vertex. The Neighbour node has vertexNum of the vertex the edge points to and also the next one from there. (the value of the vertex it points to can be found in Neighbour.next.name) the LL has only the Neighbours for that node.
 
 class Vertex{
     String name;
@@ -660,7 +660,7 @@ class Neighbour{
     }
 }
 
-Neighbour is a linked list, classical. 
+Neighbour is a linked list, classical.
 
 class Graph{
     Vertex[] vertexes; //this is an array of vertexes.
@@ -681,15 +681,15 @@ if (!visited[i]) dfs(i, visited);
 
 Now, DIJKS SSSPA - single source shortest path algo
 
-what we studied earlier was that we maintain a set X, which has the nodes visited and then from the active node, we choose the edge that has the min dijks score. we gobble that node into X, update the values of the edges from that node and repeat. 
+what we studied earlier was that we maintain a set X, which has the nodes visited and then from the active node, we choose the edge that has the min dijks score. we gobble that node into X, update the values of the edges from that node and repeat.
 
 Noq, what we will do is slightly different. we will maintain a fringe. that is, from the given active node, the fringe contains all the nodes the edges from that active node point to. we will write the dijks score for those nodes on the frings and after doing that, we will move to the node with the smallest dijks score. in this way, we many update the score for a given node some times.
-we can store the dikj scores in a matrix. 
-along the way, we also store the prev active node (that lead to the present node), we push them all to a stack and when we reach the source vertex, we pop till empty for the path. 
+we can store the dikj scores in a matrix.
+along the way, we also store the prev active node (that lead to the present node), we push them all to a stack and when we reach the source vertex, we pop till empty for the path.
 
-the algo runs till the fringe is empty i.e. when all the nodes are covered, and not when the destination was obtained as the active vertex. NOTE, the distance is only minimum when the node gets to be the active node, before that, its value may get updated. - or simply as soon as the vertex has been removed from the fringe, the shortest path been found. 
+the algo runs till the fringe is empty i.e. when all the nodes are covered, and not when the destination was obtained as the active vertex. NOTE, the distance is only minimum when the node gets to be the active node, before that, its value may get updated. - or simply as soon as the vertex has been removed from the fringe, the shortest path been found.
 
-this algo is called single source because once we run it for a single source, we get the paths to all the nodes in that vertex. 
+this algo is called single source because once we run it for a single source, we get the paths to all the nodes in that vertex.
 
 symmetric relationships - undirected graphs
 asymmetric relationships - directed graphs
@@ -700,17 +700,17 @@ also, if graph is undirected, it is symmetric.
 56. add memory address in java are stored in 4 bytes.
 
 57. heaps are filled top to bottom and left to right
-so, deleteion must happen at at right most node at the last level. 
-when inserting, insert at that same position. 
+so, deleteion must happen at at right most node at the last level.
+when inserting, insert at that same position.
 
 so, heaps are just binary trees. so, each node has three fields
 
-you do not need to use the binary tree to store the heap, you can use the fact that the tree is full, to store it in an array. start from the top vertex, store elements from left to right. this is called level order traversal. 
+you do not need to use the binary tree to store the heap, you can use the fact that the tree is full, to store it in an array. start from the top vertex, store elements from left to right. this is called level order traversal.
 
 children of i are 2i+1, 2i+2
-the division (when we find the parent, given children) is an integer divison. it is truncated down, always. 
+the division (when we find the parent, given children) is an integer divison. it is truncated down, always.
 
-so, we can use the array. 
+so, we can use the array.
 
 public int siftUp(){
     int k = array.size()-1;
@@ -736,7 +736,7 @@ CRACKING THE CODING INTERVIEW
 
 eg Q: Tell us about your internship experience with Exponentia ?
 
-3. The most important aspects are : 
+3. The most important aspects are :
 good, clear communication
 recall that your cv and knowledge is better than most of the others
 asnwering to the point
@@ -774,14 +774,14 @@ these questions show that you are passionate about the comany and its tech
 singleton design pattern
 factory designn pattern
 
-9. When asked a difficult problem, it is okay to take some time to come up with a solution - THINK ALOUD - better than keeping silent. 
+9. When asked a difficult problem, it is okay to take some time to come up with a solution - THINK ALOUD - better than keeping silent.
 
 **sort an list
 here, list can be an array or linked list.
 
-10. ASK QUESTIONS seeking clarification if the question they asked is not clear. 
+10. ASK QUESTIONS seeking clarification if the question they asked is not clear.
 
-11. When they ask you question, there is more often than not, a catch - which they want you to spot. for example note if the data is sorted. 
+11. When they ask you question, there is more often than not, a catch - which they want you to spot. for example note if the data is sorted.
 
 write pseudo code before jumping on writing the code
 name your varialbes intelligently, follow good pratices, indentation
@@ -795,7 +795,7 @@ what if the array is rotated - again, binary search - look for the 'reset' point
 naaive: for each character in MESSAGE, check of the character is there in POOL, if there, remove it from there.
 if all characters present, possible. O(mn)
 
-better: since we have repeated lookups, we can use a hash table. 
+better: since we have repeated lookups, we can use a hash table.
 **when ever we create a hash table, we need two things: key and value (remember, a hash table is just a dict really).
 So, we can have each character in POOL, map to the number of times it appears in POOL. Using the heapofy operation, we can load the data into a hash table in O(n) time. We then in O(m) time, create a character count for each character that appears in the MESSAGE. Then run a loop to check for each character in O(m) time [the check takes a constant time], hence the running time is linear O(max(m, n)), or really, just O(n) [THETA(n) ?]
 
@@ -827,24 +827,24 @@ also, if two consequtive elements go in the smaller heap say, then push one elem
 AT any point of time, the difference between the population of the heaps is 1 or 0 (it oscillates between these as the numbers arrive) - this runs in log(n) time.
 
 16. Q: given an odd numer of elements, how to create a perfectly balanced tree such that the median is at the top? this can be done if we follow the binary search tree property - left subtree smaller than the parent, right subtree bigger than the parent, root between both the subtrees.
-if the number is even, there are two medians and they are the root and the root of the larger of both the sub trees - this is log time too. 
+if the number is even, there are two medians and they are the root and the root of the larger of both the sub trees - this is log time too.
 
 **LL is not great at random access and sorting, great at storing an indefinate number of elements
-array - great at random access 
+array - great at random access
 binary tree - great at good with ordering
 
 **if you have heard a question before, say that! this will bring big honesty points. also, you it is difficult to pretent as if you are thinking. like say you heard it for one or two questions, then not.
 
 
-17. Q: given a string determine if it has all unique characters? 
+17. Q: given a string determine if it has all unique characters?
 optimal should be linear, right?
 naaive : run thru the array, for each character, if not there in our array, put it in, else ignore. this is n*n time, because we have to check also.
 
-this has space of O(n) also. a better solution would be to simply check each character against every other. this would take n^2 time and no space. 
+this has space of O(n) also. a better solution would be to simply check each character against every other. this would take n^2 time and no space.
 
-**the ascii char set is 256 characters long - it has 256 unique characters. SO, create a boolean array of size 256, run a loop thru each character (StringName.charAt(i)), if the index is 1, return false, if not set to 1. outside the loop, return true. time O(n), space O(n). 
+**the ascii char set is 256 characters long - it has 256 unique characters. SO, create a boolean array of size 256, run a loop thru each character (StringName.charAt(i)), if the index is 1, return false, if not set to 1. outside the loop, return true. time O(n), space O(n).
 
-Otherwise, you can use a heap. store all the characters in a heap one by one after checking if it is not already there. if there, return false, else true. 
+Otherwise, you can use a heap. store all the characters in a heap one by one after checking if it is not already there. if there, return false, else true.
 
 public boolean uniqueString(String inputStr)
 {
@@ -881,7 +881,7 @@ public string reverseString(String str)
     return strBuffer.toString();
 }
 
-Better solution would be, exchange the ith index with length-ith-1 index, using a temp char variable. this has lower constants and does this inplace, space complexicity is constant, O(1). 
+Better solution would be, exchange the ith index with length-ith-1 index, using a temp char variable. this has lower constants and does this inplace, space complexicity is constant, O(1).
 public String reverseString(String str)
 {
     StringBuffer strB = new StringBuffer();
@@ -890,10 +890,10 @@ public String reverseString(String str)
     {
         chat temp = str.charAt(i);
         str
-    }    
+    }
 }
 
-How to remove any one element of an array, for eg if it is a int[] i_ = {1, 2, 3};, 
+How to remove any one element of an array, for eg if it is a int[] i_ = {1, 2, 3};,
 how can I remove say 2. in python, del i_[1] would have worked. OP **
 
 
@@ -920,20 +920,20 @@ iterate thru each char, for each char, scan thru the array to see if already pre
 
 20. Q: write a method to check if two strings are anagrams or not, they are if they have the same characters (with their counts)
 
-sort both the strings and then comapre element to element if they have the same characters. if they dont, they arent. 
-**YOU can sort strings. 
+sort both the strings and then comapre element to element if they have the same characters. if they dont, they arent.
+**YOU can sort strings.
 what you need for this and many other string problems is this:
-given a string, return a hashtable with the 
+given a string, return a hashtable with the
 
 store all the chars of one string in a hashtable, each time increase its count if it is already present. do the same for the second string also. then check if the hashtables are exactly equal.
-linear time in both running and space. 
+linear time in both running and space.
 
-if you do not want to use two hashtables, you can use two arrays. 
+if you do not want to use two hashtables, you can use two arrays.
 
 **in all the string question, consider using ascii encoding i.e. bool[] letters = new bool[256];
 this for checking if a previous character was there or not
 
-21. it is important to write the pseudo code first. this will help immensly when writing java. and it is okay to have solutions that seem non optimal. like moving over each character and storing its count in a seperate array etc. this can be done  efficiently when you have the pseudo code written nicely. 
+21. it is important to write the pseudo code first. this will help immensly when writing java. and it is okay to have solutions that seem non optimal. like moving over each character and storing its count in a seperate array etc. this can be done  efficiently when you have the pseudo code written nicely.
 
 22. Q: write a method to replace space character in a string with %20
 
@@ -970,11 +970,11 @@ if (c==" ")
 **OQ : what is the difference between .equals and ==
 what does the \0 mean in strings specifically
 
-23: Q: given an image - NxN matrix, each pixel is 4 bytes = 32 bits - so, the value is b/w 0 and 2^32-1. 
+23: Q: given an image - NxN matrix, each pixel is 4 bytes = 32 bits - so, the value is b/w 0 and 2^32-1.
 Now, you have to rotate the image by 90degrees, in place.
 
 P: this can be done if we take the transpose of the matrix. we can run a loop to iterate thru each row, and a nested loop for each column in each row
-so, we have i and j indices. we can interchange their values and store them in a new array - this would take O(n^2) time and space. 
+so, we have i and j indices. we can interchange their values and store them in a new array - this would take O(n^2) time and space.
 
 for in place, we have to change the inner loop to not start from 0 but from the outer index each time.
 for (int i=0;i<n;i++)
@@ -988,7 +988,7 @@ for (int i=0;i<n;i++)
     }
 }
 
-this will work, however, it will produce an upside down image. 
+this will work, however, it will produce an upside down image.
 note here:
 
 123 original
@@ -1011,7 +1011,7 @@ dont be afraid to make this drawing on the paper before writing the pseudo code.
 24: write an algo to set the entire row and column of an mxn matrix to zero for that element that is zero.
 
 PS: have two nested loops, one runs till m, the other till n
-check each element, if it is zero, store the i and j values in two arraylists. 
+check each element, if it is zero, store the i and j values in two arraylists.
 then, run a loop twice, once for row and once row column, setting them to 0
 so,
 for (int i=0;i<m;i++)
@@ -1034,7 +1034,7 @@ for (int i=0;i<m;i++)
 
 for (int i=0;i<n;i++)
 {
-    matrix[j_array[x]][i]=0;   
+    matrix[j_array[x]][i]=0;
 }
 }
 
@@ -1057,7 +1057,7 @@ only one call to isSubstring (i.e., “waterbottle” is a rotation of “erbott
 This question I could not think of a feasible solution.
 ANSWER:
 if lengths not same, return false
-concatenate s1 with itself and check if s2 is a substring of the result. 
+concatenate s1 with itself and check if s2 is a substring of the result.
 s1 = apple, s2 = pleap -> apple is a substring of pleappleap
 
 public static boolean isRotated(String s1, String s2)
@@ -1096,7 +1096,7 @@ public class LinkedList
         {
             data=d;
             next=null;
-        }        
+        }
     }
 }
 
@@ -1121,9 +1121,9 @@ public static void removeDuplicates(Node startNode)
     {
         if (hmap.containsKey(pointer.data)):
         previous.next=pointer.next
-        
+
         else
-            hmap.put(pointer.data, true); previous = pointer; 
+            hmap.put(pointer.data, true); previous = pointer;
         pointer = pointer.next;
     }
 this is O(n), space complexicity is O(n)
@@ -1142,7 +1142,7 @@ public static void removeDuplicates(Node startNode)
             if (runner.data==slow.data)
             {
                 previous.next = runner.next;
-                runner=runner.next;                
+                runner=runner.next;
             }
             else
             {
@@ -1152,7 +1152,7 @@ public static void removeDuplicates(Node startNode)
         }
         runner = slow;
         slow = slow.next;
-    }    
+    }
 }
 
 this is O(n^2). space complexicity is O(const)
@@ -1177,7 +1177,7 @@ public static int nElement(Node startNode, int n)
     return behind.data;
 }
 
-this runs in O(n) linear time. 
+this runs in O(n) linear time.
 other way would be to scan the LL first and find the number of elements, then again go to #elements-nth node and return it. this too is linear but has higher constants
 
 **OQ, how to do this using recursion?
@@ -1191,7 +1191,7 @@ public static void deleteThis(Node deleteNode)
     deleteNode.next = deleteNode.next.next;
 }
 
-THIS wont work if the node to be deleted is the last node. check if the input nodes next is null, if it is, return false - cannot be done. 
+THIS wont work if the node to be deleted is the last node. check if the input nodes next is null, if it is, return false - cannot be done.
 
 29. You have two numbers represented by a linked list, where each node contains a sin-
 gle digit. The digits are stored in reverse order, such that the 1’s digit is at the head of
@@ -1201,7 +1201,7 @@ EXAMPLE
 Input: (3 -> 1 -> 5), (5 -> 9 -> 2)
 Output: 8 -> 0 -> 8
 
-PS : iterate thru each node, by having two pointers. add the .data in each node at each iteration, if the number is greater than 10, carry over the ones digit and put the 0s digit there itself. 
+PS : iterate thru each node, by having two pointers. add the .data in each node at each iteration, if the number is greater than 10, carry over the ones digit and put the 0s digit there itself.
 
 public static Node addLL(Node head1, Node head2)
 {
@@ -1231,7 +1231,7 @@ public static Node addLL(Node head1, Node head2)
 you will be able to do this with some nice pseudocode
 
 30. given a circular LL, find the node at the start of a loop. - this node will have two other nodes pointing to it.
-PS: run a linear scan thru the LL, store in hashtable, node reference as key and its data as value. 
+PS: run a linear scan thru the LL, store in hashtable, node reference as key and its data as value.
 with each iteration of the loop, check of the node already present in the hmap, if not, store it. when faced with the first repeat, return it.
 
 public static Node findLoop(Node startNode)

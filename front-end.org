@@ -17,7 +17,7 @@ change the color of tags individually by using :
 you just changed a property of the h2 element - you changed it by giviing it an inline style
 you can also style tags and place all your css there
 
-you need a selector for h2 elements. eg - 
+you need a selector for h2 elements. eg -
 <style>
     h2 {
        color: red;  //this selects all the h2 elements
@@ -183,7 +183,7 @@ so,
   .blue-text {
     color: blue;
   }
-  
+
   #orange-text {
   color: orange;
 }

@@ -167,7 +167,7 @@ red black trees etc are not implemented natively. there are open source implemen
 Range returns an iterator, not a generator. a list is a iterator. an iterator is just somehting that can be iterated over (something that can be used in for ___ in ____). The given statement is like: bageera is an animal, not a python
 
 A15. are tuples ordered?
-YES. 
+YES.
 
 16. what are the main modules of python and what functions they perform. eg: os, math, cmath etc
 i. Sys module

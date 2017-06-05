@@ -42,8 +42,8 @@ print __builtins__.hash(tup)
 
 2. take care of types of items. a=[]
 a.append("1")
-a.index(1) --> ValueError, not found. 
-Because "1" is stored, not 1. 
+a.index(1) --> ValueError, not found.
+Because "1" is stored, not 1.
 WRONG^
 because we are not storing anything at index 1, we have "1" at index 0
 
@@ -176,7 +176,7 @@ join takes in an interable of STRINGS only and returns a single string.
 join is a method of the String class, it can act on string objects only
 
 so, "-".join(range(10))
-doesnt work 
+doesnt work
 but
 "-".join(map(str, range(10)))
 does
@@ -230,7 +230,7 @@ print(any([0, 1, 0, 0])) # will print True
 print(any([0, 0, 0, 0])) # will print False
 
 
-11. REDUCE FUNCTION : 
+11. REDUCE FUNCTION :
 >>> f = lambda a,b: a if (a > b) else b #IF ELSE IN LAMBDA
 >>> reduce(f, [47,11,42,102,13])  # APPLIED TO FIRST 2 ELEMENTS, THEN THE RESULT+THE THIRD ELEMENT
 
@@ -253,19 +253,19 @@ print bool("0") #TRUE - because it is a string
 
 
 
-13. TEXTWRAP : 
+13. TEXTWRAP :
 >>> import textwrap
 >>> string = "This is a very very very very very long string."
 >>> print textwrap.wrap(string,8)
-['This is', 'a very', 'very', 'very', 'very', 'very', 'long', 'string.'] 
+['This is', 'a very', 'very', 'very', 'very', 'very', 'long', 'string.']
 
-Returns a list of strings of given size - it breaks down the very big string. 
+Returns a list of strings of given size - it breaks down the very big string.
 
 >>> import textwrap
 >>> string = "This is a very very very very very long string."
 >>> print textwrap.fill(string,8)
 
-Prints a single string with each line not more than the specied width. 
+Prints a single string with each line not more than the specied width.
 
 
 14. RANGE/XRANGE
@@ -319,15 +319,15 @@ for i in xrange(m):
         print " ".join(map(str,d[s]))
     else:
         print "-1"
-    
+
 17. PRINT LIST ON THE SAME LINE
 a = range(10)
 print a - [0, 2, ..., 9]
-but 
+but
 for i in a:
   print a
 
-  will give : 
+  will give :
 0
 1
 2
@@ -343,7 +343,7 @@ Sometime when timing out even with the correct code, sit back and relaize how yo
 2. Use xrange and never range
 3. The time consuming task are the LOOPS. If you have to traverse the many times, it can be a problem.
 
-Think about the various scenarios and try to figure out a means to simplify the problem. There is a trick, you just need to crack it. 
+Think about the various scenarios and try to figure out a means to simplify the problem. There is a trick, you just need to crack it.
 
 
 18. There is deque() to replace list. It can act as a stack, queue etc. Very fast.
@@ -355,7 +355,7 @@ set([1, 1,2, 3])
 a = dict
 print set(a) ##--will print the unique keys present in a
 
-SETS ARE GENERALLY USED FOR MEMBERSHIP TESTING AND DUPLICATE ENTRIES ELIMINATING 
+SETS ARE GENERALLY USED FOR MEMBERSHIP TESTING AND DUPLICATE ENTRIES ELIMINATING
 
 a=set('HackerRank')
 a.add('H') ##-- returns none. so print a.add('H') will print: `None`
@@ -389,7 +389,7 @@ Set is immutable to .union() operation (or '|' operation).
 CHAINING COMMANDS IS POSSIBLE ONLY IF THE INSTANCE RETURNED IS COMPATIBLE
 EXAMPLE : str1.strip().split(" ") - is possible because strip will return str, split will return list.
 
-NOW, IN SETS : 
+NOW, IN SETS :
 req = set()
 req.update(set2).update(set23)
 is not allowed because the first update returns a NONE, and AttributeError: 'NoneType' object has no attribute 'update'
@@ -411,7 +411,7 @@ Set is immutable to .difference() operation (or '-' operation).
 20. THERE ARE TWO TYPES OF METHODS USED TO ALTER THE OBJECT.
 str1.replace(" ", "-")
 and list.sort()
-NOW THE FORMER RETURNS A STR AND YOU CAN PRINT IT ETC. BUT IT DOESNT CHANGE STR1. STR1 STILL HAS SPACES AND NOT DASHES. 
+NOW THE FORMER RETURNS A STR AND YOU CAN PRINT IT ETC. BUT IT DOESNT CHANGE STR1. STR1 STILL HAS SPACES AND NOT DASHES.
 WHEREAS THE LATTER RETURNS NOTHING AND MODIFIES THE LIST IN-PLACE.
 NOWHERE IS IT POSSIBLE THAT THE SAME FUNCTION CALL MUTATES THE OBJECT, AND RETURNS THE MUTATED OBJECT.
 
@@ -425,7 +425,7 @@ print phase(complex(-1, 0)) --> 3.141...
 22. CARTESIAN PRODUCT IS A MATHEMATICAL OPERATION ACC TO WHICH EACH ELEMENT FROM A LIST IS OPERATED ALONG WITH EACH ELEMENT FROM THE OTHER SET.
 AxB = [(a,b) for each a belonging to A and each b belonging to B]
 
-PYTHON : 
+PYTHON :
 PRINT [(a, b) FOR a in A for b in B]
 SAME THING IS DONE USINT ITERTOOLS
 FROM ITERTOOLS IMPORT PRODUCT
@@ -449,20 +449,20 @@ Return r length subsequences of elements from the input iterable.
 Combinations are emitted in lexicographic sort order. So, if the input iterable is sorted, the combination tuples will be produced in sorted order.
 
 >>> from itertools import combinations
->>> 
+>>>
 >>> print list(combinations('12345',2))
 [('1', '2'), ('1', '3'), ('1', '4'), ('1', '5'), ('2', '3'), ('2', '4'), ('2', '5'), ('3', '4'), ('3', '5'), ('4', '5')]
->>> 
+>>>
 >>> A = [1,1,3,3,3]
 >>> print list(combinations(A,4))
 [(1, 1, 3, 3), (1, 1, 3, 3), (1, 1, 3, 3), (1, 3, 3, 3), (1, 3, 3, 3)]
 
 
 25. THERE IS A CERTAIN PROCEDURE OF THINKING ABOUT HOW TO SOLVE THE PROBLEM :
-i) THINK ABOUT THE DATATYPE TO USE TO STORE THE INPUT - LIST/DICT/TUPLE/SET ETC. 
+i) THINK ABOUT THE DATATYPE TO USE TO STORE THE INPUT - LIST/DICT/TUPLE/SET ETC.
 ii) ACCEPT THE DATA AND STORE THEM PROPERLY.
 iii) APPLY THE LOGIC AND GET THE REQUIRED RESULT
-iv) MANIPULATE THE DATATYPE HOLDING THE RESULT AND DISPLAY IT IN THE REQUIRED WAY EG USE "".JOIN(LIST1) ETC. 
+iv) MANIPULATE THE DATATYPE HOLDING THE RESULT AND DISPLAY IT IN THE REQUIRED WAY EG USE "".JOIN(LIST1) ETC.
 
 
 
@@ -472,24 +472,24 @@ A counter is container, where elements are stored as dictionary keys and their c
 Sample Code
 
 >>> from collections import Counter
->>> 
+>>>
 >>> myList = [1,1,2,3,4,5,3,2,3,4,2,1,2,3]
 >>> print Counter(myList)
 Counter({2: 4, 3: 4, 1: 3, 4: 2, 5: 1})
 >>>
 >>> print Counter(myList).items()
 [(1, 3), (2, 4), (3, 4), (4, 2), (5, 1)]
->>> 
+>>>
 >>> print Counter(myList).keys()
 [1, 2, 3, 4, 5]
->>> 
+>>>
 >>> print Counter(myList).values()
 [3, 4, 4, 2, 1]
 
 
-27. 
+27.
 import calendar
->>> 
+>>>
 >>> print calendar.TextCalendar(firstweekday=6).formatyear(2015)
                                   2015
 
@@ -524,7 +524,7 @@ zip([iterable, ...])
 
 This function returns a **list of tuples**, where the i-th tuple contains the i-th element from each of the argument sequences or iterables.
 
-If argument sequences are of unequal lengths, then returned list is truncated in length to the length of the shortest argument sequence. 
+If argument sequences are of unequal lengths, then returned list is truncated in length to the length of the shortest argument sequence.
 
 31
 A = [1,2,3]
@@ -543,7 +543,7 @@ ZeroDivisionError
 Raised when the second argument of a division or modulo operation is zero.
 
 ValueError
-Raised when a built-in operation or function receives an argument that has the right type but an inappropriate value. 
+Raised when a built-in operation or function receives an argument that has the right type but an inappropriate value.
 
 try and except statements can be used to handle selected exceptions. A try statement may have more than one except clause, to specify handlers for different exceptions.
 
@@ -563,8 +563,8 @@ Concept
 The map() function applies a function to every member of an iterable and returns the result. It takes two parameters, first the function which is to be applied and second the iterables like a list.
 Let's say you are given a list of names and you have to print a list which contains length of each name.
 
->> print (list(map(len, ['Tina', 'Raj', 'Tom'])))  
-[4, 3, 3]  
+>> print (list(map(len, ['Tina', 'Raj', 'Tom'])))
+[4, 3, 3]
 
 Lambda is a single expression anonymous function often used as an inline function. In simple words, it is a function which has only one line in its body. It proves very handy in functional and GUI programming.
 
@@ -574,7 +574,7 @@ Lambda is a single expression anonymous function often used as an inline functio
 
 Note:
 
-Lambda functions cannot use the return statement and can only have a single expression. Unlike def, which creates a function and assigns it a name, lambda creates a function and returns the function itself. Lambda can be used inside list and dictionary. 
+Lambda functions cannot use the return statement and can only have a single expression. Unlike def, which creates a function and assigns it a name, lambda creates a function and returns the function itself. Lambda can be used inside list and dictionary.
 
 
 34
@@ -588,7 +588,7 @@ print map(lambda x:x, "1 2 3 4 5")
 
 ^^HERE, THE STRING IS `LIST`-ED AND EVERY ELEMENT IS GIVEN TO LAMBDA WHICH JUST RETURNS IT.
 
-NOW, 
+NOW,
 
 EXAMPLE 2 :
 print re.sub(r"\d+", lambda x:x, "1 2 3 4 5")
@@ -612,16 +612,16 @@ re.findall('([\w-]+)@([a-z0-9]+)\.([\w]+)', x)
 
 
 36. LISTS GYAN
-If both slice indices are left out, all items of the list are included. But this is not the same as the original a_list variable. It is a new list that happens to have all the same items. a_list[:] is shorthand for making a complete copy of a list. 
+If both slice indices are left out, all items of the list are included. But this is not the same as the original a_list variable. It is a new list that happens to have all the same items. a_list[:] is shorthand for making a complete copy of a list.
 
 a = range(3)
 id(a)==id(a[:])
 False
 
-Slicing works if one or both of the slice indices is negative. If it helps, you can think of it this way: reading the list from left to right, the first slice index specifies the first item you want, and the second slice index specifies the first item you don’t want. The return value is everything in between. 
+Slicing works if one or both of the slice indices is negative. If it helps, you can think of it this way: reading the list from left to right, the first slice index specifies the first item you want, and the second slice index specifies the first item you don’t want. The return value is everything in between.
 
-WHEN PRINTING, IF THE START INDEX IS TO THE RIGHT OF THE END INDEX, NOTHING IS PRINTED. 
-EG : 
+WHEN PRINTING, IF THE START INDEX IS TO THE RIGHT OF THE END INDEX, NOTHING IS PRINTED.
+EG :
 a = range(100)
 print a[2:4]
 [2, 3]
@@ -639,7 +639,7 @@ The append() method adds a single item to the end of the list.
 The insert() method inserts a single item into a list. The first argument is the index of the first item in the list that will get bumped out of position. EG: A_LIST.INSERT(0, 'HI')
 
 APPEND VS EXTEND
-The extend() method takes a single argument, which is always a list, and adds each of the items of that list to a_list. 
+The extend() method takes a single argument, which is always a list, and adds each of the items of that list to a_list.
 >>> a_list = ['a', 'b', 'c']
 >>> a_list.extend(['d', 'e', 'f'])  ①
 >>> a_list
@@ -676,15 +676,15 @@ COUNT() - RETURNS THE COUNT OF THE ITME IN LIST
 REMOVE ITEMS FROM THE LIST: DEL A_LIST[1]
 OR A_LIST.REMOVE('HELLO') - REMOVES THE FIRST INSTANCE OF HELLO ONLY
 
-A_LIST.POP() - REMOVES THE LAST ITEM AND RETURNS IT. 
-You can pop arbitrary items from a list. Just pass a positional index to the pop() method. It will remove that item, shift all the items after it to “fill the gap,” and return the value it removed. 
+A_LIST.POP() - REMOVES THE LAST ITEM AND RETURNS IT.
+You can pop arbitrary items from a list. Just pass a positional index to the pop() method. It will remove that item, shift all the items after it to “fill the gap,” and return the value it removed.
 
 IN BOOLEAN CONTEXT, EMPTY LIST IS FALSE. OTHERS ARE TRUE
 
 
 TUPLES
 
-A tuple is defined in the same way as a list, except that the whole set of elements is enclosed in parentheses instead of square brackets. 
+A tuple is defined in the same way as a list, except that the whole set of elements is enclosed in parentheses instead of square brackets.
 The elements of a tuple have a defined order, just like a list. Tuple indices are zero-based, just like a list, so the first element of a non-empty tuple is always a_tuple[0]
 
 SLICING WORKS, IT RETUENS A NEW TUPLE.
@@ -697,12 +697,12 @@ So what are tuples good for?
 
     Tuples are faster than lists. If you’re defining a constant set of values and all you’re ever going to do with it is iterate through it, use a tuple instead of a list.
     It makes your code safer if you “write-protect” data that doesn’t need to be changed. Using a tuple instead of a list is like having an implied assert statement that shows this data is constant, and that special thought (and a specific function) is required to override that.
-    Some tuples can be used as dictionary keys (specifically, tuples that contain immutable values like strings, numbers, and other tuples). Lists can never be used as dictionary keys, because lists are not immutable. 
+    Some tuples can be used as dictionary keys (specifically, tuples that contain immutable values like strings, numbers, and other tuples). Lists can never be used as dictionary keys, because lists are not immutable.
 
-    ☞Tuples can be converted into lists, and vice-versa. The built-in tuple() function takes a list and returns a tuple with the same elements, and the list() function takes a tuple and returns a list. In effect, tuple() freezes a list, and list() thaws a tuple. 
+    ☞Tuples can be converted into lists, and vice-versa. The built-in tuple() function takes a list and returns a tuple with the same elements, and the list() function takes a tuple and returns a list. In effect, tuple() freezes a list, and list() thaws a tuple.
 
 
-To create a tuple of one item, you need a comma after the value. Without the comma, Python just assumes you have an extra pair of parentheses, which is harmless, but it doesn’t create a tuple. 
+To create a tuple of one item, you need a comma after the value. Without the comma, Python just assumes you have an extra pair of parentheses, which is harmless, but it doesn’t create a tuple.
 EG : A = (1, )
 
 RANGE() RETURNS AN ITERATOR NOT A LIST/TUPLE
@@ -711,12 +711,12 @@ RANGE() RETURNS AN ITERATOR NOT A LIST/TUPLE
 You can also use multi-variable assignment to build functions that return multiple values, simply by returning a tuple of all the values. The caller can treat it as a single tuple, or it can assign the values to individual variables.
 
 39 SETS
-A set is an unordered “bag” of unique values. A single set can contain values of any immutable datatype. Once you have two sets, you can do standard set operations like union, intersection, and set difference. 
+A set is an unordered “bag” of unique values. A single set can contain values of any immutable datatype. Once you have two sets, you can do standard set operations like union, intersection, and set difference.
 
 SO:
 Lists - mutable - can contain mutable datatypes - can't be hashed - ordered
 
-Tuples - immutable - can contain mutable datatypes - can be hashed if they contain no mutable datatype - 
+Tuples - immutable - can contain mutable datatypes - can be hashed if they contain no mutable datatype -
 
 sets - mutable - cannot contain mutable datatype - cannot be hashed - unordered
 
@@ -726,15 +726,15 @@ dicts - mutalbe - can contain mutable datatypes(not as keys but) - can't be hash
 CREATE A NEW SET :
 A_SET = {1}
 
-CREATE A EMPTY SET : 
+CREATE A EMPTY SET :
 A_SET = SET()
 
-sets can hold UNMUTABLE DATATYPES ONLY. SO NO LISTS IN SETS. TUPLES ALLOWED. 
+sets can hold UNMUTABLE DATATYPES ONLY. SO NO LISTS IN SETS. TUPLES ALLOWED.
 
 The update() method takes one argument, a set, and adds all its members to the original set. It’s as if you called the add() method with each member of the set.
 ②   Duplicate values are ignored, since sets can not contain duplicates.
 ③   You can actually call the update() method with any number of arguments. When called with two sets, the update() method adds all the members of each set to the original set (dropping duplicates).
-④   The update() method can take objects of a number of different datatypes, including lists. When called with a list, the update() method adds all the items of the list to the original set. 
+④   The update() method can take objects of a number of different datatypes, including lists. When called with a list, the update() method adds all the items of the list to the original set.
 
 
 40. REMOVE DATA FROM SETS
@@ -787,8 +787,8 @@ SPECIALITY IS THAT IT ACCEPTS WILDCARDS
 GLOB.GLOB('EXAMPLES/*.MP3')
 
 
-44. METADATA ABOUT THE FILE : 
-LIKE SIZE, TIME OF CREATION ETC. 
+44. METADATA ABOUT THE FILE :
+LIKE SIZE, TIME OF CREATION ETC.
 metadata = os.stat('hello.py')
 metadata.st_mtime - MODIFICATION TIME
 --> will print the time? - THE NUMBER OF SECS SINCE THE EPOCH - JAN1, 1970
@@ -812,11 +812,11 @@ a = [i**2 for i in range(10)]
 a is a list
 
 a = {i:i**2 for i in range(10)}
-a is a dict above. 
+a is a dict above.
 
 REPLACE KEYS AND VALUES IN DICT
 a = {value:key for key, value in a_dict}
-^wont work if the values are lists. because lists cannot be keys to any dict as they are immutable. 
+^wont work if the values are lists. because lists cannot be keys to any dict as they are immutable.
 
 
 47. SET COMPREHENSIONS
@@ -837,14 +837,14 @@ THIS IS ENCODED TO BYTES IN A PARTICULAR WAY ACC TO THE CHARACTER ENCODING.
 
 ENTER UNICODE
 
-Unicode is a system designed to represent every character from every language. Unicode represents each letter, character, or ideograph as a 4-byte number. Each number represents a unique character used in at least one of the world’s languages. There is exactly 1 number per character, and exactly 1 character per number. Every number always means just one thing; there are no “modes” to keep track of. U+0041 is always 'A', even if your language doesn’t have an 'A' in it. 
+Unicode is a system designed to represent every character from every language. Unicode represents each letter, character, or ideograph as a 4-byte number. Each number represents a unique character used in at least one of the world’s languages. There is exactly 1 number per character, and exactly 1 character per number. Every number always means just one thing; there are no “modes” to keep track of. U+0041 is always 'A', even if your language doesn’t have an 'A' in it.
 
 THAT IS CALLED UTF-32 (32 BITS = 4 BYTES)
-THEN THERE IS UTF-16 (2 BYTES FOR EACH CHAR)    
+THEN THERE IS UTF-16 (2 BYTES FOR EACH CHAR)
 
 UTF-8 (VARIALBE LENGTH ENCODING SYSTEM) - FOR ASCII - JUST ONE BYTE USED
 
-In Python 3, all strings are sequences of Unicode characters. There is no such thing as a Python string encoded in UTF-8, or a Python string encoded as CP-1252. “Is this string UTF-8?” is an invalid question. UTF-8 is a way of encoding characters as a sequence of bytes. If you want to take a string and turn it into a sequence of bytes in a particular character encoding, Python 3 can help you with that. If you want to take a sequence of bytes and turn it into a string, Python 3 can help you with that too. Bytes are not characters; bytes are bytes. Characters are an abstraction. A string is a sequence of those abstractions. 
+In Python 3, all strings are sequences of Unicode characters. There is no such thing as a Python string encoded in UTF-8, or a Python string encoded as CP-1252. “Is this string UTF-8?” is an invalid question. UTF-8 is a way of encoding characters as a sequence of bytes. If you want to take a string and turn it into a sequence of bytes in a particular character encoding, Python 3 can help you with that. If you want to take a sequence of bytes and turn it into a string, Python 3 can help you with that too. Bytes are not characters; bytes are bytes. Characters are an abstraction. A string is a sequence of those abstractions.
 
 
 
@@ -855,14 +855,14 @@ In Python 3, all strings are sequences of Unicode characters. There is no such t
 >>> "{0}'s password is {1}".format(username, password)  ②
 "mark's password is PapayaWhip"
 
-0 REFERS TO THE FIRST ARGUMENT PASSED TO FORMAT. 
-IF A USERNAME IS A LIST: 0[0] WOULD BE THE FIRST ELEMENT 
+0 REFERS TO THE FIRST ARGUMENT PASSED TO FORMAT.
+IF A USERNAME IS A LIST: 0[0] WOULD BE THE FIRST ELEMENT
 
 
 THIS WORKS TOO :
 
 >>> import humansize
->>> import sys 
+>>> import sys
 >>> '1MB = 1000{0.modules[humansize].SUFFIXES[1000][0]}'.format(sys) #NORMALLY, YOU WOULD PUT QUOTES AROUND humansize BECAUSE THAT KEY IS A STR. BUT HERE, IT IS NOT required
 '1MB = 1000KB'
 
@@ -873,18 +873,18 @@ SYS MODULE STORES INFORMATION ABOUT THE CURRENTLY RUNNIG PYTHON INSTANCE
 SYS.MODULES - LIST OF ALL THE MODULES IMPORTED INTO PYTHON
 
 51 BYTES
-Bytes are bytes; characters are an abstraction. An immutable sequence of Unicode characters is called a string. An immutable sequence of numbers-between-0-and-255 is called a bytes object. 
+Bytes are bytes; characters are an abstraction. An immutable sequence of Unicode characters is called a string. An immutable sequence of numbers-between-0-and-255 is called a bytes object.
 
 To define a bytes object, use the b'' “byte literal” syntax. Each byte within the byte literal can be an ASCII character or an encoded hexadecimal number from \x00 to \xff (0–255).
 ②   The type of a bytes object is bytes.
 ③   Just like lists and strings, you can get the length of a bytes object with the built-in len() function.
-④   Just like lists and strings, you can use the + operator to concatenate bytes objects. The result is a new bytes object. 
+④   Just like lists and strings, you can use the + operator to concatenate bytes objects. The result is a new bytes object.
 
 
 52. DEFAULT ENCODING
 Python 3 assumes that your source code — i.e. each .py file — is encoded in UTF-8.
 
-☞In Python 2, the default encoding for .py files was ASCII. In Python 3, the default encoding is UTF-8. 
+☞In Python 2, the default encoding for .py files was ASCII. In Python 3, the default encoding is UTF-8.
 
 
 If you would like to use a different encoding within your Python code, you can put an encoding declaration on the first line of each file. This declaration defines a .py file to be windows-1252:
@@ -934,12 +934,12 @@ you should never “chain” the search() and groups() methods in production cod
 <title>Guido van Rossum - Wikipedia, the free encyclopedia</title>
 <script>document.documentElement.className = document.documentElement.className.replace( /(^|\s)client-nojs(\s|$)/, "$1client-js$2" );</script>
 
-SAY YOU WISH TO GET ALL THE TAGS ELEMENTS. 
+SAY YOU WISH TO GET ALL THE TAGS ELEMENTS.
 <.*> - * means 1 or more. * is greedy by default. SO, it will start at the first < and gobble as much as possible - here,the entire thing before matching the last >
 
 to make it non-greedy ; that is gobble as little as possible :
 <.*?> - this gets us the tags
-also valid regex : <.+?> - "+" matches 0 or more characets, but ? forces it to gobble as little as possible. 
+also valid regex : <.+?> - "+" matches 0 or more characets, but ? forces it to gobble as little as possible.
 
 
 The square brackets mean “match exactly one of these characters.”
@@ -947,10 +947,10 @@ The square brackets mean “match exactly one of these characters.”
 
 >>> re.sub('[abc]', 'o', 'caps')  ④
 'oops'
-re.sub replaces all of the matches, not just the first one. So this regular expression turns caps into oops, because both the c and the a get turned into o. 
+re.sub replaces all of the matches, not just the first one. So this regular expression turns caps into oops, because both the c and the a get turned into o.
 
 
->>> re.sub('([^aeiou])y$', r'\1ies', 'vacancy')  ② - here, `cy` matches. So, when replacing : replace group 1 by itself. IE [^aeiou] by itself. and `y` by ies. 
+>>> re.sub('([^aeiou])y$', r'\1ies', 'vacancy')  ② - here, `cy` matches. So, when replacing : replace group 1 by itself. IE [^aeiou] by itself. and `y` by ies.
 
 'vacancies'
 
@@ -968,13 +968,13 @@ EXPERIMENTATION
 
 import re
 
-def plural(noun):          
+def plural(noun):
     if re.search('[sxz]$', noun):             ①
         return re.sub('$', 'es', noun)        ②
     elif re.search('[^aeioudgkprt]h$', noun):
-        return re.sub('$', 'es', noun)       
-    elif re.search('[^aeiou]y$', noun):      
-        return re.sub('y$', 'ies', noun)     
+        return re.sub('$', 'es', noun)
+    elif re.search('[^aeiou]y$', noun):
+        return re.sub('y$', 'ies', noun)
     else:
         return noun + 's'
 
@@ -998,7 +998,7 @@ def apply_h(noun):
 
 def match_y(noun):                             ①
     return re.search('[^aeiou]y$', noun)
-        
+
 def apply_y(noun):                             ②
     return re.sub('y$', 'ies', noun)
 
@@ -1008,15 +1008,15 @@ def match_default(noun):
 def apply_default(noun):
     return noun + 's'
 
-#HERE NOTE THAT RULES IS A TUPLE OF TUPLES. EACH TUPLE HAS 2 FUNCTIONS. 
-#THEY ARE ACTUAL FUNCTION OBJECTS. NOT JUST THE FUNCTION NAME STRINGS. 
+#HERE NOTE THAT RULES IS A TUPLE OF TUPLES. EACH TUPLE HAS 2 FUNCTIONS.
+#THEY ARE ACTUAL FUNCTION OBJECTS. NOT JUST THE FUNCTION NAME STRINGS.
 rules = ((match_sxz, apply_sxz),               ③
          (match_h, apply_h),
          (match_y, apply_y),
          (match_default, apply_default)
          )
 
-def plural(noun):           
+def plural(noun):
     for matches_rule, apply_rule in rules:       ④
         if matches_rule(noun):
             return apply_rule(noun)
@@ -1028,11 +1028,11 @@ THIS ADDED LAYER OF ABSTRACTION JUST MADE IT EASIER TO ADD MORE RULES. NOW, YOU 
 
 
 
-each function follows one of two patterns. All the match functions call re.search(), and all the apply functions call re.sub(). Let’s factor out the patterns so that defining new rules can be easier. 
+each function follows one of two patterns. All the match functions call re.search(), and all the apply functions call re.sub(). Let’s factor out the patterns so that defining new rules can be easier.
 
 ADDING ANOTHER LAYER OF ABSTRACTION ?
 
-This technique of using the values of outside parameters within a dynamic function is called closures. You’re essentially defining constants within the apply function you’re building: it takes one parameter (word), but it then acts on that plus two other values (search and replace) which were set when you defined the apply function. 
+This technique of using the values of outside parameters within a dynamic function is called closures. You’re essentially defining constants within the apply function you’re building: it takes one parameter (word), but it then acts on that plus two other values (search and replace) which were set when you defined the apply function.
 
 
 56. PYTHON FUNCTIONS NAME :
@@ -1061,7 +1061,7 @@ def makeitalic(fn):
         return "<i>" + fn() + "</i>"
     return wrapped
 
-@makebold # ==> hello = makebold(hello) - here, hello points to wrapper func object. hello() will execute wrapped() simply. Hence also, the args passed to hello() will go to wrapper straightaway. 
+@makebold # ==> hello = makebold(hello) - here, hello points to wrapper func object. hello() will execute wrapped() simply. Hence also, the args passed to hello() will go to wrapper straightaway.
 @makeitalic
 def hello():
     return "hello world"
@@ -1277,7 +1277,7 @@ def cube(base):
   return power(base, 3)
 
 Here, we used power to define new functions. This is tedious if you want to define say a 1000 such functions. it is a lot of repetative code.
-we can use functools.partials 
+we can use functools.partials
 
 from functools import partial
 square = partial(power, exponent = 2)
@@ -1359,7 +1359,7 @@ d.update(enumerate(range(5)))
 d
 {0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 'f', 6: 'g', 7: 'h', 8: 'i', 9: 'j', 10: 'k', 11: 'l', 12: 'm', 13: 'n', 14: 'o', 15: 'p', 16: 'q', 17: 'r', 18: 's', 19: 't', 20: 'u', 21: 'v', 22: 'w', 23: 'x', 24: 'y', 25: 'z'}
 
-63. PYTHON ALREADY HAS PARTIAL IMPLEMENTED. 
+63. PYTHON ALREADY HAS PARTIAL IMPLEMENTED.
 SAY YOU HAVE A FUNCTION POWER THAT TAKES 2 ARGUMENTS BASE, EXPONENT
 
 from functools import partial
@@ -1403,11 +1403,11 @@ bar = foo
 NOW, dir(foo) - gives what is inside foo.
 foo.func_name - the name of the function
 foo.func_globals - what is in the global scope when you define foo. IE. WHAT IS IN THE GLOBAL FRAME THAT FOO POINTS TO.
-HAS "FOO" AND "BAR"  - FUNC_GLOBALS CAN BE USED TO KNOW WHICH GLOBAL VARIABLES CAN BE ACCESSED BY YOUR FUNCTION 
+HAS "FOO" AND "BAR"  - FUNC_GLOBALS CAN BE USED TO KNOW WHICH GLOBAL VARIABLES CAN BE ACCESSED BY YOUR FUNCTION
 
-FOO.FUNC_CODE - the function is just a pointer to a seperate object of code. this will return the memory address of that code object - it has the byte code 
+FOO.FUNC_CODE - the function is just a pointer to a seperate object of code. this will return the memory address of that code object - it has the byte code
 a function so basically has a pointer to it's globals - its enviornment, what variables it has access to
-and another pointer to thie code object 
+and another pointer to thie code object
 
 foo.func_code.co_code - THE ACTUAL BYTE CODE IN THE FUNCTION - TECHNICALLY, IN THE CODE OBJECT THAT THE FUNCTION OBJECT POINTS TO
 
@@ -1431,13 +1431,13 @@ The __iter__() method is called whenever someone calls iter(<object name>).
 * the next method must raise a StopIteration when the iterator has run its course *
 This __next__ method is called whenever someone calls next() on the object
 
-it has 
-i = iter(list) or 
+it has
+i = iter(list) or
 i = list.__iter__()
 
 
 
-so, i is a iterator object 
+so, i is a iterator object
 i.next() - will give the next element of the list
 at the end of the list, it throws an exception (StopIteration)
 
@@ -1470,10 +1470,10 @@ while True:
         break
 
 why do we need iter objects ?! list is indexable anyway
-makes your code simples/shorter. 
+makes your code simples/shorter.
 in cases where you have arbitary structures (eg trees) - this would be simpler with iter.
 
-ITERATORS ARE AN ABSTRACTION ITERATING OVER ANYTHING 
+ITERATORS ARE AN ABSTRACTION ITERATING OVER ANYTHING
 
 CLEAN THE PYTHON SCREEN ; CTRL+L
 
@@ -1485,7 +1485,7 @@ I.NEXT() - 'B'
 AFTER 1 MORE ITERATION, STOPITERATION EXCEPTION
 
 for i in x:
-    print i 
+    print i
 
     ^^THIS WILL CREATE AN ITER OBJECT UNDER THE HOOD.
 
@@ -1499,7 +1499,7 @@ writing the iterators can get tedious, specially the code in the next function i
 
 so, enter generators
 we define generator functions - the functions that dont return things, but yield it
-so, 
+so,
 def counter_generator(low, high):
     while low<=high:
         yield low
@@ -1531,7 +1531,7 @@ class Counter():
             yield self.low
             self.low+=1
 
-g = Counter(1, 10) 
+g = Counter(1, 10)
 for i in g:
     print i
 running multiple times prints the values too
@@ -1540,7 +1540,7 @@ ______
 
 Using generators in list comprehensions
 say we want squares of numbers from 1 to 100
-we could do this: 
+we could do this:
 
 print sum([i**2 for i in range(100)])
 Under the hood, this will:
@@ -1568,10 +1568,10 @@ you can declare what your iterator will be in the def __iter__(self) method
 you can say that you wish that the class be its own iterator !
 just return self
 
-BUT then, if you return yourself as the iterojject,  you need to have the next method defined without failure. 
+BUT then, if you return yourself as the iterojject,  you need to have the next method defined without failure.
 
 
-eg : 
+eg :
 
 ###
 class Counter:
@@ -1607,7 +1607,7 @@ SAVE THIS CODE IN code.py
 
 open python :
 import code
-x = code.Counter(3,7) --> this will create an Counter instance 
+x = code.Counter(3,7) --> this will create an Counter instance
 i = x.__iter__()
 now, i==x - WILLBE TRUE!
 infac, i is x - WILL BE TRUE
@@ -1620,15 +1620,15 @@ class ClassName(super class you are inheriting from [optional]):
 class is a template to create an object
 you can add new variables assigned to the class instance
 for eg : c.new_var = 5
-so, you can modify the built-in-s on the fly. 
+so, you can modify the built-in-s on the fly.
 
 
 now, type(Counter)  --> will be classobj
 c= Counter(4, 5)
 type(c)  --> will be count.Counter instance
 
-dir(c) --> __module__, __doc__, next, __iter__, __init__ 
-module and doc are builtin 
+dir(c) --> __module__, __doc__, next, __iter__, __init__
+module and doc are builtin
 
 c.__dict__ --> this will show the defined variables as a dict. that is the varialbes in the namespace of the object
 then you can modify the vars, using say c.varname = another_value
@@ -1636,7 +1636,7 @@ then you can modify the vars, using say c.varname = another_value
 Unbound method - the method of a class that hasnt been bound to a particular instance yet. So, if a class A has a method hello, then A.hello is a unbound method.
 Also, A.hello.im_func - that is the function
 A.hello.im_class - that is the class A
-A.hello.im_self - that is the object this class is bound to. Here, nothing for it is unbound. 
+A.hello.im_self - that is the object this class is bound to. Here, nothing for it is unbound.
 
 a = A()
 a.hello  --> is a bound method now. bound to object a
@@ -1673,7 +1673,7 @@ USING GENERATORS
 #####
 def Counter(low, high):
     current = low
-    #now, what we wish to do is keep generating numbers until we get to high. 
+    #now, what we wish to do is keep generating numbers until we get to high.
     while current <=high:
         yield current
         current+=1
@@ -1687,21 +1687,21 @@ here, c is a generator object
 for elt in c:  --> will evaluate lazily
     print elt
 
-So, the yield keyword iterates thru the object and returns the numbers. 
+So, the yield keyword iterates thru the object and returns the numbers.
 THE DIFFERENCE BETWEEN RETURN AND YIELD IS THAT after return, we are done. the function is taken off the stack and never gone back to. But, with Yield, we can go back for the next iteration and execution resumes right after the yield statement.
 
-When you call a normal function, it returns you the return value. When you call a function with yield in it, it returns a iterator object that you can iterate over. 
+When you call a normal function, it returns you the return value. When you call a function with yield in it, it returns a iterator object that you can iterate over.
 
-USED INTERNALLY BY THE os module. os.walk() --> will walk over each dir etc. USING GENERATORS SAVES MEMORY BECAUSE THE DATA IS NOT STORED IN-MEMORY. YOU YIELD IT ONE ITEM AFTER ANOTHER. 
+USED INTERNALLY BY THE os module. os.walk() --> will walk over each dir etc. USING GENERATORS SAVES MEMORY BECAUSE THE DATA IS NOT STORED IN-MEMORY. YOU YIELD IT ONE ITEM AFTER ANOTHER.
 
 multiple yields possible
-WHEN AN GENERATOR YIELDS A VALUE, YOU CAN SEND A VALUE BACK TO THE GENERAOT. SO, IT CAN BE USED TO BOTHWAYS. 
+WHEN AN GENERATOR YIELDS A VALUE, YOU CAN SEND A VALUE BACK TO THE GENERAOT. SO, IT CAN BE USED TO BOTHWAYS.
 WHEN YOU DO :
 
     for line in open('filename'):    --> open is a generator.
         ...
 
-so, the open function remembers where you are on the file ; there is a pointer specifying that. SO, RECALL ONCE I WAS READING A FILE AND AFTER READING IT ONCE, I COULD NOT RE-READ IT. THAT WAS BECAUSE THE LOCATION POINTER POINTED AT THE BOTTOM OF THE FILE. RESETTING IT WOULD ALLOW ME TO READ AGAIN. 
+so, the open function remembers where you are on the file ; there is a pointer specifying that. SO, RECALL ONCE I WAS READING A FILE AND AFTER READING IT ONCE, I COULD NOT RE-READ IT. THAT WAS BECAUSE THE LOCATION POINTER POINTED AT THE BOTTOM OF THE FILE. RESETTING IT WOULD ALLOW ME TO READ AGAIN.
 
 so, THIS IS A BIG PROPERTY OF GENERATORS - YOU CAN ITERATRE OVER THEM ONLY ONCE. THIS IS BECAUSE THEY DONT STORE THE VALUES IN MEMORY, THEY GENERATE THEM ON THE FLY
     mygenerator = (x*x for x in range(3))
@@ -1721,7 +1721,7 @@ EXTEND() METHID
 
 The extend() method is a list object method that expects an iterable and adds its values to the list.
 AN ITERABLE NOTE, NOT A LIST.
-SO THIS WORKS WITH STRINGS, LISTS, TUPLES, GENERATORS  --> THIS IS CALLED DUCK TYPING 
+SO THIS WORKS WITH STRINGS, LISTS, TUPLES, GENERATORS  --> THIS IS CALLED DUCK TYPING
 
 The itertools module contains special functions to manipulate iterables
 Ever wish to duplicate a generator? Chain two generators? Group values in a nested list with a one liner? Map / Zip without creating another list?
@@ -1734,7 +1734,7 @@ First, the iterator protocol - when you write
 for x in mylist:
     ...loop body... # HERE MYLIST IS AN ITERABLE - BECAUSE ONE CAN ITERATE OVER IT
     #TO MAKE AND CLASS ITERABLE, IMPLEMENT THE __ITER__() METHOD
-    #NOTE, THE __ITER__() METHOD SHOULD RETURN AN ITERATOR - THAT IS AN OBJECT THAT HAS NEXT() METHOD DEFINED. 
+    #NOTE, THE __ITER__() METHOD SHOULD RETURN AN ITERATOR - THAT IS AN OBJECT THAT HAS NEXT() METHOD DEFINED.
 
 Python performs the following two steps:
 
@@ -1756,7 +1756,7 @@ So that's the iterator protocol, many objects implement this protocol:
 
 Iterator protocol is the required that for any class to be treated as an iterator, it must implement the __iter__ method and that method must return a object that implements the next method
 
-Built-in lists return their items one by one, dictionaries return the keys one by one, files return the lines one by one, etc. 
+Built-in lists return their items one by one, dictionaries return the keys one by one, files return the lines one by one, etc.
 
 consider this:
 a = range(2) --> creates a list. calling next(a) wont work because that method only works with an iterator object
@@ -1795,10 +1795,10 @@ You may want to use a custom iterator, rather than a generator, when you need a 
 A metaclass is the class of a class. Like a class defines how an instance of the class behaves, a metaclass defines how a class behaves. A class is an instance of a metaclass.
 LIKE HOW THE CLASS THEMSELVES BEHAVE
 
-SO, SUPPOSE YOU HAVE A CLASS THAT YOU ARE USING AND WISH TO DEBUG IT. SO, YOU CAN ASK THAT CLASS TO IMPLEMENT FROM A METACLASS WHERE YOU DECLARE THAT THE 
+SO, SUPPOSE YOU HAVE A CLASS THAT YOU ARE USING AND WISH TO DEBUG IT. SO, YOU CAN ASK THAT CLASS TO IMPLEMENT FROM A METACLASS WHERE YOU DECLARE THAT THE
 
 
-Classes in python are different from the usual languages. Normally, in Java for eg, objects are just prototypes for the creation of objects. They are just instructions, guidelines. 
+Classes in python are different from the usual languages. Normally, in Java for eg, objects are just prototypes for the creation of objects. They are just instructions, guidelines.
 In python, classes are used to to that duty. They define how the new object will be created, what methods it will have, what variables etc. BUT, ALONG WITH THAT, the class itself is AN OBJECT.
 
 SO, THE WITH THE CLASS OBJECT, YOU CAN :
@@ -1832,8 +1832,8 @@ also, can create classes on fly. IT TAKES THE DESCRIPTION OF THE CLASS AS PARAME
 
 type works this way:
 
-type(name of the class, 
-     tuple of the parent class (for inheritance, can be empty), 
+type(name of the class,
+     tuple of the parent class (for inheritance, can be empty),
      dictionary containing attributes names and values)
 
 e.g.:
@@ -1885,7 +1885,7 @@ Eventually you'll want to add methods to your class. Just define a function with
 
 >>> def echo_bar(self):
 ...       print(self.bar)
-... 
+...
 >>> FooChild = type('FooChild', (Foo,), {'echo_bar': echo_bar})
 >>> hasattr(Foo, 'echo_bar')
 False
@@ -1897,7 +1897,7 @@ True
 
 
 
-python creates the class you ask for when you type class ClassName using METACLASSES.  
+python creates the class you ask for when you type class ClassName using METACLASSES.
 
 
 
@@ -1912,10 +1912,10 @@ But we learned that Python classes are objects.
 Well, metaclasses are what create these objects. They are the classes' classes, you can picture them this way:
 
 MyClass = MetaClass()
-MyObject = MyClass() 
+MyObject = MyClass()
 
 
-YOU CAN CHECK WHAT CLASS ANY OBJECT BELONGS TO by checking it's __CLASS__ attribute. 
+YOU CAN CHECK WHAT CLASS ANY OBJECT BELONGS TO by checking it's __CLASS__ attribute.
 
 >>> age = 35
 >>> age.__class__
@@ -1949,7 +1949,7 @@ You can call it a 'class factory' if you wish.
 
 type is the built-in metaclass Python uses, but of course, you can create your own metaclass.
 
-So, 
+So,
 
 Now the big question is, what can you put in __metaclass__ ?
 The answer is: something that can create a class.
@@ -1958,22 +1958,22 @@ And what can create a class? type, or anything that subclasses or uses it.
 The main purpose of a metaclass is to change the class automatically, when it's created.
 You usually do this for APIs, where you want to create classes matching the current context.
 
-WHEN YOU TYPE CLASS CLASS_NAME():PASS, 
-AT THE CLASS KEYWORD, PYTHON FIRST LOOKS FOR __metaclass__ in the class defination. 
+WHEN YOU TYPE CLASS CLASS_NAME():PASS,
+AT THE CLASS KEYWORD, PYTHON FIRST LOOKS FOR __metaclass__ in the class defination.
 If not there, it will look for __metaclass__ at the MODULE level
 then it will look at the first parent's __metaclass__
 
 
 
 IMAGINE A CASES WHERE YOU NEED THAT ALL YOUR CLASSES MUST HAVE THEIR ATTRIBUTES IN CAPS.
-Of the several ways to do this, one way is to set __metaclass__ at the module level. 
+Of the several ways to do this, one way is to set __metaclass__ at the module level.
 
 
 This way, all classes of this module will be created using this metaclass, and we just have to tell the metaclass to turn all attributes to uppercase.
 
 __metaclass__ can actually be any callable, it doesn't need to be a formal class
 
-Let us use a function to write the metaclass behaviour. 
+Let us use a function to write the metaclass behaviour.
 
 ###
 
@@ -1996,12 +1996,12 @@ def upper_attr(future_class_name, future_class_parents, future_class_attr):
 __metaclass__ = upper_attr
 
 class Foo():
-    bar = 'bip' 
-    #THIS CLASS DOESNT HAVE A __METACLASS__, SO IT WILL LOOK IN THE MODULE FOR THE SAME. IT FINDS ONE IN THE GLOBAL NAMESPACE (UPPER_ATTR) AND SO THAT FUNCTION WILL BE USED TO CREATE THE OBJECT. 
+    bar = 'bip'
+    #THIS CLASS DOESNT HAVE A __METACLASS__, SO IT WILL LOOK IN THE MODULE FOR THE SAME. IT FINDS ONE IN THE GLOBAL NAMESPACE (UPPER_ATTR) AND SO THAT FUNCTION WILL BE USED TO CREATE THE OBJECT.
 
 __METACLASS__ ---> MUST RETURN A CLASS. FOR EXAMPLE USING TYPE(__, __, __)
 
-NOW, 
+NOW,
 print hasattr(Foo, 'bar')  - False
 print hasattr(Foo, 'BAR')  - True
 
@@ -2027,8 +2027,8 @@ class UpperAttrMetaClass(type):
     # some advanced use involves overriding __call__ as well, but we won't
     # see this
 
-    def __new__(upperattr_metaclass, future_class_name, 
-                future_class_parents, future_class_attr): 
+    def __new__(upperattr_metaclass, future_class_name,
+                future_class_parents, future_class_attr):
 
     #RECALL THAT THE FIRST ARGUMENT OF EACH METHOD IN A CLASS HAS TO BE SELF (I.E. THE CURRENT INSTANCE)
     #HERE IT IS UPPERATTR_METACLASS
@@ -2045,19 +2045,19 @@ class UpperAttrMetaClass(type):
         return type(future_class_name, future_class_parents, uppercase_attr)
         #note, we just called type directly. This solution is not very different from the previous one where we did the same thing from a function.
 
-        #Real OOP would be,inheriting __type__ and overriding it's __new__ method. 
+        #Real OOP would be,inheriting __type__ and overriding it's __new__ method.
 
         #SO, OVERRIDING THE SUPER'S __NEW__ CLASS :
 
-        return type.__new__(upperattr_metaclass, future_class_name, 
+        return type.__new__(upperattr_metaclass, future_class_name,
                             future_class_parents, uppercase_attr)
-        
+
         # or cleaner still. using the super.
 
         return super(UpperAttrMetaclass, upperattr_metaclass).__new__(upperatr_metaclass, future_class_name
                                                             , future_class_parents, uppercase_attr)
 
-        NOTE THAT ALL WE DID WAS TO TAKE THE NAME OF THE FUTURE CLASS, IT'S PARENTS, IT'S ATTRIBUTES AND WE RETURNED THE FIRST 3 VARIABLES AS IS BUT WE CAPS-ED THE ATTRIBUTE DICT AND RETURNED IT. 
+        NOTE THAT ALL WE DID WAS TO TAKE THE NAME OF THE FUTURE CLASS, IT'S PARENTS, IT'S ATTRIBUTES AND WE RETURNED THE FIRST 3 VARIABLES AS IS BUT WE CAPS-ED THE ATTRIBUTE DICT AND RETURNED IT.
 
 
 
@@ -2091,7 +2091,7 @@ False
 a==b
 True
 
-The operator a is b returns True if a and b are bound to the same object, otherwise False. 
+The operator a is b returns True if a and b are bound to the same object, otherwise False.
 
 class class_name(object):
     def return_two(self):
@@ -2100,8 +2100,8 @@ class class_name(object):
 a = class_name()
 b = class_name()
 print a.return_two() == a.return_two --> because the value of the objects is same
-print a.return_two is a.return_two --> 
-False because the methods are created on the fly each time you look them up. the function object is always the same and it creates bound methods each time you look it up. no two bound methods are the same objects. 
+print a.return_two is a.return_two -->
+False because the methods are created on the fly each time you look them up. the function object is always the same and it creates bound methods each time you look it up. no two bound methods are the same objects.
 print id(a.return_two)==id(a.return_two)
 
 True
@@ -2110,18 +2110,18 @@ True
 
 
 73. NUMPY ARRAYS CAN SLICED BY TWO WAYS
-SAW WE HAVE A 99x3 array. 
-So, 
+SAW WE HAVE A 99x3 array.
+So,
 array_name[:5] --> this will give the first 5 rows of the array, all colmuns. this slicing is like slicing a list
 array_name[::5] --> this will give every 5th element of the array, till the end
-array_name[2:20, 1:2] --> this will give the 2nd to 20th row of the matrix and the 2nd column only 
+array_name[2:20, 1:2] --> this will give the 2nd to 20th row of the matrix and the 2nd column only
 array_name[2:30, :][:10] --> this will give the first 10 elements of the submatrix having the 2nd to 29th rows and ALL columns. SAME AS : array_name[2:30][:10]
-NOT MENTIONING THE indicde:indice (or even just : ) amounts to the entire (maximum) being returned. 
+NOT MENTIONING THE indicde:indice (or even just : ) amounts to the entire (maximum) being returned.
 
 
 
 74. "is" returns true when the objects the thing is pointing to are the same. (when the id(obj1)==id(obj2) is true)
-"==" returns true when the value of the object is same. they objects can be different. 
+"==" returns true when the value of the object is same. they objects can be different.
 
 x = range(10)
 b = range(10)
@@ -2145,18 +2145,18 @@ print a.return_two is a.return_two
 False
 
 
-This is because the the classobject 'a' points to different method objects each time. 
+This is because the the classobject 'a' points to different method objects each time.
 
 75. 3 types of methods
-1. Normal methods defined inside a class using 
+1. Normal methods defined inside a class using
 def method_name(self, *args, **kwargs):
-These methods are bound to a classobject and can only be used after instiating the class. 
+These methods are bound to a classobject and can only be used after instiating the class.
 
 2. Static methods
-These methods are independent, they can be used anywhere. When present in a class, they dont need the class to be instiatied to be executable. They are just methods defined inside a class, withoout any relation to it. 
+These methods are independent, they can be used anywhere. When present in a class, they dont need the class to be instiatied to be executable. They are just methods defined inside a class, withoout any relation to it.
 
 3. Class methods
-These methods are defined inside a class and are bount not to a class object for that class but to the class itself. 
+These methods are defined inside a class and are bount not to a class object for that class but to the class itself.
 They are defined as :
 
 @classmethod
@@ -2167,7 +2167,7 @@ They can be used without instiating the class. **INSTATITAING THE CLASS CREATES 
 the difference between static methods and classmethods are that classmethods take cls as the first argument. they are bound to the class. Thus, they have access to all the class attributes and methods. The static methods don't have any access to the class's internals (methods and attributes)
 
 
-76. ISSUE WARNINGS TO THE USER : 
+76. ISSUE WARNINGS TO THE USER :
 NOTE WARNINGS ARE DIFFERENT FROM EXCEPTIONS
 The code below the warnign is executed normally.
 
@@ -2176,7 +2176,7 @@ class HardWarning(Warning):
   pass
 warnings.warn("hello, this is a warning", HardWarning, stacklevel=2)
 
-FIND OUT WHAT THE STACKLEVEL DOES. 
+FIND OUT WHAT THE STACKLEVEL DOES.
 
 
 77. A COOL MODULE - OPTPARSE
@@ -2192,10 +2192,10 @@ MODULE DOCS
     http://docs.python.org/library/optparse
 
 
-78. A common design pattern : 
+78. A common design pattern :
 to make an interface in python, (recall an interface defines methods taht the children whihc inherit the class must implement., they in short provide a blueprint for all the children of the class)
 
-You can use @abc.SOMENAME decorator. 
+You can use @abc.SOMENAME decorator.
 Or you can use this trick :
 
     def run(self, args, opts):
@@ -2204,7 +2204,7 @@ Or you can use this trick :
         """
         raise NotImplementedError
 
-Now, the classes inheriting from the class containing this function must implement the run command by overriding this one. 
+Now, the classes inheriting from the class containing this function must implement the run command by overriding this one.
 
 79 Use print compatible with Py3
 When ever you have to print anything when working on scrapy, use this :
@@ -2234,15 +2234,15 @@ def main():
 if __name__ == '__main__':
     main()
 
-Now, from the cmd, running python hello.py - will get the output desired. 
+Now, from the cmd, running python hello.py - will get the output desired.
 
 81  . TWISTED PYTHON
 It has many protocols implemented
 3 types of execution :
 synchronous - single threaded - simple, when one task is waiting, the entire program stops
 synchonous - multi threaded - complex, the programmer will have to coordinate data b/w the threads
-asynchronous - single threaded - good because if task1 gets into waiting mode, task2 can start executing 
-This will result in a faster code exectution 
+asynchronous - single threaded - good because if task1 gets into waiting mode, task2 can start executing
+This will result in a faster code exectution
 
 Compared to the synchronous model, the asynchronous model performs best when:
 
@@ -2254,7 +2254,7 @@ These conditions almost perfectly characterize a typical busy network server (li
 
 82. A COOL MODULE - weakref
 
-Check the docs. Sometimes, you may not want to save an object from garbage collection - it may not be very important for the project (like entries in cache) - but if you refer to it, it will stay on,it wont go away. so you create a weak reference to it. When all the references to the object are weakrefs only, the object is liable to be garbage collected. 
+Check the docs. Sometimes, you may not want to save an object from garbage collection - it may not be very important for the project (like entries in cache) - but if you refer to it, it will stay on,it wont go away. so you create a weak reference to it. When all the references to the object are weakrefs only, the object is liable to be garbage collected.
 
 
 83 - has_key attribute of dicts
@@ -2279,7 +2279,7 @@ say, the spider dir will have implement the spiders for the module
 6. write a end para which states how the control flows and the system works in general.
 
 
-85. 
+85.
 THE HELP(filename) prints the help in this way :
 First comes the name of the file, the general desc.
 Then the list of classes under CLASSES
@@ -2296,7 +2296,7 @@ CLASSES :
 DispatcherError - custom error msg, extending the Exception class
 _Any - blank class defination
 
-global VARIABLES - 
+global VARIABLES -
 connections={}
 senders = {}
 _boundMethods - Weakref dictionary
@@ -2304,12 +2304,12 @@ signals = {}
 
 HEIRARCHY :
 
-for connections - 
+for connections -
 
 connections[senderkey] - this will be a dict too housing signal.
 so, connection = {'sender_101' : {'signal_one':['receiver_101', 'receiver_102', 'signal_two':"receiver_102"} ... }
 
-for signals - 
+for signals -
 {'signal_one':'receiver_101', 'signal_two':"receiver_102"}
 
 for senders -
@@ -2320,20 +2320,20 @@ FUNCTIONS :
 _removeSender(senderkey) - this will remove the senderkey from connections
 also, it will delete it from the senders key if the object still exists.
 
-- WHERE DOES THE SENDERKEY COME FROM. 
+- WHERE DOES THE SENDERKEY COME FROM.
 
-_cleanupConnections(senderKey, signal) - 
-the doc says it best : 
+_cleanupConnections(senderKey, signal) -
+the doc says it best :
 delete empty signals for senderkey. if senderkey empty, delete it.
 
 _removeSender(senderkey):
-remove the senderkey from connections and try to delete it from the senders too if present. 
+remove the senderkey from connections and try to delete it from the senders too if present.
 
 _removeReceiver(receiver):
 this removes the receiver from all the signals, all senders in collections
 
-saferef : 
-creates a weak ref after checking a few conditions. 
+saferef :
+creates a weak ref after checking a few conditions.
 
 
 
@@ -2341,7 +2341,7 @@ connect(receiver, signal=Any, sender=Any, weak=1)
 connect receiver to sender for signal
 
 
-87. 
+87.
 in scrapy folder, there is a file hello.py
 then it can be imported into another file world.py as :
 
@@ -2359,7 +2359,7 @@ __init__.py has the code :
 
 **from . import one, two
 
-file one.py can be imported as : 
+file one.py can be imported as :
 **from scrapy.hello import one - because hello refers to __init__.py which has one, two.
 
 88. dict_name.setdefault method
@@ -2393,14 +2393,14 @@ Signal was sent by <object object at 0x196a090>
 Signal was sent by {}
 
 90. Callback functions :
-A callback is any function that you pass to another_function to be executed after the another_function executes. 
+A callback is any function that you pass to another_function to be executed after the another_function executes.
 Examples:
 When we
 
 def start_requests():
     return Request(url, callback=self.parse_this)
 
-Here, parse_this is the callback - after the request is returned, the control goes to that function. 
+Here, parse_this is the callback - after the request is returned, the control goes to that function.
 
 Similary, from pydispatcher docs :
 
@@ -2413,14 +2413,14 @@ dispatcher.connect( handle_event, signal=SIGNAL, sender=dispatcher.Any )
 
 
 Here too, the handle_event is a callback funciton. what the line :
-    dispatcher.connect( handle_event, signal=SIGNAL, sender=dispatcher.Any )        
-does is : once the signal is received, execute this funciton. 
+    dispatcher.connect( handle_event, signal=SIGNAL, sender=dispatcher.Any )
+does is : once the signal is received, execute this funciton.
 
 
 91. UNDO your commits.
-There are 3 levels of undo commands available. 
+There are 3 levels of undo commands available.
 1. HARD UNDO
-Say you want to remove the commit and also the changes that you did. So if you deleted all the code in your file, then saved and commited - do this. This will remove any changes you ever did. 
+Say you want to remove the commit and also the changes that you did. So if you deleted all the code in your file, then saved and commited - do this. This will remove any changes you ever did.
 
 git reset --hard HEAD~1
 
@@ -2428,8 +2428,8 @@ git reset --hard HEAD~1
 This undo is if you want to undo the commit and remove the fiels from the staging area
 git reset HEAD~1
 
-3. Softest undo. 
-This undo is if you want to undo you commit but wish to keep the changes staged. 
+3. Softest undo.
+This undo is if you want to undo you commit but wish to keep the changes staged.
 git reset --soft HEAD~1
 
 
@@ -2439,21 +2439,21 @@ Some of the properties of MODULO are
 (a+b)%n=(a%n+b%n)%n
 (a×b)%n=(a%n×b%n)%n
 
-This operation is very useful when computation involves very large numbers and to check correctness we usually perform computation under modulo operation, hence keeping variables in standard integer size limits. 
+This operation is very useful when computation involves very large numbers and to check correctness we usually perform computation under modulo operation, hence keeping variables in standard integer size limits.
 
 93. IF ELSE IN LIST COMPREHENSIONS
 Consider this : a = range(10)
 
 print [i**2 for i in a if i%2==0]  --> will print the squares of the even numbers
 NOW THIS :
-print [i**2 if i%2==0 else i for i in a]  --> will print the squares of even numbers and the odd numbers like they are. 
+print [i**2 if i%2==0 else i for i in a]  --> will print the squares of even numbers and the odd numbers like they are.
 
-94 Closed form 
-An equation is said to be a closed-form solution if it solves a given problem in terms of functions and mathematical operations from a given generally-accepted set. 
+94 Closed form
+An equation is said to be a closed-form solution if it solves a given problem in terms of functions and mathematical operations from a given generally-accepted set.
 That is an equation is able to get the crrect ans. for eg the sum of n numbers in an AP
 
-95. The algorithms are mathematical manipulation is all. 
-For each alog, think of it as a mathamatical problem. Find a pattern, find a shortcut. Then, when all the thinkning is done, coding (esp in Python) will take not more than 2 mins. 
+95. The algorithms are mathematical manipulation is all.
+For each alog, think of it as a mathamatical problem. Find a pattern, find a shortcut. Then, when all the thinkning is done, coding (esp in Python) will take not more than 2 mins.
 
 96. IMPORTANT LEARNING :
 When writing on paper and thinking about a solution too, it if seems too difficult to get the best one, just implement the brute force and get some of the testcases working. Dont just do nothing. Sometimes the brute force isn't that bad at all. Also, once the brute force is up and you are timing out on some cases, THEN MAKE OPTIMIZATIONS. THINK ABOUT WHAT YOU CAN IMPROVE, AND DO IT.
@@ -2531,7 +2531,7 @@ Also, one caveat: if 'u', the key itself is not present in the dict, we will get
 
 
 103. Design principles
-To do the common checking tasks like to check if a node is present in the graph etc, write a method and use that all the time. The benefit is that you can custom its functionality, by raising custom exceptions, having robust checking etc. 
+To do the common checking tasks like to check if a node is present in the graph etc, write a method and use that all the time. The benefit is that you can custom its functionality, by raising custom exceptions, having robust checking etc.
 Follow this all the time - this allows for easy extensionability and also increases readibility.
 eg : for node in self.nodes(): is better than for node in self.node_components:
 
@@ -2541,18 +2541,18 @@ eg : for node in self.nodes(): is better than for node in self.node_components:
 Sometimes, this is how recursion can be implemented :
 
 def wrapper_for_rec:
-    here, you can write basic initialization needed for the recur implementation. For eg, initiallizing variables etc. 
+    here, you can write basic initialization needed for the recur implementation. For eg, initiallizing variables etc.
     res = rec()
     return res
 
 def rec():
-    here, write the recursive function. 
+    here, write the recursive function.
 
 106 Deepcopy and shallow copy
 "from import copy"
-difference only there for compond objects - they are the objects that contain different types of objects - for eg lists, dicts, class objects etc. In shallow copy, a new compund object is created and then as far as possible, the same objects into it that the original contains. 
+difference only there for compond objects - they are the objects that contain different types of objects - for eg lists, dicts, class objects etc. In shallow copy, a new compund object is created and then as far as possible, the same objects into it that the original contains.
 
-In deep copy, a new compound object is created and then recursivvely, inserts the copies of the objects found in the original object. 
+In deep copy, a new compound object is created and then recursivvely, inserts the copies of the objects found in the original object.
 
 
 107. Starting and using MySQL on Ubuntu
@@ -2564,7 +2564,7 @@ ENTER PASSWORD : leonardo1!
 I read today that for each training example, the cost function deriative wrt the bias and wrt to the weights is found. then the cost function at that point is taken as the sum of all the individiual Cost functions. What if we take a weighted avrage and not normal average. for eg, assign the outer layers more weight, or assign random nodes more weight etc.
 
 109. Perform some action at python startup
-go to anaconda/envs/root/python2.7/lib/site-packages and create a sitecustomize.py file. this will we everytime python shell is used. in site..py type print "Hi !", and save. next time you run python, it will print "Hi" everytime. 
+go to anaconda/envs/root/python2.7/lib/site-packages and create a sitecustomize.py file. this will we everytime python shell is used. in site..py type print "Hi !", and save. next time you run python, it will print "Hi" everytime.
 
 
 110. This is how you access the class' variables from inside the @classmethod
@@ -2585,9 +2585,9 @@ print one.var_one
 
 Removing cls from cls.var_one will make this not work.
 
-111. The difference between type() and isinstance(2, int) - is that type will check only for the type of the object and return it. so, class type1(type2) -- i.e. an object of type1 inherits type2 objects. so, type(type1) is type2 will return false. 
+111. The difference between type() and isinstance(2, int) - is that type will check only for the type of the object and return it. so, class type1(type2) -- i.e. an object of type1 inherits type2 objects. so, type(type1) is type2 will return false.
 however, isinstance in this exact case will return true.
-isinstance() is usually the preferred way to ensure the type of an object because it will also accept derived types. 
+isinstance() is usually the preferred way to ensure the type of an object because it will also accept derived types.
 
 The second parameter of isinstance() also accepts a tuple of types, so it’s possible to check for multiple types at once. isinstance will then return true, if the object is of any of those types:
 
@@ -2622,7 +2622,7 @@ Functions/Methods
 functions written inside the class are called methods.
 funcitons are the funcitons outside of any class
 
-classes in python have - methods and attributes 
+classes in python have - methods and attributes
 classes in java have - methods and instance varialbes
 
 methods are callable, attributes arent
@@ -2645,7 +2645,7 @@ c = Cat()
 c.method_one(1)
 1
 
-Now, method_one is just as if you were using a partial (from functools). you get a partially applied version of the function with the object instance c bound as the first argument to method_one. 
+Now, method_one is just as if you were using a partial (from functools). you get a partially applied version of the function with the object instance c bound as the first argument to method_one.
 
 Just like instance attributes, we have class attributes
 
@@ -2752,7 +2752,7 @@ d.__class__.__dict__['open'].__get__(d, Door)
 We have successfully bound the open method to the instance.
 This is the descriptor protocol - USING __get__ of the function object to take in the instance and the owner class and binding the function object to the instance
 
-[[here, you can do random shit, errors have vanished: 
+[[here, you can do random shit, errors have vanished:
 d.__class__.__dict__['open'].__get__(str, int)
 <bound method int.open of <type 'str'>>
 ]]
@@ -2769,12 +2769,12 @@ class One(object):
     def m_one(self):
         self.c = 'red'
         return 1
-    
+
     @classmethod
     def c_one(cls):
         print cls.color
         return 1
-    
+
     @classmethod
     def c_two(cls):
         cls.c_one()
@@ -2890,7 +2890,7 @@ class SecurityDoor(Door):
 dict_proxy({'locked': True,
     '__module__': '__main__',
     'open': <function open at 0xb73d8844>,//available here as well now
-    'colour': 'gray', //available now 
+    'colour': 'gray', //available now
     '__doc__': None})
 
 To call the parent's version:
@@ -2940,7 +2940,7 @@ In statically typed languages, the compiler decides the method to call on receiv
 
 In dynamically typed languages, the runtime decides on the method
 
-when you do c = a + b, 
+when you do c = a + b,
 python actually calls: c = a.__add__(b)
 
 the len("adad") calls the __len__ method. so, here: the string classes __len__ method is called (first "adad"'s dict is looked at, the method is not there, so string's dict looked at)
@@ -3002,7 +3002,7 @@ dt = dict(zip(range(100), string.ascii_lowercase))
 
 sorted(dt, lambda x:dt[x])
 ^^WRONG
-this will print in the order of 
+this will print in the order of
 
 sorted(dt.iteritems(), key=lambda (k,v):(v,k))
 This will print in the increasing order of values.
@@ -3035,7 +3035,7 @@ p = Pizza(42)
 p.get_size()
 42
 
-We didnt need to provide the self argument here as the method is bound to the instance p. the descriptor protocol does the self providing 
+We didnt need to provide the self argument here as the method is bound to the instance p. the descriptor protocol does the self providing
 
 Recall that in hashing, we studied that it is like we can use anything as index. for eg, we could use "hello" as the index etc. This is what happens exactly in the dict
 we have: dict_['hello'] = __the__value__
@@ -3089,7 +3089,7 @@ The set is the hash table in its purest form. the objects are mapped to buckets.
 
 When we do a==b --> __eq__ method is invoked
 when we do hash(a) --> __hash__ method is invoked
-if you change __eq__, you must also change __hash__, 
+if you change __eq__, you must also change __hash__,
 
 Instance attributes and class attributes:
 class Cat(object):
@@ -3150,13 +3150,13 @@ b = string.ascii_lowercase
 print id(a), id(b), a==b, hash(a), hash(b)
 139640507897392 139640507897392 True 3336797188572474019 3336797188572474019
 
-the hash comes from the value of the object, not from its memory location, i.e. it comes from the == or __eg__ method. so, ideally, a and b shouldnt be allowed to be stored in a set. the storage decision is made on hash of the object, which is made on the __eq__, so if a==b, it is technically the same object and both shouldnt be allowed to be stored in the set. 
+the hash comes from the value of the object, not from its memory location, i.e. it comes from the == or __eg__ method. so, ideally, a and b shouldnt be allowed to be stored in a set. the storage decision is made on hash of the object, which is made on the __eq__, so if a==b, it is technically the same object and both shouldnt be allowed to be stored in the set.
 
 if a not in list_
 
 --> here the in uses ==
 
-Set containment uses hashing; list containment uses equality. 
+Set containment uses hashing; list containment uses equality.
 so, "a" in set(['a', 'b', 'c'])
 this will compare the hash of the objects
 
@@ -3184,6 +3184,3 @@ Checking if somehting is in the list, is O(n)
 
 Take away: sets check membership via hashing, lists via ==/is/__eq__
 By the way, as you might expect, dictionary containment also uses hashing, and tuple containment uses equality:
-
-
-

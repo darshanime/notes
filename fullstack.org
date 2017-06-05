@@ -2,7 +2,7 @@
 
 1. We have one server that has the everything [viirtual private server]
 and then the second server that houses the testing framework
-VPS has the OS. 
+VPS has the OS.
 The OS has the Web Server[nginx] - it has an engine to run the code. For eg, we can use WSGI Server to run python code (eg. gunicorn), the web server can take the code/other dependencies from github  etc. there are also the static files, key value datastores etc that are in the OS and are used by the server.
 
 
@@ -11,7 +11,7 @@ The OS has the Web Server[nginx] - it has an engine to run the code. For eg, we 
 3. nginx - it is a web server
 4. green unicorn - a WSGI server, web server gateway interface
 
-5. WSGI is a standard defined by the python community to for deploying web applications to web servers. a server that impliments the WSGI standard is the WSGI server. django/flask etc are wsgi frameworks. 
+5. WSGI is a standard defined by the python community to for deploying web applications to web servers. a server that impliments the WSGI standard is the WSGI server. django/flask etc are wsgi frameworks.
 
 We must run our web application on a server or a cluster of servers called the production enviornment. we can rent a virtual server from AWS, Linode, DigitalOcean for eg. There are several options:
 
@@ -21,7 +21,7 @@ IaaS - virtualized abstractions of resources, AWS, MSAzure
 PaaS - Abstracted execution enviornments eg Heroku, Amazon BeanStalk
 
 
-Virtual Private servers - are virtualized slices of hardware which run on top of physical server. They use software like VMWare to run many different server instances on the same server. 
+Virtual Private servers - are virtualized slices of hardware which run on top of physical server. They use software like VMWare to run many different server instances on the same server.
 
 
 when you create a new EC2 instance, you will get a key-value pair - it will be a .pem file.
@@ -41,7 +41,7 @@ secure your fresh server
 # and prevents brute force login attempts
 apt-get install fail2ban
 
-change UsePAM to true in : 
+change UsePAM to true in :
 /etc/ssh/sshd_config
 
 this will not allow root access to the server.
@@ -65,7 +65,7 @@ chmod 0440 /etc/sudoers
 **OQ: not able to do this for some reason.
 check the pages 30-36 and implement that
 
-you have the entire procedure in a script so that you don't have to do this everytime you use a new VPS. we use Fabric for that. 
+you have the entire procedure in a script so that you don't have to do this everytime you use a new VPS. we use Fabric for that.
 install it in a virtualenv using : pip install fabric==1.10.2
 Execute the script from the local command line with
 fab bootstrap . You'll
@@ -98,7 +98,7 @@ sudo ufw allow 443
 
 sudo ufw enable
 
-we can automate this and more using Ansible. 
+we can automate this and more using Ansible.
 Ansible is an open source configuration management tool written in Python that will
 allow us to automate the steps we performed manually above. We'll also build on the
 Ansible scripts, which are called “playbooks” in Ansible terminology.
@@ -115,7 +115,7 @@ Now, that we have an Ansible script that will create a new deploy user, prevent 
 Nginx is an example of a web server. recall, earlier, when we wanted to host pages, eg for jekyll, we used jekyll serve - this created a server and it hosted the static pages. Similarly, we have SimpleHttpServer in the Python API. So, inside the OS, we need a server that would handle the HTTP requests for the page - it would accept the GETs, process them and return JSON, XML, HTML etc.
 
 In our example, the server does two things:
-1. serves the static CSS and JS files. 
+1. serves the static CSS and JS files.
 2. it also serves as a proxy that passes requests to the WSGI server and sends the responses back to the web browser.
 
 We will use Nginx (other options include Apache HTTP server etc)
@@ -133,13 +133,13 @@ the domain name is just a alias for an IP. The webserver is located on the inter
 
 there are special hosts that do this conversion, called Domain Name System hosts.
 
-HTTP is without encryption, HTTPS is not. 
+HTTP is without encryption, HTTPS is not.
 We can configure Nginx without HTTPS, via SSL/TLS
 
 create a config file with the app name and extension as .conf
 /etc/nginx/conf.d/loccart.conf
 
-here, we define the port to listen to for connections, define locations for access log, error log etc. say where to find the static files, we set the proxy settings. 
+here, we define the port to listen to for connections, define locations for access log, error log etc. say where to find the static files, we set the proxy settings.
 
 we can create a self-signed certifiicate and upload it on the nginx server for security.
 
@@ -151,13 +151,13 @@ scp -i path/on/local/machine/file.txt fil2.txt deployer@{your.server.ip.address}
 
 we need to copy the cert files in a certain folder of the nginx dirs.
 
-now, in the config file we created earlier, we will add the certificate location and its key. 
+now, in the config file we created earlier, we will add the certificate location and its key.
 
 we can automate all this, using Ansible.
 
 we can have our code hosted on a github, and make our webserver grab it from there directly. for large projects, it is recommended that we have deployment pipelines package the source code to deploy it and never have production enviornment touch the source control system directly.
 
-we need a deploy key. this will grant read only access from our server to the single repo that houses our code. this is important if your repo is private. for public repos, anyone can read the code. 
+we need a deploy key. this will grant read only access from our server to the single repo that houses our code. this is important if your repo is private. for public repos, anyone can read the code.
 
 whenever you want to authorize two systems, you use public and private keys.
 
@@ -173,7 +173,7 @@ we can create them like this:
 ssh-keygen -t rsa -b 2048
 
 we put the public ket in github and keep the private key with us. so, the server can show everyone its key and then check if the client has the matching key, if yes, that client is authorized. else, not.
-so, you keep the secret one with you. 
+so, you keep the secret one with you.
 
 go to your private repo and add the deploy key to the project. share the public key. put the private key in your server.
 
@@ -192,7 +192,7 @@ master'
 PostgreSQL is a traditional relational database.
 Redis is an in-memory key-value pair store.
 
-we will use the former for long term/persistant data, and the latter for transient data for example, to keep a count of the number of votes received. 
+we will use the former for long term/persistant data, and the latter for transient data for example, to keep a count of the number of votes received.
 
 the database runs on the database server. we can install PostgreSQL by getting the following packages:
 1. postgresql - core database software
@@ -223,39 +223,7 @@ we will install the dependencies on our server in a virtualenv, not directly.
 each virtualenv is its own copy of the python intrepreter and dependencies in the site-packages directory.
 
 When you build a Python web application you should always include a requirements.txt file with your project’s pegged dependencies. “Pegging” dependencies means attaching a specific version number after the name of the
-dependency. 
+dependency.
 
 we can install what is in the requirements.txt file by first activating the enviornment and then issueing:
 pip install -r /home/deployer/cyoa/requirements.txt
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

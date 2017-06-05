@@ -1,12 +1,12 @@
 * emacs
 
 The current version is emacs24
-install it using 
+install it using
     sudo apt-get install emacs24
 
 C-f Forward one character
 C-n Next line
-    
+
 C-b Back one character
 C-p Previous line
 
@@ -15,7 +15,7 @@ M-f Forward one word
 M-a Previous sentence
 M-v Previous screen
 M-< Beginning of buffer
-    
+
 C-e End of line
 M-b Back one word
 M-e Next sentence
@@ -38,7 +38,7 @@ c - l : center the text around the cursor
 
 ####### MOVING AROUND
 
-move lines: 
+move lines:
     c-p previous
     c-n next
 
@@ -78,7 +78,7 @@ c-g is to quit - use if emacs is forzen, a command is taking too long to execute
 
 c-x is for command related to windows, files, buffers and related things
 so:
- c-x 1 
+ c-x 1
 kills all windows, and keeps only 1
 
 type 25 'a's using
@@ -135,7 +135,7 @@ finding a file makes a new buffer in emacs
 get a list of buffers using c-x c-b
 get rid of the list by c-x 1
 
-there can only be one active buffer, if you to switch to editing another file, use c-x c-f filename or simply, 
+there can only be one active buffer, if you to switch to editing another file, use c-x c-f filename or simply,
 
 c-x b
 here, type the name of the file you want to switch to
@@ -168,7 +168,7 @@ There are many C-x commands.  Here is a list of the ones you have learned:
     C-x b       Switch buffer
     C-x C-c     Quit Emacs
     C-x 1       Delete all but one window
-    C-x u       Undo 
+    C-x u       Undo
     C-/         Undo
 
 arguments that are used even less are named.
@@ -180,7 +180,7 @@ emacs autosaves your files
 they begin and end with #
 so: #hello.py#
 
-to recover the auto-save file, 
+to recover the auto-save file,
 m-x recover-file <return>
 
 ######### GUI components
@@ -210,7 +210,7 @@ c-r for reverse search
 
 Multiple windows
 
-to move the line with the cursor to the top - c-l c-l 
+to move the line with the cursor to the top - c-l c-l
 to get it to bottom, one more c-l
 to where it was, one more c-l
 
@@ -290,7 +290,7 @@ m-x info OR c-h i is for the information manual, the official documentation
 
 point is the current cursor
 
-find-file-at-point --> if your point is on a filepath, you can open it using 
+find-file-at-point --> if your point is on a filepath, you can open it using
 Mx ffap
 
 Ido mode
@@ -363,7 +363,7 @@ c-x v to discard the changes in the marked buffers
 
 unmark it using `u`
 
-also, can open it using ret, e, 
+also, can open it using ret, e,
 
 dont forget to bind the c-x c-b to ibuffer
 
@@ -394,7 +394,7 @@ to create a new bookmark, c-x r m (m for mark)
 i just created a bookmark!
 it is used to go back to a place in code, just like what a bookmark does!
 
-reiterating - 
+reiterating -
 c-f forward one char
 c-b backward one char
 c-n next line
@@ -619,7 +619,7 @@ a frame can be divided into as many windows as required
 
   c-x 2 is for split-window-below
   c-x 3 is for split-window-right
-  
+
   if you do both, you'll have three windows
 
   each window can hold a buffer
@@ -632,7 +632,7 @@ the "other-window" is the one you visit when you do c-x o
  you can cycle the other window by m-pgdown
 
 so, c-x 3/4 opens another window with same buffer but:
-c-x 4 is the common prefix for opening things in other buffer 
+c-x 4 is the common prefix for opening things in other buffer
 
     c-x 4 c-f find-file-other-window and move cursor there
     c-x 4 c-o display-buffer - this asks for a buffer from the
@@ -685,13 +685,13 @@ so:
 
 	c-x 4 d open dired in another window
 	c-x 4 m compose mail in other window
-	
+
 in the terminal, if you try to do c-4 c-f it wont work, this is because you cant use control with digit keys,
 there you have to use: c-u 4 c-f
 
 c-u c-f is by default 4 chars forward, and powers of 4 hence.
 
-	
+
 Dired
 ~~~~~
 ~~~~~
@@ -769,7 +769,7 @@ view all with c-x r c-h
 c-x r w saves the window configuration - window-configuration-to-register
 c-x r f saves the frame configuration (multiple instances of emcas, and all their windows configuration)
       	this is for frame-configuration-to-register
-	
+
 this asks for a name, type it and it is saved
 when you want to retrieve it, just do c-x r j <name> and the layout is restored
 
@@ -1045,7 +1045,7 @@ called along with everything else as arguments
     the inner most parts are executed before the outer ones OR
     	      	   	 OR
     args are evaluated from left to right ??
-    
+
 so:
 
     (+ 1 (+ 2 3) (* 3 4) (/ 4 2))
@@ -1218,11 +1218,11 @@ this command is used to bind a key to a function
 
 example:
 (global-set-key (kbd "C-x C-b") 'ibuffer) ;; bind "C-x C-b" to ibuffer command
-(global-set-key "\C-x\C-b" 'ibuffer)  ;; bind "C-x C-b to ibuffer command, but modifier 
+(global-set-key "\C-x\C-b" 'ibuffer)  ;; bind "C-x C-b to ibuffer command, but modifier
                                       ;; keys must be escaped with the backslash
 (global-set-key [?\C-x?\C-b] 'ibuffer) ;; use vector instead of a string [[ vector is array in other lngs]]
 
-to avoid escaping characters and all, use "kdb" function - it recorgnizes 
+to avoid escaping characters and all, use "kdb" function - it recorgnizes
 C-x, <f2>, left, right, up, down etc
 
 local binding if defined, takes precedence over the global-key
@@ -1341,7 +1341,7 @@ so:
     setup-faces.el for Faces group.
     setup-help.el for Help group.
     setup-multimedia.el for Multimedia group.
-    setup-local.el for Local group. 
+    setup-local.el for Local group.
 
 say you create a folder ~/.emacs.d/custom
 you can load that folder in your init using:
@@ -1897,8 +1897,8 @@ this is encoded in base64 by httpie and it looks like this in the request:
     Host: localhost:8000
     User-Agent: HTTPie/0.9.9
 
-eg: 
-http --auth 5:4ih-cb4b672694981ab7311f :8000/api/signed_url 
+eg:
+http --auth 5:4ih-cb4b672694981ab7311f :8000/api/signed_url
 http --auth 5:4ih-cb4b672694981ab7311f :8000/api/login username=darshanime password=test1234 -f
 (the -f flag is for serializing the command line data as form-fields. checking the docs for
 request.POST, we see that it returns
@@ -1962,7 +1962,7 @@ sexp --> symbolic expression (aka lisp expression)
 
 to add an item to a list,
 (put 'eval-expression 'disabled-nil)
-here, we add the symbol 
+here, we add the symbol
 
 to search for all the emacs's variables and functions that contain the word "delete":
 M-x apropos RET delete RET
@@ -2041,7 +2041,7 @@ also eg: (if 1 "yup" "nope")
 
 hence:
 (if a a //if a is true, return a
-    (if b b // ELSE, if b is true return b 
+    (if b b // ELSE, if b is true return b
         (if y y z))) // ELSE, if y is true, return y else z
 
 (if a a b) ----> same as ----> (or a b)
@@ -2188,7 +2188,7 @@ so, we solved the problem using advice, by only changing the advice
 that's too restrictive :top:
 to allow a new buffer, we do this:
 (interactive
-  (list (read-buffer "switch to buffer: //read-buffer prompts the user for a buffer name, we are giving the 
+  (list (read-buffer "switch to buffer: //read-buffer prompts the user for a buffer name, we are giving the
                      (other-buffer) //read-buffer 2 args,default buffer to switch-which is what is returned by other-buffer here
                      (null current-prefix-arg)))) // and a boolean stating wheat her to restrict to existing buffers.
                      here, null returns true if arg is nil.
@@ -2201,9 +2201,3 @@ use it to upercase commands
 how to save info in one command and retrieve it in another?
  - using variables
  - using markers, symbol properties
-
-
-
-
-
-

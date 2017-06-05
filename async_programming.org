@@ -8,13 +8,13 @@
 [[./assets/twisted_1.png]]
 
 
-* In which we begin at the beginning 
+* In which we begin at the beginning
 
-Twisted operates at a very high level of abstraction, so, it is necessary to start at low level stuff to appreciate Twisted. 
+Twisted operates at a very high level of abstraction, so, it is necessary to start at low level stuff to appreciate Twisted.
 
 If you have only one core and you want to do multiple tasks, there are 3 ways:
 
-There are 3 main models 
+There are 3 main models
 
 ** Synchronous model - Single threaded synchronous model
 
@@ -31,7 +31,7 @@ There are 3 main models
 
 Here, the different threads of execution are managed by the operating system, and the host machine may have many cores or even one core (multiplexing)
 
-This works fine if the threads are independent of each other, but if they are not, you have to manage access to shared resources wisely. 
+This works fine if the threads are independent of each other, but if they are not, you have to manage access to shared resources wisely.
 This led to the whole section on Synchronization in OS class
 
 ** Asynchronous model - single threaded asynchronous model
@@ -54,7 +54,7 @@ This is perfectly suited for a typical network server (like a web server)
 
 * Slow poetry and the apocalypse
 
-Let's write a webserver that will send poetry when any client connects to it. 
+Let's write a webserver that will send poetry when any client connects to it.
 It is a blocking server so it will finish one and then initiate another
 
 It is written using just sockets. It listens for connections and when a connection is initiated, it uses sock.sendall to send some data.
@@ -86,10 +86,5 @@ It is written using just sockets. It listens for connections and when a connecti
             return
         time.sleep(delay) # artificial delay
 #+end_src
- 
+
 Question - here, we are creating a socket and accepting client connections to it and asking it to send a chunk of data. What is the max quantity of data that it can send in one go?
-
-
-
-
-

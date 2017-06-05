@@ -22,22 +22,22 @@ for i in range(1000):
 6. tf.reduce_mean
 this will find the mean of the tensor.
 
-7. When writing the dimensions of the Weight vector, think about the layers which the matrix would join 
+7. When writing the dimensions of the Weight vector, think about the layers which the matrix would join
 axb a=#number neurons in l-1, b=#in l
 When writing the bias, think about the number of neurons in the layer : nx1 - n = #of neurons in that layer
 
 8. Type cast values in TF. eg boolean to float
 tf.cast(bool_tensor, "float")
 
-9. to execute any command, create a session, 
+9. to execute any command, create a session,
 sess = tf.Session()
-then, use : sess.run(FN_NAME, feed_dict={x:___, y:___}) - here, the feed_dict must contain all the variables that are needed to execute the FN_NAME with the key as the actual name being used in the FN_NAME defination. 
+then, use : sess.run(FN_NAME, feed_dict={x:___, y:___}) - here, the feed_dict must contain all the variables that are needed to execute the FN_NAME with the key as the actual name being used in the FN_NAME defination.
 
 10.More specifically, as a mixture of an infinite number of normal distributions with a common mean μ but with precisions (the inverse of the variance) that are randomly distributed according to a gamma distribution
 
 11. tf.reshape(tensor_to_reshape, [1, 2, 3])
 
-12. We are converting the input image into a 4D tensor. SO, the convulation layer needs strides as a 4D tensor too - describing the stride in each direction of each dimension of the input. 
+12. We are converting the input image into a 4D tensor. SO, the convulation layer needs strides as a 4D tensor too - describing the stride in each direction of each dimension of the input.
 Max pool layer doesn't need the weights. It needs the ksize, and the strides.
 Officialy, :
 ksize: A list of ints that has length >= 4. The size of the window for each dimension of the input tensor.
@@ -50,18 +50,14 @@ The first two are for the dimensions of the patch size, the 1 is for the #of inp
 14. tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
 the inputs are x, W, strides.
 
-15. cross entropy error reduces the entropy between the outcome you predicted and the true one. 
+15. cross entropy error reduces the entropy between the outcome you predicted and the true one.
 (Summation over : y_true*tf.log(y_predicted))
 
 16. After defining the model, all the statements seem like one liner functions. for eg :
-cross_entropy = -tf.reduce(y_*tf.log(y_conv))    
+cross_entropy = -tf.reduce(y_*tf.log(y_conv))
 train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
 correct_pred = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_pred, "float")) - when called, with accuracy.eval(feed_dict={blah:blah})
 
 Run the functions using fn_name.eval(feed_dict={blah:blah})
 OR fn_name.run(feed_dict={blah:blah})
-
-
-
-

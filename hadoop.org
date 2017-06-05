@@ -25,7 +25,7 @@ what makes it NoSQL is that the attributes can vary. you can have different attr
 
 CAP theory
 
-consistency - supports transactions, 
+consistency - supports transactions,
 availability - up-time(data always availabile)
 partionining - partionining means the data can be stored as chunks - parallel processing of data possible be of P
 
@@ -79,8 +79,8 @@ recommendation engine, risk modelling, customer churn analysis, anamoly detectio
 Difference between HBase and Hadoop
 	Hadoop core is a HDFS, processing framework - mapreduce
 	the HDFS is a big data filesystem, so each chunk is 64mb or 128mb or can be configured to even more
-	
-	MapReduce is written in java. folks dont want to query the data in the hdfs directly, they want an abstraction, an api that makes the querying easier. they want an orm, MapReduce is that orm. 
+
+	MapReduce is written in java. folks dont want to query the data in the hdfs directly, they want an abstraction, an api that makes the querying easier. they want an orm, MapReduce is that orm.
 
 			MapReduce : Hadoop :: C++ : OOP
 
@@ -92,7 +92,7 @@ Hadoop processes runs in seperate JVMs
 JVMs don't share state
 JVM processes differ b/w Hadoop 1 and 2
 
-Hadoop can be used with multiple filesystems as well. eg: 
+Hadoop can be used with multiple filesystems as well. eg:
 
 HDFS (larger chunks, replication 3 fold) --> it has 2 modes (distributed - 3 copies, pseudo-distributed - used for testing)
 
@@ -125,9 +125,9 @@ Hadoop ecosystem
 
 
 	Cloudera additionally has Hue - UI framework which makes interacting with Hadoop easier
-	
-Impala, Hive, Pig are all used to query the MapReduce, provide a layer of abstraction
-Hive has HQL - hive query langage - it is very similar to SQL used in rdbms	
 
-you can set up ec2, install Hadoop OR use Elastic 
+Impala, Hive, Pig are all used to query the MapReduce, provide a layer of abstraction
+Hive has HQL - hive query langage - it is very similar to SQL used in rdbms
+
+you can set up ec2, install Hadoop OR use Elastic
 (Up and running with )

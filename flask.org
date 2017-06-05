@@ -37,7 +37,7 @@ from app import app
 app.run(debug=True)
 
 
-here, we used the index view to return html to the page. to the request. 
+here, we used the index view to return html to the page. to the request.
 what if we wanted to return better html?
 
 you could do something like:
@@ -208,7 +208,7 @@ from .forms import LoginForm
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
-    return render_template('login.html', 
+    return render_template('login.html',
                            title='Sign In',
                            form=form)
 
@@ -225,7 +225,7 @@ def login():
         flash('Login requested for OpenID="%s", remember_me=%s' %
               (form.openid.data, str(form.remember_me.data)))
         return redirect('/index')
-    return render_template('login.html', 
+    return render_template('login.html',
                            title='Sign In',
                            form=form)
 
@@ -236,7 +236,7 @@ When validate_on_submit is called as part of a form submission request, it will 
 If at least one field fails validation then the function will return False and that will cause the form to be rendered back to the user, and this will give the user a chance to correct any mistakes. We will see later how to show an error message when validation fails.
 
 
-we can display the errors in data entry by the user: 
+we can display the errors in data entry by the user:
           Please enter your OpenID:<br>
           {{ form.openid(size=80) }}<br>
           {% for error in form.openid.errors %}
@@ -244,9 +244,9 @@ we can display the errors in data entry by the user:
           {% endfor %}<br>
 
 
-          As a general rule, any fields that have validators attached will have errors added under form.field_name.errors.In our case we use form.openid.errors. 
+          As a general rule, any fields that have validators attached will have errors added under form.field_name.errors.In our case we use form.openid.errors.
 
-    if in the settings or config file, we have a dict defined at say: 
+    if in the settings or config file, we have a dict defined at say:
     A_DICT = {balh:balh}, we can access it like:
     varOne = app.config['A_DICT']
 
@@ -282,7 +282,7 @@ call it like this:
 databases
 we can use Flask-SQLAlchemy - it is a wrapper for the SQLAlchemy project - which is an ORM
 
-ORMs allow database applications to work with objects instead of tables and SQL. 
+ORMs allow database applications to work with objects instead of tables and SQL.
 
 to track changes in database as our applicaiton grows, we can use migrations
 We are going to use SQLAlchemy-migrate to keep track of database updates for us. It adds a bit of work to get a database started, but that is a small price to pay for never having to worry about manual database migrations.
@@ -344,7 +344,7 @@ How to use tables?
 
 <div class="container"> //creating one of the two available container classes
   <h2>Striped Rows</h2>
-  <p>The .table-striped class adds zebra-stripes to a table:</p>            
+  <p>The .table-striped class adds zebra-stripes to a table:</p>
   <table class="table table-striped"> //assigning the class to the table
     <thead> //the column names for the table
       <tr>
@@ -401,5 +401,4 @@ We have dropdowns as well:
     <li><a href="#">CSS</a></li>
     <li><a href="#">JavaScript</a></li>
   </ul>
-</div>  
-
+</div>

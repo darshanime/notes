@@ -175,7 +175,7 @@ they become pass by value effectively
 
 we can still pass by reference if we pass the pointer to the varialbe
 
-when we pass an array as an argument, the address of the beginning of the array is passed. 
+when we pass an array as an argument, the address of the beginning of the array is passed.
 
 #include <stdio.h>
 
@@ -316,13 +316,3 @@ so:
 #define VTAB '\013' // ascii code 3*1+1*8+0*64 - 11
 is same as:
 #define VTAB '\xb' //b in hex is 11
-
-
-
-
-
-
-
-
-
-

@@ -1,6 +1,6 @@
 * java
 
-1. 
+1.
 #+begin_src java
 import java.util.*;
 
@@ -21,32 +21,32 @@ public class one{
 2. How java is executed
 Write the source code for your program in .java. The compiler checks for errors and if all passes, it converts .java to Java bytecode. This is sent to the JVM which reads and runs the bytecode
 
-To compile, javac class_one.java  - this will get the class_one.class bytecode - this is the compiled code. 
+To compile, javac class_one.java  - this will get the class_one.class bytecode - this is the compiled code.
    Then, start the jvm using this class_one.class file (java class_one)- the jvm converts this to machine code.
 
 the jvm is just a specification - a set of rules that define how the bytecode must be converted to machine code.
 
-3. Create a new instance of the Dog class : 
+3. Create a new instance of the Dog class :
 Dog mydog = new Dog(name, size);
 
-4. Java has lists! 
+4. Java has lists!
 int[] list_one = {1, 2, 3, 4};
 
 5. Typecasting in java. Str to int: int a = Integer.parseInt('8')
 
 A source file has a class, the class has methods and variables. the methods have commands.
 
-6. When you say class_one.class at the cmd, the JVM look for the main() method and executes it. 
-**The main() method must be inside a class obv. 
+6. When you say class_one.class at the cmd, the JVM look for the main() method and executes it.
+**The main() method must be inside a class obv.
 public static void main (String[] args){
     //code here
 }
 
 NORMAL CLASS DEFINATION :
 public class ClassOne{
-    
+
 }
-public - everyone has access to it. 
+public - everyone has access to it.
 class - syntax declaring that this is a class
 
 main()'s void - this means it returns nothing
@@ -55,7 +55,7 @@ The main() method accepts an array of strings as argument and it MUST be called 
 so, args will be ["ab", "de", "og"]
 
 7. The source file must be named after the public class in it. For eg, I create a class ClassOne with the main() method, I cannot call that file one.java, I have to call it ClassOne.java
- 
+
 8. Java has 3 looping commands - while, do-while, for
 
 9. Java has only one main to get the ball rolling. However, the test classes you write to test other classes might have main()s.
@@ -71,24 +71,24 @@ so, args will be ["ab", "de", "og"]
 13. Length of that list : aa.length
 Accessing the elements : aa[1] - 0 based indexing
 
-14. Type casting int one = (int) 24.3 - it always rounds down. 
+14. Type casting int one = (int) 24.3 - it always rounds down.
 
 15. String a = "blah"; int a = 12 --> wont work. This is not Python :P
 
-16. Two types of languages - compiled and interpreted. 
+16. Two types of languages - compiled and interpreted.
 Java is a compiled language - the compiler gets the bytecode from the source code - makes it fast
 Python - the virtual machine converts the source code directly into machine code - makes it slower.
 
 Java is a Strongly typed language - this means that it cant allow variables to hold the wrong type of data. eg: String a, int a example above in #15
 
-Java supports dynamic binding - that means that there will be objects created at runtime, they can hold variables,data. 
+Java supports dynamic binding - that means that there will be objects created at runtime, they can hold variables,data.
 Compiler makes sure you aren't accessing private methods, chaging variables that arent meant to be changed etc.
 
 Procedural programming - this style of programming imply contain a series of computational steps to be carried out. Any procedure can be called at any point in the program
 
 True OO code will have this property : if you have to add a new feature, you wont have to touch previous tested code. EXTENSIBILITY !
 
-17. A inherits from B. B is the super class, A is the subclass. 
+17. A inherits from B. B is the super class, A is the subclass.
 Objects in Java have instance variables and methods
 
 18. create a new class Dog:
@@ -122,12 +122,12 @@ machine language == 110101011010101
 
 terse - not being verbose, being concise and to the point.
 
-22. Scala is an effort to make a "better java". That is, more terse, functional approach, better design maybe while maintaining the speed that java is loved for. The Scala compiler is used to convert scala source code to java bytecode. This byte code can then run on any standard jvm (which runs Java bytecode too). Since Java runs on the JVM, Java and Scala stacks can be freely mixed for seamless integeration. 
+22. Scala is an effort to make a "better java". That is, more terse, functional approach, better design maybe while maintaining the speed that java is loved for. The Scala compiler is used to convert scala source code to java bytecode. This byte code can then run on any standard jvm (which runs Java bytecode too). Since Java runs on the JVM, Java and Scala stacks can be freely mixed for seamless integeration.
 
 Scala classes are ultimately JVM classes. You can create Java objects, call their methods and inherit from Java classes transparently from Scala. Similarly, Java code can reference Scala classes and objects.
 use a scala complier then
 
-23. You can make objects in two steps too - 
+23. You can make objects in two steps too -
 Player p1; --> tells the jvm to allocate space (on the stack) for a reference variable (to store the object reference/pointer/address)
 p1 = new Player(); - tell the jvm to allocate space for the object on the heap and assigns the reference to the reference variable
 
@@ -136,7 +136,7 @@ p1 = new Player(); - tell the jvm to allocate space for the object on the heap a
 public class ClassOne(){
     public static void main(String[] args){
     GameClass game = new GameClass()
-    game.startgame()  --> you are calling the stargame method of the game object. this method will use the 
+    game.startgame()  --> you are calling the stargame method of the game object. this method will use the
     class's instance variables.
     }
 }
@@ -150,7 +150,7 @@ public class ClassOne(){
 static methods can be accessed in non static methods, not the other way round. [ this is because the static methods dont depend on the state of the object/class. whereas the non-static methods do ]
 also, the static methdods must be accessed by the name of the Class, not the object - not illegal, but not good pratice.
 
-27. packaging/exporting a java application. 
+27. packaging/exporting a java application.
 A java program is nothing other than class(es) with one having the main() method. when you wish to ship the code, you can bundle your code in a jar file (java archive) and include a manifest file - which defines which class in that jar holds the main() method. You may also need to include a jvm with your jar incase the end user doesn't have it. there are installer programs that help you package all this together.
 
 28. superclass is more abstract. the sub class inherits from it and gives more specific functionality.
@@ -162,9 +162,9 @@ Two types of variables - priminitives (int, float, String) and object references
 boolean - true or false
 char - 0 to 65535 eg: char='d';
 
-INT : 
+INT :
 byte = 8bits -128 to 127
-short = 16bits 
+short = 16bits
 int = 32 bits
 long = 64 bits
 
@@ -175,22 +175,22 @@ floating point
 float 32 bits eg: float f = 23.5f - without the f, it defaults to double.
 double 64 bits
 
-remember them by : be careful, bears should't ingest large furry dogs - mnemonic - this is in order. 
+remember them by : be careful, bears should't ingest large furry dogs - mnemonic - this is in order.
 be careful, because sakru is large fucking dick
 
 31. Keywords - the tokens that the compiler recognizes - eg: this
 32. there is no such thing as a object variable - only an object reference variable
-the char varialbe holds the well, the char. the object reference variable holds the "bits" having the address of the object. 
+the char varialbe holds the well, the char. the object reference variable holds the "bits" having the address of the object.
 
 33. a Dog reference can only point to a Dog object. But, it can point to different Dog objects in its life. However, it if is declared final - then it cannot point to a different Dog object.
 Also, if it is the reference variable is set to null, it points to nothing - (use Dog dog; dog=null - however, it can be used in the future to point to Dog objects)
 when the last reference variable pointing to a object is set to null, the object becomes a candidate for garbage collection.
 **the reference variable contains a reference to the object - not the object itself. the object lives on the heap.
 
-34. 
+34.
 Dog a = new Dog();
 Dog b = new Dog();
-This creats two dog objects on the heap. 
+This creats two dog objects on the heap.
 
 Dog c = b
 Now, this wont create a new object, this will paste the address biits in b into c. So, c will point to object refered to b only.
@@ -200,7 +200,7 @@ Arrays are always objects, weahter they are declared to hold primitives or objec
 **you can however, put an short in an int array. -- this is called implicit widening
 **a refernce variable has a value of null when you are not referencing any object
 
-eg: 
+eg:
 Dog[] dog ;
 dog = new Dog[7] ;
 --> dog referes to a Dog array object
@@ -218,7 +218,7 @@ A method USES parameters, the caller PASSES parameters.
 A parameter can also be used for a local variable
 
 accept it like this:
-the int says the the bark() method will return an int. 
+the int says the the bark() method will return an int.
 int bark(int a):
     return a;
 
@@ -230,7 +230,7 @@ when you pass an int x to a method, the variable is copied - thus, say the metho
 when you pass reference variables, you pass a copy of the reference variables  -so, if you null the original one, the latter one still remains.
 
 39. getters and setters in java
-say, a class has these instance variables : 
+say, a class has these instance variables :
 var1, var2, var3
 now, getVar1(), setVar1, getVar2(), ... - this is the standard
 
@@ -279,7 +279,7 @@ compare two objects using the .equals() method
 Write the pseudo code first. Then :
 **Write your tests first. then, write the code to pass those tests. writing the tests first makes you think hard about how you want to design the app. then, write some more tests, and just the code that passes those tests. doing this will make sure your app always builds.
 
-The test class usually has the main() method - to instantiate the required objects and run them. 
+The test class usually has the main() method - to instantiate the required objects and run them.
 
 45. new way to loop in java: introducing the "for each"
 int[] arr = new Int(10);
@@ -314,7 +314,7 @@ One is in java.io and the other is in java.util
 49. use the for loop when you know exactly you want the thing to run. use while when you dont.
 
 50. You can create an instance of the class(object of that class) inside the class itself. you can use that object to call the methods of that class.
-eg: 
+eg:
 public class Output{
     public static void main(String[] args){
     Output ou = new Output();
@@ -333,7 +333,7 @@ class Output():
         print self.a
 c = Output()
 print c.a
-c.b() 
+c.b()
 This only works. shifting the last three statements inside the class defination does't work.
 
 51. the traditional arrays - int[] a = new int[4]; cant change their size.
@@ -373,14 +373,14 @@ ArrayList is an object. so, you can invoke/call all these methods. to be fair, a
 
 the traditional array doesn't return things. when you do : Dog d = dogArray[1] -> you did not remove the dog from the array, you just copied the address bits (the pointer/reference to the Dog object being refered to) and put them in d. Now, both d and dogArray[1] point to the same Dog object on the heap.
 
-ArrayList cant hold primitives just like that, it wraps them in a primitive wrapper. 
+ArrayList cant hold primitives just like that, it wraps them in a primitive wrapper.
 
 
 54. The or is ||
 not is != or !a.equals(b)
 
 55 **short circuit operators. && and ||
-the jvm will check for the left hand side condition first and if it is false, wont bother to check the right one. 
+the jvm will check for the left hand side condition first and if it is false, wont bother to check the right one.
 if the left one is true, wont check the right one
 
 & and | are non short cut operators.
@@ -391,12 +391,12 @@ if the left one is true, wont check the right one
 57. in the java library (java api) classes are grouped into packages
 each class belongs to a package - eg of packages: javax.swing, java.util - it holds the utility classes.
 
-java.lang package contains the Math (Math.random()), System classes. 
+java.lang package contains the Math (Math.random()), System classes.
 import java.util.ArrayList
 or type the full name each tome you use it. eg: java.util.ArrayList<Dog> dog = new java.util.ArrayList<Dog>
 
-58. uses of packages : it provides structure to the api, 
-it provides name scoping so there is no clash between class with same names but in different packages. 
+58. uses of packages : it provides structure to the api,
+it provides name scoping so there is no clash between class with same names but in different packages.
 provides security.
 
 javax.swing - holds some gui related classes - same with java.awt
@@ -410,11 +410,11 @@ children can go where the parents are expected. this works because the children 
 60. abstract code is generic code. it is general. specific code gives more personalised behaviour to classes/objects.
 When we wish to say that the sublclass inherits from the superclass, we say the sublclass extends the superclass.
 
-61. the lowest method gets called i.e. one closes to the object - the one which it iteself or its immediate parent overriides. 
+61. the lowest method gets called i.e. one closes to the object - the one which it iteself or its immediate parent overriides.
 
 62. **to check if one object extends the other, it should pass the IS A test
-eg: triangle IS A shape. 
-human IS A animal 
+eg: triangle IS A shape.
+human IS A animal
 
 
 63. **HAS A relationship : eg: bathrom has a tub
@@ -436,17 +436,17 @@ public void hello(){
 }
 How are the two different
 
-65. What are the memebers of a class : 
-they include instance varialbes and methods 
+65. What are the memebers of a class :
+they include instance varialbes and methods
 So, a superclass can choose weather or not it wants a sublclass to inherit a particular member (method/variable)
 **the four accesss levels in java:
 private, default, protected, public
 
-access levels control who sees what. 
+access levels control who sees what.
 public methods are inherited, private methods arent
 
 66. inheritence allows you to define a common protocol that all your sublcasses have to follow.
-Polymorphism : when you deinfe a supertype for a group of classes, any subclass of that supertype can be passes where the supertype is extected. 
+Polymorphism : when you deinfe a supertype for a group of classes, any subclass of that supertype can be passes where the supertype is extected.
 so, A extends B. in some place, java expects B(superclass) to be given, there, you can sneak in A (its)
 
 67. **the threee step procedure behind this statement
@@ -483,7 +483,7 @@ With polymorphism, you can write code that doesnt change when you add a new subc
 
 68. Classes cant be marked private like methods.
 but there are three things that can preven you from extending a class:
-if it is not explicity marked public 
+if it is not explicity marked public
 **public classes are the classes that are availabe to code outside the class's package as well. so, it can be subclassed only by other classes in its own package.
 
 the keyword final - this makes the class non-extendable/inheritable. nobody can inherit a final class.
@@ -491,36 +491,36 @@ ERROR: Exception in thread "main" java.lang.VerifyError: Cannot inherit from fin
 
 **if the class has only private constructors - it cant be subclassed or instantianted outside itself.
 
-you may need to make classes final if you want a gurantee that they would always behave a particular way. 
+you may need to make classes final if you want a gurantee that they would always behave a particular way.
 
 69. there is a difference between overloading and overriding.
-if is overriding when you honour the parent method's parameters and return values restrictions. i.e. accept the same as the parent did, return the same as the parent did. 
+if is overriding when you honour the parent method's parameters and return values restrictions. i.e. accept the same as the parent did, return the same as the parent did.
 
-But, if you modify the parameter/return value and still use the same name for the method as your superclass, it is defined as OVERLOADING 
+But, if you modify the parameter/return value and still use the same name for the method as your superclass, it is defined as OVERLOADING
 
 70. make sure that the method you are overriding with has the same access level or friendlier. if you are overriding a method decalred as public in the superclass, you cant mark it as private in your overridden version or even not expilicty put "public" in the method deination, because that will default to "default".
 
-71. method overloading is more flexible. you can change the parameter signature, return type etc. you can vary the access levels in any direction. **when overloading, changing only the return type is not allowed. you must also change the argument signature else, it will be classes as overriding. 
+71. method overloading is more flexible. you can change the parameter signature, return type etc. you can vary the access levels in any direction. **when overloading, changing only the return type is not allowed. you must also change the argument signature else, it will be classes as overriding.
 
 SO, overloading is officially, technically: "explicitly changing the argument signature of the method while keeping the same name" - you may not change the reuturn signature, but the parameter has to change for it to be overloading.
 
 Look at it this way, class A has one(), B extends A, B overrides one() --> the same argument and return type
-This will work. the compiler wont allow us to change the return type of B's overriden one() because remember we are giving the promise of polymorphism to the users. we will be able to pass the B's overriden method where A's original method was expected. the return type cannot change in the new method, otherwise the existing code will break. 
+This will work. the compiler wont allow us to change the return type of B's overriden one() because remember we are giving the promise of polymorphism to the users. we will be able to pass the B's overriden method where A's original method was expected. the return type cannot change in the new method, otherwise the existing code will break.
 
 Now, say, we want B to overload A's one() and not override it. This is cool, we can do it, but we will have to change the argument signature, AND/OR the return signature. This is because if we dont change the argument signature compulsarily, how will the compiler know weather to call B's overloaded method or A's original method. When B changes the parameter signature, the compiler knows what the developer intends to be called.
 
-two methods can be said to be overloaded if they are in the same namespace. so, if Dog extends Animal, and both have a makeNoise() method with different parameter signature and return signature, then it is overloading. 
+two methods can be said to be overloaded if they are in the same namespace. so, if Dog extends Animal, and both have a makeNoise() method with different parameter signature and return signature, then it is overloading.
 If a class has two methods with the same name (needs to have different parameter/return signature) then, it is method overloading. however, if there are two classes not linked together and they have methods with the same name, that is not overloading. basically, they have to be in the same namespace to qualify as method overloading.
 
 Remember when answering questions that : subclasses can come where the superclass is expected[""polymorphism""]. , smaller capacity variables can come in the place of larger variales (where int is required, you can use byte)[""implicit widening""]
-Also, know the overriding is when you respect the parameter and/or return signature of your superclasses version. 
-overloading is when you change the parameter signature. 
+Also, know the overriding is when you respect the parameter and/or return signature of your superclasses version.
+overloading is when you change the parameter signature.
 
 **Method overloading need not happen within the same class. A extends B. Now, A can overload B's one as well. CHECK if this is overloading, using the @Overriden tag
 
 it is illegal to just change the return signature - if your superclass returns an Animal, you have to return Animal/Dog/Cat etc but you cannot return Plant. If you do want to return Plant, you will have to change the parameter signature too.
 
-72. So, you make abstract classes and make more specific verision in their subclasses, whihc are usuable. but it makes no sense to instantiate the abstract superclass since it would not implement any real functionality, just provide some policy/blueprint for subclasses extending it. So, to prevent the abstract classes from getting instantiated (Animal a = new Animal(); shouldnt be allowed) - we mark them as abstract. 
+72. So, you make abstract classes and make more specific verision in their subclasses, whihc are usuable. but it makes no sense to instantiate the abstract superclass since it would not implement any real functionality, just provide some policy/blueprint for subclasses extending it. So, to prevent the abstract classes from getting instantiated (Animal a = new Animal(); shouldnt be allowed) - we mark them as abstract.
 
 This way:
 
@@ -544,14 +544,14 @@ public void eat(){} //this is an empty method. this method can be called with ov
 If you have even one abstract method is a class, you have to mark that class as abstract. this is because if it isnt extented and used as is, when the abstract method is called, it will blow at runtime.
 However, for a abstract class, it can have concrete methods as well as abstract methods.
 
-SO, ABSTRACT CLASSES AND METHODS ARE USED explicitly TO DEFINE PROTOCOLS. 
-all abstract methods must be overriden by the subclasses. 
+SO, ABSTRACT CLASSES AND METHODS ARE USED explicitly TO DEFINE PROTOCOLS.
+all abstract methods must be overriden by the subclasses.
 
-73. so you cant make objects of abstract classes like Animal. Okay, so this isnt allowed: 
+73. so you cant make objects of abstract classes like Animal. Okay, so this isnt allowed:
 Animal animal = new Animal();   --> WRONG
 But, consider this:
 Animal[] animals = new Animal[5];   ---> LEGAL !
-THis is allwoed because you are not creating a new Animal object here, you are creating a new array object of type animal. it can be used to store Dog objects, cat objects etc. 
+THis is allwoed because you are not creating a new Animal object here, you are creating a new array object of type animal. it can be used to store Dog objects, cat objects etc.
 
 74. every class of java extends the object class.
 Any method with object as its accepted/returned argument can accept anything!
@@ -581,10 +581,10 @@ you can give any object to ar_ob - but when you use .get(0); to get back the obj
 This is just like saying Subclasses can be used where superclasses are expected but not the other way around. So, this also wont compile :
 
 Dog old_dog = new Dog();
-Dog dog = getObject(old_dog);  --> wont work, the dog comes out as object. and the Object object cant be assisned to its child. 
+Dog dog = getObject(old_dog);  --> wont work, the dog comes out as object. and the Object object cant be assisned to its child.
 
 ""
-You cant assign a parent object to a child type reference variable. So, 
+You cant assign a parent object to a child type reference variable. So,
 Dog d = new Animal() wont work
 Animal a = new Dog() works
 ""
@@ -602,9 +602,9 @@ public Object getObject(Obejct c):
     This wont work becuse Object class donest have the bark method. IF it has the bark method defined, then it would have worked - but here, the compiler would have called the overriden methon in the Dog class.
 
 
-So, the subclasses can access their parents methods(or the more specific version fo their parents ones in case they are overriden) plus their new methods but the parents cant access their childrens methods - because this would be us exploiting the polymorphism guarantee - code would start breaking left and right and the extensibility promise would vanish. 
+So, the subclasses can access their parents methods(or the more specific version fo their parents ones in case they are overriden) plus their new methods but the parents cant access their childrens methods - because this would be us exploiting the polymorphism guarantee - code would start breaking left and right and the extensibility promise would vanish.
 
-You can ofcourse cast the generic Object object to a Dog object: 
+You can ofcourse cast the generic Object object to a Dog object:
 so, the previous incorrect line can be fixed by :
 Dog d = (Dog) o
 d.bark(); --> this will work
@@ -630,7 +630,7 @@ This is because Object method doesnt have the makeNoise method for Dog to overri
 
 However, Animal class has the makeNoise method that the Dog class overrides - hence, you can use the Animal reference variable and call that method - the latest method is called - the overriden one, the one in the Dog class.
 
-**you can check if any object belongs to a class using the instanceOf operator 
+**you can check if any object belongs to a class using the instanceOf operator
 if (o instance of Dog){
     Dog d = (Dog) o;
 }
@@ -639,10 +639,10 @@ this is not working. how to do this correctly ? **OQ
 
 Some terminology :
 reference variable - the varialbe which holds the address bits to point to a object on the heap.
-so a reference variable of Class Dog can point to Dog objects on the heap or any of Dog's subclasses. 
+so a reference variable of Class Dog can point to Dog objects on the heap or any of Dog's subclasses.
 
 Summary:
-if any reference variable of type "object" doesnt have a method defined but its children have it, you cant call it using that reference variable. if the class has it , but its children have a more specific verison and the reference type is that of the superclass, the more recent veriosn is called. 
+if any reference variable of type "object" doesnt have a method defined but its children have it, you cant call it using that reference variable. if the class has it , but its children have a more specific verison and the reference type is that of the superclass, the more recent veriosn is called.
 
 COMPILER CHECKS THE CLASS OF THE REFERENCE VARIABLE, NOT THE CLASS OF THE ACTUAL OBJECT THE VARIABLE IS REFERING TO.
 
@@ -655,15 +655,15 @@ If Dog class has a new method, fetchBall(), then you cannot do :
 a.fetchBall() because the compiler checks if the class of the reference variable (the reference variable is a here, its class is Animal) has that method - and not the actual object being refered to (that is the Dog object) - so as Animal doesnt have that, this results in error.
 In effect, it boils down to the parent trying to call the methods of its children, this is not possible. the children can call the methods of the parents.
 
-75. Sometimes, you need to inherit from two superclasses. this insnt allowed in java. so, you use interfaces. 
-Deadly diamond of death is when you have a class digitalRecorder with two subclasses CDBurner and DVDBurner. Now both of if you could inherit from both of these calsses, which classes method to be called from both the parents. 
+75. Sometimes, you need to inherit from two superclasses. this insnt allowed in java. so, you use interfaces.
+Deadly diamond of death is when you have a class digitalRecorder with two subclasses CDBurner and DVDBurner. Now both of if you could inherit from both of these calsses, which classes method to be called from both the parents.
 
 the three solutions proposed :
 give all pet methods to animal - this is not good as non pets will have access to pet method
 
 give all pet methods to animal - make them as abstract - this is silly because the non pets will have to override all the pet methods albeit by just saying - do nothing.
 
-putting the pet method in just the pet sublclasses of animal - this is redundant again. you are not using polymorphism - you have to write the methods everywhere  -also you have to make sure that all the subclasses get it exactly right so that it does not lead to inconsistent behaviour. 
+putting the pet method in just the pet sublclasses of animal - this is redundant again. you are not using polymorphism - you have to write the methods everywhere  -also you have to make sure that all the subclasses get it exactly right so that it does not lead to inconsistent behaviour.
 
 Java interfaces are just like 100% pure abstract classes - all its methods are marked abstract. so, if you implement an interface, you will have to override the methods in that interaface and hence, the compiler will call the overriden methods - avoiding the deadily diamond of death.
 
@@ -676,7 +676,7 @@ public interface AnInterface{
 
 use it like this:
 public class Dog extends Animals implements Pets{
-    //override MethodOne and MethodTwo here. 
+    //override MethodOne and MethodTwo here.
 }
 
 
@@ -699,23 +699,23 @@ When you want to define a protocol for a group of classes, i.e. when you want th
 When you want to define a role that other classes can play, regardless of where they come from in the inheritence tree, use interfaces.
 
 from the Dog object, if you wish to call any of Animals method, use super.theMethodName();
-imagine you are in a sublclass which inherits some methods from its superclass. you can use super.methodName() to call the method of the superclass, and use this.methodName() to call the overriden method. 
+imagine you are in a sublclass which inherits some methods from its superclass. you can use super.methodName() to call the method of the superclass, and use this.methodName() to call the overriden method.
 
-When to choose any class as abstract or normal concrete class - use abstract when the class is generic enough that it cannot be used without further modifying it and making it more specific. 
+When to choose any class as abstract or normal concrete class - use abstract when the class is generic enough that it cannot be used without further modifying it and making it more specific.
 
 
-Remember: **when you dont want a class to be instantiated (just inherited, maybe because the original class is very generic and wont be of use unless extended) you mark it as abstract. 
+Remember: **when you dont want a class to be instantiated (just inherited, maybe because the original class is very generic and wont be of use unless extended) you mark it as abstract.
 if the class has even one abstract method, it must be marked abstract
 
 so, in Animal d = new Dog(); there are two variables. the reference variable (d) - it has type Animal  and the object beign refered to - Dog here. Now, on d, you can run only the methods define in Animal or above. not the ones defined in Dog. (parents cant call childrens methods)
 
 naturally, all interface methods are public and abstract. naturally, you cannot instantiate an interface - only implement it.
 
-76. the way to kill the object is to abandon it. 
-The object live on the heap. The method invocations and local variables live on the stack. 
+76. the way to kill the object is to abandon it.
+The object live on the heap. The method invocations and local variables live on the stack.
 Local variables are aka stack variables.
 
-instance variables are declared inside a class, local variables are declared inside a method, they include the method parameters. 
+instance variables are declared inside a class, local variables are declared inside a method, they include the method parameters.
 
 the stack has stack frames - one for each method. the current running method has its stack frame at the top. the stack frame stores the state of the method and also the local variables
 
@@ -726,35 +726,35 @@ Instance varialbes live on the heap - inside the object they belong to.
 if an object contains a nonprimitive variable (reference variable) --> then the reference variable lives in the object but the object being refered to lives on the heap
 Animal a; --> this just creates the reference variable -- it points to null
 this a lives on the heap if it is an instance variable or it lives on the stack - inside the stack frame if it a local variable.
-a = new Animal(); --> this creates a new object Animal on the heap and the reference variable is given the address bits to point to the object. 
+a = new Animal(); --> this creates a new object Animal on the heap and the reference variable is given the address bits to point to the object.
 
 When you create a code, its constructor gets executed. the constructor has the code that runs when you instantiate an object. if you dont write any constructor for yourself, the compiler writes one for you
 public Duck{
-    
+
 }
 -- note it has no return type.
 
 constructor can be used to initialize the instance variables - now you dont have to write a seperate setter method for that.
 
-Constructors are not inherited. 
-You can have more than one constructors (overloaded constructors) - they can be differencaited based on the parameter signature. 
+Constructors are not inherited.
+You can have more than one constructors (overloaded constructors) - they can be differencaited based on the parameter signature.
 you can have 2 constructors that accept the same arguments but only if they are passed in different order.
 
 constructors dont have to be public, they can be private or default( by default, they dont have any access modifier at all; its just Duck(){};
 
-**there is a difference between public Duck(); and public Duck(){}; 
+**there is a difference between public Duck(); and public Duck(){};
 In the first one, the method Duck is not defined. It is abstract. In the second one, the method is defined but it just doesnt do anything
-however, the first one has to be marked abstract to be compilable - 
+however, the first one has to be marked abstract to be compilable -
 public abstract void Duck();
 
 marking anything as private means that nobody outside the class can access that method/variable.
 
 77. **say a object a inherits b which inherits Object class.
-Now, when the object a is created on the heap, the object a has inside it object b with all its instanec variables and also Object object inside the b with all its instance variables. 
+Now, when the object a is created on the heap, the object a has inside it object b with all its instanec variables and also Object object inside the b with all its instance variables.
 
-**all the constructors in an object's inheritence tree are run in order when you make a new object. 
+**all the constructors in an object's inheritence tree are run in order when you make a new object.
 so Dog d = new Dog(); --> runs the Animals constructor and also the Objects constructor. even abstract classes have constructor (even though they are never instantiated)
-so, whenever any object is created anywhere in the code, of any type, the Object constructor runs (and runs first). this is because the subclass depends on the instance variables and methods of its superclass to function correctly. This is called constructor chaining. 
+so, whenever any object is created anywhere in the code, of any type, the Object constructor runs (and runs first). this is because the subclass depends on the instance variables and methods of its superclass to function correctly. This is called constructor chaining.
 
 so, the stack looks like this :
 
@@ -775,8 +775,8 @@ public Dog(int size){
 78. super() accepts arguments too. eg ;String name="dog"; super(name);
 
 79. Now, say that you have a hundred constructors (all with different parameter signatures/orders). If all the constuctors have some common code, like say printing something/logging the creation of the object etc, you will have to manually write the same code in all the different constructors. Or : you can put it in one place - the Real Constructor and invoke it everywhere, then complete the custom constructor operations and get the object ready. -- use this() for this.
-this is a reference to the current object.you can say this() only within a constructor. you cant have both this() and super() in one constructor - they both must be the first statements in their respective constructors. 
-So, 
+this is a reference to the current object.you can say this() only within a constructor. you cant have both this() and super() in one constructor - they both must be the first statements in their respective constructors.
+So,
 do this :
 
 Class Dog extends Animal{
@@ -788,7 +788,7 @@ Class Dog extends Animal{
     //more specific initialization now goes here
     }
 
-    public Dog(String name){ --> this is the real constructor. 
+    public Dog(String name){ --> this is the real constructor.
     super(); //calls the constructor of Animal
     //log code
     //print code
@@ -800,7 +800,7 @@ Class Dog extends Animal{
 **what is 'this' used for? OQ.
 it refers to the present object, just like self in python
 
-80. an objects life depends on the life of the reference variables pointing towards it. the life of the reference variables in turn depends on weather they are local or instance variables. 
+80. an objects life depends on the life of the reference variables pointing towards it. the life of the reference variables in turn depends on weather they are local or instance variables.
 
 Say a method is defines a local variable "a". Now, that variable "a" lives in the stack frame of that method. it is not accessible to code outside the method. they die with the method.
 
@@ -811,10 +811,10 @@ so, all the methods inside the class can access the instance variables. but the 
 
 
 81. life and scope.
-life is till when is the method alive - till the method is running. 
+life is till when is the method alive - till the method is running.
 scope is where all can the variable can be accessed - so, a variable is defined inside a method A, and that method calls another method B, then the variable defined in A is still alive, just out of scope.
 
-Same rules for both primitives and non-primitive type of variables. 
+Same rules for both primitives and non-primitive type of variables.
 An object is alive as long as at least one reference variable pointing to it is ALIVE. (it can be out of the scope, that is allowed, but it needs to be alive just)
 
 example of Three ways that can kill the object:
@@ -827,12 +827,12 @@ public void go(){
 public void go(){
     Dog d = new Dog();
     d = new Dog(); --> in this case, the old Dog object is toast. because you reprogrammed your reference variable d to point to a new Dog object.
-    d = null; --> the new Dog object is also toast, because you reprogrammed the reference variable to point to nothing - i.e. effectively removeing the address bits to the new Dog object. 
+    d = null; --> the new Dog object is also toast, because you reprogrammed the reference variable to point to nothing - i.e. effectively removeing the address bits to the new Dog object.
 }
 
 82. **consider this case;
 there is a object Dog that lives on the heap.
-Now, the Dog has an instance variable (non primitive, of type Collar) called c which is programmed to point to a Collar object. Say, the new Collar object has a instance variable (primitive or non, doesnt matter) (the instance variable lives with the object recalll on the heap) - but now, when the c is set to null, the Collar object on the heap are toast and can get GCed. Note on the heap there are two objects here, the Dog object that has the c instance variable and the Collar object that has its own instance variables. 
+Now, the Dog has an instance variable (non primitive, of type Collar) called c which is programmed to point to a Collar object. Say, the new Collar object has a instance variable (primitive or non, doesnt matter) (the instance variable lives with the object recalll on the heap) - but now, when the c is set to null, the Collar object on the heap are toast and can get GCed. Note on the heap there are two objects here, the Dog object that has the c instance variable and the Collar object that has its own instance variables.
 
 Also, another case : what if like above, we created a local variable to point to a object in the heap, then as soon as the local variable dies (this happens when the method holding the local variable is popped off the stack), the obejct becomes toast.
 
@@ -843,8 +843,8 @@ When a method calls a new method, that called method gets on the top of the stac
 84. Reading this makes it appear that everything is so transitory - how do objects even survive ?
 Every java program's stack starts with the main() methods stack frame on the top, then it calls stuff which call stuff and all, in the end, everyone finishes executing and the main() stack frame becomes active again, it ends running and the program shuts down.
 
-85. Now, say the main frame has a local varialbe "a" that reference a Kit object and another local varialbe "c" that references a Collar object. Now, that Kit object has a instance variable Kit_c that is equal to "c" - the local variable. Now, suppose you set "c" to null. this means the Collar object should be toast. But it wont be, because the object Kit is still alive, and the Kit's instance variable Kit_c is still alive and it points to the object "c" was pointing to - the object Collar. 
-Collar will die when Kit dies. 
+85. Now, say the main frame has a local varialbe "a" that reference a Kit object and another local varialbe "c" that references a Collar object. Now, that Kit object has a instance variable Kit_c that is equal to "c" - the local variable. Now, suppose you set "c" to null. this means the Collar object should be toast. But it wont be, because the object Kit is still alive, and the Kit's instance variable Kit_c is still alive and it points to the object "c" was pointing to - the object Collar.
+Collar will die when Kit dies.
 
 public class Example{
     public static void main(String[] args){
@@ -855,9 +855,9 @@ public class Example{
 }
 
 class Kit{
-    
+
     Collar kit_c;
-    
+
     public Kit(Collar col){
         kit_c = col;
     }
@@ -876,7 +876,7 @@ class Collar{
 
 87. some methods dont need instance variables like Math.round() - also, it is wastage of heap space to make objects of classes like Math class. this is because you what are the obejcts (they just store the instance variable inside them). So, you dont make an instance of the math class, infact you cant.
 so, this is illegal :
-Math mathObject = new Math(); ->you get that Math() has private access, i.e. the constructor is marked as private. 
+Math mathObject = new Math(); ->you get that Math() has private access, i.e. the constructor is marked as private.
 
 ""
 Recall, there is an OQ that asks in the section talking about how to prevent a class from being extended: mark it as final, mark its constructor as private, mark all methods as final
@@ -886,7 +886,7 @@ I asked what is the difference between these approaces:
 This is the best soultion if you dont want to allow a class to be extended because this has no unnecessary sideeffects.
 
 2. marking the constructor as private
-this wont let the class be extended sure, but it also wont let the class get instantiated. this is because anything marked private cannot be accessed outside that class. 
+this wont let the class be extended sure, but it also wont let the class get instantiated. this is because anything marked private cannot be accessed outside that class.
 
 3. marking all methods as final
 This wont do the job because this is simply saying, this much part of the class cant be changed. but this doesnt stop anyone from extending the class.
@@ -913,13 +913,13 @@ class One{
 }
 
 class One{
-    public static int min(int a, int b){ --> this method doesnt need the instance variables. 
+    public static int min(int a, int b){ --> this method doesnt need the instance variables.
     //return the lesser of the two
     }
 }
 
-**so, a static method is that method that does not need the instance variables to function - hence they can be used with out the isntance variables existing hence, they can be used without the object being created. 
-So, you directly use the class name and not the object name ot call that method. 
+**so, a static method is that method that does not need the instance variables to function - hence they can be used with out the isntance variables existing hence, they can be used without the object being created.
+So, you directly use the class name and not the object name ot call that method.
 
 
 **two ways of making sure that no one instantiates your class :
@@ -928,11 +928,11 @@ marking the constructor as private --> hence, the constructor becomes inaccessib
 
 so, static methods dont depend on non-static (instance variables) - so,they cannot use them.
 
-**note that the main() method is a static method. it is directly called without creating the object of the class containing it. 
+**note that the main() method is a static method. it is directly called without creating the object of the class containing it.
 
-regular methods can use static variables and methods, not vice versa. 
+regular methods can use static variables and methods, not vice versa.
 
-also, the static methods cannot use non static (regular) methods either. this is because they dont exist. 
+also, the static methods cannot use non static (regular) methods either. this is because they dont exist.
 EVEN if they dont use the instance variables. this is because, if in the future, you wish to change the method to make it use the instance variables, your code will break. also, some subclass can ovveride that method and make the method use isntance variables, then it is a mess.
 
 you can invoke static methods from objects too - it is just not advised, makes the code less readable
@@ -946,7 +946,7 @@ class Example{
     int a = 3 //a non static (instance) variable.
     public static void main(String[] args){
         JustAme(); --> static method cant call a non static method, or use a non static variable
-        
+
         Example ex = new Example();
         ex.JustAme() //will work
 
@@ -983,7 +983,7 @@ public class Duck{
     public void setSize(int b){
     size = b;
     }
-} 
+}
 
 the static variable lives in the class, not in the object. So, say 5 Duck objects will all share only one copy of the static noOfDucks variable. if it is updated, it is updated in all of them.
 
@@ -995,7 +995,7 @@ the static variable lives in the class, not in the object. So, say 5 Duck object
 THAT would be wrong(wont compile). the constructor cannot be static because the constructos main job is to instatntiate the instance variables - if it cant access it, how will it do that?
 
 all static variables are initialized (the first time the class is loaded) i.e. before any object of that class are created or before any static method of the class runs.
-the static methods can accept arguments, 
+the static methods can accept arguments,
 
 **static final variables are constants.
 **constant variable names must be all in CAPS, good pratice that is
@@ -1039,7 +1039,7 @@ but, if it were int x; if would have printed 0.
 but this is different and legal :
 
 public class Hello{
-   
+
 
 int x = 6;
 
@@ -1069,7 +1069,7 @@ a.add(x); ==>wont work before java5. in java5, the primitive is wrapped as an ob
 **what can the ArrayList store when we dont give it any specific type. like in ArrayList a = new ArrayList();
 ANSWER ABOVE
 
-91. theres a wrapper for each primitive type in java - and the wrapper is in java.lang - so it doesnt need to be imported. 
+91. theres a wrapper for each primitive type in java - and the wrapper is in java.lang - so it doesnt need to be imported.
 boolean - Boolean - be be
 char - Char - careful careful
 byte - Byte - bears because
@@ -1096,9 +1096,9 @@ ArrayList<Integer> a = new ArrayList<Integer>;
 a.add(4); ---> the compiler automatically does the boxing and unboxing automatically.
 int b = a.get(0);
 
-notice the type is Integer and not int - it needs object types only, not primitives. 
+notice the type is Integer and not int - it needs object types only, not primitives.
 
-autoboxing can be used anywhere to enable you to use a primitive or its wrapper type everywhere one is expected - automatically. 
+autoboxing can be used anywhere to enable you to use a primitive or its wrapper type everywhere one is expected - automatically.
 so, an argument returns int ? you can make it return Integer. so, this is legal now :
 
         public int go(){
@@ -1129,10 +1129,10 @@ class Test{
     System.out.println("HW");
     }
 
-93. so, the wrappers allow us to use primitives where they earlier couldnt be allowed, great. but they are full fledged objects, they must have some useful utility methods too, right ? right. 
+93. so, the wrappers allow us to use primitives where they earlier couldnt be allowed, great. but they are full fledged objects, they must have some useful utility methods too, right ? right.
 wrappers have static utility methods (eg : Integer.parseInt("4"));
 
-94 ** "true" to true : 
+94 ** "true" to true :
 boolean value_ = new Boolean("true").booleanValue();
 
 turning a primitive into a string :
@@ -1147,14 +1147,14 @@ note, toString, is a static method of the Double, Integer etc wrapper classes.
 95. **THE + OPERATOR IS OVERLOADED IN JAVA, THE ONLY OVERLOADED OPERATOR.
 
 96. string formatting is taken care of in the java.util.Formatter class.
-you can access the methods of this class using the String.format method 
+you can access the methods of this class using the String.format method
 format : String.format(_formatting instructions||_aka as the format string__, __value to be formatted_);
 
 String s = String.format("%, d", 100000000);
 System.out.println(s);
 
-**anytime you see the percentage sign (%) in a format string (the first argument of the String.format method), 
-think of it as representating a variable and that variable is the other argument to the method. the rest of the characters in the format string describe the formatting instructions. 
+**anytime you see the percentage sign (%) in a format string (the first argument of the String.format method),
+think of it as representating a variable and that variable is the other argument to the method. the rest of the characters in the format string describe the formatting instructions.
 
 String.format('%.2f', 4141.151)
 '%.2f' means, on % i.e. (4141.151), display it acc to .2f (so, as 4141.15)
@@ -1170,7 +1170,7 @@ syntax for the format string :
   if u have more than one arguemnts
                     eg ,
                             minimum width
-                                    sets no of decimal places 
+                                    sets no of decimal places
                                             f, d, i etc
 
 eg :
@@ -1179,16 +1179,16 @@ format('%,2.3f')
 97. java supports variable argument lists - varargs.
 
 98. for all calender / time / dates etc related functionality, use the java.util.Calender class.
-the class is abstract, so you cannot instantiate it. you will have to use its concrete subclass which you use a static method of the Calender class to get. 
+the class is abstract, so you cannot instantiate it. you will have to use its concrete subclass which you use a static method of the Calender class to get.
 
-so, 
+so,
 Calender cal = new Calender(); is not allowed
-Calender cal = Calender.getInstance(); --> this will get you the concrete subclass of the Calender abstract class. 
+Calender cal = Calender.getInstance(); --> this will get you the concrete subclass of the Calender abstract class.
 
 **OQ: what is the use of that^ ?
 what inspired the makers to do it this way?
 
-99.**INTERFACES CAN HAVE ONLY PUBLIC STATIC FINAL or GLOBAL CONSTANTS for variables. 
+99.**INTERFACES CAN HAVE ONLY PUBLIC STATIC FINAL or GLOBAL CONSTANTS for variables.
 static because the interfaces can never be instantitated (abstract classes also cant be instantitated, and if any class has even one abstract method, it has to be marked abstract), so only static variabels can be used. Also, since they are static, they will be shared by all the instances of the objects which implement this interface - so, it is decalred final to avoid that. public so that you can access it.
 
 100. before java 8, you couldnt define static methods in an interface. so, this was illegal:
@@ -1207,8 +1207,8 @@ public interface Foo{
 
 102. **why cant static methods be abstract in java ?
 
-Regular methods can be abstract when they are meant to be overridden by subclasses and provided with functionality. 
-Imagine the class `Foo` is extended by `Bar1, Bar2, Bar3` etc. So, each will have their own version of the abstract class according to their needs. 
+Regular methods can be abstract when they are meant to be overridden by subclasses and provided with functionality.
+Imagine the class `Foo` is extended by `Bar1, Bar2, Bar3` etc. So, each will have their own version of the abstract class according to their needs.
 
 Now, static methods by definition belong to the class, they have nothing to do with the objects of the class or the objects of its subclasses. They don't even need them to exist, they can be used without instantiating the classes. Hence, they need to be ready-to-go and cannot depend on the subclasses to add functionality to them.
 
@@ -1245,7 +1245,7 @@ public void foo(){} - empty method
 
 104. in System.out.println  -  out is a static variable of the System class.
 
-105. so, a class A extends B. both classes A and B have static initializtion print code, and also the constructor prints sometext too. 
+105. so, a class A extends B. both classes A and B have static initializtion print code, and also the constructor prints sometext too.
 SEE THE QUESTION ON PG 310 - PLEASE - HEAD FIRST JAVA
 the order of the print statements will be :
 B's static initializtion print lines.
@@ -1269,21 +1269,21 @@ Integer a; --> this a reference variable of type Integer will have default value
 constructors need access to the instance variables (to maybe give them a default value), static method cannot have that access, so static constructor doesnt make sense.
 
 109. constructor cannot be marked as final
-this is because constructors are not inherited by the subclasses, so they cannot be overriden (things which arent inherited cannot be overriden)  - so they are implicitly final. to avoid redundant keywords which only add confusion and not have any impact on the code, constructors arent allowed to have the final keyword.   
+this is because constructors are not inherited by the subclasses, so they cannot be overriden (things which arent inherited cannot be overriden)  - so they are implicitly final. to avoid redundant keywords which only add confusion and not have any impact on the code, constructors arent allowed to have the final keyword.
 
 110. you can have more than one static initializtion blocks - all of them will be executed when the class is loaded and the constructor is called for creating the new object. they are executed in the sequence in which they appear.
 
 111. To emulate a static class :
 set it to final -- no one extends it now
 set constructor to private -- no one initializtes it now
-set all methods to static - to get the static behaviour. 
+set all methods to static - to get the static behaviour.
 
 112. in python : try, except
 in java, try, catch
 An exception is an object, of type Exception
 you catch  an Exception - catch(Exception ex)
 
-Exception heirarchy : 
+Exception heirarchy :
 Throwable <-- Exception <--IOException/InterruptedException
 Methods in Throwable inherited by Exception - getMessage(), printStackTrace();
 
@@ -1327,7 +1327,7 @@ public class One{
     System.out.println("Works, the static one too!");
     }
 
-} 
+}
 
 115. the clause "finally" is used to write the cleanup code that you wish to execute regardless of exception thrown or not.
 
@@ -1344,7 +1344,7 @@ catch (Exception e){
     //e.printStackTract();
 }
 
-You can say throws Exception { --> this is allowed because of polymorphism. children can take the place of their parents. so, where Exception object is expected, all its children can also be passed. 
+You can say throws Exception { --> this is allowed because of polymorphism. children can take the place of their parents. so, where Exception object is expected, all its children can also be passed.
     //code
 }
 
@@ -1356,10 +1356,10 @@ You can say throws Exception { --> this is allowed because of polymorphism. chil
 119. ducking an exception
 when a method throws an exception, that method is popped off the stack and the exception is thrown to the next method on the stack - the caller. if the caller also ducks - it too is thrown off the stack and the exception is passed on to the next method.
 
-you can duck an exception by declaring that the method throws that exception. 
+you can duck an exception by declaring that the method throws that exception.
 so :
 public void foo() throws ClothingException{ //this is foo here, ducking the said exception
-    
+
 }
 
 120. so, two ways to handle the exception :
@@ -1382,7 +1382,7 @@ void go() throws NullPointerException{
 }
 
 122. inner class - the nested class must be define inside the outer classes's curly braces.
-the inner class can access ALL the methods and instance variables of the outer class, even if they are marked as private. 
+the inner class can access ALL the methods and instance variables of the outer class, even if they are marked as private.
 an inner class instance is tied to an outer class instance on the heap.
 steps to creating and using them :
 
@@ -1415,7 +1415,7 @@ class Foo{
 This is because, we arent allowed to mark the constructor as static, even of the inner class. the constructor has a purpose - it has to initialize the instance variables of the innterclass. if it is marked as static, it wont be able to access them and they wont be initialized.
 ""
 
-123. Inner classes can be of use when you an seperate class but still want that class to behave as if it were part of another class. 
+123. Inner classes can be of use when you an seperate class but still want that class to behave as if it were part of another class.
 
     }
 }
@@ -1428,7 +1428,7 @@ t.start();
 
 Thread class belongs to the java.lang package
 
-125. names of classes and interfaces are written in capital letters in java. 
+125. names of classes and interfaces are written in capital letters in java.
 
 126. the jvm starts multiple threads when it runs the code. there is a main thread - the one with the main() method at the bottom of it, there is a thread for garbage collection, and some other threads.
 
@@ -1479,7 +1479,7 @@ class MyRunnable implements Runnable{
 
 How, the stacks work out:
 MAIN STACK
-main() -> 
+main() ->
         th.start();
                    run(); --> this is the new stack, the main thread is now frozen
                         go();
@@ -1501,7 +1501,7 @@ Threads can also be "blocked" even when it is in the runnable state - i.e. it is
 a thread can go between running to runnable
 
 131. the thread scheduler controls the threads. you cannot directly control it.
-to make a thread go from running to runnable, make it sleep. this will get it off the jvms green light and it wont be back atleast until the the sleep-time is over again. 
+to make a thread go from running to runnable, make it sleep. this will get it off the jvms green light and it wont be back atleast until the the sleep-time is over again.
 
 
 132. **another way to start threads - subclass Thread, override its run method. that way you can use Threads no arg constructor and make a thread.
@@ -1552,11 +1552,11 @@ it has no utility - because this would mean that the child HAS to override that 
 
 ""
 **OQ:
-wont this^ be unconvient? 
+wont this^ be unconvient?
 say, I have this class that does many things. it has a lot of methods and a lot of functionality that is ready to be used. however, there is this one feature that needs some more generalization before it can be used. I mark that particular method as abstract. but this will ruin my entire class, it wont be usuable out of the box, it will have to be implemented, even for the features that worked fine out of the box earlier.
 ""
 
-137. so if a class implements an interface, it MUST implement all its methods. that is unless you decalre the class as abstract ! So, if an abstract class implements an interface, it can get away without implementing some of the interfaces mmethods and the class which subclasses the abstract class has to implement them. 
+137. so if a class implements an interface, it MUST implement all its methods. that is unless you decalre the class as abstract ! So, if an abstract class implements an interface, it can get away without implementing some of the interfaces mmethods and the class which subclasses the abstract class has to implement them.
 
 138. give the threads names - thread.setName("Alpha thread");
 
@@ -1570,7 +1570,7 @@ import java.util.*;
 import java.io.*;
 
 public class One{
-    
+
     ArrayList<String> songList = new ArrayList<String>(); //songlist is an instance variable, accessible to all the methods of the class
 
     public static void main(String[] args){
@@ -1602,7 +1602,7 @@ public class One{
 }
 
 
-142. ArrayList does not sort. 
+142. ArrayList does not sort.
 TreeSet - keeps elements sorted and prevents duplicates
 HashMap - sort and access elements as name value pairs - dict
 LinkedHashMap - remembers the order in which elements were inserted - ordereddict
@@ -1619,7 +1619,7 @@ Collections.sort(songList); --> it is sorted now.
 144. every object when printed has toString() called on it. It is in the Object class - so everyclass has the method somewhere in its inheritence tree. you can override it thus:
 public String toString() {
     return "Whats up";
-} 
+}
 
 So, this prints "Whats up!"
 class Example{
@@ -1628,12 +1628,12 @@ class Example{
     }
 
     public String toString() {
-        return "Whats up!";    
+        return "Whats up!";
     }
 
 }
 
-145. generics means more type safety. 
+145. generics means more type safety.
 recall type safety is the gurantee that you cannot put a Dog in a Cat object reference variable.
 **good if the problems are caught at compile time rather then the runtime.
 
@@ -1641,7 +1641,7 @@ They allow "a type or method to operate on objects of various types while provid
 
 You need a single "sort" method that would sort numbers, strings etc. Generics allow you to do that. Generic methods allow the user to create with a single method declaration, a set of realted methods and generic classes allow the user to with a single class declaration, create a set of realted classes.
 
-so, you can write one generic function for sorting and it would sort arrays, lists, numbers, strings etc. 
+so, you can write one generic function for sorting and it would sort arrays, lists, numbers, strings etc.
 all generic methods declarations have a type parameter section delimited by angle brackets. that precede the methods return type.
 
 collections are "virtually" the only ones of the entire java api that needs generic classes - because they have the general methods like sort etc. generic classes are essentially classes that can hold a variety of other classes and expect the user to specify what they will be holding when they declare and instantiate them
@@ -1658,13 +1658,13 @@ class ArrayList<E> extends AbstractList<E> implements List<E> ... {
 
 E is the convention, you can use anything else too - but it is a convetion to use single capital letter.
 
-147. to declare the generic type paremeter for just the method, 
+147. to declare the generic type paremeter for just the method,
 public <T extends Animal> void takeThing(ArrayList<T> list) {
     //code
 } -- here it means that T can be of any type of animal i.e. Dogs, Cats
 
 public void takeThing(ArrayList<Animal> animal){ --> just takes in the Animal type
-        //code 
+        //code
 }
 
 you might be wondering why cant you just accept Animal type and then, automatically, you would be able to accepts Dogs, Cats etc
@@ -1709,7 +1709,7 @@ set is useful when uniqueness matters, it is unordered
 So, sets cannot have more than one element referencing the same object
 map - when you need a dict - no duplicate keys allowed
 
-150. Collections API : 
+150. Collections API :
 Collection --> Set and List
 Set --> SortedSet( --> TreeSet), LinkedHashSet, HashSet
 List --> ArrayList, LinkedList, Vector
@@ -1725,20 +1725,20 @@ dog.addAll(songList)
 **what is the diff b/w hashtable and hashset?
 
 152. a static inner class cannot refer to the non static (instance) variables and methods of the outer class.
-Remember you cannot go to any method of the class (like go(); or doStuff();) from the main method. this is because main() is static and cannot refer to non static (regular) instance variables and methods - you can use them if you create a object of the class and then call them. 
+Remember you cannot go to any method of the class (like go(); or doStuff();) from the main method. this is because main() is static and cannot refer to non static (regular) instance variables and methods - you can use them if you create a object of the class and then call them.
 
 153. **everything i know about static variables
-they are initiated before the static method and can be used by the static methods. they belong to the class, and so are shared by ALL the obejct instances of the class. they can be used by non static methods, if declared "final", then they need to be initialized, they dont get a default value, otherwise they do. interfaces can have only public static final variables. 
+they are initiated before the static method and can be used by the static methods. they belong to the class, and so are shared by ALL the obejct instances of the class. they can be used by non static methods, if declared "final", then they need to be initialized, they dont get a default value, otherwise they do. interfaces can have only public static final variables.
 
 154. **everything I know about static methods
 they belong to the class, they dont need the class to be initiated to be used, they can be used directly by ClassName.staticMethodName(), they can use the static varialbes of the class but not the regular methods or regular (instance) varialbes. it is bad pratice to call them like objectOfaClass.staticMethodName() - though it is legal. they are used if you need some method that doesnt need the instance varialbes and so for them to be used, creating an object is wasting space on the heap. also, static methods can call other static methods and static variables.
 
 155. Generally how it all is done is this way:
 the entire file contains one big class - say LinkedList
-the class has several methods and instance varialbes. it may also have inner classes etc. 
-those methods maybe used to add a new node, print out the DS etc. 
+the class has several methods and instance varialbes. it may also have inner classes etc.
+those methods maybe used to add a new node, print out the DS etc.
 
-at the end of the plethora of methods, there is the main() method. the main() method would create a object of the class and use it. 
+at the end of the plethora of methods, there is the main() method. the main() method would create a object of the class and use it.
 
 156. Java's null == Python's None
 
@@ -1751,7 +1751,7 @@ if (afterNode = null)
 
 158. What does this line mean ? [erm, what?]
 
-159. I suggest wrongly that ArrayList has a LL implementation. It is not true, it is just a array that when it gets full, its size is doubled. doubling takes O(n) time. Access is O(1) time. 
+159. I suggest wrongly that ArrayList has a LL implementation. It is not true, it is just a array that when it gets full, its size is doubled. doubling takes O(n) time. Access is O(1) time.
 
 160. static methods can also be looked upon as standalone methods, they are not some operation on an object(to be more specific, an object's data).
 
@@ -1780,13 +1780,12 @@ class Three
     public static void main(String[] args)
     {
         Four f = new Four();
-        
-        Four.Inner i = f.new Inner(2); 
+
+        Four.Inner i = f.new Inner(2);
         ^  //note here, we identify the Inner class as Four.Inner. also, in the rhs, we cant use Four.new Inner(), this is because the Inner class instance needs to be bound to an instance of the outer Four class
-        
-        i.printa();         
+
+        i.printa();
     }
 }
 
 What if the inner class was static? it wouldnt be allowed to access the instance variables and methods of the outer class (and rightly so), but how would it be instantited?
-

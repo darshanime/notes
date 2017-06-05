@@ -12,7 +12,7 @@ int main()
     puts("Hello World");
     return 0;
 }
-#+end_src 
+#+end_src
 
 #+RESULTS:
 : Hello World
@@ -21,7 +21,7 @@ gcc rocks.c -o rocks
 
 3 standards of C - ANSI C, C99, C11
 :command: puts --> put string
-:command: char ex[20] -- char array of size 20. 
+:command: char ex[20] -- char array of size 20.
 :command: scanf("%19s", ex) -- scan 19 literals and put in ex
 
 the main() function is the starting point for any C program
@@ -46,7 +46,7 @@ the index always starts at 0, this is because the index is an offset actually.
 so, if a[0] is at 0x0000, a[5] is at 0x0005
 
 single quotes - for chars
-double - for strings 
+double - for strings
 
 we have to account for the NULL ourselves in the length of the array
 
@@ -63,7 +63,7 @@ but 6 & 4 --> 6 is 110, 4 is 100. so, 6&4 is 100 (pairwise AND operation on the 
 
 similarly with | (pairwise OR operator)
 
-- a lot of if statements probably mean that a "switch" is in order. never run switch without break. 
+- a lot of if statements probably mean that a "switch" is in order. never run switch without break.
 
 
 :command: while (i==1) { printf(i); }
@@ -71,7 +71,7 @@ similarly with | (pairwise OR operator)
 
 :command: for (a = 1; a<10;a++) {//code}
 
-use break to come out of loops. it cannot come out of if statements. 
+use break to come out of loops. it cannot come out of if statements.
 #+begin_src C
 #include <stdio.h>
 int main()
@@ -83,11 +83,11 @@ int main()
     printf("*b points to %p\n", *b);
     return 0;
 }
-#+end_src 
+#+end_src
 
 #+RESULTS:
 | a  | lives  | at | 0x7ffdaba5ab7c | --> &<var> gives the memory address of <var>
-| b  | lives  | at | 0x7ffdaba5ab7c | --> b is a pointer, it's value is the address 
+| b  | lives  | at | 0x7ffdaba5ab7c | --> b is a pointer, it's value is the address
 | *b  | points | to |            0x5 | --> *b is the value of the memory pointed at by the pointer
 
 
@@ -97,7 +97,7 @@ int main()
 int a --> this is how you declare an int
 int *b --> this is how you declare a pointer which has an address of an int
 
-Note, numbers are returned as hex. is that due to %p? 
+Note, numbers are returned as hex. is that due to %p?
 
 #+begin_src C
 #include <stdio.h>
@@ -110,7 +110,7 @@ int main()
     printf("*b now has %p\n", *b);
     return 0;
 }
-#+end_src 
+#+end_src
 
 #+RESULTS:
 | *b | has | 0x5 |     |
@@ -134,7 +134,7 @@ int main()
     len_str(str);
     return 0;
 }
-#+end_src 
+#+end_src
 
 #+RESULTS:
 | size      | is:  |  8 |   |        |
@@ -171,7 +171,7 @@ int main()
     printf("a_ptr_n is %p\n", a_ptr_n);
     return 0;
 }
-#+end_src 
+#+end_src
 
 #+RESULTS:
 | ptr     | is | 0x7ffe872b88e0 |
@@ -236,7 +236,7 @@ int main()
 
 :imp: int *ptr = 2; printing ptr will print the address(because that is what is the value of ptr). printing *ptr will print 2, the value. printing &ptr will print the address of the ptr pointer variable
 
-:imp: char s[] = "hello";  s == &s; True --> because "s" is just the pointer to the 1st element. Now, normally, when we do &ptr, it would return the address of the pointer. but since "s" is an array, &s returns the address of the array which is just the 1st element of array. Therefore, s == &s is True. But if we had had, char *t = s, then t points to 1st element of s, so, printf(*t) prints "h". but &t is the address of the pointer variable t itself. so, &t != t. But, convince yourself that t==s, t==&s, *t==*s, 
+:imp: char s[] = "hello";  s == &s; True --> because "s" is just the pointer to the 1st element. Now, normally, when we do &ptr, it would return the address of the pointer. but since "s" is an array, &s returns the address of the array which is just the 1st element of array. Therefore, s == &s is True. But if we had had, char *t = s, then t points to 1st element of s, so, printf(*t) prints "h". but &t is the address of the pointer variable t itself. so, &t != t. But, convince yourself that t==s, t==&s, *t==*s,
 
 #+begin_src C
 #include <stdio.h>
@@ -263,7 +263,7 @@ int main()
 | value | is |              E |
 | value | is |              E |
 
-When we say char s[] = "there";, "s" is a variable that points to the 1st element of the array. 
+When we say char s[] = "there";, "s" is a variable that points to the 1st element of the array.
 the array lives in the memory, it consumes 6 blocks, so, "s" is simply the pointer to the 1st one. there is no block stored for "s" which stores the value of s(the address of the 1st element of array). But when we do char *t = s, there is a block stored in the memory for t (who's address can be found by &t) which has as it's value the address of the 1st element of array "s". So, we can make "t" point somewhere else too. But we can't make "s" point to somewhere else. now we know why s==&s - True
 
 Pointer decay - when we pass a pointer of an array, (when we pass "s" to a function), we loose the information of it's length. we just have the starting position and we will have to scan till we reach \0 to know the length of the pointer
@@ -276,8 +276,8 @@ int main()
 {
     char msg[] = "Hello, there";
     int c = 0;
-    do 
-    {   
+    do
+    {
         printf("%c", *(msg+c)); // so, msg[0]==*msg, msg[2]==*(msg+2)
         c+=1;
     } while (*(msg+c)!='\0');
@@ -309,7 +309,7 @@ consider this:
 int main()
 {
     char *cards = "JQK"; // here, cards is a pointer to the string literal
-    cards[2] = cards[1]; //error 
+    cards[2] = cards[1]; //error
     return 0;
 }
 #+end_src
@@ -321,7 +321,7 @@ This is because the string literals live in "constants" section of the memory wh
 #+ATTR_ORG: :height 200
 [[~/Pictures/org-inline/head_first_c_1.png]]
 
-Note the "cards" variable lives in the stack. 
+Note the "cards" variable lives in the stack.
 
 to change it, make a copy: char cards[] = "JQK"; // here, cards is an array, actually, cards is still a pointer that points to the 1st element of the array
 
@@ -348,7 +348,7 @@ int main()
 
 we were able to do it because the array lives in the stack, (char str[] = "hello"). If it had lived in the constants area, char str = "hello";, then it wouldn't have worked
 
-Oh wait, C is pass by value. So, it works. 
+Oh wait, C is pass by value. So, it works.
 
 - declaration --> a piece of code that declares something (a variable, a function) exists.
 - scanf is short for scan formatted
@@ -365,7 +365,7 @@ string.h is for string manipulation, it is part of the C standard library
 
 "You get some free code when you install a C compiler"
 So, the headers(and the standard library) are part of the compilers, if you think about it
-The library is made up of header files. A header file lists all the functions that live in a particular section of the library. 
+The library is made up of header files. A header file lists all the functions that live in a particular section of the library.
 
 The printf, scanf functions were from the stdio.h header file
 
@@ -380,7 +380,7 @@ Global scope - the variables that live outside any function definitation
 
 An array of arrays vs. Array of Pointers
 
-to store a list of string literals, use an array of pointers 
+to store a list of string literals, use an array of pointers
     char *names_for_dogs[] = {"Rocky", "Olive", "Julius"};
 
 
@@ -392,7 +392,7 @@ when we do scanf, it doesn't care where the data comes in from, so on the termin
 scanf always uses pointers, to put the data read from the input in
 eg: float longitude; scanf("%f", &longitude);
 
-** redirection 
+** redirection
 
 the program always reads the input from stdin, gives output to stdout. we can "redirect" the stdin and stdout so that they use files etc
 #+ATTR_ORG: :width 400
@@ -418,13 +418,13 @@ fprintf(stderr, "txt")
 and the redirect the stderr to some file (by default it is to the terminal)
 
 ** piping
-to solve a big problem, we should divide it into small problems and then make small tools to solve them, and connect the solutions from the small tools to solve the big problem. 
+to solve a big problem, we should divide it into small problems and then make small tools to solve them, and connect the solutions from the small tools to solve the big problem.
 
 The | symbol is a pipe that connects the Standard Output of one process to the standard input of another process
-so, to filter the coordinates first and send the filtered ones for jsonification, 
+so, to filter the coordinates first and send the filtered ones for jsonification,
     (./filter | ./geo2json) < geodata.csv > output.json
 
-we can create more than 1 file handlers and redirect the output to them. open them using the fopen utility. 
+we can create more than 1 file handlers and redirect the output to them. open them using the fopen utility.
     FILE *in_file = fopen("input.txt", "r");
 
 the modes are "r", "w", "a"
@@ -483,19 +483,19 @@ size 2x generally
 *** float
 size y
 *** double
-size 2y generally 
+size 2y generally
 
 casting:
 int a = 2;
 float b = (float)a;
 
 prefixing datatypes:
-1. "unsigned" 
+1. "unsigned"
 - will make the number unsigned, that is to say, unsigned int will be able to store double the values as signed int (which is the default)
 eg, unsigned char c; will store nos from 0 to 255
 
 2. "long"
-- prefixing any data type with long will make it longer. 
+- prefixing any data type with long will make it longer.
 
 To find out the limits of int, float etc(which are platform dependent), we can do:
 #+begin_src C
@@ -525,7 +525,7 @@ int main()
 
 
 8-bit/64-bit etc
-The bit size of a computer can refer to the size of its CPU instructions, or the amount of data the CPU can read from memory. The bit size is really favored size of numbers that the computer can deal with. 
+The bit size of a computer can refer to the size of its CPU instructions, or the amount of data the CPU can read from memory. The bit size is really favored size of numbers that the computer can deal with.
 
 
 If you use a function without declaring it (i.e. if it comes after the main() function), the compiler will assume that it will return an int and compile the code. If it doesn't there will be an error at runtime.
@@ -537,7 +537,7 @@ you can put the function declaration in a header file. (a file with /.h/ extensi
 and include it like so: #include "myHeader.h"
 not angular brackets because they are reserved for the library header files
 
-The #include command is a preprocessing step. It will include the contents of the header file into the current file. 
+The #include command is a preprocessing step. It will include the contents of the header file into the current file.
 
 Here are all the reserved keywords in C.
 
@@ -594,16 +594,16 @@ compile it like this: gcc message_hider.c shared_fn.c -o message_huder
 
 To share variables - use the extern keyword. extern int passcode;
 
-If you have a very large program, with lots of files, after every change, recompiling them will take a lot of time. 
+If you have a very large program, with lots of files, after every change, recompiling them will take a lot of time.
     gcc *.c -o launch
-So, do this: 
+So, do this:
     gcc -c *.c
 this will output the object code
 now, do this:
     gcc *.o -o launch
 this will take the object code files, link them together and produce an executable binary
 
-If you change any one file, just compile that single file and then run the link phase again 
+If you change any one file, just compile that single file and then run the link phase again
 
 * Chapter 5 - Structs
 
@@ -614,7 +614,7 @@ int main()
 {
     int a = 1;
     printf("%p\n", a);
-    printf("%p\n", &a); 
+    printf("%p\n", &a);
 //    printf("%p\n", *a); *<var> prints the value of the address location var. but, "a" is an int, it's not an address location, so this will error out
     printf("%p\n", *&a); // "print the value at address of a", which is the int 1
     return 0;
@@ -625,4 +625,3 @@ int main()
 |            0x1 |
 | 0x7ffdfcab5584 |
 |            0x1 |
-

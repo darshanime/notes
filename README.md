@@ -1,8 +1,8 @@
 # notes
 
-Welcome to my personal notes on various computer science topics, gathered over 3 years. 
+Welcome to my personal notes on various computer science topics, gathered over 3 years.
 
-I am sharing them in the hope that they would be useful you as well. 
+I am sharing them in the hope that they would be useful you as well.
 
 
 Available notes:
@@ -44,4 +44,3 @@ I welcome you to contribute your notes on the topics or add new topics entirely!
 ##### DISCLAIMER
 
 A large chunk of these notes are not organized very nicely. Especially the ones from "pre-emacs, pre-org mode" era. I will structure them when I get time.
-

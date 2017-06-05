@@ -23,7 +23,7 @@ this produces this log:
 
     installing route - action ONE
       create app/routes/scientists.js // this file stores the logic of the route
-      create app/templates/scientists.hbs //this file is the template for the route 
+      create app/templates/scientists.hbs //this file is the template for the route
     updating router - action TWO
       add route scientists // adds the entry for scientists in the projects route.js (which is like project's urls.py)
     installing route-test - action THREE
@@ -40,7 +40,7 @@ so, we write this there:
 
     import Ember from 'ember';
     export default Ember.Route.extend({
-        model() { // the model hook 
+        model() { // the model hook
             return ['Name One', 'Name One', 'Name One', 'Name One', ];
         }
     });
@@ -74,7 +74,7 @@ and the data in programmers.js:
             return ['prog one', 'prog one', 'prog one', 'prog one'];
         }
 
- 
+
 # if your ember crashed, restarting it is compulasry or it might behave erratically and
 # you may end up wasting a lot of time trying to figure out what happened
 
@@ -123,7 +123,7 @@ you can provide templates with a "component" (which is a reusuable piece of temp
 Hi {{ name }}!
 here, "name" is a property provided by the template's context
 
-each template has an associated controller, which provides the template with it's context. so, the controller would have the "name" property. by default, ember provides you with a controller, which acts as a pass thru controller. 
+each template has an associated controller, which provides the template with it's context. so, the controller would have the "name" property. by default, ember provides you with a controller, which acts as a pass thru controller.
 
 the controller is just a js file that you can put your template's custom logic in. it's name must be the same as the name of the template which it intents to serve
 
@@ -265,7 +265,7 @@ model property
 in the template, we can iterate thru add the entries in the model and display them.
 this way:
         {{#each model as |rental|}}
-        {{ rental.owner }}, 
+        {{ rental.owner }},
         {{ rental.title }}
         {{/each}}
 
@@ -302,4 +302,3 @@ emailAddressChanged: Ember.observer('emailAddress', function() {
     console.log('observer is called: ', this.get('emailAddress'));
 })
 #+end_src
-

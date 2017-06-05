@@ -25,7 +25,7 @@ class NewGuideView(CreateView):
        return super(NewGuideView, self).dispatch(*args, **kwargs)
 `
 
-3.resources for django class views 
+3.resources for django class views
 django class resource - https://ccbv.co.uk/projects/Django/1.5/django.views.generic.edit/CreateView/
 
 4.
@@ -137,7 +137,7 @@ start postgres terminal:
     quit with \q
 
 you are logging into the postgres server using the account named postgres
-set its password by loggin in using 
+set its password by loggin in using
 sudo -u postgres psql postgres //this logs in the server, and accesses the postgres database
 then: \password postgres //this sets the password for the postgres database
 enter it twice and you are done
@@ -149,11 +149,11 @@ createdb -h localhost -p 5432 -U postgres mycroft
                            port     user   name of the database
                                 who owns the
                                 database
-enter the password for the postgres user and done. 
+enter the password for the postgres user and done.
 logout to go back
 
 copy a postgres database into another server:
-    
+
     pg_dump the_db_name > the_backup.sql
 
     Then copy the backup to your development server, restore with:

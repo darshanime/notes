@@ -1,0 +1,1303 @@
+# Algorithms and more
+
+* Lecture 1
+
+2 important things to learning:
+i. Memory - learning from your experience 
+ii. Simulation - prediction based on your actions and your model of the environment
+
+Always a trade-off b/w learning and simulation(modelling)
+
+Agent - an entity that perceives and acts.
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_1.png]]
+
+We have the environment (that we can model in our agents mind), we get percepts from it using our sensors and we use the data to control your actuators(they are the tools you have at your disposal to act on the env) to manipulate the env. 
+
+The question mark is the _agent function_
+
+A rational agent selects the actions that maximize it's utility (expected utility from your model of the world)
+
+the percepts, actions that are available decide which algos to use
+ 
+Our agent will be Pacman. 
+
+** Part 1 - Making decisions
+fast search/planning
+constraint satisfaction
+adversarial and uncertain search
+
+** Part 2 - Reasoning under uncertainty 
+bayes' nets - which is a framework for reasoning about uncertainty 
+decision theory
+machine learning
+
+** Part 3 - applications
+NLP, CV etc
+
+
+* Lecture 2 - Search
+
+** Agents that plan ahead
+
+*** Reflex agents
+chooses action chooses action based on current percept (and maybe memory)
+do not consider future consequences of their actions 
+
+this can solve the problem if the maze is simple
+if the link is broken, it stalls
+
+((similar to greedy algorithms?))
+
+*** Planning agents
+it simulates the results of it's actions
+must have a model of how the world evolves in response to actions
+
+**** Optimal vs. complete planning
+
+
+
+**** Planning vs. replanning
+Planning - expand the entire graph and choose the best plan before making a move
+this is fine if the graph is not very big
+
+Replanning - expand only as much as needed. If you can get a point, take it. If not, expand nodes till you can get it. May not give optimal solution
+Now, you can have different algos (strategys) on how to expand when you have to do so
+
+
+** Search Problems
+A search problem consists of:
+
+*** a state space
+ - all the ways a world might be in the future
+*** a successor function
+ - how it evolves in response to actions
+ - for each state, what actions are available
+*** start state, goal test
+
+A solution is a _plan_
+it is a sequence of actions which transform the start state to a goal state
+
+Search problems are models
+**** Example: Traveling in Romania
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_2.png]]
+
+
+State space - cities
+Successor function - roads
+cost - distance/time required/cost dependent on quality of road
+start state - Arad
+Goal test - is state == Bucharest?
+
+Solution - sequence of roads 
+ 
+What to include in your environment?
+World state - every last detail
+Search state - keeps only the details needed for planning (abstraction)
+
+**** Pacman 
+
+***** Pathing problem - you have to be at the specified position
+
+States - (x, y) location
+Actions - NSEW
+Successor - update location only
+Goal test - (x,y)=END
+
+
+In the pathing problem, we need only this much in our search state
+We can abstract all other details away
+This will make the search space smaller
+
+***** Eat all Dots - slightly harder
+
+States - (x,y) location of yourself, location of all dots 
+BUT, BETTER
+States - (x,y) location of yourself, dot booleans
+Actions - NSEW
+Successor - update location, possibly a dot Boolean
+Goal test - dot boolean all 0s
+
+The number of world state gets to large numbers very easily
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_3.png]]
+
+But, we don't need all that information.  
+States for pathing - #of agent positions - 120
+States for eat all dots - 120x(2^30)
+ 
+So, you need to search efficiently
+
+Consider:
+ Safe passage problem - keep the ghosts perma scared while you eat all dots
+
+State - your location, location of power pellets and dots, #steps you can travel before ghosts come alive again
+you don't need the location of ghosts, think!
+or you need that if you can eat the ghosts and they come alive etc. you need to model them in that case
+
+
+*** state graphs, search trees
+
+State space graph - a mathematical representation of a search problem
+
+each node is an abstracted state of the world, 
+each arc represents successors, 
+the goal test is a set of goal nodes (can be only one)
+
+each state occurs only once in the state graph
+
+Generally, you cannot build the full graph in memory, it's too big
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_4.png]]
+
+
+you can dynamically build the graph on demand from the start state using the transition function(successor function) 
+how to build the graph on demand, in such a way that you don't have to build too much --> search algorithms!
+
+
+Search graph
+ - each state appears once
+Search tree
+ - root is the start state, but we have multiple successors
+ - a "What if" tree of plans and their outcomes
+ - this tree is an unrolling of the search graph
+ - generally bigger than the search graph
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_5.png]]
+
+
+ 
+consider this 4 state graph:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_6.png]]
+
+So, the state tree is infinite if there are cycles in the graph
+Also, lots of repeated structure in the search tree
+
+*** Tree Search
+
+Say, we want to solve the Romania problem - Arad to Bucharest 
+We do this:
+1. expand out potential nodes
+2. Maintain a *fringe* of partial plans under consideration
+3. Try to expand as few tree nodes as possible
+
+How to expand the tree? Several strategys
+
+General pseudo code:
+
+fn Tree-search(problem, strategy) returns a solution or failure
+{
+    initialize the search tree using the initial state of problem
+    loop do
+    {
+        if there are no candidates for expansion, return failure
+        choose a leaf node for expansion according to strategy
+        if the node contains a goal state, return corresponding solution
+        else expand the node and add the resulting nodes to the search tree
+    }
+}
+
+Strategy is needed for - *which fringe nodes to explore?*
+
+That leads us to the search methods
+
+** Uninformed Search methods
+
+Options:
+1. Depth first search - use stack - LIFO
+2. Breath first search - use queue - FIFO
+
+
+*** DFS
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_7.png]]
+
+
+
+Questions we need to answer:
+Complete - guaranteed to find a solution if one exists?
+Optimal - guaranteed to find the least cost path?
+Time complexity
+Space complexity
+
+b is the branching factor
+m is the maximum depth
+solutions at various depths (in red)
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_8.png]]
+
+Number of nodes: 1 + b + b*b + ... + b^m = O(b^m)
+
+It expands everything till the end, then moves right. 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_9.png]]
+
+It stops at the left most solution. 
+Worst case - the solution is at lower right corner - could process the whole tree
+ 
+Complete - guaranteed to find a solution if one exists?
+If there is a cycle, it would be infinite, unless we prevent cycles
+
+Optimal - guaranteed to find the least cost path?
+Not optimal, it will find the left most solution (in our diagram, a better one exists)
+
+Space complexity - O(bm)
+time - O(b^m)
+
+*** BFS
+
+Expand the shallowest node first
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_10.png]]
+
+Now:
+Complete - guaranteed to find a solution if one exists?
+Yes, complete
+
+Optimal - guaranteed to find the least cost path?
+Optimal if all costs are one. 
+
+Time complexity
+O(b^s)
+
+Space complexity
+O(b^s) 
+-- this case is when you are in the last node of the 2nd last layer, then, you have b^(s-1) nodes in your present layer, each has b nodes so:
+b^s
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_11.png]]
+
+
+When will BFS outperform DFS?
+solutions are shallow
+
+When will DFS outperform BFS?
+solutions are deep and dense
+
+Note, DFS has a space advantage, with BFS's shallow-solution advantages with - Iterative deepening 
+-- do DFS with a depth limit of 1. If no solution...
+-- do DFS with a depth limit of 2. If no solution...
+-- do DFS with a depth limit of 3. If no solution...
+
+We get DFS memory with BFS guratantee (it is optimal)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_12.png]]
+
+BFS will find shortest path in terms of *shallow*, not in terms of *cheapness*
+(it becomes the same thing if the cost of everything is 1)
+
+To find the least-cost path, we need uniform cost search
+
+*** Uniform cost search
+
+Strategy - expand the cheapest node first
+Fringe is a priority queue (priority - cumulative cost)
+(it is a heap)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_13.png]]
+
+
+Note: it is the overall (cumulative) cost
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_14.png]]
+It goes cheap to expensive, irrespective of depth
+
+Complete - guaranteed to find a solution if one exists?
+Yes, complete
+
+Optimal - guaranteed to find the least cost path?
+Yes, Optimal
+
+Time complexity
+Processes all nodes with cost less than cheapest solution
+
+if that solution costs C* and arcs cost at least alpha, then effective depth - C*/alpha approx
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_15.png]]
+So, O(b^m) where m is the depth, or can be re-written as O(b^(c/aplha)) 
+:top: exponential in effective depth
+
+Space complexity
+
+O(b^(C*/alpha)) --> same as time
+
+UCS has a problem of expanding in all directions whereever it sees a lower cost function, even if that is away from the target, this is because it doesn't have any notion of direction towards goal
+
+Remember - your search is only as good as your model
+
+* Lecture 3 -  Informed Search
+
+If we include some specific information regarding the problem we are solving, we can make the tree not expand in all directions blindly for a solution, but have it more directed in it's search
+
+** review
+a search problem has:
+ - states
+ - actions and costs
+ - successor function (world dynamics)
+ - start state and goal test
+
+search tree
+ - nodes - represent plans for reaching states
+ - plans have costs (sum of action costs)
+
+search algorithm
+ - systematically builds a search tree
+ - chooses an ordering of the fringe (unexplored nodes) --> what order to choose in exploring downwards in the tree - the only key difference b/w all the search algos
+ - optimal - finds least-cost plans
+
+
+Many problems can be modeled as constraint search problems, and these techniques can be used there
+we can change our cost function, to optimize for different things
+
+# Recall we did a java problem yesterday, what it said was - given a 6x6 matrix, find the hourglass with max sum
+# this can be modeled as a search problem - 
+# starting with the 6x6 matrix, it will have a lot of children (4*4 - 16) to be precise.
+# the end goal would be to choose the cheapest of them
+
+# here, it was simple, but it could be thought of in that way
+# so, search problems really shine when you want a series of optimal decisions 
+
+In essence, all the algos differ in how they use the fringe. 
+all fringes are priority queues(heaps)(collections of nodes with attached priorities)
+
+So, in DFS - priority of selecting nodes from fringe - negative depth (lowest negative depth or highest depth first)
+in BFS - depth (lowest depth)
+in UCS - cumulative cost 
+
+for DFS and BFS, you can use a stack/queue respectively and avoid the log(n) overhead of using PQ/heap
+
+recall the problem with uninformed search was that we explored everything relatively uniformaly in all directions. 
+there was no sense of direction  
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_16.png]]
+
+
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_17.png]]
+
+Note here, the pacman explores the tree like so:
+starting node is the starting position
+the starting node has 4 children, each at a cost of 1
+similarly, each of the children have 4 children, all cost 1
+
+this way, a lot of nodes will have to be explored to find the optimal solution
+there is a lot of waste computation going on. (the redder it is, the earier it was discovered in the graph)
+
+We need to have a notion of the location of the goal
+
+** Informed Search
+
+Here, you have some indicator of where the goal is. Or, you have a heuristic. 
+
+*** Heuristics
+
+A heuristic is:
+ - a function that estimates how close a state is to a goal -- any mapping of states to numbers, which helps you indentify better states from worse states
+ - designed for a particular search problem
+
+Say, for example - you can have your manhattan distance from the goal as a heuristic. you can have this because you have the location of the goal and your own as well
+You can also use euclidean distance, that's also a heuristic
+
+
+
+*** Greedy Search
+
+You choose the lowest heuristic and go with it. 
+this might not give the optimal solution but. It is like guided DFS. 
+
+Strategy - expand a node that you think is closest to a goal state
+
+a common case - takes you straight to a suboptimal goal
+worst case - badly guilded DFS
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_18.png]]
+
+The darker the red, the earlier the node was explored. 
+
+The agent goes left, then at the intersection, it goes left, get stuck, backtracks and comes back and gets the right path
+when the simulation is done, the agent can follow the right path straight away
+
+This leads us to A* --> put it all together -- use heuristics, but also consider the idea of uniform cost search which explores other directions in case they turn out to be optimal
+
+*** A* search
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_19.png]]
+
+UCS is optimal, methodically searches the cheap alternatives first before getting to the optimal solution
+Greedy is fast, zips along in the direction of the target, gets to a suboptimal solution
+
+A* best of both worlds
+
+Here, we combine the heuristic with the cost of each path (add them together)
+The heuristic has information about the location of the target and if we are moving in the right direction
+The cost of the path makes sure that we are on the cheapest path
+
+Or: 
+Uniform cost - orders by path cost, or backward cost g(n) --> of the UCS fame
+Greedy - orders by goal proximity, or forward cost h(n) --> heuristic
+
+A* searches by f(n) = g(n) + h(n)
+
+use a heap :top:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_20.png]]
+
+
+So, to use A* we need an heuristic and cost for each edge (going from one node to another)
+
+We stop A* not when we dequeue the goal, which means that that is the shortest path on the PQ now
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_21.png]]
+ 
+Here, the dry run:
+Start from S, 
+
+| path | cost+heuristic | total |
+|------+----------------+-------|
+| S    | 0+3            | 3     | // only thing on the queue, so popped out
+
+| path | cost+heuristic | total |
+|------+----------------+-------|
+| S-a  |            2+2 |     4 |
+| S-b  |            2+1 |     3 | //cheaper so popped off
+
+| path  | cost+heuristic | total |
+|-------+----------------+-------|
+| S-a   | 2+2            |     4 | // cheaper so popped off, to be replaced by it's children
+| S-b-G | (2+3)+0        |     5  | //this has the goal, but we stop only when we DEQUEUE the goal
+
+| path  | cost+heuristic | total |
+|-------+----------------+-------|
+| S-a-G | (2+2)+0        |     4 | // cheaper, so dequeued and we have the answer
+| S-b-G | (2+3)+0        |     5 |
+
+
+
+____
+Complete - guaranteed to find a solution if one exists?
+
+Optimal - guaranteed to find the least cost path?
+Yes, subject of fineprint
+
+Time complexity
+
+Space complexity
+____
+
+
+However, it fails if the heuristics are shitty. We can always take a weighted average and all... 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_22.png]]
+It fails here :top:
+
+We need to regulate our heuristics
+ - What went wrong was - actual bad goal cost < estimated good goal cost  (the actual god-sent truth cost was less than what our heuristic says)
+ - we need estimates(heuristics) to be less than actual costs
+
+**** Admissible heuristics
+
+Inadmissible (pessimistic) heuristics break optimality by trapping good plans on the fringe
+Admissible (optimistic) heuristics slow down bad plans but never outweigh true costs
+
+A heuristic h is admissible(optimistic) if:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_23.png]]
+
+Also, it has to be positive. 
+
+**** Optimality of A* tree search
+
+Assume: 
+ - A is an optimal goal mode
+ - B is an suboptimal goal mode
+ - h is admissible
+
+Claim A will exit the fringe before B
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_24.png]]
+
+To mark the nodes that have been explored, highlight the nodes on the fringe
+
+Recall: f(n) = g(n) + h(n)
+f - the f score
+g - the cumulative cost of reaching that node
+h - the heuristic value at that point (which is always lower than the actual value - the god-sent truth)
+
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_25.png]]
+
+we have:
+ - f(n) is less or equal to f(A)
+   - f(n) = g(n) + h(n) --> which is, cumulative cost of reaching n, heuristic value of reaching A from n (which always has to be an underestimate)
+ - f(A) < f(B) --> h() will be 0 in both cases, and since A is optimal, g(A)<g(B) by defination
+ - n expands before B --> f(n) <= f(A) < f(B)
+
+Hence, all ancestors of A and A itself, expands before B
+A* is optimal
+
+**** Properties of A*
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_26.png]]
+
+A* focuses more in the direction of the goal, because it has the sense of the goal, due to the heuristic. UCS expands in all directions based on the cost without any sense of goal's direction 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_27.png]]
+
+
+:top: the first one is UCS, the 2nd one is A*. *Both are optimal*, but A* has a sense of direction and it won't explore the right side of the graph because it has an heuristic sense of direction of the goal 
+
+**** Uses of A*
+
+ - Video games
+ - Pathing/routing problems
+ - Resource planning problems
+ - robot motion planning
+ - language analysus
+ - Machine translation
+ - speech recognition
+ - ...
+
+*** Demonstrations
+
+Here, the aim is to go from green to red. 
+The light blue costs 1, deep blue costs 3.
+
+White dots means the state is explored
+
+ - BFS --> optimal if all costs equal, equal cost support, no heuristic support
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_29.png]]
+
+Note, it expands a lot of deep blue nodes without slowing down there. This is because BFS does not have any sense of non - 1 costs. It treats all the nodes as same cost, so here, it is not optimal.
+
+But if the costs we the same, it would be the optimal
+
+
+ -  UCS - optimal even in unequal costs, unequal cost support, no heuristic support 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_28.png]]
+
+
+ - Here, the optimal solution is given to us, with consideration of the deep blue water's extra cost. But we still do a lot of extra worl, note the white dots in the bottom half of the graph, the goal is somewhere else entirely, but UCS explores these nodes because it has no sense of the direction of the goal
+
+
+ - Greedy - like a guided DFS, not optimal, no cost support, heuristic support
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_31.png]]
+
+
+Here, note it zooms straight into the wrong direction. It just listens to the heuristic and does not bother about the cost at all. 
+
+ - A* - optimal solution, unequal cost support, heuristic support
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_32.png]]
+
+
+A* does no unnecessary work, it gives us the optimal solution, works prefectly 
+
+
+- DFS - not optimal, no cost support, no heuristic support
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_33.png]]
+
+
+
+*** Creating Heuristics
+
+Most of the work in solving a search problem is creating a admissible heuristic 
+
+Pratically speaking, indamissible heuristics can make your work a lot faster but you lose the optimality guarantee 
+
+
+Consider this problem:
+
+**** 8 Puzzle
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_34.png]]
+
+Number of world states - 9! (actually 9!/2 because about half of the combination cannot be achieved without breaking the board)
+Number of successor actions - 4 (so, branching factor of 4)
+Cost - 1 (because moving any tile costs the same)
+Heuristic
+
+1. number of tiles misplaced
+  - this is admissible because it is quite constrained, it is not arbitarily high.
+  - This is aka *relaxed-problem* heuristic. This is because it is how far the solution is if you can pick any tile and place it in it's right position. This would be the *god-send* heuristic in the relaxed problem. 
+
+
+2. total manhattan distannce
+  - here, we have tightened the bound on the heuristic a little. this would be the *god-send* in the case where we could slide any tile in any direction ignoring other tiles
+
+This tighter heuristic is better, in the sense that we will be more guided in our search, and won't have to explore many many nodes
+
+1. actual cost(actual distance) as a heuristic?
+   - it is admissible, because it is the *god-send* in our present game with the present rules
+   - this would lead us to expand only solving the nodes that are on our optimal path
+   - but to get the heuristic, we have to solve the problem first
+
+So, there is a tradeoff b/w getting heuristics that are tighter(and guide you well) and how much work you have to do to get them
+
+
+In general, heuristics can be nicely designed by relaxing the rules of the game and then computing costs under that simplified case
+
+#+ATTR_ORG: :width 100
+#+ATTR_ORG: :height 100
+[[./assets/AI_UCB_35.png]]
+
+At the top, we have the *god-sent* best heuristic. at the bottom, we have the zero heuristic.
+Then, we have some heuristics that are better than others - ha better than hc
+
+Any heuristic ha is better than another heuristic hb if it gives a higher value always (:thinking:)
+
+The zero heuristic gives you UCS
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_36.png]]
+
+
+** Graph Search
+  
+A small change that will make everything better. 
+
+This is not visiting the nodes we already visited. Consider this:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_37.png]]
+
+the 2 'e' subtrees have exactly the same nodes. 
+we have already visited e, we shouldn't visit it again. (thought the cost of both the subtrees is different)
+
+*** main idea of graph search
+ - never expand a state twice
+ - tree search + set of expanded states ("closed set")
+ - expand the search tree node-by-node but,
+ - before expanding the node, check to make sure its state has never been expanded before
+ - if not new, skip it, if new, expand and all to closed set
+
+Will this wreck completeness? 
+i.e. be unable to find a goal(solution) if it exists
+
+Can this wreck optimality?
+Yes, if you get the wrong one first, you won't visit the 2nd one. So, get the right one first if you want optimality
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_38.png]]
+| path | cost+heuristic | total |
+|------+----------------+-------|
+| S    | 0+2            | 2     | // only thing on the queue, so popped out
+
+| path | cost+heuristic | total |
+|------+----------------+-------|
+| S-a  |            1+4 |     5 |
+| S-b  |            1+1 |     2 |
+
+| path  | cost+heuristic | total |
+|-------+----------------+-------|
+| S-a   |            1+4 |     5 |
+| S-b-c |            3+1 | 4     |
+
+| path    | cost+heuristic | total |
+|---------+----------------+-------|
+| S-a     |            1+4 |     5 |
+| S-b-c-G |            6+0 |     6 |
+
+| path    | cost+heuristic | total |
+|---------+----------------+-------|
+| S-a-C   |            2+1 |     3 | // won't be visited because C is already visited. No other node on the fringe, So, solution returned is: S-b-c-G
+| S-b-c-G |            6+0 |     6 |
+
+
+#+ATTR_ORG: :width 200
+#+ATTR_ORG: :height 200
+[[./assets/AI_UCB_39.png]]
+
+What we need is *consistency* in our heuristics
+
+*admissiblilty* --> estimates need to be less than equal to actual reality
+*consistency* --> the heuristic has to be consistent with the reality, it has to represent the reality nicely
+That is to say, when consider 2 nodes, A and C
+say, h(A) = 4 and h(C) = 1
+
+Say the cost of the edge A->C is 1. Then, our heuristics are being inconsistent, they say that the difference in cost is 4-1=3
+So, the heuristic difference should be <= cost of that edge
+
+This constraint makes sense, because the heuristic is the actual cost, how can it reduce by more than the edge? even if the edge is pointing straight to the goal, the difference would only be equal. 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_40.png]]
+
+** summary
+Tree search:  
+ - A* optimal if heuristic admissible
+ - UCS is special case with h=0 always
+
+Graph search:
+ - A* optimal if heuristic is consistent
+ - UCS optimal (h=0 is consistent)
+
+*Consistency implies admissibility*
+(not the other way around)
+generally - you brainstrom admissiblity and verify consistency 
+
+In general, most natural admissible heuristic tend to be consistent, especially if from relaxed problems 
+
+SO: 
+ - A* uses both backward costs and estimates of forward costs
+ - A* is optimal with consistent (and hence admissible) heuristics, (consistency needed if you want to use closed sets, admissiblity always needed for optimality)
+ - heuristic design is key - often use relaxed problems
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_41.png]]
+
+* Lecture 4 - CSPs - Constraint satisfaction problems
+
+CSPs are specialized class of search problems 
+Also a general class of problems - how to represent them and solve them
+
+
+Assumptions for search:
+ - single agent, deterministic actions, fully observed state, discrete state space
+
+ - planning - we try to find sequence of actions to get goal
+   - the path to the goal is the important thing, the goal state is easy and given
+   - paths have various costs, depths
+   - heuristics give problem-specific guidance
+
+ - identification - we try to discover the goal state that is well formed. assignments to varialbes
+   - the goal itself is important, not the path. 
+   - all paths at the same depth
+   - example - map coloring
+
+In general, in search problems, the state is a black box, we just have a goal test which says if we have reached the goal and we have some successor functions which can be anything. 
+
+CSPs are a subset of search problems with some special assumptions.
+ - state is defined by *variables Xi*, with values from a domain D
+ - goal test is a set of constraints specifying allowable combinations of values for subsets of variables
+
+Simple example of a /formal representation language/
+Allows userful general-purpose algos with more power than standard search algos
+
+** Examples of CSPs
+*** Map coloring
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_44.png]]
+
+1. Variables - states that we want to color --> WA, NT, Q, NSW, V, SA, T
+2. Domains - D = {red, green, blue}
+3. Constraints - adjacent regions must have different colors
+ - implicit - WA != NT
+ - explicit - (WA, NT) part of {(red, green), (red, blue), ... }
+4. Solutions - assignments satisfying all constraints 
+ - eg, {WA=red, NT=green, Q=red, ..., T=green}
+
+needless to say, The solution satisfies the constraints 
+
+
+*** N-queens problem
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_45.png]]
+
+Place N queens on a chess board in such a way that they cannot attack one another
+
+The picture shows a 4 queen problem
+Specifying the problem:
+
+*** my formulation
+1. Variables - location of the queens (Xq1, Yq1), (Xq2, Yq2), ...
+2. Domains - all the squares on the chess board {(1, 1), (1, 2), ... , (8, 8)}
+3. constraints - 
+   - implicit 
+     - Xq1 != Xq2 != Xq3 != Xq4,
+     - same for Y
+     - (X, Y) coordinates for any 2 queens cannot form a line with m= +-1
+   - explicit
+     - too many to write! 
+4. Solutions
+   - {Q1=(1, 1), Q2=(4, 7), ... }
+
+
+*** formulation 1
+1. variables: Xij (1 if queen there, 0 otherwise) (we have 64 variables)
+2. Domains: {0, 1}
+3. constraints:
+   - implicit
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_46.png]]
+
+The first one means: in any row, there must not be 2 queens
+The on the right means, there must be 4 queens (trivial solution would be to assign all Xijs to 0, problem solved!)
+
+Note, the explicit formulation of the constraint on the right would be - 
+something like: 
+{X11, X12, X13, ..., X88} belongs:
+  {1, 1, 1, 1, 0, ..., 0}
+  {1, 0, 1, 1, 1, ..., 0} etc
+That is a lot of writing. So, we generally write constraints in implicit form
+
+*** formulation 2
+
+in the earlier formulation, we did not use the knowledge of the problem, that is why we had to explicitly write the implicit constriant about summation of Xs being N
+
+1) variables - Qk, each row is a variable and the value will be where the queen for that row is
+the variable has an implied constraint that there cannot be more than 1 queen for each row
+it uses the knowledge of the problem :top:
+2) domain - {1, 2, 3, ..., N}
+3) constraints
+   - implicit
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_47.png]]
+
+4) solution is simple - (Q1, Q2, .., Qn) = {1, 3, 0, ..., 0}
+
+
+We can draw constraint graphs to think about how to represent them in your data structure 
+semantics of the graph:
+ - nodes are varialbes
+ - edges b/w nodes means there is a constraint b/w them
+binary csp - each constraint relates at most to 2 variables. the graph is simple in this case:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_48.png]]
+
+They can be more dense as well. 
+
+*** Sudoku
+
+this is a beautiful constraint satisfaction problem
+
+variables - value of each open square
+domain - {1..9}
+constraints - no num repeats in a row, col etc. 9-war alldiff for each row, col, region
+
+
+** varieties of CSPs
+
+discrete variables 
+  - finite domains
+    - size d means O(d^n) complete assignments
+    - eg: boolean CSPs, including boolean satisfiability(NP-complete)
+
+  - infinite domains(integers, strings etc)
+    - eg: job scheduling, variables are start/end times for each job
+    - linear constraint solvable, nonlinear undecidable
+
+continuous variables
+ - eg: start/end times for hubble telescope observations
+ - linear constraints solvable in polynomial time by LP methods
+
+Linear programming is a kind of CSP with continuous variables and linear constraints 
+
+So, CSPs cover a huge huge area of problems, learning to solve them is important
+
+
+** varieties of constraints 
+
+unary constraints 
+- involve a single variable equivalent to reducing domains, 
+eg: SA!=green
+
+binary constraints
+- involve pairs of variables eg:
+  SA!=WA
+
+Higher order constraints-
+- involve 3 or more varialbes
+
+
+preferences (soft constraints)
+ - eg: red better than green
+ - often representable by a cost for each variable assignment
+ - gives constrained optimization problems
+ - (we'll ignore these until Bayes' nets)
+
+
+** real world CSPs
+- assignment problems eg - who teaches what class
+- hardware configuration
+- transportation scheduling
+- factory scheduling
+- circuit layout
+- etc
+
+** solving CSPs
+
+Framing CSPs aren't much different from framing search problems
+
+Standard search formulation of CSPs
+ - initial state - empty assignment {}
+ - successor function - assign a value to an unassigned variable
+ - goal test - the current assignment is complete and satisfies all constraints 
+
+This framing is awfully like an search problem formulation, so much so that we can try our search algos on them
+
+*** BFS
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_49.png]]
+
+BFS start at the root node, which is empty assignment(not the goal). 
+Now, it would go to layer 1. Taking WA to be the entry point, we assign it green. Not a goal, we assign it blue, not a goal, we assign it red
+Not a goal, then we assign WA green and play with NT&SA's colors
+
+So, BFS is exceptionally inefficient, the solutions lie at the bottom of the triangle and BFS will traverse the entire thing before reaching there
+
+** DFS
+
+it will assign green to everything, then backtrack. grossly inefficient but still assigns everyone colors before backtracking
+
+The main problem is - you make mistakes early on and you don't realize that then. 
+
+** Backtracking search 
+Backtracking search is the basic uninformed algorithm for solving CSPs
+
+idea 1 - one variable at a time
+ - since {WA=red then NT=green} is the same as {NT=green then WA=red}, we only need to consider assignments to a single variable at each step
+
+idea 2 - check constraints as you go
+ - i.e. consider only values which do not conflict previous assignments
+ - might have to do some computation to check the constraints
+ - "incremental goal test"
+
+DFS with these 2 improvements is called *backtracking search*
+can do n-queens with n~25
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_50.png]]
+
+
+Note, the fellas which break constraints are not included.
+Also, we take one variable at a time(the children of root aren't numofnodes*numofcolors but only numofcolors because the ordering doesn't matter
+
+Pseudo code:
+
+
+#+begin_src C
+
+function BackTrackingSearch(csp) returns solution/failure
+{
+    return recursive-BackTracking({}, csp)
+}
+
+function recursive-BackTracking(assignment, csp)
+{
+    if assignemnt is complete -> return assignment
+    choose a child node --> if breaks constraint, choose another, return recursive-BackTracking(assignemnt, csp)
+    return failure
+}
+
+#+end_src
+
+Backtracking = DFS + variable-ordering + fail on violation
+
+*what are the choice points?*
+ - we can play with the selection of the child node - which node from the graph to work on next (there would be several children nodes, we choose which one?) -- *ordering*
+ - and also, what color to assign to the next node so that the chances of constraint violation is minimum.  
+
+This is a nice improvement, but it doesn't scale
+Some general purpose ideas:
+
+ - ordering: 
+   - what variable should be assigned next?
+   - in what order should it's values be tried?
+
+ - filtering
+   - can we detect inevitable failure early?
+
+ - Structure
+   - can we exploit the problem structure?
+
+
+*** Filtering
+
+**** Forward checking
+The nodes that are still unassigned have all the choices in their domains. what we can do when we assign any node is, check if we can reduce the domain of other nodes (need not be it's children) by crossing off the values it cannot take. 
+
+Here, we assigned WA red and so we removed red from the domains of NT and SA 
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_51.png]]
+
+
+
+Note here, forward checking messed us up. In the 3rd stage, we see that NT and SA both can be only blue, but both cannot be blue because they are adjacent. FC does nothing about this. we assign SA next, NT will have an empty domain, and we will need to backtrack.  
+
+We need to intelligently select the nodes to work on --> we need to focus on ordering
+
+FC is better than nothing though. 
+
+# There is a tradeoff here
+# In A*, the better the heuristic, the more directed our search would be, but we did a lot of work to just compute the heuristic - so, we need to balance that 
+# Here as well, the better the filtering, the less the backtracking, but more time needed to cross off things from other node's domains etc - so, we need to balance that as well
+
+The problem with FC is that it doesn't check interactions b/w unassigned variables, it checks interactions b/w assigned variables and their neighbours. *Consistency of a single arc* does exactly that. 
+
+*Constraint propagation* - reason from constraint to constraint - FC and CSA are both ConPro methods
+
+**** Consistency of a single arc
+
+This is also a constraint propagation method. 
+Here, we take any 2 nodes and check if they are arc consistent. 
+
+An arc is consistent iff:
+    For every X in the tail, there is an extension to some Y in head that does not violate a constraint 
+
+Note:
+ - there must be a choice in the head for every selection of tail's elements
+eg:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_52.png]]
+Here, is NT --> WA consistent?
+for green in NT, there is a choice in WA
+for blue in NT, there is a choice in WA
+for red in NT, there is a NO choice in WA
+
+so, remove red from NT to make it consistent. 
+
+
+Now, checking Q --> WA
+for green in Q, there is a choice in WA
+for blue in Q, there is a choice in WA
+for red in Q, there is a choice in WA
+
+In you think, *what forward checking does is, it enforces the consistency of every arc that points to my new assignment.*
+
+That is all FC was, but we can do more. We can enforce consistency elsewhere as well.
+We can make sure that every, each and every arc in a CSP is consistent, (such a CSP is called an arc consistent CSP)
+
+This is a good way of constraint propagation
+
+But consider this:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_53.png]]
+
+Checking V --> NSW
+for green in V, there is a choice in NSW (red, blue)
+for blue in V, there is a choice in NSW (red)
+for red in V, there is a choice in NSW (blue)
+
+So, consistent
+
+Now, NSW --> SA
+for red in NSW, there is a choice in SA
+for blue in NSW, there is NO choice in SA 
+so, to make the arc consistent, remove blue from NSW
+
+But, now, we our previously consistent arc V-->NSW is no longer consistent
+
+Remember -> 
+ - delete from the tail
+ - if X loses a value, neighbours of X need to be rechecked
+ - arc consistency detects failure earlier than FC (because it is more agressive in it's constraint propagation than FC)
+ - can be run as a preprocessor or after each assignment
+
+downside: 
+ - too much overhead for each basic step of the algo
+
+This algorithm is called *AC-3*. It takes the CSP, makes it arc consistent and returns it. 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_54.png]]
+
+***** Limitations of AC
+ - after enforcing arc consistency - can have one or more or no solution after enforcing AC.
+#+ATTR_ORG: :width 200
+#+ATTR_ORG: :height 200
+[[./assets/AI_UCB_55.png]]
+in the first case, arcs consistent, 2 solutions exist
+in the 2nd case, arcs consistent, no solutions exist 
+
+if we have 3 way interactions, arc consistency fails to alert us about problems and we will have to backtrack 
+This is because arc consistency needs some higher notion of the state of the CSP and the assignments 
+
+
+** Ordering
+
+Which nodes to start with, and which nodes to expand?
+That can make a lot of difference, if we dynamically choose the nodes that can help us reduce our backtracking. 
+ 
+One idea is to use the Minimum remaining values as the heuristic for choosing the next node to work on. This is simple, just choose the node that has the least options in it's domain.
+
+Why min rather than max? 
+Because it's domain has the potential to get empty soon. we might as well choose the most difficult node(variable) first
+also called *most constrained variable*
+aka *fail-fast* ordering
+
+
+Another option:
+Least constraining value - LCV
+ - give a choice of variable, choose the least constraining value
+ - i.e. the ones that rules out the fewest values in the remaining variables
+ - note that it may take some computation to determine this (eg, rerunning filtering)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_56.png]]
+Here, when red and green are placed, the square below green one has only blue in it's domain. Now, if we choose the 2nd lower diagram, we will have to backtrack, so we should choose the 2nd top diagram. 
+
+Or: choose value that doesn't cross a lot of stuff. 
+Or: choose the easy value
+
+This reduces backtracking.
+Both these problems make the queens problem to solvable to 1000 queens
+
+
+* Lecture 5 - CSPs II
+
+** review
+
+CSPs are a subset of search problems
+*Solving a CSP is an NP hard problem*
+
+*** CSP
+ - variables
+ - domains
+ - constraints
+   - implicit (provide a code to compute) // here, we have to execute some code to find out if an assignment passes
+   - explicit (provide a list of legal tuples)
+   - unary/binary/n-ary // the constraint touches a single node (WA!=red) or can touch 2 or more
+
+Goals - find any solution, find all, find best etc
+
+nodes --> aka variables
+nodes(variables) are assigned values
+
+We can solve generalize CSPs to not only find a solution(which is what we have been doing till now) but also all solutions, or find the best solutions etc according to preferences etc
+
+We had some ideas about how to improve CSPs
+Ordering 
+- which variable should be assigned next? (MRV, minimum remaining values) -- choose variable with MRV
+- in what order should its values be tried? (LCV, least constraining value) -- choose value that would least constraint other variables
+
+Filtering 
+- forward checking, or it's more aggresive brother
+- arc consistency 
+
+Structure
+- can we exploit problem structure?
+- recall, our arc consistency had this problem of not being able to make guarantees about number of solutions even when the arcs were consistent. This was because it did not have any idea about the structure of the problem. 
+
+We need to extend AC (arc consistency)
+
+** K-consistency
+
+Earlier, we say AC3 which goes from arc to arc and enforces consistency - it just takes a CSP and makes it arc consistent or returns failure. It is a preprocessing algo. ((thought a arc-consistent CSP does not guarantee a solution))
+
+Increasing degrees of consistency
+ - 1-consistency
+   - node consistency (each single node's domain has a value which meets that node's unary constraint)
+
+ - 2-consistency (*Arc consistency*)
+   - for each pair of nodes, any consistent assignment to one can be extended to the other
+   - you can assign anything to one and the other would still be fine
+
+ - K-consistency
+   - for each k nodes, any consistent assignment to (k-1) can be extended to kth node
+   - you can assign anything to (k-1) nodes, (all but one) and it won't break the constraint for the kth node
+
+# Higher k more expensive to compute 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_57.png]]
+
+Here, the arcs are 1-consistent, 2-consistent, but not 3-consistent
+take the bottom two variables(nodes), a legal assignment for them would be - R+B or B+R
+in either case, there would be no solution for the top node, so, 3-consistency is not present
+
+How do we enforce this? In AC (2C), we removed the values from the domain of the tail variable. Here, we define a new constraint dynamically which says that the bottom 2 nodes cannot have R-B or B-R
+(if you think about it, in AC/2C also, we added uniary constraint on the tail node, it was saying that that node cannot have blue say
+
+So, if you are enforcing K-C, to get rid of a violation, you define a K-1-ary constraint on the group of K-1 nodes
+
+K-consistency --> the CSP is K consistent
+Strong K-consistent --> the CSP is K consistent, K-1 consistent, K-2 consistent, ... 
+
+Claim: strong n-consistency means we can solve without backtracking. 
+Simple to argue:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/AI_UCB_58.png]]
+
+But, enforcing n-consistency is same as solving the problem! 
+So, this is one way of solving the problem. you enforce 1-consistency (1C), then 2C, this may break 1C, fix it, then 3C, this may break 2C and 1C etc ... all the way to nC
+
+# k=3 is called path consistency 

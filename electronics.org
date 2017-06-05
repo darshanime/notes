@@ -1,0 +1,57 @@
+digital devices - deal with 1s and 0s
+analog - deal with continious devices, often these circuits can do things like following a line without using a microprocessor
+
+voltage regulator regulates voltage
+amplifiers - amplify
+op amp - operational amplifiers
+
+ceramic capacitors, electrolytic capacitors (cylinderical)
+
+bjt - bipolar junction transistor
+
+the TI msp430g2 launchpad is based on a MSP430G2553 microcontroller, programmable in C
+
+hello world program - the blinking led
+connect battery, resistor and a led, it shall light
+
+you can use the voltage regulator (LM 1086) in order to convert the 9V input to a 3.3V output
+it has IN, OUT and GND. that's it
+they need capacitors as well. why?
+
+potentiometer - variable resistance based on how much you turn the knob
+
+ideal ammeters are suppose to have zero voltage difference across them
+this means that resistors have voltage difference across them which is equal to i*R across them
+
+the wheatstone that can be used to measure unknown resistances
+
+
+amplifiers
+
+open-loop amplifier known as the comparator
+Comparators are active devices, meaning that they must be powered to function.
+
+ground is a reference point, we pick a node in a circuit as a reference point and all other voltages are given wrt to the ground.
+it is much like we choose ground as the zero potential energy and potential energy of everything else wrt to it
+
+by definition voltage is not an absolute quantity but rather the difference in electric potential between two locations
+it is sometimes convenient to select a reference point in the circuit, label it ground, and then speak of the voltage at any point in the circuit with respect to that ground point
+
+comparator - drawn as triangles
+V+ and V- at back, 1 output at opp vertex Vout
+Vout = f(V+, V-)
+
+the function can be anything, linear non linear etc
+in linear, f() is just a constant (open loop gain)
+
+we use a diamond shape (rhombus) to show for a non constant voltage source
+
+now as the amplifier amplifies, it needs a power source to function
+the amplifier can have limits, and if the amplified output is higher than the limits, the output is capped to the limit
+
+
+
+
+
+
+ 

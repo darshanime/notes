@@ -1,0 +1,185 @@
+A1. Tuple can be created as : b = 1,
+    now, what is the difference b/w __builtins__.hash(b), id(b)
+
+There are three things here:
+identity, value and hash value
+
+id - this is the unique int associated with ALL objects. CPython returns the memory address when you call id (other intrepreters can return something else as well). If a and b have the same id, it means both the variables are pointing to the same object in memory
+id(a)==id(b) and a is b are EQUIVALENT tests
+
+value - ALL objects also have a value. == compares their value. you can change what gets compared by overriding the __eg__ method.
+
+hash value - SOME objects also have a hash value, which means they can be stored in a set and used as dict keys. The hash is based on the value of the object. so, it is only defined for immutable objects. Recall however from Algo class that different objects(or items) can have the same hash value. If you store 2 objects with same hash value in a dict, hash collision techniques (chaining etc) will be used by the interpreter.
+
+Since the hash function depends on the value, if your object implements __eg__, it must also implement __hash__ if it wishes to be hashable. If you dont want to be hashable, implement __hash__=None in the class body
+
+class MyStr(str):
+    __hash__=None
+    pass
+
+print __builtins__.hash("faf")
+4177197833205190564
+
+print __builtins__.hash(MyStr("faf"))
+TypeError: unhashable type: 'MyStr'
+
+
+A2. What are the different types of errors in python
+AKA standard exceptions:
+
+Exception - base class for all exceptions
+StopIteration - when the next() method of the iterator doesn't point to any object
+AttributeError - failure of attribute assignment or reference
+ImportError, IndexError, KeyError, NameError (name not found in local or global namespace)
+SyntaxError, ValueError (args of correct type but invalid values), NotImplementedError, RuntimeError (when the error doesn't fall in any category)
+
+A3. what are the different log levels
+debug, info, warning, error, critical
+
+
+4. what are the two main UI libs for python. what is the advantage of one over another
+Kivy
+PyQt
+PyGUI
+
+
+5. what is pypy. pypypy? why is python slow
+PyPy is a re-implementation of Python in Python"
+PyPy has 2 major parts:
+i. The translation framework - compiler RPython to C
+RPython is just a subset of Python that can be translated by PyPy's translation framework
+
+ii. The interpreter
+The interpreter then is a normal Python interpreter written in RPython.
+
+Interpreted : A high level language run and executed by an Interpreter(a program which converts the high-level language to machine code and then executing) on the go; It processes the program a little at a time.
+
+Compiled : A high level language whose code is first converted to machine-code by a compiler(a programming which converts the high-level language to machine code) and then executed by Executor(another program for running the code). (eg, Java Compiler and JVM)
+
+""Alright, this means that a python script is first compiled to bytecode and then it is implemented by an interpreter like CPython, Jython or IronPython etc. ""
+
+Python is compiler to bytecode and then interpreted by the interpreter. This is different from the purely interpreted languages since they directly convert high level language code to machine code.
+
+The CPU can only understand machine code indeed. For interpreted program, the ultimate goal of an interpreter is to "interpret" the program code into machine code. However, usually a modern interpreted language does not interpret human code directly [[because it is too inefficient.]](maybe crap, look at PyPy's JIT)
+
+The Python interpreter first read the human code and optimize it to some immediate code before interpreting it into machine code.
+
+There are two types of compilers -  ahead of time compilation - compile code to bytecode in one go
+Just in time compiler - compile code line by line
+
+Python is compiled. Not compiled to machine code ahead of time (i.e. "compiled" by the restricted and wrong, but alas common definition), "only" compiled to bytecode, but it's still compilation with at least some of the benefits. For example, the statement a = b.c() is compiled to a byte stream which, when "disassembled", looks somewhat like load 0 (b); load_str 'c'; get_attr; call_function 0; store 1 (a). This is a simplification, it's actually less readable and a bit more low-level - you can experiment with the standard library dis module and see what the real deal looks like. Interpreting this is faster than interpreting from a higher-level representation.
+
+This bytecode is either interpreted directly(as in CPython) or further compiled to optimized machine code at runtime (as in PyPy)
+
+6. what are closures, partials, metaclass
+
+
+7. what are the namespace levels in python
+
+8. what all qualifies for iterables in python
+list, tuple, set
+Everything you can use "for... in..." on is an iterable; lists, strings, files...
+you can read them as much as you want but they store all the values in memory - not what you want if you have a lot of values
+
+Enter generators
+Generators are iterators, but you can only iterate over them once. It's because they do not store all the values in memory, they generate the values on the fly:
+
+mygen = (x**2 for x in range(5))
+for i in mygen:
+    print i
+
+Yield is a function that is used like return,but the function harboring it will return a generator
+
+>>> def createGenerator():
+...    mylist = range(3)
+...    for i in mylist:
+...        yield i*i
+...
+>>> mygenerator = createGenerator() # create a generator
+>>> print(mygenerator) # mygenerator is an object!
+<generator object createGenerator at 0xb7555c34>
+>>> for i in mygenerator:
+...     print(i)
+0
+1
+4
+
+To master yield, you must understand that when you call the function, the code you have written in the function body does not run. To master yield, you must understand that when you call the function, the code you have written in the function body does not run. your code will be run each time the for uses the generator.
+
+9. how does the empty lambda function work, the one which caused us a lot of confusion
+Recall how a normal lambda works
+a = lambda x:x**2
+
+a(5)
+25
+
+Now, this:
+a = lambda: 25
+a()
+25
+
+a(10) --> TypeError: <lambda>() takes no arguments (1 given)
+
+Now, this:
+def return_s(s):
+    return s
+
+s = "abcd"
+a = lambda:return_s(s)
+a()
+abcd
+
+Now, we used it like this in our facevote code:
+    pk = request.user.id
+    on = cache.get_or_set("on:%s"%pk, lambda: ut.get_on_count(pk), 300)
+
+cache.get_or_set(<key>, <callable to call when the key doesn't exist in cache>, [expiry of key])
+What the cache.get_or_set method does is, id the cache doesn't exist, it calls the callable
+It calls the lambda which doesn't take in any arguments but just calls the function ut.get_on_count with pk(which is already defined)
+
+Now, the value which is returned by the callable is used as the value for the given key
+so:
+cache.get_or_set("key", lambda:"value", 100)
+this will save "value" as the value for the key "key"
+
+
+10. difference between range and xrange
+range creates a list, so range(1000000000) creates this huge list in memory. xrange is a iterator generator, it evaluates lazily.
+
+11. how do imports in python work. write about circular imports
+
+
+12. why are itertools.product(range(3), range(5)) printed only when decorated with list() function
+
+13. how are the data structures implemented in python
+Lists can be used as stacks(normal append() and pop() - both happens at the end of the list), queues(this is slow in lists). Use from collections import deque
+d = deque(['a', 'b', 'c'])
+d.append('d')
+d.append('e')
+d.popleft()
+'a'
+
+red black trees etc are not implemented natively. there are open source implementation though
+
+14. "Range" returns an iterator, not a list. Explain
+Range returns an iterator, not a generator. a list is a iterator. an iterator is just somehting that can be iterated over (something that can be used in for ___ in ____). The given statement is like: bageera is an animal, not a python
+
+A15. are tuples ordered?
+YES. 
+
+16. what are the main modules of python and what functions they perform. eg: os, math, cmath etc
+i. Sys module
+ - stores info about the currently running python instance
+
+
+17. MAJOR DIFFERENCE B/W py3 and py2
+i. In Py3, all strings are encoded as Unicode characters (8 bytes(64 bits, 2**64 chars storable) for each char)
+
+
+18. write about hasattr, setattr etc
+
+A19. difference b/w a==b, and a is b
+    == is for value equality. Use it when you would like to know if two objects have the same value.
+    is is for reference equality. Use it when you would like to know if two references refer to the same object - I.e. the objects have the same address in memory
+
+20. what are singletons, factory classes that control the number of instances of created objects exist.

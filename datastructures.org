@@ -1,0 +1,1215 @@
+1. linked lists
+like arrays, they are linear but elemnts are not stored in a continous way, they are linked using pointers
+the pointer tail of the LL is null
+maintaining a sorted array is difficult in the face of deletion and insertion
+
+idea for places where you do not know the number of objects you are dealing with
+
+so, linked list is better in terms of:
+dynamic size, easy intertion and deletion
+
+drawbacks:
+random access not allowed, so no binary search possible
+extra memory for pointers
+
+__
+
+first node is called head. 
+each node in a llist consists of data, and pointer to the next node
+
+in java, represent LL as a class and a node as a seperate inner class
+LL class contains a reference of node class type
+The purpose of inner classes is purely to be used internally as helper classes
+
+A doubly linked list is a list that has two references, one to the next node and another to previous node. 
+
+Another important type of a linked list is called a circular linked list where last node of the list points back to the first node (or the head) of the list. 
+
+So, the LL has this structure :
+
+each node is a class. each class has the data instance variable and the next Node reference variable. 
+
+the LL also has a Node type instance variable head.
+first the nodes are created (by giving the constructor the data to be stored in them), and then they are linked by setting each node's next variable to point to the node to which it shoud point.
+when printing, you start with n = head, and print till the n.head variable is not null, print n.data each time.
+
+
+Inserting a node
+I) at the head
+the method is push(Node headNode);
+
+the LL class stores the reference variable poinint to the head as an instance variable. 
+
+always check if the LL is empty by "head==null" condition
+
+insertion at head = O(1)
+insertion after a given node = O(1) - no traversal needed
+insertion in the end = O(n) - we have to travserse the entire LL since randomized access is not allowed.
+
+**One important thing that I do not do is check for all the cases. for example, deleting a node based on a key, what if the LL was empty, what if the head itself had the key, what if the key was not there...etc
+
+to refer to the next node, use temp.next, to refer to its next one, temp.next.next !
+
+The data in the nodes is known as the key. 
+TO delete the first occurance of the given "key" for example
+
+Array elements are allocated memory in sequence and LL have non continous allocation of memory.
+the continous memory allcoaiton is the reason you have randomized access possible
+
+static data structure - eg array - resides in the stack section
+dynamic data structure - eg LL - resides in Heap section
+
+if you do not know the size of the array beforehand, you can allot it memory from the heap (dynamic memory size) (eg ArrayList)
+
+**you can implement a recursive solution for a problem where you have to check for a particular condition, if it is true; return true or if not move to the next element, say.
+
+
+Things to take care of when swapping nodes :
+1) x and y may or may not be adjacent.
+2) Either x or y may be a head node.
+3) Either x or y may be last node.
+4) x and/or y may not be present in linked list.
+
+NOTE, G4G swapes nodes not by interchaning the data in the nodes, but by finding the previous nodes to the required nodes and then swapping their .next pointer. this is because swapping data can be expensive if there is a lot of data in the LLs
+
+in travesring thru the LL, consider using while(temp!=null) - instead of while (n>0) or something. the former will traverse the full LL and you can return when you need to.
+
+Q: given only a pointer reference to a node to be deleated in a SLL:
+public boolean deleteThis(Node thisOne)
+Node temp=head;  #illegal here, because only the pointer to the node being deleated is given
+now, traverse thru the LL, using while (temp!=null), and if temp.next==thisOne, set temp.next = temp.next.next, return true
+outside the loop, return false.
+
+SO, here; do this : copy the data of the pointer's next to itself and delete the next node by setting pointer.next=pointer.next.next;
+
+Q: How to print the middle of the LL?
+Naaive : Find the length of the LL O(N), then print out the middle element, O(N/2)
+Robust : Traverse the LL using two pointers, move one by 1 and the other by 2, when the 2nd one reaches the end, the 1st one is at the half, print it. 
+public int printMiddle()
+Node temp = head;
+Node one = head;
+Node two = head;
+
+while (two!=null)
+{
+    one = one.next;
+    two = two.next.next;
+}
+print one.data;
+
+//take care of the terminal conditions like two going to null after one hop etc and getting exceptions too.
+
+another method :
+int counter=0, Node temp=head
+while (temp!=null):
+if counter%2!=0:
+temp2=temp2.next
+counter+=1
+temp=temp.next
+
+Q: nth node from the end of the LL
+naaive : traverse the list, find it's length. then, again traverse the list and print out the required (N-n)th one. O(N)
+
+Robust : use two pointers, move the first pointer n steps ahead of the 2nd one. then move both pointers ahead till the first one reaches null, return the 2nd pointer.
+public Node NthfromEnd(int n)
+Node first = head
+Node second = head
+for (int i=0;i<n;i++) // here, check for the condition that the len of the LL is not < n etc. 
+first=first.next;
+while (first!=null)
+first=first.next
+second = second.next
+return second
+
+This is O(N) too.
+
+If you think about it, this should be the best time too because since the LL is unordered, (i.e not sorted etc), we have to traverse it atleast once to get the required data. 
+
+Q: write fn to delete the LL
+change the head to null ! 
+if you want to keep only the first 3 nodes, change Node3.next=null!
+
+Q: Write a function that counts the number of times a given int occurs in a Linked List
+Naaive : traverse thru the LL, and increment each time you get the given int
+O(N)
+public int getCounterforN(int n)
+Node temp = head;
+while (temp!=null)
+if temp.data==key: counter+=1;
+temp=temp.next;
+return counter;
+
+can be done recursively :
+public int getCounterforN(Node point, int n)
+if point==null:
+return 0
+else 
+    if point.data==key
+    return 1+getCounterforN(point.next, n)
+    else
+    reutrn getCounterforN(point.next, n)
+
+start with getCounterforN(head, n)
+
+Q: reverse a linked list
+naaive iterative method :
+have three Node variables prev, curr, next.
+When starting, prev=null, curr=head,
+then, while curr!=null:
+next=curr.next, curr.next=prev
+prev=curr
+curr=next
+
+
+recursion :
+**TODO
+
+Q: how to detect if there is a loop in the LL.
+
+
+2. Heaps - ALWAYS SUPPOSE TO BE perfectly balanced binary trees
+used for superfast min and max extraction.
+each object has a key that can be compared.
+we have two main opetaions for heaps:
+INSERT a new element
+EXTRACT object that has minimum key value
+
+the running time is O(log(n)) for extract mean
+also, heapify (insert n elements in a batch in only O(n) time.)
+delete arbiratily from the middle of the heap in log(n) time.
+
+use them when you are using exhaustive search repeatedly to find the min or max etc
+eg : selection sort - in this method, you scan the array, find the max element, put it in 1st pos, scan again, find the max and put in 2nd place etc. here, this takes n*n time. 
+With the heap, it takes n*log(n) --> state of the art. This algo is then called HeapSort
+
+O(nlog(n)) is exactly the running time for mergesort, average running time for randomized quicksort.
+
+HEAPS aka PRIORITY QUEUES
+
+Q: find the median of a n numbers given one by one in log(n) time. 
+This can be done in n(linear) time by randomized QS. but can we do better?
+yes. we can do O(log(n)) time.
+Maintain two heaps. Make one extract min and the other extract max. When a new element comes, it if is smaller than the extract max, put it in, rend out the root as the median. else rend the root of extract min as median.
+
+note the extract min has the biggest half elements
+and extract max has the smallest half elements. 
+If the new element sandwiched b/w the two roots, it is the median - put it in either one.
+YOU also have to take care to rebalance the heaps sizes such that they have the same size +-1.
+
+This runs in log(n) - sub linear time because we have the data in an online manner. we arent given it in a batch in whihc case it woud have taken linear time 
+
+Heap implementation :
+
+the heap has objects with keys for each object that can be compared. 
+the heap has two representations: one as an array and one as a tree. 
+the tree is binary. 
+heap property : at every node X, the key at X <= all keys of X's children. all the children are better or at least equal to the parent (in magnitute)
+THUS, the root has the min value. We implement them as arrays. it is stored as levels of elements. we dont need pointers here at all because the tree is BALANCED.
+So, parent of i = i/2 if i is even
+else floor(i/2) if i is odd
+eg parent of element at pos 7 is, the element at 3rd pos.
+
+Similarly, children of i are 2i and 2i+1
+
+**Q: how can you do divide and multiply by 2 quickly using bit shifting tricks?
+
+**Insertion in Heaps:
+insert at the first empty slot in the array, in the tree, it equals to the next leaf.
+when the heap proprty is violated, swap the position of the child with the parent. keep doing this till the problem is solved. this is log(n). this is bubble up
+
+**extract min
+rend the root. replace it with the leaf node. now, replace it with its smaller child. repeat till normality.
+(bubble down), running time is O(log(n))
+
+CAN WE DO THIS TOO? replace it with the smaller child. if proprty not restored, repeat till again by swapping with the smaller child again. repeat till normality. NOOO, this wont be able to resolve the heap proprty. 
+
+3. the more the number of operations supported by a DS, the slower it tends to be. 
+Sorted array:
+searching if an element is present O(log(n)) -> binary search
+If the array was unordered, it would have taken linear time, we can use the order to quicked the process
+
+Selecting the ith order statistic --> it is constant time
+pred/succ - O(1)
+rank of a given number : O(log(n))
+output in sorted order : O(n) --> to print out the n elements.
+
+4. Sorted arrays
+Search - O(log(n))
+min/max - O(1)
+pred/succ - O(1)
+rank - O(logn)
+output in sorted order : O(n) --> to print out the n elements.
+
+INsertions deletions take n time. --> because the entire array might have to be scanned/shifted
+
+5. BINARY SEARCH TREES
+this has the benefit of FAST (sublinear) additions insertions
+
+search - O(logn)
+select - O(logn)
+min/max- O(logn)
+pred/succ - O(logn)
+rank-O(logn)
+output in sorted order-O(n)
+insert-O(logn) THE BEST PART
+delete-O(logn) - ARE THE BLAZING FAST INSERTIONS/DELETIONS
+
+Heaps are balanced binary trees - they however, do not have the balanced binary search tree property.
+Implementation:
+exactly one node per key, each node has 3 pointers - left child, right child, parent which can be NULL also
+Now, we have :
+ALL left child < Parent
+ALL right keys > Parent
+
+1. Searching the BST
+start at the root, traverse the left right pointer as needed
+Height of the tree in best case (perfectly balanced) - logn
+WOrst case height - n
+
+2. Inserting in the BST
+search for the key you wish to insert, when you reach the null pointer, make it point towards this node instead.
+
+3. Min value - follow left pointer till the end
+4.Max value - follow right pointer till the end
+5. pred - the next smallest element.
+2cases : 
+left subtree nonempty - find the largest value in the left subtree
+left subtree empty - go to the parent, keep doing that till you take a LEFT turn (till you find an element smaller than you) (LEFT turn is defined as you going leftward - that will happen in you are the right child of your parent, then you will take a left turn when you go up)
+
+6. in order travsersal, write a recursive function to recurse on the left tree, print root, recurse on the right tree.
+linear time
+
+7. deletion - 
+3 cases:
+NO CHILDREN
+search for the key you wish to delete, when you find it, delete it.
+
+ONLY ONE CHILD
+delete the parent, get its child in its place.
+
+BOTH CHILDREN
+track k, find its predecessor - next smallest value, replace them, now, delete k from its new place.
+
+8. select and rank
+RANK - what is the rank of that number ? or how many numbers in the tree are smaller than the given number
+SELECT - given an ith order statistic, you return the indicated item
+
+to enable you to select the rank, you need to store with each element/node, a number equal to the number of nodes you can reach from that node. this number for the leaf nodes will be 1, for the root will be equal to the number of ndoes in the tree.
+this process is called "augmenting your data structure"
+size of the node = size of the two subtrees + 1 - hence, get the sizes via a recursive operation - from bottom up
+
+note you have to pay the piper. when you do this, you have to make sure the values are uptodate when you perform updations and deletions.
+so, when you insert, you have to go up from there and increase the size counter in them by 1.
+
+you can imlpement select by starting at the root, say we are looking for the 17th statistic, then if the left subtree has 20 elemnts, we know they are the 20 smallest elements, so we will go there. 
+
+SAY, the left subtree only had 12 elements, they are the 12th smallest elements, X (parent/root) is the 13th smallest, so we will look for the 17-12-1 i.e. 4th order statistic in the new right subtree. 
+
+say, if the left subtree has 16 elements, then the 17th order statistic would be the root itself
+
+HENCE: let us look for ith statistic. the left subtree has a elements.
+if i=a - the left child of root ans
+if i=a-1 - the root iteself ans
+if i=a+1 - the right child of root ans
+if i<a - look for ith statistic in left subtree
+if i>a - look for (i-a-1)th statistic in the right subtree
+
+time is O(log(n))
+
+Similarly, you can write the rank operaions.
+you are given the element and you have to retunrn its rank. 
+element given = a, element at root=b, element at left/right subtree = c/d
+if a==b, rank = #LS+1th
+if a<c, rank = lesss than c, rank is same as the key on the element.
+if a>d, rank=more than d, rank is same as the key on the element + #LS + 1
+
+**like in graphs, here too we recorgnize the self. so, the distance to self is explicity mentioned as 0, and the key in the graph whihc stores the number of elements you can reach from that node is at least 1 (you can reach youself always)
+
+**the BST property is :
+all keys in the left subtree are smaller than the parent
+all keys in the right subtree are bigger than the parent
+
+the Heap property is:
+both the children are bigger than the parent, the tree is always balanced (this is for the extract min heap)
+
+
+6. BALANCED BST / RED BLACK TREES
+the operations of the BSTs depend on the height, for guranteed fast performance. **for a given set of keys, there are many many possible sets of BSTs. For starters, you can arrange them all in decreasing order as one long BST with only right subtrees. Similarly, we one with only left subtrees.
+
+shortest height is log(n). so, we use RBTs to maintain this height - there are many such trees that do this (AVL was the earliest). ALso look at splay trees that modify themselves also on lookups. B trees, b+ trees etc.
+
+RBTs have a few additional invarients - in addition to the ones in BSTs (eg all nodes to the left smaller than the parent etc)
+
+1. each node is red or black
+2. root is black only
+3. no 2 reds in a row - hence, red node has only black children
+4. EVERY ROOT - NULL PATH HAS SAME NUMBER OF BLACK NODES
+
+A chain of length three (only three nodes in total) cannot be a RBT. 
+
+if it is a terminal parent-child pair, i.e the children themselves dont have any new children, then either of there two are equivalent:
+the childrenRED+parentBLACK or, childrenBLACK+parentRED.
+
+**size n (#nodes in tree) >= 2^k - 1, where k = number of #nodes in ANY node-NULL path
+thus, k <= logBASE2(n+1)
+
+implementation of rbts:
+we ues rotations - left and right
+rotations use parent child pair.
+left rotations --. parent + right child
+
+LEFT ROTATION
+so, say we have X and its children A and y. y has children B and C
+The left rotation makes Y the parent and X the child. Thus, we can rend X and place Y in its place, but X has to be the leftsubchild of Y. Also, Y's C is the rightsubchild of Y. And B is larger than X and smaller than Y becomes the right subchild of X
+
+RIGHT ROTATION
+here, the child you want to make the parent is the left child of the parent.
+so, parent X, leftsubchild Y, rightsubchild Z.
+Y has leftsubchild YL, and rightsubchild YR
+Hence, Y parent, YL its leftsubchild, X its rightsubchild. X's rightsubchild is Z, and leftsubchild is YR
+
+**DELETION we wont discuss here. Find out about deletion in RBTs.
+
+INSERTIONS
+Only insertions and deletions destroy the invariants and you need to restore them. 
+Two ways to restore the invariants - flipping color, left and right rotations.
+
+insert as usual - by searching for the item, on eaching null, putting it there.
+try coloring the new node red - if the parent is black, we are done. had we colored it black, we would have destroyed invariant of having same #black nodes in any path.
+
+if parent red, then it must have had a black parent w. 
+
+IF other child was red :
+Do this: change w to red, and both the w's children as black. the new node(x) remains red. if w was the root, change it to black.
+
+this would only work if W's parent was black. were it red, it would have caused a violation - it would propogate the violation upward in the tree.
+
+W has only 1 child OR the other child was black (x's uncle, x's parent's sibling, x's grandparent's other child) ::
+
+this can be sorted in constant time via 2-3 rotations + recolorings ALWAYS.
+
+
+7. HASH TABLES
+much like arrays, which support superfast random access and change.
+
+say, if we had to store some numebers between 1 and 10000, we could store them acc to their index in an array. to check the value of any number, boom, in const time, same with changing the value of any elemnt.
+
+What if you want to store things in a similar way but not just indexed by numbers, but by anything. i.e names etc. we would use HASH tables. they use a hash function to map the names to numeric positions in some array. so, you enter the name, you get an index by the hash function and you can use the index to get in constant time the value and/or change it too. 
+
+hash tables support
+insert, delete, LOOKUPS
+
+HEAPS can also be called as DICTIONARY
+Like dicts, they enable you to store things according to anything as index (names etc)
+**python dicts have hashtables to power them, right?
+just like python dict is unordered, so are hashtables - so, this is not ideal for max, min etc. (in dicts too, we store the values of all the keys in an array and then do a linear scan for the max/min etc)
+
+hashtables are typically used for LOOKUPS.
+
+lookups are possible in CONSTANT TIME!
+
+de-duplication, keep dupllicates of unique objects - use a hashtable, for each new item, check if it is there in the hashtable, not there - new, there? old.
+
+**hashtables support a linear scan thru them. 
+
+**when you are trying to do better than naiive, brute force n^2, try sorting the data.
+
+hash tables can be used where ever we need to do reapeated lookups, so to remember the blacklisted ip addresses, to remember the locations we have already visited in a large large graph (chess graph)
+
+IMPLEMENTATION:
+the reason we dont just use a naaive array based solution - i.e store the required thing according to its key as the index (eg store the ip address at its index). this would mean const time access/updateion/deletion/insertion the problem is that this #ofpossible elements is vvvv large. so, you cannot use an array of the size. Space is THETA(|U|)
+S is a subset of U
+
+We can also use lists based solution (double linked list eg). this would mean that the space required is THETA(|S|), S=set of items stored in the list. BUT, random access is not allowed, so we have to do a linear scan thru the list, hence lookups are in linear time.
+
+We want the best of both worlds. Small storage, fast lookups. 
+
+you can dynamicallt increase or decrease the sizes of the hash table acc to S.
+
+We will need an hash function : 
+
+h : u (u belongs to U) --> {1, 2, 3, ..some index}
+
+it takes in an elemnt of the universe and spits out an index in which to store the element in that hash table. 
+
+WHAT HAPPENS IN CASE OF COLLISIONS ?
+
+**understand the BIRTHDAY PARADOX
+it so happends because the number of pairs increases quadritacally as the number goes up. it is nC2, so, 365 days, hence, sqrt(365) number of people means a very good chance of gettting a collision.
+
+hence, this paradox shoes that if you have a 10k buckets, all you need is root of 10k, i.e. 100 elements before there are collisions even when you assign buckets uniformly. 
+
+collision is when : for distinct x, y belonging to U, h(x)=h(y)
+
+solutions :
+1. chaining - store all the elements in a linked list. so, if there is a collision, store the elements in a list. 
+
+**is the list the underlying DS that powers the python list? what is the difference between arrays (like in java) and lists (like in python) - I THINK YES.
+The array has fixed size, the LL has variable size. So, when  we used Python's list, we were using linked list in reality, when we used Java's ArrayList, we were using LL in reality. this allowed us to dynamically increase and decrease their size. arrays are rigid blocks, they cannot be dynamically resized.
+
+incorrect, java's arrayList is not a LL. it is just a array, but it lives on the heap.
+
+Array is predefined. So, it is just a chunk of memory earmarked for storing the elements. all of them are stored sequentially and this allows for fast access. we can say, the 2nd memory block's value be changed to 4.2. This can be done in constant time
+
+2. open addressing
+here, we replace the hash function with a hash sequence.(or we could go to the next bucket to the one given to us by the hash function - AKA linear probing)
+OR we could use double hashing - two hash functions. say, the first hash function gives you 15 andd the second one gives you 8. Now, 15 is full, so you go to 15+8 = 23th index and store it there. if full again, we add 8 again, we keep on doing that till we get an empty slot.
+
+DOUBLE HASHING == LINEAR PROBING IF THE SECOND HASH FUNCTION IN DOUBLE HASHING ALWAYS RETURNS 1
+
+if space is expensive, you can use open addressing and not chaining. 
+but deletion is difficult in open addressing, in chaining, it is simple. 
+
+when we use chaining, we insert at the front of the LL, so this operation is done in CONST time
+
+WHAT MAKES A GOOD HASH FUNCTION?
+(gold standard is COMPLETELY random hashing)
+1. should spread the data out as much as possible
+2. should not take too long to evaluate 
+
+example : if we wish you store the phone numbers of your friend. and later you wish to do fast lookups.
+Now, the phone numbers are 10 dgits. so, |U| = 10^10. Too large, space requirement is insane. BUT THIS HAS THE BENEFIT OF CONSTANT TIME LOOKUPS, INSERTS, DELETIONS.
+
+We choose a hash function (say we have chosen the #buckets to be 1000)
+1. BAD
+the hash function takes in the number and returns the first three digits as the bucket number.
+ - phones in the same region will have the same bucket.
+
+2. MEDIOCRE
+the hfn returns the last three digits. this HFN assumes that the last three phone numbers are uniformly distributed - no evidence to know thats true.
+
+**memory locations are in the form of bytes, so they will always be multiples of powers of 2 - they will be even.
+
+THE THUMB RULE to formulate hash functions:
+take the object (belonging to U) which is not numeric (string, object etc) and convert it to a very bigg number. 
+"formulating the hash code"
+
+Then you take the bigg number and map it to a smaller number - the bucket number/the index where you will store the elemnt in the hashtable.
+"applying the compression function" eg taking the mod of the bigg number with the #buckets
+
+**strings to numbers can be done in various ways - each char can be treated as an ascii code
+
+important to choose the number of buckets wisely too. 
+
+choose n to be prime - this makes sure that when you take modulus, you do not get common factors. 
+
+Pathological data
+for every hash function, there is a data set that can bring the hash function to its knees - that would reduce its performance drastically. 
+
+*the load factor of a hash table is:
+ALPHA : the #of objects in hash table / #of buckets in hash table
+
+chaining can have alpha more than 1.
+
+constant time lookups possible only if:
+1. load is not kept very large (because this means that the LL has a lot of elements and traversing them is linear time)
+2. load is kep low.
+
+**what is cardianality of something (say a set)?
+
+Choose the best imaginalbe hash function.
+Now, say the |U|, the size of the universal set is LARGE. also, you have |n| - the number of buckets. Now, acc to the pigeonhole principle (or just basic common sense), some bucket will have ATLEAST |U|/|n| elements. This no is hugee too. Now, if you choose your dataset to have a lot of these |U|/|n| elements, then you will get over population in just one bucket - that means a bad hash function.  
+
+You can do this in a DoS attack, if you are clever.
+what you can do is : send some packets from nicely choesn IP addresses that map to the same bucket. Keep doing it and then, when you send more, when the hashtable looks up the IP, it will have to search the LL, which takes linear time - a far cry from the constant time - this will get this system down.
+
+SOLUTIONS:
+1. we can use cryptographic hash functions - eg SHA-2
+(difficult to find their pathological dataset)
+
+2. we can use a family of hashfunction, and at runtime, choose anyone to get the bucket number for lookup/insertion/deletion etc. 
+
+**our quicksort (with the first element as the pivot) also had a pathological input - the already sorted array!
+hence, we used randomized QS - which did not have this problem. here too, we similarly use randomization to avoid having to bear the pathological dataset
+So, like in QS, commiting to chose the first element as the pivot made it vulnerable to dataset that would destroy its runtime gurantees, chosing a single hashfunction ensures you are vulnerable to a pathological dataset.
+Hence, use a family of hashfunctions
+
+UNIVERSAL FAMILY OF HASH FUNCTIONS - good random hash functions
+a set H of hashfunctions is universal iff:
+the probability that a pair of different elements dont collide is no larger than the gold standard of perfectly uniform random hashing. (gold std is 1/n - probability of a getting a particualt buccket is 1/n, and of b also getting the same bucket is 1/n, hence, of both getting the same is 1/n*n, there are n such buckets so, in the end : 1/n, n is the #ofbuckets)
+
+We dont use random allotment ofcourse because then we will have to remember in a list say where each key went, so that would take us back to linear lookups and insertion/deletions
+
+**you may be asked to identify if given H (a set of hash functions) is universal or not. It is universal iff the gold standard probability is achieved atleast.
+
+if H has 1/n fraction of which map a key k to a bucket i, is it a universal family?
+yes and no
+yes eg : if H is a set of all functions mapping the U to the buckets. this means any function imaginable. hence, this is equivalent to a perfectly random hashfunction - whihc is the gold standard. 
+
+no eg : set of n constant hash functions. so, first fn which maps to bucket 1, 2nd fn whihc maps to bucket 2, etc. 
+
+**ip address is 32 bit integer, 4 parts of 8 bits each. each bit is a number b/w 0 and 255. 
+
+hash tables are used for constant time lookups and insertions (at least in open chaining since we are appending at the head of the LL), deletions can be linear (at least in the open chaining part where we need to do a linear scan thru the LL)
+
+so, the above restriction is not strong enough, you need UNIVERSAL HASHING.
+
+IP addresses universal hashing
+U = all possible IP addresses 
+n = a prime number of buckets
+(n is a few times the no of objects you wish to store. so, if n=500, then you can say have 997 buckets)
+
+how to make a family of hashfunctions, the hash function set, H?
+define one hash function(i.e. fix one set of A values). ha. ha is a 4 member tuple (a1, a2, a3, a4)
+Now, each a is b/w 0 and n-1 (996 here)
+so, for each of the 4 coefficients, we have n choices : hence: we have n^4 functions - we can choose the coefficients to be anything and this will get us many many different hash functions.
+
+EACH a, (a1, a2, a3, a4) IS A CONSTANT. OUR FINAL HASH FUNCTION IS dependent on these 4 constants. 
+
+ha(x1,x2, x3, x4) = (a1x1+a2x2+a3x3+a4x4) mod n
+(x1,x2, x3, x4) are the IP address bits, (a1, a2, a3, a4) are the constants which define our hashfunction.
+
+So, to store a given hashfunction of this family, we need to just store the coefficients A.
+To evaluate the hash fn, we need to do constant work (4 multiplicaitons, one mod opetaion)
+
+This is enough to fulfill the UNIVERSAL HASH condition (that of completely random uniform hashing)
+
+**when working with the expectations (specificlly the expectation of a rv): use the general decomposition principle.
+1. figure out a rv you care about
+2. decompose it as a sum of 0/1 indicator random variables.
+3. apply linearlity of expectation, take the expectation of summation of the indicator variables to summation of the expectation of the indicator variable. now, the expectation of the indicator variable is just the probability of the indicator variable being one, (because it can be only 1 or 0, the probability of it being zero becomes 0 by the 0 - all this when the expectation is expanded)
+
+So, you end up with the summation of probability of indicator variable being one.
+
+**one more trick when working with expectations.
+Q: let N denote the number of coin flips needed to get heads when the probability of getting the head is 1-x.
+
+Now, E[head] = 1 + xE[head]
+1 because we need at least one to get the head. 
+x - the probability of tails in the first coin flip.
+
+This is a geometric series -> (1-x) + (x)(1-x) + (x)(x)(1-x) + ...
+The is the proability of getting a head in inf trials (if you sum to n--> infinity). However, if we need the say, 99% certainity, we can set sum to 0.99 and find n. 
+
+expected insertion time for a hashtable with open adressing is 1/(1-alpha)^2
+(alpha is the load)
+
+**trivia : redis stores key value pairs, guess where ? IN a HASH MAP (aka HASH TABLE)
+
+8. BLOOM FILTERS AKA HASHSET
+A varient of hash functions. more space efficient, but they can have some errors. 
+supported operations :
+super fast inserts and lookups
+
+benefit over hash tables :
+more space efficient
+
+cons:
+just to remember values, not the actual objects or even pointers to the objects.
+deletions are not allowed in the vanilla BFs. 
+some errors possible (FP - they may say they have seen something they havent. there are no false negatives. so the items it says it hasent seen, it surely hasent)
+
+example usage : 
+EARLY spell checkers (when space was a premium). store all the words from a dict in a BF. then in a doc, check if each word is present in the dict, if not, it is a misspelling, else correct. it may miss some wrongly spelled words words. but it will never never mark a correct word as wrong. 
+
+Forbidden passwords - for a correct password, it may say it is not allowed, but it will never say allowed to a forbidden password. 
+
+also used on network routers - you want to process the packets coming in at a torrential rate which you canrt even imagine and send them off to the next hop asap without delaying them. "process them" - could be keeping track of blocked IP addresses, maintaining statistics etc
+
+Here each bucket/entry of an array can have only one of the two values - 0 or 1.
+Space occupied is in terms of the number of bits per object that has been inserted into the bloom filter.
+
+so, n entries, |s| elements entered in the BF. Hence, #ofbits per object in |s| = n/|s| - for now, take them to be 8 bits per object. so, for ip addresses (32bits) we use only 8bits to store if they are there or not. 
+they have k hash functions, h1, h2, .., hk
+
+INSERTION:
+put 1 in the bucket given by hashfunction without even bothering to check whats in it.
+
+LOOKUP:
+return TRUE if the bucket given by the hash funcion has 1, false otherwise.
+
+why are FP posibble ?
+say k=3, so we have 3 different hash functions. the 3 hash functions tell us the revelant bits are 17, 23, 36.  they can all be one even if we never saw those addresses earlier. say, each of these got set to 1 by 3 different IP addresses which came earlier. so, we get a false positive. 
+
+the tradeoff is space consumption and correctness. 
+
+**once we can quantify the tradeoff for any thing (say, Ein and Eout), we can plot the tradeoff curve and try to find the "sweet spot" which gives us the useful whatever it is. 
+
+**if you are asked to find an element in a unsorted array, it is best to do a linear scan - linear time. It is not good to first sort the array, using nlogn and then using binary search which takes logn time. :P
+
+9. UNION-FIND
+Thet are used to maintain a partition of a set of objects. So, say you have a set S, and you have disjoint subsets s1, s2, s3 that togehter form the set S.
+
+Supported operations :
+1. Find(x)
+we give to the DS an object from the universe and ask for the name to whihc the object belongs. (eg it could belong to s1, s2, s3 etc)
+
+2. Union(s1, s2):
+we can ask the DS to fuse two groups. so now, the members of the former seperate partitions are now merged into one.
+
+So, in Kruskal's algo, all the vertices of the connected components in the graph are part of a single partition. So, when a new edge(u, v) is being considered, we first search if the u and v belong to the same partition. If they do, we cannot choose that edge. If they do not, we use find to find the two partitions and then use Union to merge them together into one. 
+
+to implement the DS for Kruskal's algo, each vertex of the graph will have an extra pointer field. each connected component of the graph will have a leader vertex - randomly chosen. 
+
+INV#1 - each vertex points to the leader of its connected component.
+
+Each member of the connected component inherits the name of the leader vertex, so, we refer to the connected component group via the leader vertex.
+so, in constant time we can check for cycles, --> edge(u, v) will form a cycle if u and v if in the same connected component, they are in the same connected component iff they have the same leader.
+
+HOWEVER, if done naaively, for each edge sucked into the MST solution, we have to  merge two partition groups. Now, that means from the two leaders, chosing one for both the groups. This means we have to update the leaders of linear number of nodes, this would take O(n) time. For doing this in each while loop which is linear, this means we are looking at quadratic running time. 
+
+what you can do is keep the leader of the larger group and rewire the memebers of the smaller group. to know which group is bigger, you can augment your data structure to keep a count of the group size. that allows you to check in constant time which group is bigger (which would otherwise have taken a linear time again)
+
+**what if we have do not update the leader pointer for all the vertices in that group but extend/inherit it only for the leader. Then, we can say the leader vertex of any group is the grand leader vertex of that group. So, a groups leader might be pointing to some other vertex while all its group members point to it. That leader of this leader might in turn point to some third leader vertex. This way,we wont have to rewire any one except the leader. We can store the chain of leaders in say a LL. HENCE, we would take linear in the number of max possible leaders [max leaders possible is logn n = #vertex --> hence, we would take logn] time to navigate to the final leader for any group.(recall traversing the LL takes linear time). WE HAVE TWO OPTIONS HERE:
+EITHER HAVE THE GRAND LEADER AT THE HEAD OF THE LL, IN THIS CASE, WE WOULDN'T NEED TO LOG TIME TO ADD THE NEW LOCAL LEADER TO THE QUEUE, BUT WE WILL TAKE LINEAR TIME TO CHECK IF THE LEADER IS IN THE LL
+
+OR ELSE, WE CAN ADD THE NEW LOCAL LEADER AT THE HEAD IN CONSTANT TIME AND TAKE LINEAR TIME TO NAVIATE TO THE HEAD OF THE LL FOR THE GRAND LEADER. 
+
+NOTE THAT LINEAR IS LOG HERE BECAUSE THE MAX #OF LEADERS WE CAN HAVE IS LOGRATHMIC.(because each time there is a leader rewiring, it would be that the other group is at least our size or can be bigger) log base 2 here, remember.
+
+HENCE, total running time:
+mlogn - sorting the edges
+outer while loop : O(m):
+    const work for cycle checks - O(1)*O(m) = O(m) linear time
+    maintaining the leader pointer - O(m)*O(logn) - O(mlogn) //Tim says it is O(nlogn) :/
+
+Total running time is O(mlogn)
+**in eager unions, we had constant time finds, the unions could be linear in the worst case but on average they were log (given we chose to keep the larger group and rewire the smaller group members to accept the parent of the larger group as their new parent)
+
+WE CAN DO BETTER! There is a randomized algo that does it in linear time O(m)!, also there is a determininstic algo that does it in O(m * ALPHA(n))
+where ALPHA(n) is the inverse Ackermann function - which is a monotonically increasing function, but it grows vvvv slowly. 
+
+
+So, in the end, we dont need any LL when rewiring, we can just brute force rewire the members of the smaller group in log time, we may have to do this for all the nodes, so nlogn time it takes. 
+
+**however, it would be fun to check if the constants decrease when we use the LL. space required is more but the constants might decrease.
+
+GUESS WHAT. This already is done in pratice and is called Lazy Union. However, the resulting tree is not stored in a LL but in an array. where each index has the name of the index's parent. so:
+111444 would become 111111 or 444444 in the old soluion
+but with our solution (and that of lazy union) - it becomes 411444 or 111144 - the leader 1 or 4 points to the other leader 4 or 1.
+
+When you need to merge, you Find the two roots and point one to the other. However, now the Find operation doesnt take constant time, it takes logn time - because this is the maximum number of times a parent vertex might have to change its pointer.
+
+How to choose which parent to have the other parent point to. If you arent careful as to which parent remains the parent and which parent points to it, we can have linear time for Find and Union (recall, Union is just two Find operations)
+This is because we may make the larger group point to the smaller group, there can be n such smaller groups and so, we can get a very deep "tree" (like in bst, we can get a one sided tree).
+
+Note, the tree here is not binary, and its minimum height is depth 1 (where all the children have only one parent pointer, indeed what was hapening in the old solution). 
+
+Hence, like in eager union, here too, we would like to keep the deeper tree and make the shallow groups parent point to the deeper trees parent. 
+
+**WE DO NOT DO THIS:
+"Hence, to keep a count of the children that come under each parent root, we would need to augment out data structure to store a variable called rank too."
+However, it would make for a good blog post on what would happed if we did do this.
+
+What we do do is we maintain an variable rank defined as maximum number of hops required to get from the leaf of the tree to X itself. so, if X is the root, this is the longest root to leaf path in the tree. ranks of leafs is zero
+rank of the node  =  1 + largest rank of any of its children.
+
+initialize rank as 0, as initially, all the points are in their seperate partition groups
+**rank is just the measure of the maximum depth of the tree.
+if rank of s1 > rank of s2, then keep the parent of s1 and make the parent of s2 to point to s1s. 
+
+Also, when we make the parent of the shallower one point to the parent of the deeper one, there is no change of anyones ranks untill we are dealing with two trees with EQUAL rank, in that case, the rank of either one of them incrases by one and it becomes the GRANDE parent of both of them. 
+
+SO, if we choose parents by RANK, we get log running time for Find and subsequently for Union (which is just two Find operations really) - again, this since the maximum rank of the GRANDEST parent of everyone can only be log(n) where n is the #of nodes in the Union-Find. This is derived from the fact that the parent of any node can change only a log number of times (this iff we choose our new parent wisely, [acc to the rank or acc in lazy, new solution to the population of the tree in eager, old population])
+note also that log is the worst case running time, recall that the rank only increases when we merge the trees of EQUAL sizes, we can get equal sizes only log(log base 2) number of times, hence log is the worst running time.
+
+**the only object whose rank can increase is the root. also, once "not a root", never again a root :P
+it would make for a fun project to visualize these trees, color code the ranks. they increase as we go up, thus, they would make for some good graphics. do this after shocal, use d3!
+
+rank lemma: after an arbitary sequence of UNION operations, there are at most n/2^r objects with rank r. So, there are AT MOST n/4 objects of rank 2.
+
+the ranks represent the worst case search time to that node. you know where the node is, to find its parent, you have to follow the parent pointers till you get to the GRAND old root of all the nodes in the tree.
+
+WHAT DID WE gain with lazy union ? Earlier, we had log running time for Find. (worst case linear but on average log). Now too, we have log find. What did we gain?
+
+
+
+Path compression
+What we can do is, we can make the leaves (and other intermediate nodes) not point to their immediate parent pointer, but to the grand patrent of all directly. Thus, find will run in constant time now, the parent is just one hop away for everyone. so, this is exactly like in eager union - we will do this for each node we are made to search for. SO, we are asked for leaf 'g' once, we go there, rewire it to point to the root of the tree directly, so that the next time we are asked for 'g', we take just one hop
+
+the con is: there is a additional constant factor overhead for find
+the pro: speeds up all SUBSEQUENT finds
+
+NOW, we do not touch the ranks when we rewire the leaves and intermediate nodes. They remain as is from where we got them. recall the properties of ranks - they are initialized as zero, they are the MAXIMUM number of hops from the leaf of the tree to the parrent (root) of the tree, they can only change for the parent nodes of the tree, they do change only when there is a union between two trees of exactly the same rank. 
+
+Now, the rank lost its meaning, but still we can say that the rank is an upperbound - on the number of hops required from a leaf to that node
+
+THE path compression doesnt break anything. It just makes the subsequent finds faster, but all the ranks properties stay the same way, when the trees have to merge, the best parent is still chosen, everything is still the same, just now faster. **visualize the trees now, with path compression - they would be shallower and the rank need not increase monotonically, it can be that the nodes be close to the grand root but have a large rank.
+
+Now, due to path compression, our running times are better than the previous log time. 
+
+HENCE, we learned to make the Union Find master by : Lazy union + union by rank + path compression
+Hopcroft-Ullman says the running time of m union/find operations now is O(m*logSTAR(n))
+
+logSTAR is insanely slow growing - it is 5 for 2^65500 - so, 5 for all pratical values of n
+
+the tighter bound is : the running time of m union/find operations is:
+O(mALPHA(n))
+where ALPHA(n) is the inverse Ackermann function - it grows much much much more slowly than the logSTAR function --> this is really really really close to linear time now !
+
+inverse Ackermann function is 4 for any pratical value of n
+but, it is a monotonically increasing function.
+
+and Tarjan conjectures that this is it, we cannot do better with the same data structure. This data structure has this running time, it takes this much work to get the job done, the bound cannot be tightened any further. It is minf boggling that such a simple data structure, with such a simple job has such a complex running time
+
+
+
+
+GEEEEKS FOR GEEEEKS
+I. linked lists
+1. random access not allowed, so binary search not allowed
+arrays have better cache locality which can improve performance
+
+2. memory for LL allocated from the heap section
+the array resides in the stack section
+
+It is well know that the array elements are allocated memory in sequence i.e. contiguous memory while nodes of a linked list are non-contiguous in memory. Though it sounds trivial yet this the most important difference between array and linked list.
+
+since arrays are continous, they allow random access. LLs
+
+what if we wish to allocate memory to the LL from stack/data section and to the array from the heap?
+
+3. swap nodes in a LL without swapping data
+we have two pointers, curr and prev. we first search for the both the nodes. 
+we change the next of the prev, and then change the next of the current,
+
+make a diagram for easy ideas. consider the case with:
+both the nodes in the middle of the LL
+one of the nodes is the head
+one of them is absent
+
+4. get Nth node in the LL
+have two pointers, make on go N steps ahead. then, increment both, when one reaches the end, the other is n steps behind
+
+5. reverse a LL
+have three pointers,prev, current and next
+
+while current !=null:
+next = current.next //next is acting as a temp variable here
+current.next = prev
+prev = current
+current = next;
+
+EFFECTIVELY : change next to prev, prev to currennt, current to next
+
+6. find a loop in the LL
+1) O(n) space and time
+store the nodes you visit in a hashtable and for each new node, check if it was already there. if present, there is a cycle
+
+2. Floyds cycle finding algo
+have two pointers. make one move one step and the other two steps. if they meet, there is a cycle.
+compare the objects themselves, not the data.
+so, while (fastP!=null and fastP.next!=null and slowP!=null)
+fastP = fastP.next.next
+slowP = slowP.next
+if fastP==slowP:
+loop detected
+
+7. merge two sorted LLs
+create a dummy variable and make a tail Node to point to it. now, check if LL1.data>LL2.data, and then, MoveNode(destLLHead, sourceLLHead)
+Node newNode = sourceLLHead;
+sourceLLHead = newNode.next;
+newNode.next = destLLHead;
+destLLHead = newNode;
+
+if (LL1.data<=LL2.data){
+    MoveNode(tail.next, LL1);
+    //this will add to the tail.next place, LL1's first node
+}
+else MoveNode(tail.next, LL2);
+tail = tail.next;
+
+return dummy.next; -->this is the head of the merged LL
+
+recursion uses the stack space - so, if you use recursion for merging the LLs, the space required would be proportational to the LL space.
+
+sort(a, b):
+if (a.data<b.data):
+result = a;
+result.next = sort(a.next, b);
+
+else:
+result = b;
+result.next = sort(a, b.next);
+
+return result;
+
+8. insertion in a sorted LL
+while (temp.next.data<givenValue):
+temp = temp.next;
+
+temp is the node which should point to the new node
+
+Node newNode = new Node(int givenValue);
+
+newNode.next = temp.next;
+temp.next = newNode;
+
+9. given only a pointer to a node, delete it
+given.data = given.next.data;
+given.next = given.next.next;
+
+10. check if a LL is a palindrome
+traverse the LL, store the data in a stack
+then, print the LL again and check if at each place, the data is equal to that popped from the stack
+
+find the middle of the LL, reverse the second half, check if both the first half and the reversed half are the same. 
+re-reverse the second half to restore the original list.
+
+if the number of nodes are even, we get equal number of nodes in both the halves, if odd, we need to accept the middle one as a middleNode and reverse the halves sans this one.
+
+11. delete duplicates in a LL
+use hashing, time and space both linear
+
+**LL is best sorted using merge sort
+
+12. remove duplicates in a sorted LL
+use hashing or do this:
+while traversing, compare each node with the next one. this way:
+
+while (temp!=null):
+if temp.data = temp.next.data:
+temp.next = temp.next.next;
+else temp = temp.next;
+
+13. pairwise swap elements of a LL
+1-2-3-4-5 ------> 2-1-4-3-5
+
+while one and two !=null:
+one.data = temp;
+one.data = one.next.data;
+one.next.data = temp;
+one = one.next.next;
+
+//recursive
+
+swapNodes(Node head){
+    temp = head.data;
+    head.data = head.next.data;
+    head.next.data = temp;
+    swapNodes(head.next.next);
+}
+
+to change the links is a better idea
+
+need two pointers, prev and temp
+temp traverses the LL
+
+Node temp = head;
+Node prev = null;
+while (temp!=null)
+prev = temp.next;
+temp.next = temp.next.next;
+temp.next.next = temp;
+
+13. move last node to the head
+while (last.next!=null)
+prev = last
+last = last.next
+
+prev.next = null
+last.next=head
+head=last
+
+14. intersection of two sorted LLs
+1->2->3->4->6 and second linked list be 2->4->6->8, then your function should create and return a third list as 2->4->6.
+
+have a dummy pointer, and a tail pointer that points to the end of our result LL always
+now, 
+Node dummy
+Node tail = dummy
+while (a.next!=null and b.next!=null)
+if (a.data==b.data)
+merge(a, tail) //this will take the head of a and append it to tail
+
+a = a.next;
+b = b.next;
+
+elif a.data<b.data:
+a = a.next;
+else b = b.next;
+
+or, recursion
+
+getIntersection(a, b):
+
+if (a.data<b.data):
+getIntersection(a.next, b)
+else:
+getIntersection(a, b.next)
+
+if (a.data==b.data):
+Node result = a.data
+result.next = getIntersection(a.next, b.next)
+return result
+
+
+15. delete alternate nodes
+Node temp = head
+while (temp.next!=null)
+temp.next = temp.next.next
+temp = temp.next
+
+recursive:
+deleteAlt(head)
+if head.next==null:
+return;
+head.next = head.next.next;
+deleteAlt(head.next)
+
+16. alternate split of LL
+Write a function AlternatingSplit() that takes one list and divides up its nodes to make two smaller lists ‘a’ and ‘b’. The sublists should be made from alternating elements in the original list. So if the original list is 0->1->0->1->0->1 then one sublist should be 0->0->0 and the other should be 1->1->1. 
+
+we can have a function that itertaes thru the list, and maintains add to two smaller subsets alternatively.
+counter=0
+Node one, two=null
+makeSubList(temp)
+
+if temp==null: return
+
+if counter%2==0:
+one.next = temp;
+else 
+two.next = temp;
+counter++;
+makeSubList(temp.next)
+
+TREES
+1. they provide a natural heirarchy. 
+search speed : LL < Trees < Arrays
+
+trees are mainly used for easy search, manipulate sorted lists of data.
+
+Node:
+
+class Node{
+    int key;
+    Node left, right;
+    Node(int data){
+        key = data;
+        left=right=null;
+    }
+}
+
+class BinaryTree{
+    Node root;
+    BinaryTree(int d){
+        root = new Node(d);
+    }
+
+    BinaryTree(){
+        root = null;
+    }
+}
+
+public static void main(String[] args){
+    BinaryTree bt = new BinaryTree(5);
+    bt.left = new Node(2);
+    bt.right = new Node(9);
+    bt.left.left = new Node(1);
+}
+
+Main uses of trees include maintaining hierarchical data, providing moderate access and insert/delete operations. 
+
+In Binary tree, number of leaf nodes is always one more than nodes with two children.
+
+The maximum number of nodes at level ‘l’ of a binary tree is 2^l-1.
+Maximum number of nodes in a binary tree of height ‘h’ is 2^h – 1.
+In a Binary Tree with N nodes, minimum possible height or minimum number of levels is  ⌈ Log2(N+1) ⌉ 
+
+types:
+full binary tree
+a bst is full if every node has 0 or 2 children.
+the tree does not have to be balanced.
+
+complete binary tree
+a bst is complete if all the levels are completely filled EXCEPT the last level. each node has 2 children, exept in the last level. in the last level, we have all keys as left as possible
+              18
+           /       \  
+         15         30  
+        /  \        /  \
+      40    50    100   40
+      /  \   /
+    8    7  9 
+eg: binary heap
+
+
+perfect binary tree
+all nodes have two children except leaves. all leaves are at the same level.
+every level completely filled.
+
+Balanced binary tree
+A binary tree is balanced if height of the tree is O(Log n) where n is number of nodes.
+
+degenerate or pathological tree
+every internal node has only one child
+
+inorder traversal using stack:
+set current = root
+3. put to stack current, current = current.left till current!=null
+now do this while stack is not null and current is NULL:
+    pop anode from stack
+    print anode
+    set current = anode.right
+    go to step 3.
+
+Stack<Node> stack = new Stack<Node>();
+Node current = head;
+while (current!=null) stack.push(current) current = current.left
+while (stack.size()>0)
+{
+    current = stack.pop();
+    print current.data;
+    if (current.right!=null) current=current.right;
+    while (current!=null):
+        stack.push(current) current = current.left
+}
+
+level order traversals
+use a queue
+current = head, store current in queue
+while queue not empty:
+Node temp = queue.pop()
+print temp.data;
+if temp.left !=null : queue.add(temp.left)
+if temp.right !=null : queue.add(temp.right)
+
+* Demo data structures implementation in Java
+
+#+begin_src java
+import java.util.*;
+
+class DataStructures
+{
+    public static void main(String[] args)
+    {
+        //Array
+        int[] array = {1, 5, 2, 16, 2, 8, 23};
+        Arrays.sort(array);
+        //to sort in reverse order
+        Arrays.sort(array, Collections.reverseOrder());
+        //to sort in custom order
+        Arrays.sort(array, new StringLength());
+
+        System.out.println(Arrays.toString(array));
+
+        //Heap aka PriorityQueue
+        //To get the sorting in reverseOrder, use this as the comparator: Collections.reverseOrder()
+
+        Comparator<String> comp = new StringLength();
+        PriorityQueue<String> heap = new PriorityQueue<String>(10, comp);
+        heap.add("zdzdadd");
+        heap.add("rwrw");
+        heap.add("a");
+
+        Iterator<String> iter = heap.iterator();
+        while(iter.hasNext())
+        {
+            System.out.println(iter.next());
+        }
+
+        while (heap.size()!=0)
+        {
+            System.out.println(heap.remove());
+        }
+
+        //Stacks
+        Stack<Integer> stack = new Stack<Integer>();
+        stack.add(2);
+        stack.add(5);
+        stack.add(8);
+        stack.push(9);
+        while (stack.size()!=0)
+        {
+            System.out.println(stack.pop());
+        }
+
+        // Queue aka LinkedList
+        Queue<String> queue = new LinkedList<String>();
+        queue.add("ab");
+        queue.add("bc");
+        queue.add("ff");
+        //to remove items from the queue:
+        String item = queue.poll();
+        Iterator<String> qIter = queue.iterator();
+        while (qIter.hasNext())
+        {
+            System.out.println(qIter.next());
+        }
+        //LinkedList can also be used as a stack or queue. it has both the ll.addLast("a") or
+        //ll.addFirst("a") method. also, ll.removeFirst(), or ll.removeLast()
+
+        //HashMap
+        HashMap<String, Integer> hmap = new HashMap<String, Integer>();
+        hmap.put("a", new Integer(1));
+        hmap.put("b", new Integer(5));
+        hmap.put("c", new Integer(5));
+
+        //keys of hmap
+        for (String ky : hmap.keySet()) System.out.println(ky);
+        Set<String> keys = hmap.keySet();
+        Iterator<String> keysIter = keys.iterator();
+        while (keysIter.hasNext()) System.out.println(keysIter.next());
+        //for values, use values()
+        Set<Integer> values = new HashSet<Integer>(hmap.values());
+
+        //key value pairs
+        for (Map.Entry<String, Integer> entry : hmap.entrySet())
+        {
+            System.out.println(entry.getKey()+" "+entry.getValue());
+            // if (hmap.contains)
+        }
+
+        //check if entry present, if present, update the key by 1
+        if (hmap.get("as")!=null) hmap.put("as", hmap.get("as")+1); 
+        //hmap.get(key) returns null if not present
+        //also, possible :
+        if (hmap.containsKey("as")) hmap.put("as", hmap.get("as")+1);
+
+        //HashSet
+        HashSet<Integer> hset = new HashSet<Integer>();
+        hset.add(1);
+        hset.add(4);
+        Iterator<Integer> hsetIter = hset.iterator();
+        while (hsetIter.hasNext()) System.out.println(hsetIter.next());
+
+        //Red Black BST
+        //ITEMS ARE STORED IN ASCENDING KEY ORDER
+        //or you can also give the treeset a comaprator object for custom order
+        TreeSet<String> tset = new TreeSet<String>();
+        tset.add("abcd");
+        tset.add("e"); //here, abcd will come first and then will come e. 
+        Iterator<String> tsetIter = tset.iterator();
+        while (tsetIter.hasNext()) System.out.println(tsetIter.next());
+
+        //You also have TreeMap<K,V>
+        //ITEMS ARE STORED IN ASCENDING KEY ORDER
+        //you can pass the treemap a comaprator object for custom sorting order
+        //BUT BEHOLD, THE COMPARATOR SHOULD SORT ON THE VALUES, NOT THE KEYS.
+        TreeMap<String, Integer> tmap = new TreeMap<String, Integer>();
+        tmap.put("A", 1);
+        tmap.put("z", 2);
+        tmap.put("c", 1);
+        tmap.put("d", 3);
+        tmap.put("e", 1);
+        tmap.put("f", 3);
+
+        Set<String> tkeys = tmap.keySet();
+        System.out.println(tkeys);
+
+        for (Map.Entry<String, Integer> entry : tmap.entrySet())
+        {
+            System.out.println(entry.getKey()+" "+entry.getValue());
+        }
+    }
+}
+
+class StringLength implements Comparator<String>
+{
+    @Override
+    public int compare(String a, String b)
+    {
+        return a.length() - b.length();
+    }
+}
+
+class ValuesComaprator implements Comparator<Map.Entry<String, Integer>>
+{
+    @Override
+    public int compare(Map.Entry<String, Integer> a, Map.Entry<String, Integer> b)
+    {
+        return a.getValue()-b.getValue();
+    }
+}
+
+#+end_src

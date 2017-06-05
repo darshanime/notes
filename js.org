@@ -1,0 +1,372 @@
+in the head tag of html source code, you can put js and css links
+<head>
+<script src="js/jQuery.js"></script>
+<link href="css/style.css" rel="stylesheet" type="text/css"></link>
+</head>
+
+div represents different elements on the page
+say, empty boxes
+we can give divs ids which we can refrerence using JS
+<div id="header" class="center-content">
+hello world
+</div>
+
+we can either include some JS files or have JS code in the browser itself. using:
+<script type="text/javascript">
+//JS
+</script>
+
+jquery lets us inspect and manipulate the elements of a page
+
+console.log("hello world");
+//used to print something
+js uses semicolons but also mostly works anyways
+there is also a undefined there, which means that console.log returns nothing
+whereas, document.URL returns the URL of the page we are visitng currently.
+
+JS can be used to make the webbsite interactive
+that is process your inputs, give results
+
+JS was invented because HTML and CSS arent interactive. they just put things on the page and make them look pretty. they dont do things
+
+you can use css to manipulate styles on mouse hovers etc, but it is limited what you can do
+
+we can define a function at the top of the page in the script tag :
+
+function validateNumber(value){
+    alert("please add a number.");
+}
+
+later, you can call it by :
+<form>
+<div class="aa"> enter your income:
+<input id="a" onblur="validateNumber(this.value)"></div>
+</form>
+
+put the script tag in the head generally
+
+JS is a scripting language
+you can use other types of scripting languages apart from JS. eg, VBScript, ASP.NET AJAX
+
+web browsers can run JS due to a JS intrepreter inside them. JS is an interpreted language, Java is a compiled language. 
+
+JS has "events" that trigger a piece of JS code when somehting happens.
+
+one other way is to send your forms to the webserver and then validate them there, this can be done but it will take time, it is better to validate them then and there only.
+
+alert("hi"); //used to create a dialogue pop up
+
+onblur
+inside the form, inside the input, this is one attribute that triggers when the user has removed the focus on the present field.
+
+onclick - present for the input of type button, value is the text on the button or what the user entered in the text field
+
+we can put css in the <div style="//css">
+
+there are events for EVERYTHING!
+example when the page is fully loaded - the page load event - onload
+when a button is clicked - onclick
+
+<body onload="alert('Hello');">
+alert is a builtin function that creates the dialogue box
+we added the onload event handler and attached a greeting to it. 
+
+here, we read it as this: the onload is an attribute of the body tag
+
+the events come from the browser. for example, a key press is an event that the browser sends to the js function with all the necessary data. 
+the events are triggered by the browser, you respond to them or not, it doesnt matter
+
+we can put JS code directly in an event handler too, like we did for the onload event.
+
+we can ask for the users name using:
+
+function touchRock() {
+    var userName = prompt("whats the name");
+    if (userName) {
+    alert("nice to meet you" + userName);
+    //now, lets change the image as well, 
+    //we use the id of the image and change its source to a new image
+    document.getElementById("rockImg").src = "new_image.png";
+    }
+}
+
+rockImg is the id attribute of the img tag.
+we define this function in a script tag at the top html page
+also, we call it like this: in the img tag's onclick event handler attribute, we say: touchRock()
+change the style of the pointer when it is on an img by chaning the imgs style attribute
+style="cursor:pointer"
+
+the DOM states that the entire HTML page is in a tree form. so, we can access any element by using:
+            document.getElementById("one").src = "2.png";
+we are getting the element and changing its src to a new image.
+
+JS has three basic data types: text, number, boolean
+var is the keyword to indicate that you are creating a new variable
+you can craete constants using const keyword
+const TAX=10.2;
+
+In JS, you dont have to define the type of a variable. JS finds that out itself.  
+
+Varialbes, constants and other JS syntax constructs are identified in scripts using unique names known as identifiers. 
+variable names can start with a letter, an underscore, or a dollar sign
+
+we use lowerCamelCase to name multiword varialbes
+eg: numCakeDonuts
+
+
+we can manipulate values like this:
+var one = document.getElementById("one").value;
+document.getElementById("one").value = one*2;
+
+we have the form, input, and input's onchange event handler attribute. call updateValue() function on that.
+always initiaze constants when you create them.
+
+NaN is a value that isnt a number even when you are expecting a number there.
+
+Use camel case (with the first letter capitalized) only when you are naming JS objects.
+the addition operator has dual uses - numeric addition and string concatenation
+we have parseInt() and parseFloat() that converts text to a number ("4" to 4)
+
+parseInt("4") //this becomes 4
+
+the way to access a web page element with JS is the id attribute of the HTML tag.
+we use the getElementById function of the document class to get the element.
+
+this gives you the element object. you can access the data of this object using 
+document.getElementById("idName").value;
+
+isNaN(document.getElementById("name").value);
+//isNaN is a function
+
+number+string --> string contcatenation
+
+so, reiterating: web page elements are objects. value is one of their property.
+
+find a substring in a string: strVar.indexOf("substingtolookfor")==-1 //not present
+
+JS is known as a client language since it runs on the client, the browser mostly.
+
+the browser has a lot of information - the history of the webpages you visited, the cookies, the width of the screen, the location of the mouse pointer
+JS can access all this information to manipulate it.
+
+
+cookies are variables that are stored on the hard drive by the browser that JS scripts can access.
+we can set timers, so that JS code is triggered after certain time has eclapsed.
+
+there are two types of timers:
+one time and interval
+use one time:
+setTimeout("alert('ok');",1000); 
+
+this returns the timer id, which is used by clearInterval() if you need to stop it.
+
+we can get the client's width using document.body.clientWidth
+we use the document object to get the client's height.
+
+the document's body represents the visible part of the page - the client height and width.
+
+a web client is the browser
+within the browser, the client is the area of the browser window where the page appears
+
+for every element of the page, theres a style object. 
+so, document.getElementById("rockImg").style.height ="100px"
+//this is the height of the rock image we are chaning it to 100px
+
+we can use the onresize to dynamically resize images for eg
+
+JS destroys all variables when the browser closes or the page reloads.
+
+to persist, you can use cookies.
+
+what we can do is store the data in cookies, and get it from there when the user revisits the page again.
+
+cookies have data, and expiry dates
+
+cookies are stored on the users computer as one big long string of text, that is associated with a website or domain name. each cookies is seperated from another by a semicolon.
+
+
+Javascript basics - Udacity
+
+divs - they are like empty objects in which you can add stuff
+they have an id which is used to refer to them
+eg:
+<div id="main">
+
+you can nest them etc
+
+include js in your page:
+<script src="js/jsfilename.js"></script>
+
+refer to elemnts on the document by their id like this:
+
+if(document.getElementByClassName("main").length==0){
+    document.getElementById("main").style.display = "none";
+    //this means that this div is hidden if it is empty
+}
+
+jQuery is simple a manipulation tool for the dom - it helps us inspect and manipulate the dom
+
+console.log("hello world");
+this is the print statement for js
+
+using jquery, you can manipulate the html easily:
+
+    $('.super-header-wrapper').html("<img src='another_image'>");
+
+the dollar sign is used by jquery to grab an element on the page. recall, there are three ways to grab an element on the page
+
+1. element selectors
+    this can be used to refer to ALL the instances of that type eg: h1 tags for example
+
+2. id selectors
+    this is used to map a unique element on the page
+    the selection begins by the # symbol
+    eg: #main
+
+3. class selectors
+    this captures the class of elements. you can use this to access multiple types of elements at once
+
+    the selectors begins with the . symbol
+    eg: .super-header-wrapper
+
+
+we have jQuery's append function that is used to append the html content to the previous one.
+eg: 
+    $('#header').append("what up");
+this will add "what up" to the html of element with id "header"
+
+variables in js:
+    var firstName = "darshan";
+    var age = 22;
+
+    the only difference b/w python and js when it comes to variables is that js uses the term var before the variables - rest all is same (yes, here too, all numbers are stored as 64 bit floating point)
+
+    there are arrays too:
+    var myArray = [];
+
+    Functions, objects all use the same syntax:
+
+    var myFunc = function(){};
+    var myObject = {};
+
+    "string".replace("s", "b");
+    brting //replaces the first instance only 
+
+    true - false
+    non zero number - 0
+    "String" - ""
+    objects - undefined
+    arrays - []
+    functions - NaN
+
+    Arrays in JS are just like lists
+
+    var myArray = ["item1", "item2"]
+
+    they can be heterogenous as well - 
+    var myArray = [
+        "item1", 
+        {
+            name:'name',
+            job:'job'
+        },
+        myFunc
+    ]
+
+    myArray.length - gives the length
+
+    arrays are objects
+    there are no classes in JS!
+
+    object literal notation:
+        var myObj = {
+        "name":"darshan",
+        "age":22
+        };
+
+    myObj is an object, 
+    also, to access it: myObj.name, or myObj['name']
+
+    the object is purely json currently, it can have lists as the values as well
+
+    you can update things as well:
+    myObj.name = "darshan"
+    myObj['name'] = "darshan"
+
+    JSON - javascript object notation
+
+    three ways to access your json:
+        bracket notation, dot notation and object:literal notation
+        jsonObject['jsonField'] = 'its_value', jsonObject.jsonField = 'its_value'
+
+        jsonObject = {
+            "jsonField":"its_value"
+        }
+     // is a comment
+
+     if (something) {
+        doSomething();
+     }
+
+     equal to uses 3 equal sighns and not 2
+     === --> safer, *OQ:why?
+
+    while (condition){
+        doSomething();
+    }     
+
+    for (initialization;condition;mutator){
+        doSomething();
+    }
+
+    for (var i;i<10;i++){
+        console.log(i);
+    }
+
+    the item is the index of the thing in the object, not the value it self, so, if object was a list, this would print the index of the object, if you want the value as well, use object['item']
+    for (item in object){
+        doSomething();
+    }
+
+    Functions can be defined in 2 ways:
+
+        var myFunc = function(param1, param2){
+            //code
+        }
+
+        function myFunc(param1, param2){
+            //code
+        }
+
+        Called the same way. 
+
+        Now, consider this:
+        $(document).click(function(loc) {
+            console.log(loc.pageX, loc.pageY);
+        });
+
+        [[ it is like: $(document).click(function_object)]]
+
+        Here, we are passing the loc params which are captured by the browser to the unnamed function (anonymous function)- which is called by jQuery when the user clicks.
+
+        $(document) captures the whole website
+
+        we can go to sources panel and look at the sources of scripts that are running on the website
+        you can see the css, js etc
+
+        myString.split(" "); --> returns a list of seperated keywords
+
+        add values to array - push()
+
+        everything is an object
+
+        you can have functions in objects like so:
+            projects.display = function(){
+                //code
+            }        
+
+        encapsulation this is - because we are holding the function object inside the project object
+
+
+
+

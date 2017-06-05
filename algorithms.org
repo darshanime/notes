@@ -1,0 +1,3241 @@
+# Algorithms
+# Start date - March 25, 2017
+# Glory is this
+
+* Data Structures and Java Collections Framework
+
+** Chapter 0 - Introduction to Java
+
+*** Review the fundamentals
+
+Class = fields + methods
+
+main() method called by JVM on starting a new program 
+
+Primitive type:
+ - some values in java and the operations that can be performed on them
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/JCF_0.png]]
+
+char c = '\u263A'
+in this context, the sequence of symbols starting after the '\' are treated as a single character. the 'u' is for unicode
+
+Classes - custom types, can created by us
+ - String
+
+*** Use javadoc in writing method specifications
+
+A method specification is the explicit information a user will need in order to write code that invokes a method
+
+*javadoc* - a program that converts Java source code's comments to HTML (Sphynix in python)
+
+multiline comments - 
+/** 
+ *
+ *
+ */
+
+the javadoc has - @param, @return, @throws
+
+**** Equality of references and equality of objects
+
+the "equals" method compares the *object type*
+so, String object 1 == String object 2 (if they contain the same string i.e.)
+
+the "==" operator compares the equality of references 
+i.e. if the 2 references contain the same address 
+
+consider:
+String str0="yes";
+String str3="yes"; 
+
+str0==str3 --> true
+here, only one String object is created, we say that the String object has been *interned*
+
+but, here:
+String str0=new String("yes");
+String str3=new String("yes"); 
+
+str0==str3 --> false
+because we are explicitly creating new string objects
+
+#+begin_src java
+  public class One()
+  {
+      public void static main(String[] args)
+      {
+          System.out.println("text");
+      }
+  }
+#+end_src
+
+variables declared within the method (including the mehtod's parameters) are called the local variables
+*they must be explicitly initialized before they are used*
+
+scope of the local method can be the entire function or just the "for" loop for eg
+
+/it is illegal to re-declare a local identified within it's block/
+
+*** The Scanner class
+it operates on /text/
+
+Scanner sc = new Scanner(<reference from where text is to be read>)
+the reference can be:
+ - System.in
+ - new File("myFile.dat")
+ - line - where line is a String object
+
+nextInt - the scanner divides the text into token seperated by delimiters. the nextInt method parses the input, discards the delimiters (space, tab, newline etc) and takes in a token which is an int
+
+hasNext - returns true if there is another token to be read in, false otherwise
+hasNextLine - returns true iff there is at least one more char(including delimiters) in the text
+
+nextLine - it advances the scanner past the current line and returns the remainder of the current line (excluding end-of-line marker like \n)
+next - skips the whitespace (and other delimiters) and returns the next token
+
+
+**** Arrays
+it is a collection of elements that are stored contiguously in memory
+it is of fixed length
+
+int[] eg = {1, 2, 3};
+int[] eg; // space created on the stack for the variable eg
+eg = new int[4]; // int array object created on heap, address stored in eg variable on stack
+
+*** Passing args
+
+arguments - when a method is called
+parameters - in the called method's heading
+
+Java uses pass by copy
+a copy of the argument is made and is passed to the function
+python is pass by reference, but some objects are immutable so it becomes pass by copy in case of string etc
+
+But there is a catch:
+1. the argument is never affected by a method call
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/JCF_1.png]]
+OUTPUT: 30
+
+Here, the int was passed as argument, it is not affected. the 
+
+2. if the argument is a reference
+the argument itself will not be affected, but the object referenced by the argument MAY change (it changes if the object is MUTABLE, not OTHERWISE)
+so, Arrays are mutable and they can be changed. Scanner is also mutable
+
+String are immutable and they cannot be changed
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/JCF_2.png]]
+
+OUTPUT - yes
+
+#+ATTR_ORG: :width 200
+#+ATTR_ORG: :height 200
+[[./assets/JCF_3.png]]
+
+this is what happens :top:
+
+
+** Chapter 1 - Object oriented Concepts
+
+*** Data abstraction
+
+When the user of a class does not need to know how the class is implemented(but just focus on how to use it), it is called data abstraction
+
+*Abstract data types* - interfaces 
+
+#+begin_src java
+public interface Employee
+{
+  String getName(); //empty method which should return string and accept no params
+  double getGrossPay(); // likewise
+
+  final static DecimalFormat MONEY = new DecimalFormat(" $0.00"); // a class constant 
+}
+
+public class FullTimeEmployee implements Employee
+{
+  private String name; // we can define custom variables for this class
+  private double grossPay;
+
+  public FullTimeEmployee()
+  {
+    name = "foo";
+    grossPay = 1.1;
+  }
+
+  // implement the getName method
+  // implement the getGrossPay method
+}
+#+end_src
+
+*this* --> refers to the object
+
+*List* interface - this is implemented by *LinkedList*
+
+*** inheritance
+
+#+begin_src java
+public class HourlyEmployee extends FullTimeEmployee
+{
+  // class implementation - make new attributes, new methods, override the parent's methods, overload them
+  // override - same args + return type
+  // overload - different args and/or return type. But you cannot have just the return type differ
+}
+#+end_src
+
+constructors are never inherited
+but whenever a subclass constructor is called, the parent's constructor is called first, starting from the constructor of the Object class
+
+to call the custom constructor of the parent class, the first statement of the child's constructor must be:
+super(<args>);
+
+Children can take the place of parents - if you expect a reference to parent object somewhere, a reference to subclass object is allowed
+this is because the child has same or more methods implemented
+
+Parent foobar = new Child(); // this is allowed
+foobar.hello(); //if the Child has this method(it may have overridden it or it might be it's own), that version will be called
+
+So, the version of the method invoked depends on the run-time type of the object being referenced, not on the compile-time type of the reference variable
+
+
+has-a relationship --> fields in a class
+is-a relationship --> inheritance
+
+Encapsulation - hiding the variables from the user and exposing methods to access/set them 
+this helps enforce the Principle of Data Abstraction, but not exposing the internals of the object to the outside world
+
+*** polymorphism
+
+defined as the ability of a reference to refer to different objects in a class hierarchy 
+
+Consider this:
+#+ATTR_ORG: :width 600
+#+ATTR_ORG: :height 600
+[[./assets/JCF_4.png]]
+
+Here, when we call employee.toString(), the method called depends on weather the line contained "full time" or not - this is *polymorphism*
+the compiler does not know at compile time which object's method is called, this is determined at run-time(this feature is called *dynamic binding* or *late binding*)
+such methods (whose implementation is determined at runtime are called *virtual method*)
+
+in Java, almost all the methods are virtual methods(except static methods and final methods - final means the method cannot be overriden in subclasses). This makes Java program run slower than C. 
+
+*** making class diagrams using Unified modeling language
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/JCF_5.png]]
+
+the arrow is from subclass to superclass
+
+
+** Chapter 2 - Additional features of Programming and Java
+
+*** static members and instance members
+
+instance variables are the variables that are associated with the object of the class
+static variables are variables that are associated with the class itself - it is shared by all the instances of the class (all the objects)
+
+eg, to count the number of objects of class Student, we can have:
+protected static int count=0;
+and in the constructor, we can increment the count by 1
+
+constant variables are the variables that are represent a constant, whose value can be assigned only once
+eg: 
+protected final static int SPEED_LIMIT = 65.0; // this value is same for all instances of the class, as it is a static final
+
+constants within a method cannot be declared as static 
+
+recall, we read somewhere that the "out" in System.out.prinln(""); is a static, here is it's defination:
+
+    public final static PrintStream out = nullPrintStream();
+
+recall static methods are not virtual, they are bound to the classes (method identifiers) at compile time, rather than at run time - since they are associated with the class itself, not to the instance of the class 
+
+*** JUnit tests for class's methods
+
+"Testing can reveal the presence of errors, but not the absence of errors"
+
+#+begin_src java
+import static org.junit.Assert.*;
+
+@Test
+public void toStringTest()
+{
+  FullTimeEmployee full = new FullTimeEmployee("a", 150.00);
+  String expected = "a $150.00 FULL TIME";
+  assertEquals(expected, full.toString());
+}
+#+end_src
+
+The assertEquals method is an overloaded method in the Assert class of the org.junit package
+
+Method signature of assertEquals:
+    public static void assertEquals (java.lang.Object expected, java.lang.Object actual)
+
+Here, since the method expects objects of Object class, and so by polymorphism, we can pass it any object (since all classes inherit the Object class)
+
+*** try/catch blocks
+
+An /exception/ is an object that is created by an unusual condition. The exception is said to be /thrown/
+
+#+begin_src java
+public String rearrange(String fullName)
+{
+  String result;
+  try
+  {
+    Scanner sc = new Scanner(fullName);
+  }
+  catch (NoSuchElementException e)
+  {
+    // handle the error
+  }
+}
+#+end_src
+
+If an exception is thrown in a method that does not catch that exception, control is transferred back to the calling method(the caller of this method AKA the method that called the method that threw the exception)
+
+you mention the exceptions that you method can throw javadoc of the method with @throws <ExceptionName> - <details, summary>
+throw it like so:
+
+  if (year < SOME_VALUE)
+    throw new IllegalArgumentExcpetion();
+
+To know the end of input, we can use some value as *sentinel* value, like: EOF, **** etc
+
+Checked exceptions - the exceptions that we know maybe thrown and so we either catch them or propagate it using throws in the method heading
+
+  public void sample() throws IOException
+
+The calling method now must either catch the exception or must propagate it using throws in it's name
+
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/JCF_6.png]]
+
+Exception hierarchy 
+
+if you put the more general catch statement before the more specific catch statement, the compiler will say it is an error as the 2nd catch is unreachable code
+
+
+There is a *finally* block after the last catch block that will b executed weather or not any exceptions were thrown in the try block
+
+*** JVM
+
+The Java code is compiled to JVM bytecode which is then run (interpreted) by JVM
+(this is *exactly* what happens in python as well, the python code is converted to python bytecode which is then run by the python interpreter which is a C program. Here too, the JVM is a C program(or can be implemented in any other language as well - it is just a specification)
+
+The benefits - platform independence - since the source code is not converted to machine code directly, the code will run on any platform that can run the JVM (which is C)
+
+also, there is additional security since the bytecode is not run on bare metal, but in the JVM - so the JVM can choose to not allow the application to read from/write to the local disk etc
+
+The JVM oversees all aspects of your program's run-time environment. 
+The JVM has 3 main tasks:
+
+_1. Pre-initialization of fields_
+
+Initialization of fields just prior to the invocation of a constructor 
+i.e. when the constructor is called to create a new object, the JVM is responsible for allocating space for the object, initialize the variables of the new object(either with the values provided to the constructor or with default values - int gets 0 etc), and return the address of the new object
+
+*Note* : only the fields of the class get initialized, local variables (defined inside the methods) don't 
+
+
+_2.Garbage collection_
+When there are no living references to an object, and when the JVM needs space to allocate for new objects, the old unreferenced objects will be garbage collected
+
+
+_3. Managing threads_
+starting and managing threads etc. 
+
+
+*** Override Object class's equals method
+
+The Object class has a method "equals"
+here is the defination:
+
+public boolean equals(Object obj)
+{
+  return this == obj;
+}
+
+now, in your own class, you can create your own equals method if you want to. 2 ways - overload the Object classes equals or override it
+
+Overload:
+public boolean equals(FullTimeEmployee full)
+
+:top: yes, this is overloading - since the args are different
+
+Override:
+public booean equals(Object obj)
+//diff code
+
+
+the default equals compares references, we can change that:
+
+public boolean equals (FullTimeEmployee full)
+{
+  return name.equals(full.name) "" Money.format(grossPay).equals(Money.format(full.grossPay));;
+} // overloading the method 
+
+
+The *instanceof* operator returns true iff at run-time, the object referenced by the left operand is an instance of the class that is the right operand 
+
+
+
+
+*** packages and visibility modifiers
+
+A package is a collection of related classes
+for each such class, the file in which the class is declared starts with the package declaration 
+
+package neuralNetwork;
+
+eg: the Scanner class is a part of the java.util package 
+so: 
+package java.util;
+
+
+*Each java file must have a one and only one class with the visibility modifier public* 
+other classes can have default visibility. 
+
+also, the name of that public class must be the same as the name of the file 
+
+java.lang is imported by default
+
+A class with no visibility modifier has the *default visibility* - which is that the class can be accessed by any object in the same package as the class in which the member is declared
+
+*protected* -- if an identifier (can be a variable, method etc) in a class has protected visibility, that identifier can be accessed in any class that is in the same package as the given class. Also, it can be accessed in any subclass of the given class, even if it is in a different package
+
+
+/*protected* is even less restricted than default visibility/
+
+rule of thumb - use private for fields, and public for the getter and setter methods
+
+** Chapter 3 - Analysis of Algorithms
+
+*** Big-O notation
+
+For an implementation, we can define the 
+worstTime(n) -- where n is the input size or 
+averageTime(n) --> where we can assume all input possibilities(favorable - best case and unfavorable - worst case) of size n
+
+Same for space - worstSpace(n) and averageSpace(n)
+
+Big-O --> gives us an idea of the /upper-bound/ for the behavior of the algo
+
+When we say that :
+    BigO(f) = g
+
+we meanL 
+    C.f(n) >= g(n) for all n>=K
+
+that is, let the constant C be sufficiently large, for sufficiently large input size(n), the function g will be smaller than function f
+i.e. g is the upper bound of f
+
+Since Big-O is an upper bound, if there is a function f(n) = 4*n+2, it has O(n), O(n^2) ... etc
+
+#+ATTR_ORG: :width 800
+#+ATTR_ORG: :height 400
+[[./assets/JCF_7.png]]
+
+
+BigO can be misleading if the value of *n* is small:
+
+#+ATTR_ORG: :width 800
+#+ATTR_ORG: :height 400
+[[./assets/JCF_.png]]
+
+
+**** Common BigO functions
+
+***** Log n
+
+#+begin_src C
+#include <stdio.h>
+
+int main()
+{
+  while (n>1)
+    n=n/2;
+    print(n);
+}
+#+end_src
+
+(or something similar to start with i=1, i*=2 till i<n) is *log n*
+
+In general - if during each loop iteration, n is divided (or multiplied) by some constant greater than 1, worstTime(n) will be O(logn) for that loop
+
+Binary search has running time of logN because in each iteration, half the input is discarded and the total times the loop runs is logN
+
+
+***** O(n)
+
+for (int i = 0; i<n; i++)
+ print(i)
+
+this is O(n)
+passing thru the input once, for eg to search in an unsorted array is O(n)
+
+***** O(nlogn)
+
+for (int i=0; i<n; i++)
+  while (j>1)
+    j/=2;
+    print j;
+
+this is logn + logn + ... + logn --> n times, so, nlogn
+
+This is the running time of several sorting algos
+
+***** O(n^2)
+
+for (i=0; i<n;i++)
+  for (j=0;j<n;j++)
+    print(i, j)
+
+this is:
+n + n + n + ... + n
+:top: is n times, so n*n = n^2
+
+Consider this:
+for (i=0; i<n;i++)
+  for (j=i;j<n;j++)
+    print(i, j)
+
+n + (n-1) + (n-2) + ... 1
+
+which is n(n+1)/2 --> O(n^2)
+
+Selection sort uses this
+
+
+*** big-omega
+
+BigO provides the upper bound - BigOmega provides the lower bound
+
+let f,g be a function, then: g is BigOmega(f) iff:
+
+g(n) >= C.f(n) for all n>K ((for sufficiently large n)) -- C,K are constants
+
+
+i.e., however large a constant you give to g(n), for sufficiently large values of n, f(n) will be larger
+
+eg: 
+f(n) = 2n^2 + 3n
+
+f = BigOmega(n^2), BigOmega(n), BigOmega(1) etc
+
+i.e. to say, if we have BigOmega(n^2), it is a subset of BigOmega(n), which is a subset of BigOmega(1) etc
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/JCF_8.png]]
+
+*** big-theta
+
+let f be a function, then we can say it is BigTheta(g) iff:
+  
+  C1.g(n) <= f(n) <= C2.g(n) for constants C1, C2 with C2>C1 and n sufficiently large (or, for all n>k)
+
+that is, f(n) is exactly bound by g(n)
+
+*saying that is function f is BigTheta(g) is exactly the same as saying it is BigO(g) AND BigOmega(g)*
+
+
+#+ATTR_ORG: :width 800
+#+ATTR_ORG: :height 400
+[[./assets/JCF_9.png]]
+
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/JCF_10.png]]
+
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/JCF_11.png]]
+
+Polynomial time problems - O(n^i) where i is some integer >=2
+:top: they are bad, but not worse than exponential time which are O(i^n) for i>=2
+
+such problems, whose solving compulsarily requires exponential steps(there is no other way to solve them that would require smaller steps) are called *intractable* problems - eg, travelling salesman problem, printing to 2^n
+
+
+Consider:
+f(n) = n + n/2 + n/4 + ...
+
+this is BigO(n) because:
+n(1+1/2+1/4+...) = n(some const) = n
+
+do not confuse this with logn running time, 
+there, we do constant work, logn times - i.e. 1+1+1+... logn times, so, logn
+but, if we did n work logn times, it would be nlogn etc
+
+Basically, just make a series and sum it up
+
+
+** Chapter 4 - The Java Collections Framework
+
+The JCF is an assortment of interfaces and classes which implement those interfaces. They are a part of the java.util package
+
+Most of the classes of JCF are instances of a collection - i.e. each instance is composed of collections of elements. 
+Java has recently introduced type parameters to specify the type of the elements when declaring an instance of a collection class
+
+*** What is a collection
+
+A collection is an object that is composed of elements
+the elements can either by primitive (ints) or references to objects 
+eg:
+Array - collection of elements of same type, stored contiguously in memory (in reality, it may or may not be stored continuously, what matters is that it can be accessed with it's index)
+
+String[] names = new String[5];
+here, :top: JVM creates allocates space for an array of 5 String references and returns a reference to the beginning of the space allocated, the reference is stored in reference variable names
+
+Arrays support random access since they are contiguous
+drawbacks
+ - fixed size
+ - space for the entire array must be allocated before any elements can be stored in the array
+ - if you want to insert something at index 300 of an array with 1000 elements (and indexes upto 800 filled), then the elements 300-800 will have to be shifted by one place
+
+
+Better alternatives: instances of collection classes
+*collection class* - a class in which each instance is a collection of elements and each elements is a reference to an object. this means that we cannot create an instance of a collection class with primitives in it, we will have to first wrap them in wrapper classes (eg, Integer for int) before we can put them in the collections class
+
+
+#+ATTR_ORG: :width 600
+#+ATTR_ORG: :height 400
+[[./assets/JCF_12.png]]
+
+Each member of the collections class has an isEmpty method 
+
+There are 2 types of collections classes in terms of how they store the elements 
+1. contiguous-collections
+for eg, ArrayList 
+
+2. linked-collections 
+here, the elements are housed in a special entry called nodes and they are linked by storing a reference to each the next one within them
+
+#+ATTR_ORG: :width 800
+#+ATTR_ORG: :height 400
+[[./assets/JCF_13.png]]
+
+
+The JCF consists of a thoroughly tested assortment of interfaces and classes. 
+the classes represent widely used data structures and algorithms
+
+The JCF is huge, there are over 200 methods in 8 classes (which we will study)
+
+The Interfaces and Abstract Classes present in the JCF are unifying tools, they force method headings on the implementing classes.
+
+Recall - an Abstract Class is a class with at least one (or all) abstract method. I.e. the method has a body, need not be empty (like in the interface) but it is marked abstract. The subclass extending this abstract class can override the method or mark it as abstract and let it's children override it. 
+
+Some abstract classes in JCF - AbstractCollection, AbstractList, AbstractSet
+
+Some points:
+ - an interface can extend one or more interfaces (public interface Container extends Collection, Comparable)
+ - a class can implement one or more interfaces (class NewClass implements Interface1, Interface2)
+ - A class can extend and implement interfaces both (class NewClass extends OldClass implements Interface1, Interface2)
+
+Since J2SE, (i.e. Java 2 Platform, Standard Edition), you can define in angle brackets, the class's element type which it is meant to store
+ ArrayList<Double> ald = new ArrayList<Double>();
+
+add elements with ald.add(new Double(2.2)) -- this will add to the end of the arraylist
+get elements - Double gpa = ald.get(index);
+
+Double wrapper class -> double value:
+ - gpa.doubleValue();
+
+This feature to mention the type of the references (elements) that are to be stored in the Collections class is called "generics"
+
+in the example above, :top: ArrayList<Double> is a parameterized type, AKA "generic type"
+
+Parameterized types improve your productivity as a programmer, this is because you don't need to check if the element is of a certain type, you can be assured that it is. Also, you will be prevented from making mistakes if you try to enter someother element type in the Collection class.
+
+Auto-boxing - since the Collections classes cannot store primitives, and can only store references to objects, Java supports auto-boxing, i.e. if you try to store ald.add(1.1), it won't throw an error, it will wrap the primitive in it's wrapper class(Double here) and then store it. Likewise, it will debox it when you use .get() to extract the element
+
+*** Create collections
+
+The Collection Interface consists of a hierarchy. At the bottom are the implementations of the interfaces and extensions of abstract classes. 
+At the top of the hierarchy, there are 2 interfaces: 
+*Collection* and *Map*
+
+In the javadocs, the ArrayList (and in the figure below), the *E* is for "element" - as the *type parameter*, it is replaced with an actual class such as Double, FullTimeEmployee etc. 
+
+#+ATTR_ORG: :width 600
+#+ATTR_ORG: :height 400
+[[./assets/JCF_14.png]]
+
+
+
+*** Collection interface
+
+"According to the Principle of Data Abstraction, user's code should not access the implementation details of a Collection class"
+
+*Iterators* - objects that allow the elements of Collection objects to be accesses in a consistent way without accessing the fields of the Collection class. 
+Inside each class that implements the Collection interface, there is an iterator class (nested?) that allows a user to access each element in the collection. 
+
+The iterator class itself implements the Iterator interface - which provides the methods: hasNext(), next(), remove()
+
+Here is how to create an iterator object:
+
+Iterator<String> itr = myCollection.iterator();
+
+now, when we call itr.hasNext(), by polymorphism(the method invoked depends on the type of the referenced object and not on the type of the reference variable), myCollection's iterator's hasNext will be invoked. 
+
+Example usage:
+String word;
+while(itr.hasNext())
+{
+  word = itr.next();
+  if (word.charAt(0) == 'a'):
+    System.out.println(word);
+}
+
+shortcut:
+
+for (String word: myCollection)
+{
+  if (word:charAt(0) == 'a')
+    System.out.println(word);
+}
+
+The second method is exactly the same as the first, the enhanced forloop creates an iterator, and the code is more readable. 
+
+
+# Define multiple variables in the same line: 
+#   int A=1, B=2, C=3;
+
+This makes for clean code:
+consider you have to find averages of some numbers, sentinel value is -1
+
+#+begin_src java
+final int SENTINEL = -1;
+Scanner sc = new Scanner(System.in);
+ArrayList<Integer> gpaList = new ArrayList<Integer>();
+
+while (true)
+{
+  in = sc.nextInt();
+  if (in==SENTINEL)
+    break;
+  gpaList.add(in)    
+}
+int sum = 0;
+for (int e: gpaList)
+  sum+=e;
+System.out.println(""+sum/gpaList.size());
+#+end_src
+
+*enhanced for loop cannot be used if you want to modify the elements of the collection during iteration, eg, if you want to delete from gpaList, if the gradepoint is below 1.0, use iterator*
+
+Iterator<Integer> itr = gpaList.iterator();
+while (itr.hasNext())
+  if (itr.next()<1)
+    itr.remove();
+
+
+Appreciate how we used the *iterator pattern* to solve the problem of allowing users of the Collection classes to loop thru the elements without violating the principle of DA (i.e. without them knowing the internals of the class)
+
+
+*** The List interface
+
+JCF's List interface extends the Collection interface by providing some index-related methods like *get* to get an element at a given index. 
+
+The List is an interface which embodies the idea of a data structure which stores elements according to an index (may or may not be contigous)
+In the JCF, the List interface is partially implemented by the abstract class AbstractList and the rest by it's subclasses ArrayList and LinkedList
+
+
+#+ATTR_ORG: :width 600
+#+ATTR_ORG: :height 400
+[[./assets/JCF_15.png]]
+
+
+*what is the difference b/w Arrays, Lists, Vectors?* - OQ
+So, Lists are just a collection of elements that may or may not be contiguous. 
+Array are a more specific than lists are refer to collection of elements that are necessarily contiguous
+
+*** Compare LinkedList, ArrayList
+The ArrayList class implements the List interface with an underlying Array (contigous)
+The LinkedList class implements the List interface with an underlying linked structure (non-contigous)
+The Stack class also implements the AbstractList with an underlying Array
+
+So, you can do:
+List<Integer> myList = new ArrayList<Integer>();
+
+API:
+ - myList.add(1);
+ - System.out.println(myList); // this is equivalent to System.out.println(myList.toString());
+the toString method of each Collection class in JCF has overriden the Object class's toString method and returns a String representation of the class.
+ - myList.contains(22);
+ - myList.remove(<index>);
+ - myList.add(<index>, <int element>); // this will move all the elements after <index> to <index+1>
+ - Iterator<Integer> itr = myList.iterator();
+
+To use LinkedList instead, we could have just replace ArrayList with LinkedList in the line above :top:
+Had we used that, the myList.get(5) would be slower in the LL compared to AL because we would have had to traverse all the elements. 
+But, the myList.remove(<index>) would be faster because we don't have to copy over all the elements after <index> in the LL, we just have to re-wire some elements is all.
+
+*** Summary
+
+#+ATTR_ORG: :width 700
+#+ATTR_ORG: :height 400
+[[./assets/JCF_16.png]]
+
+
+** Chapter 5 - Recursion
+
+*** Where is recursion useful?
+
+Recusive methods - methods that call itself, *with a terminating condition* 
+
+Note: Officially, a method must be termed *static* if it depends only on it's parameters (arguments passed to it) and not on the instance variables. This is there, but additionally, a *static* method must also not modify the state variables - In Java, the compiler won't let it, but still; Good to know.
+
+Consider the classical factorial program:
+
+public static long factorial(int n)
+  return fact(n)
+
+protected static int long fact(int n)
+  if n<=1 return 1;
+  return n*fact(n-1);
+
+here, fact is recursive, not factorial
+The factorial method is just a wrapper for the fact method
+
+When we do fact(3), it goes like this:
+
+3*fact(2) // at this point, the value of 3 must be saved somehow, also of n
+2*fact(1) 
+2*1
+3*2
+6
+
+*** how do recursive methods get executed
+
+We can study the recursive methods by using *execution frames*
+make boxes with information values of parameters and other local variables
+make arrows to represent return values
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/JCF_17.png]]
+
+*Any problem that can be solved recursively can also be solved iteratively*
+Iterative method uses loops. 
+
+*** compare recursive and iterative methods wrt space and time and ease
+
+Weather to use iterative or recursive methods depends on the type of the problem and the tradeoff related to ease of solving it(ease of converting from recursive->iterative), space and time requirements. 
+
+For the factorial, using a simple loop is simple enough and we don't have to pay the extra space cost
+
+but consider the problem of converting int to binary
+
+**** int to binary
+if we solve the problem with this observation:
+
+The rightmost bit has the value of n%2; the rest of the bits are the binary equivalent of n/2;
+
+example:
+
+#+ATTR_ORG: :width 600
+#+ATTR_ORG: :height 400
+[[./assets/JCF_18.png]]
+
+Here, the recursive solution:
+we will return the binary in String format
+
+public static String intToBinary(int num)
+    return getBin(num)
+
+public static String getBin(int num)
+    if num<=1 return Integer.toString(num);
+    return getBin(num/2) + Integer.toString(num%2);
+
+
+*The space and time complexity of recursive calls is dependent on the number of recursive calls*
+Here, there are logN recursive calls. In each call, constant work done
+so, time - O(logN)
+Also, in each call, space required is constant (one char)
+so, space - O(logN)
+
+
+**** towers of hanoi
+
+the problem is simple: we have 3 poles, A B C
+There are some disks on pole A to start with, we have to shift them all to pole B using pole C as temporary storage
+
+the rules:
+ - only one disk may be moved at a time (the top disk of any pole)
+ - bigger disk cannot be placed on top of smaller disk
+
+Starting position:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/JCF_19.png]]
+
+To solve this, consider how the last disk, disk 4 will be moved to pole B 
+for that, we need to have:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/JCF_20.png]]
+
+
+So, now the problem is reduced from: 
+  move "n" disks from A to B 
+    To
+  move "n-1" disks from A to C + move disk 4 to B + move "n-1" disks from C to A
+
+This is a recursive definition, we can write:
+
+#+begin_src java
+
+public String solveHanoi(int n, char from, char to, char temp)
+{
+  return recurseHanoi(n, from, to, temp);
+}
+
+public String recurseHanoi(int n, char from, char to, char temp)
+{
+  if (n==1)
+    return "Move top disk from %s to %s" % (from, to);
+  return recurseHanoi(n-1, from, temp, to) + "Move top disk from %s to %s" %(from, to) + recurseHanoi(n-1, temp, to, from);
+}
+#+end_src
+
+SO, the recursive strategy works best if you can reduce your problem into a slightly smaller problem which is *exactly* like the original one with a terminal condition
+
+
+**** searching an array
+
+we can search an array for an item. if the array is unsorted, we have to use linear time sequential search to find if an element is present in the array or not. (return -1 if not, else the index)
+
+If the array is sorted, we can use the binary search which is O(logn)
+
+***** sequential search
+
+a general method that takes in a list to be checked and an item, returns index or -1
+We assume that the element class implements the Comparable interface (in java.lang)
+
+Comparable interface just has one method - public int compareTo(T obj)
+which returns >0 int if the calling object is > obj, 0 if they are equal or <0 if obj>calling obj
+
+eg: String implements the Comparable interface - so, we can do:
+String s = "dadsd";
+
+s.compareTo("ddddd"); --> this will return an int less than int because the calling obj is greater 
+
+#+begin_src java
+public static int sequentialSearch(Object[] a, Object key)
+{
+  for (int i=0; i<a.length; i++)
+    if ( ((Comparable) a[i])).compareTo(key) == 0)
+      return i;
+  return -1;
+}
+#+end_src
+
+since we need to use the compareTo function, we need to type cast the elements of list "a" from Object to any type that implements the Comparable interface - so we can call the compareTo method. We cannot if the object belongs to the Object class.
+
+***** binary search
+
+assuming the array is sorted:
+
+#+begin_src java
+public static int binarySearch(Object[] a, Object key)
+{
+  return recurseBinary(a, key, 0, a.length);
+}
+
+public static int recurseBinary(Object[] a, Object key, int left, int right)
+{ 
+  int index = left+right/2;
+  if left==right return -1;
+  if (a[index]) == key return index;
+  if (a[index]<key) right=index;
+  if (a[index]>key) left=index;
+  return recurseBinary(a, key, 0);
+}
+#+end_src
+
+*** understanding the backtracking design pattern
+
+Backtracking is natural if one uses DFS or BFS. 
+Use DFS if you need a yes/no - i.e. if it is possible to reach the destination from the start position or not and you don't care about the optimal path - still need to maintain a mask of nodes you visited
+use BFS if you care about the optimal path. 
+
+Both DFS and BFS are exponential O(b^m), b is branching factor b, m levels deep
+DFS space - O(bm) - draw a stack and pop first element, replace by b children, pop first and replace by b children etc
+BFS space - O(b^m) - draw a stack and replace each element by b children, repeat for all elements 
+
+DFS is not optimal
+BFS is optimal if the cost of each hop is uniform
+if it is not uniform, use UCS - uniform cost search which uses a heap and pops according to cumulative score
+
+The problem with UCS is that it has no sense of direction of goal, it explores everywhere uniformly - leads to wastage.
+
+Use a heuristic to get an estimate of direction of goal.
+If you follow just the heuristic, you get Greedy search 
+
+If you use heuristic+cumulative cost, you get A* which is optimal, complete and expands in the direction of the goal, thus avoiding waste.
+BUT, note that the heuristic must be admissible (must be lower than the god-sent truth) and also it must be consistent(difference in heuristic b/w 2 nodes must be LESS THAN OR EQUAL to the cost of that hop) - the latter is a stronger condition
+
+
+*** The cost of recursion
+
+Everytime a method calls itself (or any other method for that matter), a certain amount of information is saved, this information collectively is called *activation record* (it is just an execution frame)  because it pertains to the execution state of the method that is active during the call. 
+
+It contains:
+- *the return address* - the address of the statement that will be executed when the call has been completed
+- *the value of each argument* - java is call by value, so the variables are copied over(if they are primitive) or the references are copied over if they are references. (note, if the references point to immutable objects, they aren't changed, else they are)
+- *the local variables* - declared within the body of the called method
+
+This is the main overhead in recursion over the iterative version, (considering space and time complexity to be same)
+
+Use recursion if:
+Complex cases can be reduced to simpler cases which are *exactly* like the complex cases and the simpler cases can be solved directly. By *exactly* we mean that the smaller problem has the same problem specification as the original problem (in terms of the constraints, resources, rules etc)
+
+The compiler implemented recursion by using a *stack*
+
+
+
+
+
+** Chapter 6 - Array based lists
+
+Recall we earlier mentioned that the Collections interface(which represents the general idea and setting for a collection, group of elements) is implemented by the List interface which has index based methods. 
+
+Any class that implements the List interface has elements that are stored in some sequence - according to an index. They are of two broad categories - contiguous (ArrayList) and non-contiguous (LinkedList)
+
+Both are suitable for different purposes and which one to use depends on the job at hand. ArrayList is contiguous, so it offers random access but expensive deletion/random insertion. LinkedList is non-contiguous so it doesn't have random access but has cheap insertion/deletion 
+
+*** The ArrayList Class
+
+It is parameterized (as with all the other collection classes of JCF), so, more approriate to refer to AL as ArrayList<E> 
+
+The List interface adds several index related methods to the Collections 
+examples:
+1. E get(int index) - O(n)
+2. E set(int index, E element) - O(n)
+3. int indexOf(Object obj) - O(n)
+4. void add(int index, E element) - O(n)
+5. void add(int index, E element) - worst is O(n)
+
+the times are given for the worst of all the implementations of the List interface (most belong to LL)
+
+#+ATTR_ORG: :width 700
+#+ATTR_ORG: :height 400
+[[./assets/JCF_21.png]]
+All the methods of the ArrayList class :top:
+
+ArrayList is almost always better than normal arrays. In normal arrays, the size is fixed, so if you wish to move delete a certain element, it is your responsibility to fill the hole by offsetting all the other elements. also, inserting at any random index means you have to manually move the other pieces yourself. AL takes care of that, so you don't have to worry about that
+
+
+**** some methods of AL
+
+1. initial-capacity constructor
+
+ArrayList<String> fruits = new ArrayList<String>(10);
+
+2. copy constructor
+ArrayList<String> morefruits = new ArrayList<String>(fruits);
+
+this is a shallow copy
+*shallow copy* - coping the references to the objects, not the objects themselves 
+
+how to copy arrays? System.arraycopy(array_to_copy_from, index_to_copy_from, array_to_copy_to, index_to_copy_to, num_of_elements_to_copy)
+
+3. add method
+in AL, it is simple
+in A, you have to manually offset the elements 
+
+or even to add at the end, you have to give the index 
+
+4. size method
+AL has a fruits.size() method
+"A" has no such method - it has the length attribute that returns the total size of the array, but nothing about the number of entries it has filled in
+
+
+5. get method
+AL - use get(int index)
+A - use A[int index]
+
+the advantage is with A here, because you can do A[1]="foo", you can't do that with AL
+
+6. set method - replace the element at some index
+AL wins here - AL.set(int index, E element) - fruits.set(2, "bananans")
+A - you have to iterate and assign it
+
+7. add method - adds an element at given index
+AL wins - AL.set(2, "fruits") - index 2 has fruits now, everything after it offset automatically by 1
+A - manually iterate and offset and then insert
+
+8. remove with index
+AL wins - you can remove from any index fruits.remove(3)
+A - manually iterate, remove and move all others one step up
+
+
+9. public int indexOf(Object obj)
+AL wins - get the index of any element, else -1
+A - manually iterate with a loop
+
+#+ATTR_ORG: :width 500
+#+ATTR_ORG: :height 400
+[[./assets/JCF_22.png]]
+
+The size parameter of the AL class keeps track of the index to which the AL is currently filled. This is used to know when the AL is full and needs to be expanded
+
+
+
+
+
+** Chapter 7 - Linked Lists
+
+We talked about AL, now we talk about LL
+
+AL has constant time random access, LL has linear time random access
+LL has constant time insertion/deletion *after* the element has been located, AL always has linear insertion/deletion
+
+So, we would be able to leverage the insertion/deletion of LL *only* if we do a lot, a lot of insertions/deletions near the head of the array(aka list). if we do that near the middle, the LL benefit vanishes away. Near the end? AL reigns. 
+
+:top: that is if you use singly linked lists, otherwise the near the end benefit vanishes of AL vanishes with doubly-linked-lists
+
+One more benefit is that you don't waste space, that is to say, you store just the elements, you don't have to reserve space for anything like in AL/A. The downside is that each element occupies more space now, since it stores program information (reference to the next pointer, or even next+last pointer) apart from program information
+
+We can define an iterator for the singly linked SimpleLinkedList by creating a nested class implementing the Iterator interface. The Iterator interface has methods - next(), hasNext(), remove() ((which we won't implement for this SimpleLL))
+
+We do this:
+
+#+begin_src java
+protected class SimpleLLIterator implemented Iterator<E> 
+{
+  protected Entry<E> next;
+
+  protected SimpleLLIterator()
+    next = head;
+
+  public boolean hasNext()
+    return next != null;
+
+  public E next()
+   E theElement = next.element;
+   next = next.next;
+   return theElement;  
+
+  public void remove()
+    throw new UnsupportedOperationException();
+
+}
+#+end_src
+
+Now, how do we create this iterator and return it?
+we define a new method that returns this iterator
+
+public Iterator<E> iterator()
+{
+  return new SimpleLLIterator();
+}
+
+use it like so:
+Iterator<Boolean> itr = mySimpleLL.iterator();
+
+Note that itr is a polymorphic reference, it can point to any subclass of Iterator interface AKA any class that implements the Iterator interface
+
+Imagine a case where you are asked to read some gradepoint input from the user and return the average. you should use an LL in this case, because you need to add arbitary number of values, and iterate thru them once
+
+*** LinkedList class in Java
+
+The LL class also implements the List interface like AL so it has the index based methods like AL but the performance characteristics are different 
+We do not have the initial capacity constructor as LL grow/shrink dynamically
+Also, we don't have trimToSize, ensureCapacity
+
+We have instead - removeFirst(), getLast()
+They are just wrappers for myLinkedList.remove(0)
+
+All the methods of the LL class (API of the LL class)
+#+ATTR_ORG: :width 600
+#+ATTR_ORG: :height 400
+[[./assets/JCF_23.png]]
+
+All take linear time except the last method toString which takes constant time
+
+**** one-parameter add method - adds to end of LL
+
+add(E element)
+constant time always (in contrast to AL where it was linear time when the AL was full)
+(there is a tradeoff on how much size to increase when the AL is full - to double it's size of to increase it by 50% etc. Java increases it by 50%, Cpp doubles it - the tradeoff is the space that gets blocked vs the next time you have to copy the entire array over which takes linear time)
+
+**** get(int index)
+This is linear
+in AL it was constant
+
+**** set(int index, E element)
+for AL this was constant if we insert at the end else it was linear
+here, it we do a linear scan to get to the element, and then constant time to add
+summary:
+In the AL, it is O(<linear in num of elements after the index>)
+In the LL, it is O(<linear in num of elements before the index>)
+
+*** LinkedList iterators
+They are very important since there is no random access. The LL in JCF is a doubly linked list. The iterator can move in both directions. 
+
+The iterator is basically a nested class in the LL class of the JCF called *ListItr*. ListItr implements the ListIterator inteface
+
+*listIterator method*
+ListIterator<String> itr1 = fruits.listIterator([index to start reading at]);
+
+Ofcourse you can use the enhanced *for* loop:
+for (String s: fruits)
+  System.out.println(s);
+
+Iterator methods:
+1. void add(E element) // read as: add method returns nothing and takes in an (variable) element of type E 
+Adds the element at the iterator position
+
+2. boolean hasNext()
+
+3. boolean hasPrevious()
+4. E next()
+5. int nextIndex()
+6. E previous() // this moves the iterator
+7. int previousIndex()
+8. void remove()
+removes the element at iterator position 
+9. void set(E element)
+replaces the element at iterator position
+
+:top: each of the above 9 methods take constant time - they would have taken linear time if it were an array
+
+Reverse traverse of LL:
+ListIterator<String> itr = fruits.listIterator(fruits.size());
+while (itr.hasPrevious())
+  Sysmem.out.println(itr.previous());
+
+#+ATTR_ORG: :width 600
+#+ATTR_ORG: :height 400
+[[./assets/JCF_24.png]]
+
+Very fine summary :top:
+a lot of changes/deletions/updates during a single pass thru the array, use LL
+if a lot of random accessing + updation/deletion randomly, use AL
+
+#+ATTR_ORG: :width 500
+#+ATTR_ORG: :height 400
+[[./assets/JCF_25.png]]
+
+:top: implementation of a doubly linked list
+
+
+the *transient* keyword is used if the variable is not saved if the class is serialized 
+eg: private transient int size = 0;
+
+#+ATTR_ORG: :width 600
+#+ATTR_ORG: :height 400
+[[./assets/JCF_26.png]]
+ :top: java's implementation of LL
+the constructor takes in a reference to the element to insert, reference to the next element, reference to the previous element 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/JCF_27.png]]
+
+the constructor :top:
+
+In java, the reference to the "head" Entry and "tail" Entry is not maintained. Instead, there is a single variable called "header" that points to a dummy Entry object. The Dummy object (and all Entry objects look like this what we showed above, they have 3 fields - previous, element, next)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/JCF_29.png]]
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/JCF_30.png]]
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/JCF_28.png]]
+
+Note that the LL is stored circularly. the dummy entry marks the beginning and end of the LL, so, we know we have completed the iteration when we reach the dummy node form either direction.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/JCF_32.png]]
+
+"The Java Collection Framework's implementation of the LinkedList class stores the elements in a circular, doubly-linked structure with a dummy entry. Another possible implementation is a non-circular, doubly-linked structure with head and tail fields."
+
+
+** Chapter 8 - Stacks and Queues
+
+*** JCF's Stack class and Queue interface
+
+**** Stacks
+They are LIFO, are used in DFS and are awesome.
+Only the *top* element can be removed. Insertion is *push*, removal is *pop*. Retrieval of top element is called *peek* (peeks don't remove the element from the stack)
+
+The Stack in JCF is a legacy class, just like Vector class. The Vector class was a clone of AL, (it was virtually the same)
+
+The *top* element can be chosen to be the 1st element of the array or the last element. If the first is chosen, insertions and deletions would be linear time. If the last is chosen, they would be constant time. So, the last ones are chosen.
+*This is why it is said that the stack grows downward* :top: 
+
+So, the Stack:
+averageTime(n) - constant push, pop and peek
+worstTime(n) - linear push // this is because we might need to resize the array, copy it over to a new array of 1.5times the size etc
+
+The pop/peek methods have the keyword *synchronized*
+The Stack constructor automatically creates an array of length 10
+
+#+begin_src java
+Stack<Character> s = new Stack<Character>();
+
+// iterating thru the stack: (in FIFO)
+for (int i=s.size(); i>=0;i--)
+  print(s.get(i));
+
+//Iterating thru the stack: (in reverse order than designed i.e. in LIFO)
+for (Character c: s)
+  print(c);
+// same result as :top: if you do a print(s)
+
+// destruction of the stack with the iteration
+while (!c.isEmpty())
+  print(c.pop());
+
+#+end_src
+
+*** Flaw in JCF's stack
+Ideally, Stacks by definition should only allow modification of the top element, but in JCF, the Stack class implements the List interface, so it has methods like:
+myStack.remove(5); // this removes the element at index 5 etc
+
+
+*** contiguous and linked implementations of Stacks and Queues
+
+*** Stacks - use in recursion and in converting from infix-postfix
+
+**** implementing recursion
+Compilers use stacks to implement recursion. Consider a method calls another method. As we noted earlier, each time a method is called, the return address in the calling method is saved so that the computer can know where to resume execution in the calling method after the called method has been executed. Also, some other information is saved:
+
+*Activation record* or *stack frame*:
+1. the return address, i.e. the address of the statement that will be executed when the call has been completed
+2. the value of each argument, a copy of the corresponding argument is made(if reference-to-object, the reference is copied)
+3. the values of the method's other local variables (that it creates for it's internal use)
+
+:top: is done for each new method, each new method gets this information. When a new method is called, the this AR/SF is pushed onto the stack and when it is done, it is popped
+
+**** converting infix to postfix
+
+Postfix makes it easy for compilers to evaluate expressions 
+a+b --> a b +
+each token is either a operand or a operator.
+the operator takes in the 2 last operands as it's arguments
+
+We can use stacks to convert infix to postfix
+before that: how to postfix to infix:
+consider: 
+
+    a c h - b r * / +
+
+we do a linear pass thru the string, and add tokens to stack
+
+a
+a c
+a c h
+
+when we reach "-", we take the last 2 operands as it's arguments. so, pop twice and push result of applying operator on them
+So, 
+
+a c-h 
+a c-h b
+a c-h b r
+
+Now, pop twice and apply * to operands received
+a c-h b*r
+
+Now, pop twice and apply / to operands received
+a {c-h / b*r}
+
+Now, pop twice and apply + to operands received
+a + {c-h / b*r}
+
+That is the expression in infix.
+
+How to go from infix to postfix now?
+Simple. 
+
+Take TEMP as the stack. Do a linear scan of the string. 
+If new operand - just append to postfix string
+If new operator X, check stack - if the top element(Y) has lower preference or equal to X, pop Y, append to postfix string and push Y
+If new operator X has higher preference, just append X to stack
+
+Consider, a-b+c*d
+
+Scan the string sequentially, put operands on stack, store operators temporarily 
+
+TEMP: NULL
+a
+
+# store - temporarily
+TEMP: - 
+
+TEMP: - 
+a b 
+
+# we come across + which has the same precedence as +, so, it is put in temporary storage and old inhabitant - is pushed onto stack
+
+TEMP: +
+a b -
+
+TEMP: - 
+a b - c
+
+# We come across * which has higher precedence than -, so it is pushed onto the TEMP location
+TEMP: - *
+a b - c
+
+TEMP: - *
+a b - c d
+
+# string complete, pop the stack and paste it here.
+
+So, final result: ab-cd*+
+
+Another example:
+a + c - h / b * r
+
+TEMP: - *
+a c + h b / r * -
+
+Infix to prefix would need two stacks - operatorStack and operandStack
+
+*** queues
+
+Queues - they are FIFO
+
+In JCF, there is a Queue interface with type parameter E which extends the Collection interface (by specifying the remove() and element() methods)
+Also, it inherits the add() method.
+
+Queue is just an interface. LL implements that interface. So, we can do:
+
+    Queue<String> queue = new LinkedList<String>();
+
+    queue.add("foo");
+    queue.add("bar");
+    queue.remove();
+
+The LL (non contiguous array) is a better model for queues that contiguous array (eg, AL) because with LL, there would be constant time additions, deletions. The same problem of having LL methods that can manipulate non first elements is there here as well, which is why we should specify the reference variable type to Queue so that it's a heads up to future code maintainers. 
+
+
+
+
+** Chapter 9 - Binary Trees
+
+Now we move from the realm of the linear data structures into a non-linear construct - the *Binary Tree*
+This will be the topic of chapters 10, 11, 12, 13. 
+We will learn about:
+ - binary search trees
+ - AVL trees
+ - Decision trees
+ - Red black trees
+ - Heaps
+ - Huffman trees
+ 
+
+Chapter 15 presents the topics of trees in general.
+
+*** Definition
+
+Each element has 2 children, forming the left subtree and the right subtree. 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/JCF_33.png]]
+
+#+HEADERS: :classname Solution
+#+begin_src java
+class Solution
+{
+  public static void main(String[] args)
+    {
+      System.out.println("text");
+    }
+}
+#+end_src
+
+#+RESULTS:
+: text
+
+:top: just a sample Java program, ignore!
+
+*Whenever you head the word Binary tree (or any tree in general), only one thing should ring in your head - RECURSION!*
+
+*** sample problems
+Height of the tree:
+
+#+begin_src python
+def height(root_node):
+  if root_node is empty: return 0
+  return 1 + max(height(root_node.leftsubtree), height(root_node.rightsubtree))
+#+end_src
+
+number of leaves:
+
+#+begin_src python
+def leaves(root_node):
+  if root_node is empty: return 0
+  return 1 + leaves(root_node.leftsubtree) + leaves(root_node.rightsubtree)
+#+end_src
+
+
+Two-tree - if each node has 2 children except leaf nodes (all leaves need not be on the same level)
+Full-tree - if two-tree (i.e. all nodes have both children) and all leaves on the same level - balanced binary tree
+Complete tree - the tree is full thru next-to-lowest level and all the lowest levels are as far to the left as possible - i.e. the tree is as *full, balanced* as it can be
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/JCF_34.png]]
+
+Complete trees can be represented in linear data structures like AL, this is because given an element *i*, we know the position of it's parents and children:
+*i* --> the node itself
+*2i+1, 2i+2* --> the node's left and right children
+*i/2* (or *i-1/2* if i is even) --> i's parent
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/JCF_35.png]]
+
+:top: complete tree in 9.8a implemented as a AL 
+
+
+Binary tree theorem:
+
+#+ATTR_ORG: :width 700
+#+ATTR_ORG: :height 400
+[[./assets/JCF_36.png]]
+
+The height of the binary trees is logarithmic in n.
+This means that insertions/deletions are O(logN) -- (if we make sure the tree is balanced)
+this is a huge improvement over insertions and deletions in arrays (like AL/LL) where it was linear. That is the reason in many applications, binary trees are preferable to lists. 
+
+**** External path length
+The summation of the depths of all the leaves in the non empty binary tree /t/. 
+Let it be denoted by *E(t)* 
+
+We have: 
+
+    E(t) >= k * (log2 k)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/JCF_37.png]]
+
+:top: we have E(t) = 2+4+4+4+5+5+1 = 25
+
+*** Traversals
+
+**** inOrder --> Left-Root-Right
+
+#+begin_src C
+#include <stdio.h>
+
+int inOrder(t)
+{
+  if t!=null:
+    inOrder(t.left);
+    process t;
+    inOrder(t.right);
+    return 0;
+}
+#+end_src
+
+If tree has n elements, 2n recursive calls made to inOrder. 
+
+
+*Binary Search tree* --> A binary tree in which all the elements in the left subtree are less than the root, and all the elements in the right subtree are greater than the root.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/JCF_38.png]]
+47 31 42 50 25
+
+**** portOrder --> left-right-root
+
+#+begin_src C
+#include <stdio.h>
+
+int postOrder(t)
+{
+  if t!=null:
+    postOrder(t.left);
+    postOrder(t.right);
+    process t;
+    return 0;
+}
+#+end_src
+
+consider this postfix notation: A B C + *
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/JCF_39.png]]
+
+If each non-node is a binary operator, the operands are associated with left/right subtrees we get postfix with postorder traversal
+
+**** preOrder --> root - left - right
+
+#+begin_src C
+#include <stdio.h>
+
+int preOrder(t)
+{
+  if t!=null:
+    process t;
+    preOrder(t.left);
+    preOrder(t.right);
+    return 0;
+}
+#+end_src
+
+preOrder traversal of the binary tree with nodes as operators and leaves as operands we get prefix notation.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/JCF_40.png]]
+
+Preorder is also called *Depth first search*
+
+
+
+**** breadthFirst --> level by level
+
+process the root, then children from left to right, then their children from left to right and so on 
+
+ --> use a queue to pop a node, put it's children onto the end of the queue (first left child, then right child)
+
+Here, we used a queue. Everywhere else, we can use recursion(which is implemented using a stack internally) or we can design an iterative version with a stack. 
+*any recursive version can be converted to iterative version*
+*sometimes you may need to use a stack, sometimes you may not, but it is easy if you do use a stack*
+
+*** summary
+
+#+ATTR_ORG: :width 700
+#+ATTR_ORG: :height 400
+[[./assets/JCF_41.png]]
+
+
+
+
+
+** Chapter 10 - Binary Search trees
+
+Binary trees are awesome because they offer O(logN) insertions/deletions in average case unlike the AL/LL where it is linear. (assuming the data is stored in a some sorted order)
+
+JCF has *TreeSet* that is a red-black tree implementation, so it guarantees O(logN) insertions/deletions/search. 
+
+*** Binary search tree
+Left subtree is smaller than root, right subtree is bigger than root
+
+InOrder traversal of a Binary Search Tree(BST) gives the elements in *ascending order*
+
+We can define a dummy BST class to implement the Collection interface (everything in this book implements the Collection interface) (it actually implements a small extension of the Collections interface called the  Set interface) The set interface doesn't have any new methods, it just disallows duplicate entries. 
+
+We can also assume that the elements in the BST class would implement the Comparable interface, which has the method compareTo and returns an int. 
+
+Recall how you can make it work:
+#+begin_src java
+class Solution implements Comparable<Student>
+{ 
+  // all the class's methods
+  public int compareTo(Student otherStudent)
+  {
+    return this.grade - otherStudent.grade;
+  }
+}
+#+end_src
+
+
+
+*** Implementing the common binary search problems
+
+**** Defining the class
+The BST class would be made up of many Entry classes, they can be static classes within BST. The BST would have two attributes - head pointing to the root of the BST and int size which has the total number of nodes in the BST.
+Also, it has several methods:
+1. copy constructor
+2. add
+3. remove
+4. contains
+5. iterator -- look below 
+
+Finally, it has an nested Iterator class which implements the Iterator interface and so has the methods hasNext, next, etc
+
+The head reference variable would point to an Entry object which would have the root node
+
+Each Entry object has:
+
+1. element data
+2. Entry reference variable pointing to Parent
+3. Entry reference variable pointing to left child
+5. Entry reference variable pointing to right child
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/JCF_42.png]]
+
+Now, implementing the default constructor:
+
+#+begin_src java
+  // base class
+  class BST
+  {
+    int size;
+    Entry root;
+    
+    BST()
+    {
+      size=0;
+      root=null;
+    } // empty BST constructor
+
+  BST(BST<? extends E> otherTree)
+  {
+    root = copy(otherTree.root, null);
+    size = otherTree.size;
+  }
+
+  public copy(Entry<? extends E> root, Entry<E> parent) // why don't we do ? extends E for parent?
+  {
+    if (root!=null)
+      Entry<E> q = new Entry<E>(root.element, parent);
+      q.left = copy(root.left);
+      q.right = copy(root.right);
+      return q
+    return null; // root is null
+  }
+
+
+    public int size()
+      {
+          return size; // here, you can refer to the class' size variable with size directly. not in the nested class Entry's constructor. Hmm
+      }
+
+    class Entry<E>
+      {
+          protected E element; // the main data of the element
+          protected Entry<E> left = null;
+          protected Entry<E> right = null;
+          protected Entry<E> parent;
+
+          public Entry()
+          {
+                // empty constructor
+          }
+
+          public Entry(E element, Entry<E> parent)
+          {
+                this.E = element;
+                this.parent = parent;
+          }
+
+      } // end of nested class Entry
+
+
+  // the contains method - ITERATIVE
+      public boolean contains(Object obj)
+      {
+          Entry<E> temp = root
+          if (obj==null) throw new NullPointerException();
+          while (temp!=null)
+          {
+            comp = (Comparable)obj.compareTo(temp.element)
+            if comp==0: return true;
+            if comp<0: temp = temp.left;
+            if comp>0: temp = temp.right;
+          }
+      }
+
+  // the contains method - RECURSIVE
+      public boolean contains_recursive(Object obj)
+      {
+          if (obj==null) throw new NullPointerException();
+          Entry<E> temp = root;
+          return run_contains(obh, temp);
+
+      }
+      public boolean run_contains(obj, temp):
+      {
+        if temp==null: return false;
+        comp = (Comparable)obj.compareTo(this.root);
+        if comp==0: return true;
+        if comp<0: temp = run_contains(obj, temp.left);
+        if comp>0: temp = temp.right(obj, temp.right);
+      }
+
+public boolean add(obj):
+Entry<E> temp = root;
+Entry<E> prev = null;
+if root==null: BST(obj, 1); // empty tree
+
+while (temp!=null)
+    {
+        comp = (Comparable)obj.compareTo(this.root.element);
+        if comp==0: return false;
+        if comp<0: prev=temp; temp=temp.left; 
+        if comp>0: prev=temp; temp=temp.right;
+    }
+
+        temp = (Comparable)obj.compareTo(temp.element);
+        if comp<0: temp
+
+  // we also need an iterator nested class and a method to spawn an instance of it
+  public Iterator<E> iterator()
+  {
+    return new TreeIterator();
+  }
+  }
+#+end_src
+
+We can make a recursive version of contains method as well, but we will need a wrapper (we need a wrapper because the Entry class is a nested class. So, the right and left variables in Entry point to references of Entry, not BST class
+
+
+*** Understanding the idea of BSTs
+There are two things here. Writing code in this file is difficult and would not help much anyway. The best way to master BSTs are I think to understand two things:
+
+1. The concept - how to remove, add, search elements - if you can do this with words, covering all the corner cases etc, half the job is done
+   - we can talk about this, this is a solved problem
+2. The representation of the BST
+   - there is a class BST which has attributes - Entry<E> root, int size
+
+   - there is a static nested class Entry (static saves space, since the Entry class doesn't have to hold a reference back to BST class)
+     - it has 4 attributes; E element, Entry<E> left, Entry<E> right, Entry<E> parent;
+     - there is only one method - the constructor which takes in the value of the element and pointer to parent. 
+
+   - there are several methods to manipulate the BST 
+     - public int size()
+     - public Iterator<E> iterator();
+     - public BST(BST<? extends E> otherBST) ---> the copy constructor
+     - public boolean contains(Object obj)  ---> iterative/recursive
+     - public boolean add(E element)
+     - public boolean remove(Object obj) ---> 3 cases, 0, 1 or 2 children
+       - here, you can use abstraction. use modified contains to get the element
+       - use deleteEntry(Entry<E> e) to delete the obtained entry
+       - in deleteEntry, if the node has 2 children, you need to swap it with it's successor - use successor() to get the successor
+
+     - finally, there is the nested class(TreeIterator) implementing the Iterator interface (hasNext, next, remove) and a iterator() method to return an instance of that class 
+
+3. then there is the code. write it on paper!
+
+Given a set of numbers, they can be arranged in a multitude number of ways such that they are still Binary Search Tree but the height is different. The best BSTs would be ones with smallest running times. 
+
+For now let's leave the implementation details of red-black/AVL trees as abstractions and know that they have logN height in N, which is the number of elements in the tree. This gives them logN running time for insertions/deletions/search in worst-case as well.
+
+In java JCF, *TreeMap* and *TreeSet* classes implement the red-black trees.
+
+
+** Chapter 11 - Sorting
+
+Radix is not a comparison based algorithm. 
+
+Stable sort - preserves the natural ordering of the elements. Eg, the elements with the same value are both relatively left in the same order as they were earlier in the unsorted array. 
+
+For each sort, it is important as it is with BSTs to be able to describe what we are doing in English. Writing the same in Java would be trivial if we do it once or twice.
+
+*JCF implements Merge Sort and Quick Sort and they are present in Collections/Arrays classes in java.util*
+
+*** Comparable interface vs Comparator interface
+
+We earlier saw the Comparable interface, which enforces the compareTo method. String class already implements that and it can be used to sort the String in the natural order; lexicographically. 
+
+*** Classification of sorting algos:
+ - time complexity
+ - space complexity (some are in-place -- constant space, others are linear in memory)
+ - stability - in case of a tie, maintain original order of the elements
+ - internal sort - all records in memory/RAM vs External sort - all records are on disk (maybe if the elements are too large)
+ - recursive(quick sort, merge sort) / iterative(insertion sort, selection sort)
+
+*** Bubble sort
+scan the array multiple times, i.e. make multiple passes thru the array, with each pass:
+  - we will compare the element with it's adjacent element. if it is smaller, we swap. 
+  - this basically pushes the element in it's correct position after the pass
+  - we do this n times, so quadratic in n
+  - also, one more trick - have a flag: boolean sorted. if in any pass, if there are no swaps, then the list is already sorted and we can exit the loops. this is because each scan looks for the next highest/lowest elements but in the process compares all pairs of adjacent elements.
+  - with this trick, bestCase is linear (with already sorted array, we will only make one pass)
+  - worstCase, averageCase both quadratic
+  - in place, stable sorting algo bubble sort is
+
+#+begin_src java
+    public static void bubble_sort(int[] elements)
+    {
+        int temp;
+        for (int i = 0; i < elements.length; i++)
+        {
+            for (int j = 0; j < elements.length-i-1; j++) // here, note the small optimization, we don't compare till end of array, since the elements[i:] are already sorted, it makes no sense to compare against them
+            {
+                if (elements[j]<elements[j+1])
+                {
+                    temp = elements[j];
+                    elements[j] = elements[j+1];
+                    elements[j+1] = temp;
+                }
+            }
+        }
+        print_array(elements);
+    }
+#+end_src
+
+*** Selection sort
+Do a scan of the array, select the minimum, sort with element at correct index, repeat 
+
+#+begin_src java
+    public static void selection_sort(int[] elements)
+    {
+       int index;
+       for (int i = 0; i < elements.length; i++)
+       {
+           index = elements.length-1;
+           for (int j = i; j < elements.length; j++)
+           {
+               if (elements[index]<elements[j])
+                   index = j;
+           }
+           int temp = elements[index];
+           elements[index] = elements[i];
+           elements[i] = temp;
+       }
+       for (int z:elements)
+       {
+           System.out.print(" "+z);
+       }
+       System.out.println("");
+    }
+#+end_src
+
+This is quadratic running time, and constant space
+*** Merge sort
+
+ - worst case is O(NlogN) here
+ - this is a recursive algorithm
+ - archtype of *divide and conquer* algorithm design paradigm
+ - we do this fundamentally: we divide the input array into 2 parts, and sort them. when they are sorted, we merge them
+ - we do this recursively
+ - the recursion is simple, if the num of elements is 1, return it simply. else, divide it into 2 parts and call merge_sort on both to get the sorted array. now, call the merge_sort_merge on the two arrays and return the result.
+ - the merge step is even simple - have 3 flags - left_index, right_index and the results_index and fill elements in the results array, from whichever it is smaller
+
+#+begin_src java
+    public static int[] merge_sort_merge(int[] left, int[] right)
+    {
+        int[] results = new int[left.length+right.length];
+        int left_index = 0, right_index=0;
+        int res_index=0;
+
+        for (int i = 0; i < results.length; i++)
+        {
+            if (left[left_index]>=right[right_index])
+            {
+                results[i] = left[left_index++];
+                res_index++;
+                if (left_index >= left.length)
+                    break;
+            }
+            else
+            {
+                results[i] = right[right_index++];
+                res_index++;
+                if (right_index >= right.length)
+                    break;
+            }
+        }
+        if (left_index<left.length)
+        {
+            for (int i = left_index; i < left.length; i++)
+            {
+                results[res_index++]=left[i];
+            }
+        }
+
+        if (right_index<right.length)
+        {
+            for (int i = right_index; i < right.length; i++)
+            {
+                results[res_index++]=right[i];
+            }
+        }
+        return results;
+    }
+
+
+    public static int[] merge_sort(int[] elements)
+    {
+        if (elements.length==1)
+            return elements;
+        int median = elements.length/2;
+        int lefth[] = new int[median];
+        int righth[] = new int[elements.length-median];
+        for (int i = 0; i < elements.length; i++)
+        {
+            if (i<median)
+                lefth[i] = elements[i];
+            else
+                righth[i-median] = elements[i];
+        }
+        int[] sorted_left = merge_sort(lefth);
+        int[] sorted_right = merge_sort(righth);
+        return merge_sort_merge(sorted_left, sorted_right);
+    }
+#+end_src
+
+
+ + running time:
+ + merge sort requires O(NlogN)
+ + the recursive merge tree of the merge_sort algo is this:
+ + it is a binary tree, with log2 N levels and each level has 2^j subarrays, each of size n/2^j
+ + work done on each level:
+   + at each level, the merge step requires - linear work in the 2 subarrays. so, we have (num of arrays)*(number of elements in the subarrays) --> 2^j * (n/2^j) [j is the level], so, linear work at each level
+   + we have logN such levels, so, total: NlogN
+   + the work in splitting the arrays is linear which we do logN times, so, NlogN + NlogN which is O(NlogN)
+ + merge sort is not inplace, it needs linear space
+
+
+*** Quick sort
+ - inplace, recursive, divide and conquer algorithm
+ - and running time of O(NlogN) in averageCase, O(N^2) in worstCase
+ - randomized quicksort minimizes worstCase running time
+ - this is the go to sorting algo in most standard library sorting functions 
+ - explanation:
+   + select any as the pivot
+   + now, we rearrange the list such that all the elements lesser than the pivot are to the left and all greater than it to right aka *partioning*
+   + now, we can divide the problem into 2 subproblems - the left and right subarrays of the pivot
+   + the partioning logic requires linear time. Also, each time we get 2 subproblems of smaller size, we can prove that this happens logN times in averageCase/worstCast-also? and this, running time - O(NlogN)
+
+
+*** Heap sort
+
+*** Counting sort
+
+*** Radix sort
+
+*** Insertion sort
+
+ - better than bubble and selection sort in practical scenario
+ - we maintain one pointer - i
+ - i is the boundary b/w sorted and unsorted subsets
+ - we advance the sorted set, from 0 to elements.length
+ - at each new element, we place it in it's correct place in the sorted subset
+ - since the sorted subset is /sorted/, we can use binary search to get the correct position of the new element
+ - this will make the algo run in O(NlogN) time. but in insertion sort, we don't do that
+ - we do a linear scan to find the correct place
+ - for inserting the new element in it's correct position is actually linear, so even with binary search, it wouldn't be NlogN unless we use a priority queue to maintain the sorted subset. this would mean we need linear space though
+ - note the trade off here - constant space, n^2 running time OR linear space, NlogN running time
+ - best case - sorted array - linear time
+ - worst case - reverse sorted, quadratic time 
+
+#+begin_src java
+    public static void insertion_sort(int[] elements)
+    {
+        int N = elements.length;
+        for (int i = 1; i < N; i++)
+        {
+            for (int j = 0; j < i; j++)
+            {
+                if (elements[i]>elements[j])
+                {
+                    swap(elements, i, j);
+                    break; // note, here we can break because we know that only one swap will happen in each pass, as the subarray is already sorted
+                }
+            }
+        }
+        print_array(elements);
+    }
+
+// a smarter way to write the algorithm
+    public static void insertion_sort(int[] elements)
+    {
+        int j;
+        int N = elements.length;
+        for (int i = 1; i < N; i++)
+        {
+            j = i;
+            while (j>0 && elements[j]<elements[j-1])
+                swap(elements, j, j-1)
+        }
+        print_array(elements);
+    }
+// what is smart is that we do no extra work, we start by comparing the new element with the largest element of the sorted array, if it is smaller, we swap it with the largest element (ingest it into the sorted array), we keep pushing it inward unless we find it's right place. We are able to do this elegantly because the sorted array is well, sorted. 
+
+#+end_src
+
+
+* Algorithm Design Manual
+
+** Introduction to Algorithm Design
+
+Algorithms are an idea, about how to do things. The crux of studying algorithms is this: understand what it is doing, implementing it is easy
+
+Checklist:
+ - what is the problem statement?
+ - what is the brute force solution?
+ - what is the /right answer, optimal/ algorithm doing in English?
+ - write pseudo code on paper
+ - look after the corner cases in the pseudo code
+ - finally, implement the code in Java/Python
+
+We will follow this technique whenever we encounter a new problem. 
+
+*** Insertion Sort
+This is a quadratic time algorithm, constant space. 
+In each iteration, the sorted part of the array increases. 
+At each new iteration, we take in a new character and place it in the correct position in the sorted array.
+
+*** Robot tour optimization
+
+ - what is the problem statement?
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/algos_1.png]]
+
+Input: We are given a set S of n points in a plane
+Output: We have to find the shortest cycle that visits each point in the set S
+
+ - what is the brute force solution?
+
+Randomly choose a unselected point and go there. 
+This is like a DFS exploration of the search tree. The solution would not be an optimal one. 
+
+Explore the entire graph to return the shortest one. This will be very very slow. 
+For n nodes, we will have to explore n! paths. Cannot be solved with even 20 nodes
+
+for node in unvisited_nodes:
+  mark_visited(node)
+  goto(node)
+
+ - what is the /right answer, optimal/ algorithm doing in English?
+
+Not the right answer, but one answer would be to use the /nearest neighbor heuristic/ to select a point to explore. 
+This is Greedy search. Might give the suboptimal answer if the heuristic is not consistent/admissible. 
+
+For optimal solution, we can use uniform cost search - maintain a cumulative cost of visiting each node and expand the node with the lowest cumulative cost. Optimal solution, but this is wasteful. 
+
+*However, UCS (and even greedy with right heuristic) is optimal only wrt to given starting node. If we are free to choose the starting node, this won't work*
+
+ - write pseudo code on paper
+
+for node in min_heuristic(unvisited_nodes):
+  mark_visited(node)
+  goto(node)
+
+ - look after the corner cases in the pseudo code
+ - finally, implement the code in Java/Python
+
+
+In fact, this was the travelling salesman problem :top:
+
+
+
+* misc brain dumps
+
+1. searching in a sorted array - 
+a) straight pass thru the elements - O(n)
+b) Binary search - O(log(N))
+
+**if the input is ordered, you might be able to not have to go thru the entire array. 
+you know that one way to see if you can improve the speed of your implementation is to check the work that the code is doing - the steps taken, the data looked at, the maths done on the data - and if it is redundant in any way, then there must be a better way to do it.
+
+Now, in the linear pass thru the data, we arent doing any redundant work, we are just looking at the data once - BUT we have ordered data - that is a thing that we can exploit. we can make sure of the ordered data to not have to look at the data even once fully. 
+Thus, all the algos that run in O(log(N)) time must have ordered inputs. checking this would make for a good excercise!
+
+2. Worst case analysis, best case analysis, average case analysis
+
+in average case, we take all possible inputs and calculate the running time for all the inputs. we must know the distribution of the occurance of the test cases (distribution of all possible inputs). (eg. we can take unifrom distribution). 
+
+so, if we take uniform distribution, we have SUMMATION (i=1, i=N+1) O(i) / (N+1)
+so, this will be O(1) + O(2) + ... = O((n+1)*(n+2)/2).
+
+**if we have for two cases, O(1) and O(2), can we add them for the average case ?
+O(1) + O(2) / 2 = O(3)/2 = 3/2 = 1.5 (if linear time, n = O(n))
+
+**merge sort has O(nlog(n)) for best and worst case.
+
+ Time complexity of all computer algorithms can be written as Ω(1)
+ because Ω gives the lower bound and every algo will take ATLEAST const time.
+
+**get the big oh, small oh, etc sorted once and for all OQ
+
+ 3. Time is O(1) if it doesnt have loops, recursion, or call to any other non constant time function. if it takes a fixed no of steps (say 5, 100, 1000) regardless of the input size (CAN be a loop that runs a constant no of times)
+
+ eg, swap(a, b) - O(1)
+
+4. Time is O(n) if there is a loop that is is incremented/decremented by a constant amount - if it makes one pass thru the input data. 
+
+Time is O(n**c) if there are c nested loops - or the number of times the inner most loop is executed - or if c passes are made thru the data
+
+**QUESTION : what is this loops time complexity --> this is O(n**2)
+for i in range(n):
+    for j in range(i):
+        pass
+        ORRR
+for (int i=0;i<=n;i++)
+{
+    for (int j=0;j<=i;j++)
+    {
+        continue;
+    }
+}
+
+
+5. the time is O(nlog(n)) if the counter is divided by a constant number
+for (int i=0;i<=n;i*=c)
+{
+    //code - TO MAKE THE CODE nlog(n), we need this to be a linear pass thru the data. else, this the running time is just O(log(n))
+}
+
+n can be 2, 3, etc.
+it is actually O(nlog(base c)N)
+
+6. Time is O(log(log(n))) - if the counter is decreased by exponentially by a constant amount
+for (int i=0;i<=n;i=pow(i,c)) - c can be 0.5 for squareroot, 1/3 for cuberoot etc
+{
+    //code --> log(log(n)) is even slower than log(n) just like log(n) is slower than n.
+}
+
+eg, for (int i=0;i<+n;i=sqrt(i))
+
+so, logn is smaller/faster compared to n
+similarly, loglogn is faster compared to logn
+logn is when we were getting the input divided by a constant factor
+here, when we are getting the input divided by exponentially, we get loglogn - faster than logn
+recall, logSTAR(n) is when you have logloglogloglog....n - very very slowly growing function - very very fast.
+
+7. When there are many loops, the time complexity is the sum of individual parts:
+for i in range(n):
+    #code
+
+for i in range(m):
+    #code
+
+here, it is O(n+m), if n==m, it becomes, O(n)
+
+order of speed:
+loglogn, logn, n, nlogn, n^2, 2^n
+
+8. to find the time complexity of recursive functions, we need to know how to write and solve recurance relations.
+
+9. when asked to find the time complexity of any snippet of code, dont guess, write the number of times the O(1) statements inside the loop are getting executed. say, they are getting executed n, n/2, n/4 .. times. assuming we do CONSTANT work each time, the complexity is :
+O(n+n/2+n/4+..) - O(n)
+
+10. SO, you might say this :
+In merge sort, we had this each recursion problem of half the size, so :
+o(n+n/2+n/4+...) - this would amount to O(2n) = O(n) - but wasnt it O(nlog(n)) - yes, yes it was. 
+
+We had "n" work on each iteration (this was fixed, it didnt increase or decrease). also, we have logn such levels, so, the total running time is : O(nlog(n))
+
+Consider: for (int i=0;i<n;i/=2)
+{
+  constant work, eg: count++;
+}
+In the last case, we did constant work on each iteration, also, we have logN iterations, hence, the work is O(logN)
+
+it is like : 1 + 1 + ... + 1 --> logN times.
+
+Now, consider this:
+
+int fun(int n)
+{
+  int count = 0;
+  for (int i = n; i > 0; i /= 2)
+     for (int j = 0; j < i; j++)
+        count += 1;
+  return count;
+}
+
+This is just O(n) because it is representative of the work we did for each level. here, we have:
+
+n, n/2, n/4, ... 1
+there are logN elements, this sums to O(n).
+
+11. Theta notation is equivalent to "exactly" EQUALS - so, this is sandwiched between upper bound and the lower bound.
+
+12. for loops, the brute force approach works best. dont make theories, just write the series as it may be. write the number of times the body of the loop O(1) statements are being executed for a few iteration, and then use the GP/AP to add them. do the math. 
+
+13. be clear on the meanings of O(), o(), THETA(), theta(), etc. for eg : O(n**2)  is valid for n also. that is not the correct way of writing it obv, learn it.
+
+  f1(n) = 2^n
+  f2(n) = n^(3/2)
+  f3(n) = nLogn
+  f4(n) = n^(Logn)
+
+  Here, nLogn < n^1.5 < n^Logn < 2^n 
+  f1, f2, f4 all exponential.
+
+  Here, too, dont compare out of the blue, do some manipulation, eg, take log on both sides etc, if nothing, take some values and compare. 
+
+  14.  for(i = 1; i < n; i *= 2)
+  is O(logN)
+this is because the outer loop will run LogN times and each time, we are doing constant work : 
+So, O(logN)
+
+
+14. Time complexity of algos is fun. Now, you have to write the series. It is mandatory - without it, solving problems will get tricky.
+
+STEP 1 : WRITE A TABLE LIKE THIS :
+In for(i = 1; i < n; i *= 2)
+we have : 
+for i = 1 ; O(1);
+for i = 2; O(1);
+.
+.
+NOW, THE RUNNING TIME complexity OF THE ALGO IS THE SUM OF THE O(Xes) - HERE IT IS O(1), LOG(N) TIMES, HENCE, o(log(n)) 
+Here, we will have log(n) such runs of the outer loop and on each run, we will have O(1) work - hence : O(log(n)*1) = O(log(n)) in total.
+
+
+REVISITING :
+int fun(int n)
+{
+  int count = 0;
+  for (int i = n; i > 0; i /= 2)
+     for (int j = 0; j < i; j++)
+        count += 1;
+  return count;
+}
+
+
+here too, same approach :
+//RECALL, THE TIME complexity OF NESTED LOOPS IS THE NUMBER OF TIMES THE INNERMOST LOOP RUNS.
+i = n, O(n)
+i = n/2, O(n/2)
+.
+.
+.
+NOW, THE RUNNING TIME complexity OF THE ALGO IS THE SUM OF THE O(Xes)
+SO : TIME complexity HERE IS SUM OF (N+N/2+N/4+...) = O(N)
+
+EXAMPLE THREE :
+for (int i = n; i > 0; i -= 1)
+     for (int j = 0; j < i; j++)
+        //code
+
+Here, 
+i = n ; O(n)
+i = n-1 ; O(n-1)
+.
+.
+.
+so, sum of : n, n-1, n-2, ..., 1 = O(n^2)
+even if were, n, n, n, .. then too, O(n^2)
+
+15. Big Oh of f(n)
+T(n) = O(f(n)) - iff T(n) is EVENTUALLY bounded above by C.f(n), where C is a constant.
+So, T(n) <= c.f(n) for all n >= n0.
+
+Hence, BigOh is the worst case running time, upper bound on the performance
+
+OmegaOh is the lower bound.
+T(n) = OMEGA(f(n)) - iff T(n) >= c.f(n) for all n>n0
+
+ThetaOh is equivalent to EQUALS.
+It is only true ie T(n) = THETA(f(n)), if T(n) = O(f(n)) AS WELL AS T(n) = OMEGA(f(n))
+
+**T(n) is the maximum number of steps/operations the algo needs to take (as a function of n) before it completes. 
+EXAMPLE:
+T(n) = 0.5n^2+3n
+O(n^3), OMEGA(n), THETA(n^2).
+
+**FIND OUT MORE ABOUT :
+Little Oh notation : If T(n) < o(f(n)) and not T(n) <=O(f(n))
+
+
+16. Piggy bank on Mergesort to find out the number of inversions before the array can be sorted. Example, 
+1 3 5 2 4 6 has 3,2 + 5,2 + 5,4 inversions. 
+These can be found when during the merging step, and running the counter, say, the LHS and the RHS arrays have 5, 5 elements each. Now, the first element taken from the LHS, when the next element is taken from the RHS, all the elements in the LHS are inversions. So, add them.
+EG : 135 and 246
+So, take 1, then take 2 --> this means 35 are inversions.
+Now, take 3. Then 4 --> this means 5 is an inversion. 
+So, there are 3 inversions.
+
+17. QuickSort Algorithm
+This has nlog(n) best case performance. 
+38251476
+i, j at : 3ij8251476
+Take 3 as the pivot. Now, 8>3, so let it be. 
+3i8j251476
+Now 2<3 so, SWAP ith Pos and jth Pos. Then, increment both by 1 so : 32i8j51476
+321i5j8476 ,321i58476j 
+Then : 321i58476j
+When j reaches the end, swap element at ith place and the pivot. 
+SO : 12358476
+Do this for again with a random pivot. We can find that average performance is nlog(n)
+
+If we have median as the pivot - T(n) = 2T(n/2)+O(n) - O(n) is because we have to do a linear scan thru the array after the pivot is chosen.
+
+So, best case performance is O(nlog(n))
+
+In general too, we can bet for nlog(n) performance - this if we define a random variable Xij that is 1 if there is comparision between ith and jth element. In this case, we can say that the running time is expectation of this rv - the max no of comparisions that are needed before we can finish the algo.
+So, E(Xij) = expectation of summation from i=1 to i=n-1 of (summation of j=1+1 to j=n of (Xij))
+Taking the expectation inside, we get The summations (of the proability that the entries will get compared) - this is nlog(n)
+
+**this is a good technique for randomized algos, to find the running time, define a rv that triggers if there is some activity (like comparision) then, the running time is the summation of the expectation of that rv, it would be in the form of summation, take the summation inside, find the expectation and sum it to find the expectation and hence the running time. 
+
+EXAMPLE : 
+we have n processes to be assigned to n servers. there are n^n combinations. lets find the expectation of the number of processes assigned to the first server. so, E(Y)
+defining an rv Xi that is 1 if ith process assigned to server 1 else 0. We have:
+E(Y) = E(SUMMATION from i=0toi=n of Xi)
+that is SUMMATION of E(Xi)
+Now, E(Xi) = 1/n*1+(n-1)/n*0 --> so, E(Xi) we have is : 1/n
+So, summation we get, 1/n summer over i=1ton, we get : 1
+
+
+18. Q: How to find the ith order statistic from an array. Say we need to find the 1st order statistic, or maybe the 3rd order one. We can sort in nlog(n) and get it but we will aim for better since we are asking for less information. So, 
+There are two ways : randomized QS and determininstic QS - both do it in linear time
+
+Randomly pick a pivot, perform the partioning in linear time, we get the statistic of the pivot. if the required statistic is more than it, do the same on the RHS part of the partioned array. repeat till we are done. worst case performance : O(n^2)
+average is O(n)--> this is obtained after taking the expected number of recursice calls we need to be in 0.75, into the work done in those calls.
+
+**thus, from this and the fact that when sorting too, we get a average run time similar to that when you got the median for the pivot we infer that on average, we get the median only (this good fortune is in part because of the fact that we get a 25-75 split 50% of the times, and that is good enough)
+
+Deterministic version : divide the array into n/5 arrays of 5 elements each. sort each element, get the median, from the n/5 meadians, recursively find the median of them ... return this as the pivot and perform the partition. then, do then same in the RHS or the LHS of the pivot as required. This works in O(n) time too, 
+
+A fixed number of elements can be sorted in linear time. 
+So, we have n/5 groups. sorting them takes:
+O(1)+O(1)+....+O(1) ==> n/5 such groups, so, O(n)
+
+Each step has 2 recursive calls, one for finding the medians, another one for the partioning. 
+T(n) <= n + T(n/5) + T(7n/10)
+            this is because in the next recusive call, we have only the n/5 medians to take care of
+        this is for sorting the n/5 groups
+                    this is for recursive call for partioning, we claim that the new array will have only 0.7% elements.
+
+**look at the running time derivation of QS if needed.
+
+GRAPHS. n = #vertices, m=#edges
+
+19. ways to represent graphs :
+a) adjacency matrix
+has 1/0 if edge present, or can have the weight of the edge too.
+sign to represent the direciton.
+
+space requirement is O(n*n)
+
+b) Adjacency lists
+They include :
+array/list of vertices O(n)
+array/list of edges O(m)
+array/list with each vertex has the edges incident on it
+array/list with each edge pointing to its end points.
+
+O(m+n) or O(max(m, n))
+
+20. the problem of minimum cut. - compute the cut of the graph that has the min cuts of all. 
+This is for undirected graphs. for n nodes, min edges : n-1, max nodes: nC2
+
+Random contraction algorithm. 
+Randomly pick one edge, contract it, remove self loops, repeat till the end - final two vertices are the output. 
+degree of a certain vertex == the number of incident edges on that vertex.
+
+The probability of succes is 1/n^2 where n is the number of vertex. Now, this is done using the probability that any of the edges that represent the min cut arent selected. we run this say N times, so the probability that we get the wrong answer still is : (1-1/n**2)^N
+Or, can be approximated as : e^(-N/n*n)
+Running time is O(n*n) or, OMEGA(n*n*m)
+
+21. Graph search - visit every node in the graph - never any twice
+There are two options, BFS and DFS
+BFS : 
+goes layer by layer
+Computes the shortest path
+computes the connected components in UNDIRECTED graphs
+Uses the queue data structure
+
+DFS:
+explores deep, backtracks when needed
+computes topological ordering of directed acyclic graphs
+computes the connected components in DIRECTED graphs
+Use stacks
+
+pseudo code :
+1. start from the starting node, store each vertex that originates from that vertex AND IS not visited yet in the S/Q. mark the starting node as 'visited'.
+Now, take in the next vertex and do the same. visit, mark as visited. DO this till there are elements in S/Q
+
+store in S/Q, mark as visited - repeat
+
+running time : O(m+n)
+
+Q: to compute the shortest path/min no of hops, use bfs.
+on each hop, add one to the #hops required. 
+initialize dist(v) = 0 if v=s, else inf
+Now, when you get to a unvisited node, set dist(w) = dist(v) + 1
+
+Q: Find the connected components in undirected graph
+two vertices connected if there is a path from one to another
+i.e if u~v is an equivalence relation. 
+ie u~v then v~u
+u~u, v~v is true - it is because each element is connected to itself, (empty path)
+u~v, v~w then: u~w -> true.
+
+Make a list of all vertices/nodes, mark them as unlabeled. now, for each node i, BGS(G, i)
+(during each BFS, mark the nodes visited as marked)
+This has both the BFS loop and the BFS main body. 
+
+22. **recursive version of DFS without using stacks
+DFS(G, s)
+mark s as explored
+for each edge (s, v):
+  if v not explored:
+    DFS(G, v)
+
+Q: Find the topological ordering (similar to connected components) of directed acyclic graph.
+Topological ordering is ordering of vertices such that the arcs only point forward.
+every directed acyclic graph has a sink vertex - comes last and has no tail on it.
+
+The topological ordering will be used later to find the SCCs too.
+
+Here, too, just like for last case:
+DFS Loop - for the vertice A, that are yet unexplored (initally mark all as unexplored)
+go the DFS Main Body
+formally:
+
+DFS (graph g)
+mark all nodes unexplored
+current_label = n
+for each vertex not yet explored:
+DFS Main Body(G, v)
+
+DFS Main Body(Graph g, vertex s)
+mark s explored
+for each edge (s, j), if j unexplored:
+  DFS(g, j)
+set f(s) = current_label
+current_label--
+
+So, all the nodes will have labels, the ones belonging to the same order will have the same level.
+the deeper nodes will have the high order labels (sink will have label n),
+lower order ones will have it as n-1, .., 1 etc
+
+Q: connected components of directed graphs
+
+**connected components are labeled so even if they allow one way movement from one vertex to another. eg:
+a-->b-->c is connected, you can go from a to c, but not from c to a
+Hence, this is not STRONGLY connected
+
+Hence, the problem is to find pockets of strongly connected components of the graph.
+To find them, we cannot use vanilla DFS, that would give us wrong results. because if we start from say the source, we will discover all the SCCs in one big lump called the graph. 
+
+Hence, the order of nodes from where we run the DFS beast is vital. We have Kosarajus two pass algorithm. The first pass will discover this magical ordering, the next one will find the SCCs one by one. 
+
+the 1st pass finds the finishing times (ordering), the 2nd loop runs from n to 1.
+all the SCCs will have the same label
+
+So : the entire pseudocode:
+In the first pass, reverse the given graph. Now, for all the vertices, (randomly chosen):
+DFS loop(Grev):
+  current label = n
+  dfs(Grev, v)
+
+dfs(Grev, v):
+  mark v explored, 
+  for each node v`:
+    dfs(Grev, v`)
+set finishing time(v`)==current_label #note, we are setting it for where the dfs gets stuck
+current_label--
+
+Each iteration of dfs gives us one SCC.
+Now, again, get back the original graph : G, 
+DFS loop (for each node, with finishing time in decreasing order):
+  dfs(g, v)
+dfs(g, v):
+  mark v as exolored
+  for each node n`:
+    dfs(g, v`)
+
+**the finishing times are the magical ordering that we needed
+
+When getting the finishing times, we can store them at the correct index. For fast retrieval later. So, if say node 3 has fininshing time of 4, store it at fininshing_times[4]=3 (1 based indexing)
+
+the SCCs in both G and Grev are exactly the same - because the SCCs are an equivalence relation.
+
+we get the topological ordering from the finishing times. that makes sure we do not spill into other SCCs.
+
+**we find the topological ordering of the G rev and then run DFS again in the decreasing order of the finishing times.
+**is the topoligical ordering of Grev and G in exactly different order (eg, 123 and 321)
+
+23. single source shortest path problem  - dijkstras algo
+each edge has a weight, whihc is non negative. we will assume directed graphs, though that is not needed. 
+**recall BFS also finds the shortest path, but it does so ONLY when the weights of all the paths is ONE. Dijk solves a more general problem. use bfs for minimum hops === if weights are one.
+
+**when faced with a problem you are not able to solve, try to reduce it to the one you can solve. 
+
+we have X housing the explored vertices. we have V-X housing the yet non explored ones. We choose the vertex which has its tail on the present vertex. If there are multiple possible options : we choose the vertex that minimizes :
+A[v]+len of edge(vw) [it is v*, w*] --> DIJK'S GREEDY CRITERION
+add w* to X, A[w*] = A[v*]+lv*w*
+Also, we can maintain the path itself - B[w*] = B[v*]+(v*, w*)
+
+note, you have to consider ALL the outgoing edges from X. choose the one that minimizes the DIJK's greedy CRITERION. A[r] where r will be the edge whihc has the tail at r.
+
+recall djik breaks down on negative path lengths, also you cannot add a common term to all the edges to bring them above 0 because this wont preserve the shortest path, it will meddle with the graphs information.
+
+this is proved by induction. 
+
+**almost linear time is nlog(n), linear time is n, sublinear time is log(n)
+
+Naive implementation is THETA(mn), because, for each vertex, we may have to choose from m edges. so, nm
+
+We can do better if we use a Heap.
+
+**Q: how does the heap work?
+Heaps can be used where you have to do min computations over and over and over again. it extracts min in O(log(n)) time.
+conceptually, they are a perfectly balanced binary tree. also, additionally, they have the property that teh key<=childrens keys. --> the smallest key is at the root/head of the tree. 
+
+rend the root, make the right most leaf (highest element in tree??). 
+
+when using heaps, store not the edges but the nodes/vertices in the tree. also, the key[v] for each vertix v is : smallesy dijks score of an edge with head on that vertex. (which has that vertex as its head) and tail in X
+
+if no edge, then the key of that vertex = inf.
+
+so, earlier we had one single round - winner takes all. we did a scan thru all the possible candidates and choose the one with the min dijk score.
+
+Now, we store for each vertex in V-X the value of the min dijks score for all the edges that have their head on that vertex. we remember the lowest such vertex - this corrosponds to the min of the heap.
+Now, what we do is select this min score having vertex - this gives us the required node in log(n) and not linear (m) time.
+
+when we include a new element in X, we need to update the keys of all those edges that stick out of w (w being the new vertex being included into X) because they might have changed. 
+
+when we extract w from heap :
+for each edge from w --> (w, v):
+update key of the vertex with the min of the dijks score of all the edges with heads on that particular vertex. 
+it can stay the same or decrease. 
+
+heap only has the vertexes outside X
+
+the running time : we have n-1 extract mins, each taking log(n), also bookkeeping (updating the min of the heads of the edges from the vertex being sucked into X)
+so : O(mlog(n)) --> this is worse than the linear time O(m+n) but still awesome.
+
+**what if it is a complete graph - then the bookkeeping will take linear time too.
+
+23: Q: the 2 sum problem. given an array of n integers, unordered, find if any two intergers sum to T.
+Naaive:
+for each element a:
+  do a linear scan thru the array for T-a.
+
+  n^n time.
+
+Better : sort the array in nlog(n). Now, for each element a, check if a-T present USING BINARY SEARCH. this is done in nlog(n) time. much much better. THIS IS THETA(nlog(n)).
+
+**WHEN EVER POSSIBLE (I.E. WHENEVER YOU CAN DESTROY THE ORIGINAL ARRAY) SORT THE ARRAY FIRST AND THEN WORK ON IT
+
+Best:
+store all elements in a hashtable (this takes n/linear time). now, for each element a, check if a-T present (this is done in const time), so, in linear time, we get the ans. THIS TOO IS THETA(n)
+
+We thought about using the hash table because we were doing reapeted lookups, for eachh element a, we were looking in the array for a-T, so that should ring a bell that the hash table might come in as useful. 
+
+ALGO II
+
+We cannot use Dijk's algo to find the shortest route for packets of data to travel to their destination, because, it needs the entire graph to be loaded onto memory, (recall the X subset whihc increases one by one) hence, we need a way to find the next direction we need to go to for the shortest path to the destination without taking into consideration the entire graph. - Bellman-Ford Algorithm.
+
+In BFA, only local computation needed. BFA is a dynamic programming Algorithm. handles negative edge length too. slower than dijk's. it is the foundation of modern internet routing protocols.
+
+Some Algorithm design paradigm
+1. divide and conquer
+ - take problem, break it into smaller sub-problems, solve the smaller subproblems recursively, combine the results to get the final result. eg: merge sort
+
+ 2. randomized algotihms
+  - make random choices inside the code, this can lead to performance boosts, eg choosing the pivot of quicksort randomly lead to performance of nlogn. 
+
+3. greedy algotihms
+ - they iteratively make "myopic" decisions, eg Dijk's shortest path algotihm. they add to the result on each step.
+
+4. dynamic programming
+ - solves shortest paths in large graphs, sequence alignment
+
+
+ 24. Greedy algotihms
+ The decision are made iteratively, they look good at that instant and the hope is that everything works out in the end. 
+ dijk's algo has an outer while loop, which runs over the all the nodes in the graph. for each node, we make a decision (that of choosing the edge with the min dijk's score - recall the process of finding the min would have been linear had we not used heaps, whihc do it in logn time, sublinear !), and we stick to that decision, we hope that in the final solution, it will still be the best. (In comparisoin based sorting, this is not true, for eg : in QS. Yes, we make a decision of placing the pivot at its location but then all the other elements change their positions and this makes QS not eligible for the greedy label)
+
+ greedy algotihms have easy to compute running times, harder to compute correctness. they are "often" not correct. you may conjure up some metric to guide your myopic decisions (some score function say, like the dijks score) which may not give the correct advice.
+
+ greedy algos can be proved for correctness by induction : all the steps till now were correct, this step is correct too. 
+
+ P vs NP
+ P is there is a polynomial time solution to solve the problem
+
+ NP
+ Given a solution for the problem, we can find it it is correct or not in polynomial time
+
+ Hence, the ability of verify reportted solutions in polynomial time is NOT a sufficient gurantee polynomial time solvability. 
+
+Example usuage of greedy algotihms : 
+CACHING:
+cache is a small memeory place that supports very fast access. (small fast memory - L2 cache, big and slow memory - main/disk memory)
+
+Now, say the cahce has space for 4 items. When a new item is asked for by the user, we load it on the cache and remove one item. Whihc item to remove? the one whihc has the possiblility of being asked for again as late in the future as possible. Say, 'e' is to be asked 10 timesteps into the future. 'y' 60 timesteps into the future. Hence, we will remove 'y' from the cache and not 'e'. How do we know what will be asked in the future? We assume the principle of locality of reference. What ever was asked recently has a high probability of being asked again. So, we keep it there. (LRU - least recently used)
+
+SCHEDULING PROBLEM:
+each job as a weight - wj (indicator of PRIORITY)
+length lj (how long it takes to complete)
+
+we need the output as a sequence of these n jobs
+
+define : completition time cj - the time before the job gets completed, for the first one it will just be l1. 
+
+hence, we can find the optimal solution by minimizing the objective function defined as :
+the weighted sums of completition times. weights - would be the respective weights of the jobs. 
+objective function:
+
+Min : SUMMATION(wjCj)  - j from 1 to n
+this is equicalent to minimizing the weighted average of the completition time
+
+**--> can we use gradient descent to solve this optimization problem ?
+GD works when the variables are continous, here the variables are Cs. They are fixed actually, but the variable is the order. It would be interesting to see if there is a solution for this.
+
+possible combinations : n!. so, brute force has crazy running time
+So, how to solve the problem given weights, completition times, lengths of jobs.
+
+**WHEN FACED WITH A DIFFICULT PROBLEM, FIRST LOOK at certian specific cases of the problem and imagine how you would solve them. then, try to generalize
+
+here, we have competiting forces at play. jobs with higher weight are given priority, and the ones with shorter times are given priority. so, how do we quantify the tradeoff?
+
+maybe if we can define a score for each of the job which is a function of the length and the weight of the job. 
+
+what could such a score function look like ?
+what about normalized(w) - normalized(length)  --> the normalization is not necessary, vanilla difference might work too
+also, weights/lengths
+
+"both are possible functions you come up with, one may be wrong here. The correctness doubt will be something you come up with many times in your algotihm design adventures"
+
+to find out whihc may be incorrect, try to find an example where they give different outputs and comapre their output with the ground truth. this may help you discard some functions whihc give incorrect answers. remember greedy algotihms are very often wrong. check for the correctness before commiting to one. 
+
+in the scheduling problem, the correct scoring function (the correct heuristic) is the ratio score - weights/lengths for each job. do the ones with the higher score first, this will minimize the objective function.
+
+the running time for this one is nlogn because we are essentially sorting based on the scores.
+
+the proof is by the Exchange argument. details not studied. 10 min total time.
+
+25. Minimum spanning trees
+THEY SHOW THE use of the greedy algorithm padadigm
+they are used to connect a bunch of points as cheaply as possible
+
+the algos that work are:
+prim's algorithm
+Kruskal's algorithm
+
+they both run in O(mlogn) time. m is the #EDGES, n is #nodes - with the correct DS
+
+problem defination:
+input is : UNDIRECTED graph, (in dijk's shortest path problem, we have directed graphs)
+
+recall the adjencency list representation of graph.
+
+also, the cost of the edges is given as c for each edge which can be negative.
+
+what is a tree that spans all the vertices?
+the output graph spans the graph iff:
+1. there are no loops/cycles.
+2. the subgraph is connected - it is possible to reach any vertice from any other vertice
+
+so, the graph which visits each and every node of the graph, does not make a loop, and has the minimum cost is the minimum spanning tree.
+
+**minimum spanning forest is the same thing as MST, but they are for disconnected graphs. So, say a graph has 3 seperate graphs, then, we would get 3 MSTs for each part, thus, that would be the MSF.
+
+
+1.Prim's algo
+
+recall what we did in dijk's shortest path algorithm ? we started at a start node, then greedily, choose as the next node to suck into our X the one which had the minimum dijk's score, we did this repeatedly till the entire graphs (all the nodes) were covered. Recall, we used a heap to extract the min everytime. 
+
+Also, the dijk score was : for any node v in V-X, and the edge connecting v to w:
+the score was: A[v] + E(v, w)
+where A is the cumulated greedy cost of reaching that node from the starting node
+In dijk, we just reported the minimum path score to each node, not the actual way (however, we could have stored it without much trouble)
+(X is the set of vertices we spanned so far)
+
+Here, too the procedure is very similar
+We start with a random node, then from there, suck up the edge having the minimum cost, we use the heap datastructure to find the minimum edge cost of all the available options, this way we proceed till all the nodes are covered. 
+here, we will store the tree too, so keep that in mind. 
+
+after sucking each node into X, and looking for the next edge, with one vertex in X and the other NECESSARILY out of X
+
+the number of cuts for graph with n vertices is:
+2^n-1.
+for each vertex, we have a option to choose from two groups - A or B. So, 2^n choices. -1 for the fact that the groups cant be empty. So, we subtract 1 for the option where ALL the nodes were placed in one group. **shouldnt it be -2? for when all the nodes are assigned to 1 group or the other group
+
+SOME GRAPH LEMMAS:
+1.empty cut lemma:
+a graph is not connected iff there are no crossing edges. 
+
+2. double crossing lemma
+if a cycle in the graph crosses a cut, it has to cross it twice (or even number of times, if more than one member of the group is seperated from the rest of the group). (a cycle in the graph means all the node are connected in a cycle)
+
+**Cut property of graphs
+this is the property that makes sure our seemingly "myopic" decisions about including a particular edge for our final solution are indeed correct and wont come back to bite us in the future. 
+
+"if you have an edge of the graph and you can find JUST a single cut for which this edge is the cheapest one crossing the cut(the frontier), then that edge is a part of the MST"
+
+HENCE, if you think about it, what the prim's algorithm is doing is, is simply finding this min crossing edge on each iteration and adding it to the MST.
+this property simply takes the onus of proving the correctness of our "myopic", greedy decision on itself. 
+
+if the edge costs are not unique, multiple MSTs are possible, however, if there are only unique edge costs, there is a unique MST.
+
+pseudo code:
+initialize X = [s], s chosen randomly
+initialize T = NULL SET, (this will store the MST solution)
+while there is a node not part of X:
+  add to X the cheapest of all the edges that are the cross cuts between X and the rest of the graph.
+  add the same node to T
+
+Make sure the heap is not getting you the minimum edge of all the edges of the graph, but just the one from the cutting edges for that instance. THIS IS STILL log TIME, BUT THE CONSTANTS ARE BETTER...
+
+recall without the heaps, this is O(mn) - polynomial time, now it is O(mlogn). (m and not n because m>n ?? YES, thats our assumption, hence, we can replace n with m)
+
+without the heap too, we have polynomial time which is better than the exponential time for brute force looking at all the possible spanning trees. 
+
+**it is possible to insert, extract-min.max, delete stuff from the heap in log time.
+keep in mind that it is stored as an array - it is in reality a fully leaved binary tree. 
+the heap property is that the children have to be bigger than the parent (for a extract-min heap)
+
+min is at the root, to extract it, rip off the root, swap the last leaf with the root, bubble down to get the now smallest element at the root. 
+
+to insert, insert as the last leaf and bubble up, to delete from the middle, rip it out, (replace it with a leaf?) and bubble up/down as needed. 
+
+Better, don't use the heap to store the edges, store the vertices. there are two invariants
+the first one describes what objects the heap contains 
+and the second one describes what the key value of those heap objects are.
+
+so, INV1 = has all the vertices that we dont yet span (V-X)
+so, now the heap wont give us the next edge to add to X but the next vertex to add to X.
+
+INV2 = we define the key to be the cheapest edge incident to this vertex AND IS ALSO THE CUTTING EDGE (ALSO crosses the current frontier)
+
+**after each iteration, after each sucking up of an edge into X, we need to update the heap - both the INVs.
+
+INV1 = delete the newly sucked node (lets call it w) form the heap
+INV2 = for each edge of w, if it points to a node already in X, ignore it.
+If it points to a node not in X:
+delete the node from the heap, 
+recompute its key - key[node to which the edge pointed, call it w'] = min(key[w'], Cww`)
+(we rechoose the key as the minimum of its present key and the cost of the new edge that now crosses the frontier)
+reenter it in the heap
+
+You need to change(update) only those vertexes that shared edges with the node that just got sucked into X and werent already in X.  
+
+note, if there is a vertex that is in the heap (it means it is still not in X) that has no incident edges that cross the frontier, we have it's key set to inf
+
+recall the two step chat from dijk earlier?
+in the naaive implementation, we have a one round winner where we search thru all the edges and choose the one with the minimum cost.
+
+here, with the heaps, we do it in two steps. First, for each vertex, we store as it's key the minimum of all the edges that point to it AND are also part of the current frontier.This is the local round
+Then, in the next round, we choose the vertex with the biggest key. this is the second round.
+
+**does this mean we have two heaps? or we just do a linear scan thru all the edges pointing to the vertex and also part of the frontier.
+this is it, otherwise, we would have to have a heap for all the nodes. Only then would we be able to find the required min edge. 
+Also, if you think about it, at each iteration, the minimum is not looked for from scratch. The minimum is built upon on the knowledge of the last iterations, and we only have to choose from two choices. (the previous key and the new edge's cost that now crosses the frontier with its other end in X)
+
+**deletion from the heap is wrt to the index. You dont say delete this node, you have to say delete the node at index i. So, you need additional bookkeeping to store where the vertex was kept in the heap. Use a hashtable to get its index ! **ANYHWERE WHERE YOU WOULD THINK OF USING A PYTHON DICT, YOU CAN USE THE HASTABLE. BOTH ARE SAME UNDER THE HOOD!
+
+running time is : 
+1. heapofy operation - linear time
+2. outer while loop which runs for n iterations
+in each while loop, we have a min search computation - log n time due to the HEAP. else, O(n)
+Also, a few constant time updations for maintaining the invariants.
+
+**another way to look at it:
+there are O(m) heap operations - for the m edges. Now, each opetaion is log(n), so mlog(n)
+
+THIS is fast ! THis is in the same league as sorting - this is a "for-free" primitive too !
+
+2. Kruskal's algorithm
+it uses a UNION-FIND datastructure.
+
+earlier, we were bound into selecting the cheapest edge that crosses the frontier, here, we can choose anywhere in the graph ! (as long as we don't create cycles, if we do, we discard that edge and choose another one)
+
+we make a single scan thru the edges in SORTED ORDER.
+
+pseudo code:
+0. Sort the edges to get SORTED_EDGES
+1. initialize T = NULL SET
+2. for a in SORTED_EDGES:
+  add a if choosing a doesn't make any cycles in T
+return T
+
+**YOU can terminate the for look when you have n-1 edges, that can fasten the algo - decrease the constants a little.
+
+**MAXIMUM number of edges = nC2 - this is quadratic in n. So, m = O(n**2)
+IT is a little confusing when it comes to running times wrt m or n. Take m to be on the safe side, because m is at least n-1 but can be upto n^2
+
+Running time:
+sorting is : mlogm - or mlogn (because, m = n**2, so, logm = 2logn, 2 gets suppressed)
+outerloop : m, 
+checking if there is no cycle : you pick the edge in question, lookat/store the nodes it points to, check the edges the nodes have, lookat/store their nodes, keep doing that recursively till you get thru the entire graph without finding any node more than twice in the entire run (if the node comes more than twice, there is a cycle) - this has n time because we are scanning thru all the present nodes.
+
+BETTER THAN THE MESS ABOVE
+You know if the edge (u,v) would form a cycle if there is a path between u and v. the path can be found by DFS/BFS which take linear time [O(n)]. ALSO, we only need to search the nodes/edges present in T. 
+
+Hence, this is O(m*n) running time.
+
+Hence, in totality : O(mlog(n)) + O(mn) == O(mn)
+(interestingly, this was also the time for prim's algorithm without using the DS)
+
+The main thing that is slowing us down is the cycle checks. Union-find would allow us to check for cycles in constant O(1) time.
+Hence, our time would reduce to O(mlogn) - the time taken by sorting!
+
+Union-find is talked about in data_structures. Point number 9.
+
+
+3. MST can be used in clustering etc
+For clustering, we need a measure of "similarity" between two points. the function should be symmertical i.e d(a, b) = d(b, a). one example of such a function can be the eucleadian distance, or the NW score (which is used to measure how similar two string sequences are)
+
+We define an objective function which we would like to optimize. lets call it the spacing objective which is the distance between two clusters, we would like to maximize it. We go over all the clusters (initially, we start with the degenerate case of each point being its own cluster), and choose the pair of clusters that are the closest to each other - we fuse them, next we do the same till we are down to the required number of clusters.
+
+pseudo code:
+T = set of all the nodes
+dist = list of the distance of each cluster from the other
+while len(T)!=k:
+  for a in min(dist):
+    merge the two clusters
+    remove one of the two points from T
+  return T
+
+Tim's pseudo code:
+intially each point in its own cluster
+repeat till onlt k clusters:
+let p, q = closest pair of separated points
+merge the clusters containing p and q into a simple cluster
+
+How to find the closest pair of seperated points in a d dimensional space?
+THIS IS JUST LIKE KRUSKALS ALGO, THERE TOO, WE LOOKED ON THE MINIMUM EDGE (HERE, MINIMUM DISTANCE B/W ANY TWO POINTS) AND WORKED ON THEM (IN K: WE ADDED THE EDGE TO THE MST, HERE: WE MERGE THE TWO CLUSTERS HAVING THOSE POINTS INTO ONE) The difference is that this algo is aborted early
+the points are the nodes/vertices, the distances are the edge costs. we have a **complete graph - that is there is an edge to each node from each node.
+
+so, if we wish to implement this algo, we would do it EXACTLY as if we were solving Kruskals algo.
+
+This procedure of fusing clusters one at a time is called single linked cllustering
+
+25. GREEDY Algorithm for huffman codes
+huffman codes = prefix free binary codes
+
+binary codes map characters to a binart string
+say you wish to encode 32 characters (28 alphabets and some punctuations). you can use 32 different binary strings of length 5. just like in ascii.
+5 bit - we have 2^5 = 2.2.2.2.2 = 32 combinations
+
+now, this is not optimal. if some characters appear more than others, we can do better if we use variable (shorter) codes for most frequently occuring characters. eg, this (variable length encoding) is done in mp3 encoding, 
+but using variable length codes can lead to confusions:
+suppose SIGMA = {A, B, C, D}
+So, we can use : {00, 01, 10, 11} to encode these characters
+but if chose to use variable length codes, we might select say {0, 01, 10,1}, now in the code, this can lead to confusion, if we have say 01, is it 0(A) and 1(D) or just 01(B)?
+
+one way around this is to make the encodings prefix free. i.e. make sure that for every pair, i and j, neither of the encodings, f(i) and f(j) is a prefix of the other - so, a possible encoding option : {0, 10, 110, 111}
+
+say, we have A 60% of the times, B 25%, C 10% and D 5%, in this case, with our variable length encoding, we would need 1*0.6+2*0.25+0.1*3+9.05*3 = 1.55 bits/character
+
+In fixed length encoding, we would need 2 bits/character
+
+So, the problem can be formulated as finding which variable length prefix free encoding scheme can give the best compression i.e. minimum average encoding length per symbol/character.
+
+the trick is to represent binary codes as binary trees. when represented as a tree, the left child corresponds to 0, the right child corresponds to 1. Now, you can say the code is not prefix free if the characters are present at internal nodes and not only the leaves. ANY BINARY CODE CAN BE EXPRESSED AS A TREE. prefix free only iff nodes allowed at the leaves ONLY and not at internal nodes
+
+when decoding, you start at the root and follow the code till you get to a leaf. when you do, you print the character corresponding to that leaf and replace the pointer at the root and continue reading the encoding from the next bit.
+
+the number of bits required to encode the character is just the depth of the leaf of that character. 
+
+problem input : the frequency of the different characters of set SIGMA
+we wish to minimize the expected number of bits/character required to encode the characters in SIGMA.
+
+Or, we can say:, T = tree with leaves <--> symbols of SIGMA
+L(T) = average encoding length = SUMMATION(pi * depth of i in T) - classic expectation defination - this will give the expected number of bits needed to encode the characters of SIGMA
+pi = probability of the character apprering / frequency of the character
+
+how we solve this problem is by the bottom up approach. we start with all the characters in SIGMA as leaves. then we keep merging them one by one. when we merge, we get an internal node and that adds one more bit to the encoding of that character (because we now have to traverse one more node from the root to reach that leaf). in the end, we have to have only one tree. 
+
+**how do we merge?! do we take the ones with the minimum frequency and merge them?
+each merger of the subtree means one more internal node means one more bit in your encoding.
+
+yes! in the first iteration, you take the two least appearing items and merge them. you create a new meta-symbol by merging the last merged nodes and assigning it the frequency = sum of the frequency of both the symbols. implement using recursion, the base case is where there are only two nodes present - then, simply merge them. it would be fun to implement the unwinding procedure.
+
+26. Dynamic Programming
+This is a very useful tool to have in your toolbox. After some practice, you get the hang of it, it is a somewhat mechanical to apply and use. 
+
+Problem of max weight independenent sets in path graphs
+independenent sets - subset of the graphs vertices such that no two graphs vertices are adjcent. so, if the graph is a simple path graph, where the nodes are in a straight line, we need to return the set such that they do not have any consecuutive vertices. so, imagine 4 nodes, egs could be : empty set, nodes 1 and 3, nodes 2, 4 etc.
+
+now, the nodes have weights. what you have to return is the set with the maximum vertex weight.
+
+options to solve this:
+brute force
+the number of independenent sets is exponental in the vertices n, so this would require exponental time.
+
+greedy algo
+one thing you could do is, take the maximum node of all the legal nodes you have to choose from. but this doesnt give the optimal solution. so, check on smaller problems first to make sure that the problem can be solved. 
+
+divide and conquer
+can solve the problem quadratic time - the main challange is in the merge step. dynamic can do it in linear time.
+
+dynamic programming
+let s be a member of the result(S) - a member of the max weight independenent set
+let Vn be the last vertex of the path
+(S is the result - the max weight independenent set)
+1. if Vn is not a part of S:
+let G' = G -Vn, now, S is still the max weight independenent set (IS) of G'.
+
+2. if Vn is a part of S:
+then Vn-1 isn't. also, G'' = G-Vn-Vn-1. 
+then, too, S-Vn is the max weight IS of G''. 
+
+SO, now...
+if we know that the final vertex is in the solution, we can recurse on G', if it is not, we can recurse on G'' and add the last node, this way, we can find the solution
+
+what we can do is, assume either of the cases and check whihc case gives a better result - this is organised brute force search. 
+
+pesudo code:
+recursively compute S1 = max wt IS of G'
+recursively compute S2 = max et IS of G''
+return S1 or S2+Vn whichever is higher
+
+this takes exponential time. if you think about it, this isnt much different from divide and conquer - but we are peeling just one element/node/vertices off at a time.
+
+Now, there are only a linear number of DISTINCE subproblems. think about it, when you are at say, a graph of 10 nodes, you peel of the 10th node and are have the 9 node array - this is solved already in earlier recursive calls - you now have only one additional problem to look at. 
+
+so, what one can do is : cache the result of the subproblems and then look it up (use an array, at index i, store the solution of that subproblem)
+this is called memoization
+you can avail the benefit of this only if you solve the problem in a bottom up way.
+
+so, we have:
+A[0]=0
+A[1]=w1
+A[i] = max(A[i-1], A[i-2]+wi)
+ This can be done in linear time!
+
+with out memoization, we would have had to solve the same subproblem many many times over
+
+we still need to reconstruct the optimal solution, the algo just gives us the optimal value
+we can store the nodes too when we take the max.
+this wastes space and time but
+
+alternative: when the number in the next index changes, we know that the last element(i.e. that index-element) was indcuded. when the number doesnt change, we know that it wasnt.
+
+pseudo code:
+S = the solution set = empty set
+while i>=1: i is initially set to the length of A.
+  if A[i-1] > = A[i-2]+wi:
+    decrease i by 1
+  else:
+    add vi to S, decrease i by 2
+return S
+this can be memoized too for faster post processing if any
+
+Key to using dynamic programming 
+1. finding a suitable set of subproblems which satisfy a number of properties. 
+the subproblems should not be too big - else they will take time to solve.
+in the last example, we had one new subproblem for each new index. 
+
+2. a notion of smaller and larger subproblems. 
+so, in DP, you start with the smaller problems and you systemically move towards solving the larger ones
+its like it should build up, say this case is ideal for DP:
+
+computing sums of n numbers:
+at each iteration, you can go from 0 to that index and add things up - this will take n squared time
+
+or, you could memoize the values of the last solved subproblems and for a new index, just add that index only to compute to sum till that index. 
+
+SO, the thing that is required is that the solutions to previous subproblems is sufficient to quickly and completely compute the solution to the current subproblem. 
+
+3. by solving all the subproblems, you are able to answer the original question. - usually the last (and largest) subproblem. 
+
+27. Knapsack problem
+
+input is n items, each item has a value vi and a size wi 
+also given, capacity W
+
+algo has to select the subset of the items, that maximes the total value - vi.
+
+subject to: total weight has to be less than the total capacity given.
+
+it comes up whenever you have a budget and you have to utilise your resources such as to maximize your utility.
+its like we have some items with two variables. we want to optimize one while holding the other below a certain limit - constraining it.
+
+DP solution:
+you can arrive at the right set of subproblems by doing a thought experiment about what the solution has to look like. 
+formulate a recurrance - which has the optimal solution as a function of the larger subproblems. like last time, here too, we can think about the last item belonging to the set or not. 
+if we remove the last item, the subproblem is an optimal solution to the remaining array with W* = W-wn, and only (n-1) items are there for consideration. 
+
+when the last item isnt part of the soltuon: (n not part of S)
+THEN, S must be optimal with (n-1) items (it was optimal earlier, so it is now too), same capacity W
+
+Sn = S(n-1)
+
+suppose n is a part of S
+we have to express this as a part of the smaller subproblem, so we delete the last item, we cant talk about S because it has the last itme, so S-n is optimal for :
+smaller problem with (n-1) elements and capacity W-wn.
+S(n) = S(n-1)+wn
+
+so, the only two cases possible here are:
+1. you inhetied the optimal solution with one less items and the same Knapsack capacity - W
+2. OR you look at the optimal solution with one less item and less knapsack capacity (by wn) and you add item n to that knapsack. 
+
+Hence, when we consider weather the new item is a part of the solution S : we check which is better : the value of 
+
+Recurrance relation:
+Vi,x = value of the best solution on that:
+uses only the first i items and total size is <=x. 
+
+Vi,x = max(V(i-1, x),
+            v(i)+ V(i-1, x-wi))
+
+if wi>x, must have Vi, x = V(i-1), x
+
+Identifying the subproblems.
+
+x is the reduced weight of the smaller subproblem.
+all possible prefixes of items - {1, 2, 3, ...i}
+here we have to reduce the residual capacity x = {0, 1, ....w} of the subproblems before looking for the optimal subproblems. 
+
+now, we are done. we just have to write the recurrance relation
+
+we have a 2D array A
+initialize : A[0, x] = 0 for x = 0,1, ..w
+for i=1, 2, 3, ...n:
+  for x = 0, 1, 2, .., w:
+    A[i, x] = max(A[i-1, x], A[i-1, x-wi]+ vi)
+
+return A{n, w}
+
+lookups are constant time
+running time is THETA(nW)
+
+it doesnt matter that the problem needs a global overview to get the best solution - the thing is that we have the solution to a smaller subproblem - so, we got that global thing sorted - now, just focus on the level of the subproblem + a little extra that this iteration brings.
+
+YOUTUBE VIDEO
+the brute force algo would be to search all possible combinations. how many such combinations possible? well, the solution can have 0, 1, 2, 3...,n parts so, nC0, nC1, ..., nCn - that is 2^n problems. so, running time is O(2^n) - exponential.
+
+B(i, w) --> the maximum benefit obtained by choosing items till ith index and having a maximum of w weight.
+
+our subproblems are B(i, w) - i is the index till from which we have to accept items.
+SO, so, B(5, w) - means we have to look at only the first 5 items and the max weight that we can pick is w.
+
+now, at each iteration, there are two options:
+we might accept a particular item into our sack or not
+
+if we do not accpet it: B(i-1, w)
+if we do accept it: B(i-1, w-wi)+bi
+
+so, we have to choose the max of both these quantities.
+sanity check : B(0, w) == 0 == B(i, 0)
+
+so, now, we run two nested loops
+we have a 2D array A
+initialize : A[0, x] = 0 for x = 0,1, ..w
+for i=1, 2, 3, ...n:
+  for x = 0, 1, 2, .., w:
+    A[i, x] = max(A[i-1, x], A[i-1, x-wi]+ vi)
+
+return A{n, w}
+
+so, first you are allowed to look at 0 elements, w increases to max W
+then, only 1 elements, w increases to max W
+like that, in the end, we get all the elements, w increases to max W - that will be the solution.
+
+the dimensions of A will be : nW - i.e. if the weights are 1, 4, 7, 100 - then the #columns will be 100, not 4.
+
+we start at 0,0 and get the answer at n, W.
+
+so, B(2, 3) = max(B(1, 3), b2+B(1, 3-w2))
+also, B(2, 4) = max(B(1, 4), b2+B(1, 4-w2))
+B(3, 3) = max(B(2, 3), b3+B(2, 3-w3))
+
+28. Optimal Binary Search trees
+
+the search trees that minimize the average search time wrt to given set of probabilites over the keys. 
+
+the SEARCH TREE DATASTRUCTURE has one property. each key has two parents. the subtree to the right of the key has all elements greater than the key, the tree to the right of the tree has all elements less than the key. this so that searching is easy, it is logn. 
+
+when we wish to find the optimal search tree, we know that a good answer is using RBT - red black trees - they have log height guranteed. 
+but, if we knew that some items are searched for more than others, we can use that fact to get a faster search tree
+
+if we have highly skewed search frequencies, we can have better search time (i.e. less items to look at before we find the item), better than log!
+
+so, unbalanced trees may be faster than balanced trees if the frequency is non uniform. - of course, the search tree property is still followed. 
+
+so, given the items and known frequency of access, what is the optimal search tree.
+
+input: frequencies f1, f2, ..., fn
+C(T) = SUMMATION(pi*[search time for i])
+
+in Huffman codes, we didnt have to maintain the BST property. so, greedy worked. here, to maintain the property, we need a global view.
+
+top down, botton up approcahes wont work here. we need a DP solution.
+Actually, we just need some way to compute the root. then, we can recurse twice, once on the right, once on the left and find the required tree. 
+
+we have the optimal subproblem - the BST for the keys 1, 2, 3, ...n with root r, subtrees T1 and T2 are optimal BSTs for keys 1, 2, 3, ...r-1 and r+1, r+2, ..., n respectively. 
+
+DYNAMIC PROGRAMMING - TUSHAR - YOUTUBE
+
+29. knapsack problem,
+say we have n items --> Vi = 1, 4, 7, ..., n
+w = 1, 14, 5, ... --> max W is M
+when you create the matrix, make it of dimensions : 
+nxM
+
+30. there are two things:
+longest palindromin SUBSEQUENCE  -->  here, the charachters need not be consequetive
+longest palindromic SUBSTRING --> here, the characters need to be consequetive
+
+31. longest palindromic subsequence
+make a matrix of size nxn
+
+in questions like longest subsequence - of numbers, palindrome, etc - or anything similar,
+you can construct a matrix and try to solve it.
+you know the model, try to fit the problem in it.
+
+32. take an example and make a matrix. fill it up patiently, fill it completely. when filling it up, have the 0 index also. Now, when filling up, note the logic - note where you move to get what you need, note you can have to move any place - up and down and all. formulate the recursive relationship, write the base cases, code it in, AC:P
+
+now, when you make the matrix, the pattern may not be immediately visible - try moving that row's index steps to the left, right, top, bottom etc.
+
+coin changing problem - 
+given the coins of a few demonitions, find the number of ways of getting W total
+
+eg: 1 2 3 total needed W = 5
+so, 11111, 122, 311, 32, 2111 - 5 ways
+
+we GENERALLY write the W needed on the top row = as the columns headers
+and we write the #of coins we have access to as the row headers (column 0)
+so, the matrix will be :
+
+  0 1 2 3 4 5 --> this is the weight required in the subproblem
+1 
+2 //these are the coins we have access to
+3
+
+so, matrix(2, 4) --> means we have access to the first two coins and we need to make a total of 4 OR, using the first two coins, how many ways to make a total of 4??
+
+manually filling up the array gives us the pattern. 
+the logic can be described as :
+#ways of getting 4 using the first two coins = #ways we can get the same W by not including the last coin + #ways we can get W-wi performance by not including last coin.
+
+GENERALLY, when the #of coins variable is cumulative - i.e. third row means that you can use upto 3 coins. this way, in the end, we get the solution using ALL the coins.
+
+ALSO, once you make such a matrix, we can also find out how to print out the required elements which form the solution - not just the optimal sum of the mix.
+
+
+check the video for the cutting rod to maximize profit problem
+there the mechanical array filling has a definate meaning :
+by 4:13, you can reason:
+B(3, 3) = max(B(2, 3) , w3+B(2, 3-w3))  --> the first option is, when you do not include the last rod
+the second option is when you include the last rod.
+
+label your rows and columns too.
+
+a very powerful technique of coming up with a good way to code something is first undestanding how it is working mechanically by doing a dry run on a input. now, carefully see, observe what you are doing - just convert that into code and you are done !
+
+33. recall that the comaprision based algos were nlogn.
+it was actually : AT LEAST logN comparision, each taking O(1) and n such characters. So nlogn
+when making a sorted suffix tree, we have : logN comparisions, each taking O(n) time - because we are comapring the suffixes aphabetically. so, n^2logn
+
+34. quicksort is also a divide and conquer algo. after the first partioning iteration, we would get the pivot in its correct location. then, both the part to the right and part to the left are recursively acted on by the same procedure. 
+
+35. the preorder, inorder and postorder traversal techniques are used to perfrom many tasks and not just to print the said order. so, for eg, you could use this traversal and "augment" more functionlaity on this method to find the largerst BST for eg.
+
+36. use queues for level order traversal of bst
+if you want level by level printing, i.e. on different lines, you have to use two queues.
+
+if you want dfs traversal (preorder, inorder, postorder), you can use recursion - (which uses the inbuilt recursion stack), or for iterative, you have to use stacks. (could be one or two)
+
+TRAVERSALS ARE PURE STACK/QUEUE PLAY. DO THE DRY RUN AND YOU WILL KNOW HOW THINGS SHOULD WORK.

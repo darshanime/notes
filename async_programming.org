@@ -1,0 +1,92 @@
+# Krondo helps us see the light - http://krondo.com/in-which-we-begin-at-the-beginning/
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/twisted_1.png]]
+
+
+* In which we begin at the beginning 
+
+Twisted operates at a very high level of abstraction, so, it is necessary to start at low level stuff to appreciate Twisted. 
+
+If you have only one core and you want to do multiple tasks, there are 3 ways:
+
+There are 3 main models 
+
+** Synchronous model - Single threaded synchronous model
+
+#+ATTR_ORG: :width 200
+#+ATTR_ORG: :height 200
+[[./assets/twisted_2.png]]
+
+** Concurrent model - many threads of executions
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[./assets/twisted_3.png]]
+
+
+Here, the different threads of execution are managed by the operating system, and the host machine may have many cores or even one core (multiplexing)
+
+This works fine if the threads are independent of each other, but if they are not, you have to manage access to shared resources wisely. 
+This led to the whole section on Synchronization in OS class
+
+** Asynchronous model - single threaded asynchronous model
+
+#+ATTR_ORG: :width 200
+#+ATTR_ORG: :height 200
+[[./assets/twisted_4.png]]
+
+In concurrent case, the choice to yield control of a processor is not with the thread (preemption)
+but here, the thread has to explicitly yield control
+
+One might argue that if there are no blocking calls at all, the synchronous model will perform _faster_ that the asynchronous model because it has the advantage of [[https://en.wikipedia.org/wiki/Locality_of_reference][locality of reference]] - similar values will be accessed more frequently
+
+** Asynchronous better than Synchronous
+ - large no. of tasks -- async will give better responsiveness
+ - tasks perform a lot of I/O -- async will execute all faster
+ - tasks are independent of each other - simpler to write them in an async fashion
+
+This is perfectly suited for a typical network server (like a web server)
+
+* Slow poetry and the apocalypse
+
+Let's write a webserver that will send poetry when any client connects to it. 
+It is a blocking server so it will finish one and then initiate another
+
+It is written using just sockets. It listens for connections and when a connection is initiated, it uses sock.sendall to send some data.
+
+#+begin_src python
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    sock.bind((options.iface, options.port or 0))
+
+    sock.listen(5)
+    while True:
+        sock, addr = sock.accept()
+
+    inputf = open(poetry_file)
+    while True: # repeat till there is no poem
+        bytes = inputf.read(num_bytes) # read some bytes - read num_bytes
+
+        if not bytes: # no more poetry :(
+            sock.close()
+            inputf.close()
+            return
+
+        try:
+            sock.sendall(bytes) # this is a blocking call, send num_bytes
+        except socket.error:
+            sock.close()
+            inputf.close()
+            return
+        time.sleep(delay) # artificial delay
+#+end_src
+ 
+Question - here, we are creating a socket and accepting client connections to it and asking it to send a chunk of data. What is the max quantity of data that it can send in one go?
+
+
+
+
+

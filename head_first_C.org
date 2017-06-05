@@ -1,0 +1,628 @@
+# Head first C
+
+* Chapter 1 - Diving In
+
+first c program
+
+#+begin_src C
+
+#include <stdio.h>
+int main()
+{
+    puts("Hello World");
+    return 0;
+}
+#+end_src 
+
+#+RESULTS:
+: Hello World
+
+gcc rocks.c -o rocks
+
+3 standards of C - ANSI C, C99, C11
+:command: puts --> put string
+:command: char ex[20] -- char array of size 20. 
+:command: scanf("%19s", ex) -- scan 19 literals and put in ex
+
+the main() function is the starting point for any C program
+the stdio.h header has code that allows you to read and write data to/from the terminal
+
+note: int main()
+int is the return type of main. 0 --> successful execution
+
+:OQ: "to check the exit status of a program, do echo $?" how does that work?
+
+:command: use atoi to convert text into a number
+
+when you compile a c program using gcc, it outputs a binary.
+you can execute it using ./<name>
+
+# when running programs, we do ./<name>
+# that is because on unix style OS, programs are run only if we specify the dir where they live or if the dir is in the path
+
+:imp: to any array, C adds \0 as the last character(called the sentinel character). this is the NULL of C
+
+the index always starts at 0, this is because the index is an offset actually.
+so, if a[0] is at 0x0000, a[5] is at 0x0005
+
+single quotes - for chars
+double - for strings 
+
+we have to account for the NULL ourselves in the length of the array
+
+when we define strings using double quotes, they are called string literals. they are unmutable, so if you try to change them, you will get a bus error --> a bus error just means that your program can't update that piece of memory
+
+
+:command: if (1==1) { printf("1==1"); }
+if will run one statement by default if evaluated to true
+
+--> | and & will evaluate both operators, || and && are the short circuit operators, they will evaluate only one
+
+eg: 6 && 4 --> 6 != 0, so True
+but 6 & 4 --> 6 is 110, 4 is 100. so, 6&4 is 100 (pairwise AND operation on the bits)
+
+similarly with | (pairwise OR operator)
+
+- a lot of if statements probably mean that a "switch" is in order. never run switch without break. 
+
+
+:command: while (i==1) { printf(i); }
+:command: do { // code } while (cond); --> this executes at least once
+
+:command: for (a = 1; a<10;a++) {//code}
+
+use break to come out of loops. it cannot come out of if statements. 
+#+begin_src C
+#include <stdio.h>
+int main()
+{
+    int a = 5;
+    int *b = &a;
+    printf("a lives at %p\n", &a);
+    printf("b lives at %p\n", b);
+    printf("*b points to %p\n", *b);
+    return 0;
+}
+#+end_src 
+
+#+RESULTS:
+| a  | lives  | at | 0x7ffdaba5ab7c | --> &<var> gives the memory address of <var>
+| b  | lives  | at | 0x7ffdaba5ab7c | --> b is a pointer, it's value is the address 
+| *b  | points | to |            0x5 | --> *b is the value of the memory pointed at by the pointer
+
+
+0x7ffdaba5ab7c --> 5 --> this is the variable a. it resides at memory location 0x7ffdaba5ab7c and has value 5
+0x6142accaaac2 --> 0x7ffdaba5ab7c --> this is the variable b. It resides 0x6142accaaac2 and has value 0x7ffdaba5ab7c. It has an address value which points to an int. Thus, it is an int pointer
+
+int a --> this is how you declare an int
+int *b --> this is how you declare a pointer which has an address of an int
+
+Note, numbers are returned as hex. is that due to %p? 
+
+#+begin_src C
+#include <stdio.h>
+int main()
+{
+    int a = 5;
+    int *b = &a;
+    printf("*b has %p\n", *b);
+    *b = 9;
+    printf("*b now has %p\n", *b);
+    return 0;
+}
+#+end_src 
+
+#+RESULTS:
+| *b | has | 0x5 |     |
+| *b | now | has | 0x9 |
+
+
+consider this:
+
+#+begin_src C
+#include <stdio.h>
+void len_str(char str[]) // we are taking an array of chars. so it lives in the stack of the function len_str. had we taken an char pointer, pointing to a string literal, it would have lived in the constants section
+{
+    printf("size is: %i", sizeof(str)); // shows the size of the pointer
+    printf("\ncontents: %s", str); // prints the string. the compiler knows that the str points to the 1st element of a char, so, it prints it out
+}
+
+int main()
+{
+
+    char str[] = "this is a string";
+    len_str(str);
+    return 0;
+}
+#+end_src 
+
+#+RESULTS:
+| size      | is:  |  8 |   |        |
+| contents: | this | is | a | string |
+
+So, "str" is a pointer to the start of the array. since it is an array of type char, the compiler knows that it is a string and on printf, prints out till it reaches \0 (null char)
+also, sizeof(str) returns the size of the pointer in bytes. 8bytes --> since our machine is 64-bit system, each memory address is 64 bits long
+
+sizeof is an operator, not a function. an operator is compiled to a sequence of instructions by the compiler. if it were a function, the program counter would have to jump to the definition of the function and start executing it(also, storing the return address as the present address)
+
+when we do int *a=1 - the address of 1 is stored in "a"
+the pointer is just a variable(named "a"), storing 1's address. the address of the pointer itself can be found by &a
+
+
+Observe: the address of the array is just the address of the element at index 0 - the first element
+#+begin_src C
+#include <stdio.h>
+int main()
+{
+    int consts[] = {1, 2, 3};
+    int *ptr = consts;
+    int *n_ptr = &consts;
+    int *a_ptr = &consts[0];
+    printf("ptr is %p\n", ptr);
+    printf("n_ptr is %p\n", n_ptr);
+    printf("a_ptr is %p\n", a_ptr);
+
+    consts[0] = 5;
+    int *ptr_n = consts;
+    int *n_ptr_n = &consts;
+    int *a_ptr_n = &consts[0];
+    printf("ptr_n is %p\n", ptr_n);
+    printf("n_ptr_n is %p\n", n_ptr_n);
+    printf("a_ptr_n is %p\n", a_ptr_n);
+    return 0;
+}
+#+end_src 
+
+#+RESULTS:
+| ptr     | is | 0x7ffe872b88e0 |
+| n_ptr   | is | 0x7ffe872b88e0 |
+| a_ptr   | is | 0x7ffe872b88e0 |
+| ptr_n   | is | 0x7ffe872b88e0 |
+| n_ptr_n | is | 0x7ffe872b88e0 |
+| a_ptr_n | is | 0x7ffe872b88e0 |
+
+Now, *ptr (consts/&consts) note, is not the address of 1, but rather the element that is the first element of consts. If you change the 1st element, the addresse of consts (*ptr) won't change, the value stored at that address will change
+
+So, think of "consts" as the address of the first element of the array. It has no relation to the actual contents of the 1st element
+
+solve this:
+
+#+begin_src C
+#include <stdio.h>
+
+int main()
+{
+    int conts[] = {1, 2, 3};
+    int *ptr = conts; // stores the address of the 1st place of conts, right now it has 1
+    conts[0] = 2; // 1st element is now 2
+    conts[1] = conts[2]; // 2nd elemnt is now 3 (third element)
+    conts[2] = *ptr; // third element is now the value at the ptr, which points to the 1st element of conts, which is 2
+    printf("conts is %i, %i, %i", conts[0], conts[1], conts[2]);
+    return 0;
+}
+#+end_src
+
+#+RESULTS:
+| conts is 2 | 3 | 2 |
+
+*<var> --> give me the value at the memory address <var>. <var> needs to be a pointer
+&<var> --> give me the address of <var>. <var> may be a pointer
+
+#+begin_src C
+#include <stdio.h>
+
+int main()
+{
+    char s[] = "Example is this maaan";
+    char *ptr = s;
+    printf("value is %p", ptr);
+    printf("\nvalue is %c", *ptr);
+
+    printf("\nsizeof s %p", sizeof(s)); // print the size of the array, C will know that this "s" is an array and print it's full size
+    printf("\nsizeof ptr %p", sizeof(ptr)); // note ptr is an address of the 1st element of array "s", so 8
+    printf("\nsizeof ptr %p", sizeof(*ptr)); // note *ptr is the value of the thing that ptr points to, which is the 1st element of "s". size is 1
+    return 0;
+}
+#+end_src
+
+--> so to get the size of an array, do a sizeof(<array pointer>) where the <array pointer> points to the 1st element of the array
+
+#+RESULTS:
+| value  | is  | 0x7ffeae87e960 |
+| value  | is  |              E |
+| sizeof | s   |           0x16 |
+| sizeof | ptr |            0x8 |
+| sizeof | ptr |            0x1 |
+
+:imp: int *ptr = 2; printing ptr will print the address(because that is what is the value of ptr). printing *ptr will print 2, the value. printing &ptr will print the address of the ptr pointer variable
+
+:imp: char s[] = "hello";  s == &s; True --> because "s" is just the pointer to the 1st element. Now, normally, when we do &ptr, it would return the address of the pointer. but since "s" is an array, &s returns the address of the array which is just the 1st element of array. Therefore, s == &s is True. But if we had had, char *t = s, then t points to 1st element of s, so, printf(*t) prints "h". but &t is the address of the pointer variable t itself. so, &t != t. But, convince yourself that t==s, t==&s, *t==*s, 
+
+#+begin_src C
+#include <stdio.h>
+
+int main()
+{
+    char s[] = "Example is this maaan";
+    char *t = s;
+    printf("\nvalue is %p", s);
+    printf("\nvalue is %p", &s);
+    printf("\nvalue is %p", t);
+    printf("\nvalue is %p", &t);
+    printf("\nvalue is %c", *t);
+    printf("\nvalue is %c", *s);
+    return 0;
+}
+#+end_src
+
+#+RESULTS:
+| value | is | 0x7fff4721c5e0 |
+| value | is | 0x7fff4721c5e0 |
+| value | is | 0x7fff4721c5e0 |
+| value | is | 0x7fff4721c5d8 |
+| value | is |              E |
+| value | is |              E |
+
+When we say char s[] = "there";, "s" is a variable that points to the 1st element of the array. 
+the array lives in the memory, it consumes 6 blocks, so, "s" is simply the pointer to the 1st one. there is no block stored for "s" which stores the value of s(the address of the 1st element of array). But when we do char *t = s, there is a block stored in the memory for t (who's address can be found by &t) which has as it's value the address of the 1st element of array "s". So, we can make "t" point somewhere else too. But we can't make "s" point to somewhere else. now we know why s==&s - True
+
+Pointer decay - when we pass a pointer of an array, (when we pass "s" to a function), we loose the information of it's length. we just have the starting position and we will have to scan till we reach \0 to know the length of the pointer
+
+
+We can add to addresses also, eg:
+#+begin_src C
+#include <stdio.h>
+int main()
+{
+    char msg[] = "Hello, there";
+    int c = 0;
+    do 
+    {   
+        printf("%c", *(msg+c)); // so, msg[0]==*msg, msg[2]==*(msg+2)
+        c+=1;
+    } while (*(msg+c)!='\0');
+    printf("\n%p\n", *(msg+c+1)); // just priting one extra address, it has (nil)
+    printf(msg); // this prints till \0
+    return 0;
+}
+#+end_src
+
+#+RESULTS:
+| Hello, | there |
+| (nil)  |       |
+| Hello, | there |
+
+When we add 1 to the array pointer, it moves to the next element.
+
+:imp: int doses[]={1, 2, 3, 4}; doses[3] == *(doses+3) == *(3+doses) == 3[doses]
+:command: scanf("%39s", name); --> scanf is a function that takes in the pointer to which to store the data. you can either give it the array pointer or a pointer to a variable. so, name is --> char name[]; or you can also give it --> int a; scanf("%i", &a); recall &a is the address of a. scanf can cause buffer overflow if the user enters more than the specified limit
+
+:command: a better? alternative is fgets() which takes as arguments pointer to a buffer, max size of the string (/0 included), source of input eg: fgets(food, sizeof(food), stdin);
+
+:imp: array variables are pointers (to the first element of array). They are different from normal pointers in that name, &name are the same. That is to say that they aren't allocated seperate space on the stack, they are just a label attached to the address of the first element of the array. So, when you printf(name); it will print the array (till the \0 char), with other pointers, it would have printed the address
+
+
+consider this:
+#+begin_src C
+#include <stdio.h>
+
+int main()
+{
+    char *cards = "JQK"; // here, cards is a pointer to the string literal
+    cards[2] = cards[1]; //error 
+    return 0;
+}
+#+end_src
+
+Error because string literals, and they can never be updated. you can if you create an array from a string literal like so: char cards[] = "JQK";
+This is because the string literals live in "constants" section of the memory which is read-only
+
+#+ATTR_ORG: :width 200
+#+ATTR_ORG: :height 200
+[[~/Pictures/org-inline/head_first_c_1.png]]
+
+Note the "cards" variable lives in the stack. 
+
+to change it, make a copy: char cards[] = "JQK"; // here, cards is an array, actually, cards is still a pointer that points to the 1st element of the array
+
+"When you pass an array as an function argument, you pass a pointer (to the 1st element of array) and then you cannot change the array"
+#+begin_src C
+#include <stdio.h>
+
+void change_str(char str[]) // void change_str(char *str) also works
+{
+    str[0] = 'a';
+    printf(str);
+}
+
+int main()
+{
+    char str[] = "hello";
+    change_str(str);
+    return 0;
+}
+#+end_src
+
+#+RESULTS:
+: aello
+
+we were able to do it because the array lives in the stack, (char str[] = "hello"). If it had lived in the constants area, char str = "hello";, then it wouldn't have worked
+
+Oh wait, C is pass by value. So, it works. 
+
+- declaration --> a piece of code that declares something (a variable, a function) exists.
+- scanf is short for scan formatted
+- stack --> function's local variable storage
+- heap --> for dynamic memory
+- globals --> variables that live outside of functions and are visible to every function
+- constants --> read-only memory (for eg, string literals)
+- code --> has the actual code
+
+
+** String Theory
+
+string.h is for string manipulation, it is part of the C standard library
+
+"You get some free code when you install a C compiler"
+So, the headers(and the standard library) are part of the compilers, if you think about it
+The library is made up of header files. A header file lists all the functions that live in a particular section of the library. 
+
+The printf, scanf functions were from the stdio.h header file
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[~/Pictures/org-inline/head_first_c_2.png]]
+
+
+strstr("hello", "el"); --> will find the location of string "el" and return the address of "e"
+
+Global scope - the variables that live outside any function definitation
+
+An array of arrays vs. Array of Pointers
+
+to store a list of string literals, use an array of pointers 
+    char *names_for_dogs[] = {"Rocky", "Olive", "Julius"};
+
+
+* Chapter 3 - Creating small tools
+
+We already know how to read and write files using C. the modes etc, we use in Python are all taken from C
+
+when we do scanf, it doesn't care where the data comes in from, so on the terminal, we can give it input from a file etc
+scanf always uses pointers, to put the data read from the input in
+eg: float longitude; scanf("%f", &longitude);
+
+** redirection 
+
+the program always reads the input from stdin, gives output to stdout. we can "redirect" the stdin and stdout so that they use files etc
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[~/Pictures/org-inline/head_first_c_3.png]]
+
+*** input
+- ./geo2json < gpsdata.csv
+here, we are telling the OS to provide the data from the file into the stdin of the program
+
+*** output
+- ./geo2json < gpsdata.csv > output.json
+here, we are telling the OS to send the output to output.json
+
+*** stderr
+- ./geo2json < gpsdata.csv > output.json 2> errors.txt
+
+when we use printf, it just calls fprintf under the hood. which has the syntax:
+fprintf(stdout, "txt")
+so, to send to stderr, we can do this:
+fprintf(stderr, "txt")
+
+and the redirect the stderr to some file (by default it is to the terminal)
+
+** piping
+to solve a big problem, we should divide it into small problems and then make small tools to solve them, and connect the solutions from the small tools to solve the big problem. 
+
+The | symbol is a pipe that connects the Standard Output of one process to the standard input of another process
+so, to filter the coordinates first and send the filtered ones for jsonification, 
+    (./filter | ./geo2json) < geodata.csv > output.json
+
+we can create more than 1 file handlers and redirect the output to them. open them using the fopen utility. 
+    FILE *in_file = fopen("input.txt", "r");
+
+the modes are "r", "w", "a"
+
+To close it, fclose(in_file);
+
+giving args to main()
+./categorize mermain mermain.csv elvis elvis.csv the_rest.csv
+
+So, the main becomes:
+int main(int argc, char *argv[])
+the argc is the count of the args. argv is an array of pointers, pointing to the args's memory location(the args are all strings ((string literals)))
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+[[~/Pictures/org-inline/head_first_c_4.png]]
+
+command line args: getopt()
+each time you call it, it returns the next option it finds on the command line
+it is a part of the unistd.h header which is not a part of the std C library. It gives the program access to some of the POSIX libraries. POSIX was an attempt to create a common set of functions for use across all popular OSes. (a standardization effort to make portability easier)
+
+#+begin_src C
+#include <stdio.h>
+#include <unistd.h>
+// ae: means we take the -a flag and the -e flag needs an arg
+int main()
+{
+    ...
+    while((ch==getopt(argc, argv, "ae:"))!=EOF)
+    {
+        switch(ch)
+        {
+            case 'e':
+                engline_count = optarg; // optarg holds the arg supplied to "e"
+                ...
+        }
+    }
+    argc -=optind
+    argc += optind
+    return 0;
+}
+#+end_src
+
+
+* Chapter 4 - Small files, make
+
+** C datatypes:
+*** char
+each char is stored in the computer's memory as a character code; that's just a number. So, A is stored as 65 (A's ascii code)
+*** int
+size x
+*** short
+size x/2 generally
+*** long
+size 2x generally
+*** float
+size y
+*** double
+size 2y generally 
+
+casting:
+int a = 2;
+float b = (float)a;
+
+prefixing datatypes:
+1. "unsigned" 
+- will make the number unsigned, that is to say, unsigned int will be able to store double the values as signed int (which is the default)
+eg, unsigned char c; will store nos from 0 to 255
+
+2. "long"
+- prefixing any data type with long will make it longer. 
+
+To find out the limits of int, float etc(which are platform dependent), we can do:
+#+begin_src C
+#include <stdio.h>
+#include <limits.h>
+#include <float.h>
+
+int main()
+{
+    printf("The value of INT_MAX is: %i\n", INT_MAX);
+    printf("The value of INT_MIN is: %i\n", INT_MIN);
+    printf("The value of FLT_MAX is: %f\n", FLT_MAX);
+    printf("The value of FLT_MIN is: %f\n", FLT_MIN);
+    printf("The size of float is: %i bytes\n", sizeof(float));
+    printf("The size of int is: %i bytes\n", sizeof(int));
+    return 0;
+}
+#+end_src
+
+#+RESULTS:
+| The | value | of | INT_MAX | is: |             2147483647 |       |
+| The | value | of | INT_MIN | is: |            -2147483648 |       |
+| The | value | of | FLT_MAX | is: | 3.4028234663852886e+38 |       |
+| The | value | of | FLT_MIN | is: |                    0.0 |       |
+| The | size  | of | float   | is: |                      4 | bytes |
+| The | size  | of | int     | is: |                      4 | bytes |
+
+
+8-bit/64-bit etc
+The bit size of a computer can refer to the size of its CPU instructions, or the amount of data the CPU can read from memory. The bit size is really favored size of numbers that the computer can deal with. 
+
+
+If you use a function without declaring it (i.e. if it comes after the main() function), the compiler will assume that it will return an int and compile the code. If it doesn't there will be an error at runtime.
+
+So, you must declare it like so:
+    float do_something_fantastic();
+
+you can put the function declaration in a header file. (a file with /.h/ extension)
+and include it like so: #include "myHeader.h"
+not angular brackets because they are reserved for the library header files
+
+The #include command is a preprocessing step. It will include the contents of the header file into the current file. 
+
+Here are all the reserved keywords in C.
+
+| auto    | if       | break    |
+| int     | case     | long     |
+| char    | register | continue |
+| return  | default  | short    |
+| do      | sizeof   | double   |
+| static  | else     | struct   |
+| entry   | switch   | extern   |
+| typedef | float    | union    |
+| for     | unsigned | goto     |
+| while   | enum     | void     |
+| const   | signed   | volatile |
+
+That's it
+
+Example code:
+
+#+begin_src C
+#include <stdio.h>
+
+void encrypt(*message)
+{
+    while (*message)
+    {
+        *message = *message ^ 31; // ^ is for XORing, we are XORing each char(which is just a num), with 31
+        message += 1;
+    }
+}
+#+end_src
+
+The C raw source code --> preprocessing, which puts the header code into the source code file --> convert the code to an intermediate representation --> run optimization passes, remove dead code etc --> get assembly code --> generate the machine or *object* code
+
+The object code is generated for each source file. And then they are all linked together so that code from one file can call code from another file etc
+
+** sharing code
+say there is a function "shared_fn" that needs to be shared
+put it in "shared_fn.c"
+now, make a header file "shared_fn.h" with the contents:
+    void shared_fn(char *message);
+(just the signature of the shared_fn)
+
+then, in your project, use it like so:
+
+    #include "shared_fn.h"
+    int main()
+    {
+        char[] msg = "hello";
+        shared_fn(msg);
+    }
+
+compile it like this: gcc message_hider.c shared_fn.c -o message_huder
+
+To share variables - use the extern keyword. extern int passcode;
+
+If you have a very large program, with lots of files, after every change, recompiling them will take a lot of time. 
+    gcc *.c -o launch
+So, do this: 
+    gcc -c *.c
+this will output the object code
+now, do this:
+    gcc *.o -o launch
+this will take the object code files, link them together and produce an executable binary
+
+If you change any one file, just compile that single file and then run the link phase again 
+
+* Chapter 5 - Structs
+
+#+begin_src C
+#include <stdio.h>
+
+int main()
+{
+    int a = 1;
+    printf("%p\n", a);
+    printf("%p\n", &a); 
+//    printf("%p\n", *a); *<var> prints the value of the address location var. but, "a" is an int, it's not an address location, so this will error out
+    printf("%p\n", *&a); // "print the value at address of a", which is the int 1
+    return 0;
+}
+#+end_src
+
+#+RESULTS:
+|            0x1 |
+| 0x7ffdfcab5584 |
+|            0x1 |
+

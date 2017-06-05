@@ -1,0 +1,1304 @@
+1. java allows Strings to be split like in python:
+String a = "ab,as,as,asf,fr";
+String[] tokens = a.split(",");
+remeber that tokens array can be accesed just like python list - tokens[0] etc.
+also, they are ordered
+
+2. java.util.ArrayList 
+java.util.Formatter, Calender, Scanner, 
+
+3. to read in user input, Scanner object is created and System.in is passed to the constructor.
+Scanner in = new Scanner(System.in);
+int a = in.nextInt();
+System.out.println(a);
+
+4. to read a file :
+new File object with filepath to constructor.
+BufferReader object with a FileReader object to whom the File object must be given
+
+File file = new File("SongsList.txt");
+    BufferReader reader = new BufferReader(new FileReader(file));
+    String line = null;
+    while ((line = reader.nextLine()) != null) {
+        System.out.println(line);
+
+
+5. Hashtable in Java:
+HashMap<Integer, Integer> map = new HashMap<Integer, Integer>();
+map.put(1, 2);
+
+6. ArrayList in java
+ArrayList<Integer> int_array = new ArrayList<Integer>();
+int_array.add(1);
+
+7. Convert words to a sentence.
+Use a StringBuffer for that.
+
+recall, toString is called when anyobject is printed using System.out.println()..., the toString method is present in the Object class. Here, what we infer is that StringBuffer class overloads the toString method and has it accept a list of strings and return them as combined string to the original method.
+something like:
+class StringBuffer{
+
+    //rest of the class
+
+    public String toString(String[] words){
+        String result = "";
+        for (String word:words){
+            result+=word;
+        }
+        super.toString(result); // the Object classes toString method called
+    }
+}
+
+example of usuage:
+class HashMap2
+{
+    public String makeSentence(String[] words) {            
+        StringBuffer sentence = new StringBuffer();
+        for (String w : words) sentence.append(w);        
+        return sentence.toString();
+    }
+
+    public static void main(String[] args)
+    {
+        String[] words = {"one", "two", "three"};
+        System.out.println(hmap.makeSentence(words));
+    }
+}
+
+
+8. To find the character at a particular index in a string, use charAt function
+eg : String a = "abcd";
+System.out.println(a.charAt(1));
+-->b
+find the length of a string ? int b = a.length();
+
+9. find the ascii code of any char :
+int a = "abcd".charAt(2); --> will give the ascii of c
+char a = "abcd".charAt(2)l --> will store the value "c".
+
+**This is an example of method overloading? NOO.
+This is not special for charAt method. It can be done for any character.
+so, int a = "a"; works too. the ascii of a is stored.
+This is more of an autoboxing like feature
+
+also, characters can be used in indexing - so, bool[] a = new bool[256];
+a['a'] = true; --> works
+
+9. it is boolean, not Boolean, it is true/false, not True/False.
+it is null, not Null. Boolean is the object class.
+
+10. when we need to iterate thru the string length for eg, do:
+for (int i=0;i<str.length();i++)
+{
+    //code
+}
+
+Note, it is <str.length(), not <= --> this is because of zero indexing.
+
+11. common mistake when writing code on paper is:
+    1. string in place of String
+    2. charAt[] is wrong, charAt() is right
+    3. common indexing error - when you want to take the last index, use str.length()-i-1 and not str.length()-i.
+    4. the length method is for Strings, not for arrays. there it is just the length instance variable.
+    So, char[] c = {'a', 'b', 'c'};
+    int c_ = c.length; is correct, c.length(); is not
+    5. String is defined with a double quote ONLY. it cannot be in a single quote.
+    6. char is defined with a single quote ONLY. it cannot be in a double quote.
+
+
+12. Given a String, how to convert it into a array of characters (char[]) and back?  
+
+This can be done this way:
+String str = "hello";
+char[] c = str.toCharArray(); //thats it
+
+you can sort strings using
+str = sort(str);
+
+13. in Python, we loved this:
+a = ['a', 'b', 'c']
+for i in a:
+    print i
+
+In java, we can do this too !
+char[] a = {'a', 'b', 'c'};
+for (char i:a)
+{
+    System.out.println(i)    
+}
+
+14. we can have the matrix like this:
+this is basically a 2d array
+int[][] image, 
+
+15. do we have a tuple like data type in java ? i'd love to store things like (1, 2) etc. this can be avoided if we have one index as continous like (0, 1), (1, 5), (2, 6) - then we can store things in an array with the index as one element and the other as the value in it. 
+however, if we wish to store things like (1, 2), (4, 6) etc we can maintain two ArrayLists. and store the required values in the synconized indices. This way, you are not restricted to two values, you can do three, four, ... values too.
+
+16. Explicit is better than implicit. do not use ArrayList if you know the size of the array - then use an array just. Also, consider this:
+int[][] matrix;
+matrix.length - this will give the number of rows
+matrix[0].length - this will give the number of columns
+
+it is constructed like this:
+int[] vector = {_, _, _, _, ...}
+int[][] vector = the above stacked one upone the other. so, vector.length gives the number of such arrays stacked (#ROWS)
+and vector[0].length gives the length of the first array (#COLUMNS)
+
+vector[0][2] -> this is the entry in the 1st row, 3rd entry.
+
+17. you can add two strings just like that - the + operator is overloaded
+so, s1="abc"; s2="bcd" - s1s2=s1+s2 = "abcbcd"
+
+18. FINALLY! how to create a Hashtable ?
+Hashtable htable = new Hashtable();
+htable.containsKey(key), htable.put(key, value).
+import java.util.Hashtable;
+
+19. LL questions are quite common. more often than not, you will have to conjure up a solution wherein you use two pointers. this is quite common, when faced with a difficult question, think how two pointers can help manybe
+
+20. recall this one liner if else clause
+bool value = 5 > 2 ? true:false;
+
+21. chatAt method
+"abcd".charAt(2) --> c
+
+22. ** "true" to true : 
+boolean value_ = new Boolean("true").booleanValue();
+turning a primitive into a string :
+int a = 4;
+String a_stringed = 4 + "";
+or, also :
+String a_stringed = Integer.toString(a);
+
+23. example usage of threads 
+class One
+{
+    public static void main(String[] arga)
+    {
+        Runnable runner = new MyRunnable();
+        Thread th = new Thread(runner);
+        th.start();
+    }
+}
+
+class MyRunnable implements Runnable
+{
+    public void run()
+    {
+        doMore();
+    }
+
+    public void doMore()
+    {
+        //do still more
+    }
+}
+
+24. java Collections cannot sort 
+Integer[] one_ = {1, 4, 6, 12, 2, 9, 3};
+     ArrayList<Integer> a_int = new ArrayList<Integer>();
+     a_int.add(2);
+     a_int.add(5);
+     a_int.add(0);
+     Collections.sort(one_);
+     for(int d:one_){
+        System.out.println(d);
+     }
+
+     collections cant sort int, it can sort ArrayList however. 
+     but, they can be sorted by:
+     java.util.Arrays.sort(one_);
+
+25. Most programmers start coding the first thing that comes to their mind. this is not optimal. what you shoudl do is, work up a solution on paper, check that it is optimal, check its correctness, write the edge cases, only when all that is done, start coding - you will be able to complete the problem in a wizzy then. 
+
+26. hashmap and hashtable
+hashmap is not thread safe, so do not use it in multi threaded programs. 
+hastable is thread safe, use in multithreaded programs
+
+hashmap allows one null key and many null values
+hashtable does not allow null key and values
+
+hashmap iterated using iterator
+hashtable itertated using enumerator.
+
+    HashMap hashmapobj = new HashMap();
+    hashmapobj.put("Alive is ", "awesome");  
+    hashmapobj.put("Love", "yourself"); 
+    System.out.println("HashMap object output :"+hashmapobj);   
+
+hashset is a proper python set.
+it does not store key value pairs, just a stores keys.
+
+HashSet<String> hset = new HashSet<String>();
+hset.add("one");
+hset.add("two");
+hset.add("three");
+
+if (hset.contains("three"))
+{
+    //code
+}
+
+27. the difference above in HashMap and HashSet is a more generic one and arises elsewhere too, TreeMap and TreeSet. 
+The main difference is that HashMap/TreeMap implement the Map interface and TreeSet/HashSet implements the Set interface.
+
+28. you can define a sorting order - the natural sorting order is as defined by Comparable interface and custom sorting order defined by Comparator interface. Both TreeSet and TreeMap have overloaded constructor that accpet a comparator, which will be used to sort and compare the elements in them.
+
+also, the name is tells us all about the differences between TreeMap and TreeSet. TreeMap is a binary search tree I suppose. Now, TreeSet allows you to store only the keys, not key value pairs (key or just call it objects)
+whereas, treeMap allows you to store key value pairs
+
+29. iterating over the arrayList
+ArrayList<String> games = new ArrayList<String>();
+games.add("ab");
+games.add("bc");
+games.add("cd");
+
+//method one
+for (String a: games)
+{
+    print a;
+}
+
+//method two
+for (int i=0;i<games.size();i++)
+{
+    print games.get(i);
+}
+
+Iterator<String> iter = new Iterator<String>();
+iter = games.iterator();
+while(iter.hasNext())
+{
+    print iter.next();
+    iter.remove(); //this will remove the item from the arraylist too
+}
+
+30. Heaps and BSTs are both binary trees. 
+The difference is that heaps implement the heap property - the children are smaller or larger than the parent
+the binary search tree implements the bst property - all elements smaller that the key in the left subtree and all elements greater than the key in the right subtree
+
+31. data structures have size, arrays have length
+
+32. Comparator interface must be implemented by the scoring class. it must override one method - compare method
+if the strings are the input, implement Comparator<String>, and in the compare method, take 2 strings and return their score - -1 or 1 or 0.
+
+the compare method takes in obj1 and obj2. it returns a positive value if obj1>obj2, 0 if they are equal
+and negative if obj1<obj2
+
+33. you can define a comparator and use it via the collections.sort this way:
+
+Collections.sort(List,Comparator)
+eg: List<String> lst = new List<String>();
+lst.add("ne");
+...
+Collections.sort(lst);
+Collections.sort(lst, new comparabeClassName);
+
+
+34. if you use COllections.sort(arrayList or List variable) - this wont work
+if you want it to work, give it a comparator to compare the items on, that DogComparator would just have to override on method - compare which would take in 2 Dogs and return an int. Now, you could just make Dog implement this interface and not have to write a new class - this way you can also make the instance variables of the Dog class private and show encapsulation.
+
+35. java vector is just like ArrayList, but it is syncronized and has some legacy methods too.
+
+36. how do you find out which algo, data structure to use? you can write the complete search program, then, look at what the program is doing, what is the thing that is being done over and over - then, what data structure can prevent that repetition, and what algo can be used there.
+
+37. you can print ArrayList straightway using System.out.println(name of the arraylist)
+But, if you wish to print an array,
+you can do:
+System.out.println(Arrays.asList(arrayName));
+
+to print arrays, eg: int[] a = {1, 2, 3};
+you can do this: import java.util.Arrays;
+print Arrays.toString(a);
+
+38. convert '1' (char to int), or in general, string to int:
+int a = Integer.parseInt(String.valueOf('3'));
+or int a = Character.getNumericValue('3');
+
+39. when you need to use int values more than 64 bits, you can use BigInteger.
+
+import java.math.BigInteger;
+
+BigInteger[] bint = new BigInteger[3];
+bint = new BigInteger["1213"];
+
+when you wish to add or multiply, bint[0].multiply(bint[1])
+also, bint[1].add(bint[2]);
+
+40. fill an array with false values
+Arrays.fill(new boolean[100], false);
+
+41. when you want to iterate over they keys of a an object implementing the Map interface in java, (including HashMap, TreeMap, LinkedHashMap, HashTable etc)
+use this:
+
+Map<Integer, Integer> map = new HashMap<Integer, Integer>();
+for (Map.Entry<Integer, Integer> entry : map.entrySet())
+{
+    Key = entry.getKey(), value = entry.getValue());
+}
+
+HENCE:
+for any map, to get the list of keys:
+map.keySet(). 
+use it like this:
+for (Integer key : map.keySet())
+
+get the list of values
+map.values()
+
+42. with any array, you can get an iterator to iterate thru it
+it is good if you tell the iterator what exactly it can expect
+it is this format:
+
+Iterator<WhatToExpect> iter = arrayName.iterator();
+
+again, Iterator<Map.Entry<Integer, Integer>> iter = map.entrySet().iterator();
+while (iter.hasNext())
+{
+    Map.Entry<Integer, Integer> entry = iter.next();
+    key = entry.getKey(), value = entry.getValue();
+} 
+
+"""
+This is generic to any array,
+say:
+String[] a = {"ab", "ca", "dad"};
+Iterator<String> iter = a.iterator();
+while (iter.hasNext())
+{
+    print iter.next()
+}
+"""
+this is wrong, arrays have no iterator, this is because you have random accesss and you can also use a for each loop.
+
+However, this works:
+ArrayList<String> al = new ArrayList<String>();
+al.add("ab");
+al.add("ca");
+al.add("dad");
+Iterator<String> iter = al.iterator();
+while(iter.hasNext())
+{
+    System.out.println(iter.next());
+}
+
+to reset the iterator pointer to the beginneing, you have to do : iter = al.iterator();
+
+
+43. how to use heap / priority Queue
+
+when you use a heap, you need to give a method on how you want the objects to be sorted.
+so, see this
+
+note:
+1. when ever you have lists, give them the type of data you wish to store in them. for example, here, say: PriorityQueue<String>, in ArrayLists too, say what you wish to store.
+
+2. Same with Comaprator, tell it what kind of data you wish to store.
+
+3. You have to give the initial size of the priority queue also. - you can overshoot it, no problem
+
+import java.util.Comparator;
+import java.util.PriorityQueue;
+import java.util.Scanner;
+
+class Example
+{
+    public static void main(String[] args)
+    {
+        Comparator<String> comp = new StringLengthComparaot();
+        PriorityQueue<String> heap = new PriorityQueue<String>(10, comp);
+        heap.add("blah");
+        heap.add("twoblah");
+        heap.add("threeblah");
+        while (heap.size()!=0)
+        {
+            System.out.println(heap.remove());
+        }
+    }
+}
+
+class StringLenghtComparator implements Comaprator<String>
+{
+    @Override
+    public int compare(String x, String y)
+    {
+        return x.length() - y.length();
+    }
+}
+
+DONE
+
+44. Stacks in Java are descendents of Vector/ArrayList and have the following methods
+
+import java.util.Stack;
+
+Stack st = new Stack(); //here we arent saying explicitly what data we want to store in the stack, so we can store anything, like the double below. if you want just integets, say so by : Stack<Integer> st = new Stack<Integer>();
+print st //will print an empty array symbol "[]"
+st.push(new Integer(5));
+st.push(new Double(1.1));
+Integer a = (Integer) st.pop()
+
+IT is mandatory to type cast the poped item back into the original type. this is bacause JUST LIKE arrayLists, we get back the generic type as defined for the Stack.
+had we defined Stack<Integer>, we would have got back integer, here, we get back Objects.
+So, typecasting is needed.
+
+45. queues in java. we have two implementations
+LinkedList and PriorityQueue
+we covered priorityQueue, now looking at LinkedList
+import java.util.LinkedList
+LinkedList ll = new LinkedList();
+ll.add("one");
+ll.add("two");
+ll.add("three");
+
+access the elements like this:
+
+just like in priorityQueue, we can remove the top element using remove()
+for (Object ob : ll)
+{
+    //do something
+} ORRR
+Iterator<String> iter = ll.iterator();
+while (iter.hasNext())
+{
+    print iter.next();    
+}
+
+to remove it:
+while(ll.size()!=0)
+print ll.remove();
+
+46. if you wish to use binary search tree, use TreeMap<K, V> - it is implemented as a red black tree
+
+import java.util.TreeMap
+
+TreeMap rbl = new TreeMap();
+rbl.put("one", new Double(12.21));
+rbl.put("two", new Double(12.11));
+---here, one will be store above two. this is becayse the items are stored in descending key order. so, 'o' is smaller than 't'. here, lenght does not come into picture.
+
+for (Map.Entry<String, Double> entry : rbl.entrySet())
+print entry.getKey()
+entry.getValue();
+
+this is just like in HashTables
+
+Also, to get the key of any elements value
+Double d = rbl.get("one");
+
+
+47. the TreeMap, just like the HashMap/HashTable and store Map.Entry object, that object's key can be obtained by (lets call the object me), me.getKey() and value by me.getValue()
+
+48. common sources of error, 
+when you get back the item from the list, it may be a generic type, you may need to type cast it.
+
+49. So, when you wish to sort arrays, 
+just do java.util.Arrays.sort(arrayName);
+simple
+
+Now, when you want to sort ArrayLists, PriorityQuesues that too accoring to the custom way you define: do this:
+
+ArrayList<Integer> intAL = new ArrayList<Integer>();
+intAL.add(12); //add more stuff
+
+create a new class SortPlZ implements Comparator<Integer>
+{
+    @Override
+    public int compare(Integet a, Integer b)
+    {
+        return a-b;
+    }
+}
+
+then, Collections.sort(intAL, new SortPlZ());
+
+This will sort the arraylist
+
+ALSO, note that the Comparator type is <Integer>, this is because we will get giving Integers as arguments to 
+
+50. to check if a string A is a substring of B, 
+we can do: stringA.contains(stringB)
+
+51. say you have an arraylist, and you want to sort it and then do a binary search so that the lookups are fast.
+do this:
+ArrayList<Integer> al = new ArrayList<Integer>();
+al.add(1); al.add(3);
+Arrays.sort(al);
+int a = Arrays.binarySearch(al, 1);
+this will return the int
+
+52. when writing pseudo code, make sure you think about the indices too. dont just put crap on the pc and then try to debug it. make the pseudo code clean then it will take only 5 minutes to get the code up and running.
+
+53. say you have a string "hello"
+you want all the substring of it like
+h, he, hel, hell, hello
+e, el, ell, ello
+l, ll, llo
+l, lo
+o
+
+do this:
+for (int i=0;i<str.length();i++)
+for (intj=0;j<i+1;j++)
+print str.substring(i,j);
+
+54.
+if you have a if-else block, that just returns things, you can most probably convert it into a terniary operator
+eg:
+if (x>5) return true;
+else return false;
+
+x>5?true:false
+
+"inorder" predecessor - this means "in sorted order" predecessor - i.e if the elements of the bst were stored in a sorted array, what would have been the immediate smaller value
+
+to delete a node with both children, follow its inorder predessor - i.e. take one right and then go full left. replace the leaf node's data with the original nodes data. and make the parent of the leaf node point to null
+
+55. the main thing in the LL, BST, Graphs etc are the strucutre of the Nodes, how you represent the BST, graph etc. here is a quick summary:
+
+LL.
+class LinkedList
+{
+    Node head;
+    static class Node(int data)
+    {
+        int data;
+        Node next;
+        public Node(int d)
+        {
+            data=d;
+            next=null;
+        }
+    }
+
+    public void push(int d)
+    {
+        Node temp = new Node(d);
+        temp.next = head;
+        head = temp;
+    }
+
+    public static void main(String[] args)
+    {
+        LinkedList ll = new LinkedList();
+        ll.push(4);
+    }
+}
+
+NOW, BST.
+
+public class BSTNode{
+    int data;
+    BSTNode left, right; //just like LL's static inner class, here we have the same structure.
+}
+
+public static searchNode(BSTNode root, int target)
+{
+    BSTNode ptr = root;
+    BSTNode prev = null;
+    while (ptr!=null)
+    {
+        if (root.data==target) return root;
+        prev = root;
+        if (root.data>target) 
+        {
+            root = root.right;
+        } else {
+            root = root.left;
+        }
+    }
+    return null; //the value not found. 
+}
+
+public static searchNode(BSTNode root, int target)
+{
+    if (root.data==target) return root;
+    if (root.data>target) return searchNode(root.right, target)
+}
+
+public static insert(BSTNode root, int insertThis)
+{
+    //we will search for the value and on reaching the null, we will insert it there. 
+    //this code will go in the return null part of searchNode.
+    BSTNode temp = new BSTNode(target);
+    if (left) { prev.left = temp;}
+    else prev.right = temp;
+}
+
+for delete, if there is no child, just remove it
+if one child, make x's parent point to x's child directly
+
+there are 4 conditions, x is right/left child, x has left/right child
+
+if both children, find x's inorder predecessor, by taking one left and then as many right as possible.
+then, place the data of the predecessor (which will be a leaf), in x and delete the predecessor.
+
+Now, DFS
+say we have 5 nodes
+A --> B --> C
+we will have an arrayList<Vertex> -- or better yet, an array of type Vertex.
+
+BASICALLY, we have an array of Vertex. each entry has a Vertex object which has two instance variables. First one is the name of the vertex (A, B, C, D etc), and the other is the pointer to the head of the Linkedlist which houses one Neighbour node for each edge from that vertex. The Neighbour node has vertexNum of the vertex the edge points to and also the next one from there. (the value of the vertex it points to can be found in Neighbour.next.name) the LL has only the Neighbours for that node. 
+
+class Vertex{
+    String name;
+    Neighbour adjList;
+    public Vertex(String name, Neighbour negbrs){
+        this.name = name;
+        this.adjList = negbrs;
+    }
+}
+
+class Neighbour{
+    int vertexNum;
+    Neighbour next; //for storing the weight, we can have an additional int weight variable.
+    public Neighbour(int vnum, nbr){
+        this.vertexNum = vnum;
+        next = nbr;
+    }
+}
+
+Neighbour is a linked list, classical. 
+
+class Graph{
+    Vertex[] vertexes; //this is an array of vertexes.
+
+public void dfs(int v, boolean[] visited){
+    visited[v] = true;
+    print vertexes[v].name;
+    for (Neighbour n = vertexes[v].adjList;n!=null;n=n.next){
+    if (!visited[v]) dfs(n.vertexNum, visited);
+    }
+}
+
+//writing the driver loop
+for (int i=0;i<visited.length;i++)
+if (!visited[i]) dfs(i, visited);
+
+}
+
+Now, DIJKS SSSPA - single source shortest path algo
+
+what we studied earlier was that we maintain a set X, which has the nodes visited and then from the active node, we choose the edge that has the min dijks score. we gobble that node into X, update the values of the edges from that node and repeat. 
+
+Noq, what we will do is slightly different. we will maintain a fringe. that is, from the given active node, the fringe contains all the nodes the edges from that active node point to. we will write the dijks score for those nodes on the frings and after doing that, we will move to the node with the smallest dijks score. in this way, we many update the score for a given node some times.
+we can store the dikj scores in a matrix. 
+along the way, we also store the prev active node (that lead to the present node), we push them all to a stack and when we reach the source vertex, we pop till empty for the path. 
+
+the algo runs till the fringe is empty i.e. when all the nodes are covered, and not when the destination was obtained as the active vertex. NOTE, the distance is only minimum when the node gets to be the active node, before that, its value may get updated. - or simply as soon as the vertex has been removed from the fringe, the shortest path been found. 
+
+this algo is called single source because once we run it for a single source, we get the paths to all the nodes in that vertex. 
+
+symmetric relationships - undirected graphs
+asymmetric relationships - directed graphs
+
+adjacency matrix is NxN - N is the #ofnodes
+also, if graph is undirected, it is symmetric.
+
+56. add memory address in java are stored in 4 bytes.
+
+57. heaps are filled top to bottom and left to right
+so, deleteion must happen at at right most node at the last level. 
+when inserting, insert at that same position. 
+
+so, heaps are just binary trees. so, each node has three fields
+
+you do not need to use the binary tree to store the heap, you can use the fact that the tree is full, to store it in an array. start from the top vertex, store elements from left to right. this is called level order traversal. 
+
+children of i are 2i+1, 2i+2
+the division (when we find the parent, given children) is an integer divison. it is truncated down, always. 
+
+so, we can use the array. 
+
+public int siftUp(){
+    int k = array.size()-1;
+    while(k>0){
+        int p = (k-1)/2;
+        if (array[k]>array[p]){
+            int temp = array[p];
+            array[p] = array[k]; array[k] = temp;
+        } else break;
+    }
+}
+
+56. YOU ADD THINGS TO A SET, YOU PUT THINGS IN A MAP
+So, HashSetObejct.add("a"), TreeSetObject.add("sa")
+BUT
+TreeMapObject.put("as", "as"), HashMapObejct.put("sa", "as");
+
+
+CRACKING THE CODING INTERVIEW
+
+1. Pratice writing the code on paper before entering it on a PC
+2. Prepare a summary of all the projects on your CV, and the challenges you faced and how you overcame them
+
+eg Q: Tell us about your internship experience with Exponentia ?
+
+3. The most important aspects are : 
+good, clear communication
+recall that your cv and knowledge is better than most of the others
+asnwering to the point
+being extremely courteous and friendly
+
+your plus points? passionate and motivated about computer science, quick learner, excited about trying out new technology, easy going.
+
+4. remember, if selected, they will have you work alongside them everyday, be the one they would love to "go out with a beer for", a person who would be a pleasure to work with
+
+5. OPEN SOURCE and INDEPENDENT projects MATTER A LOOOT. DO 'EM !
+
+6. prepare for these question before you go in:
+
+what is your strength
+
+what is your weakness
+
+what was the happiest, saddest moment on your life
+
+what was the most challenging time of your life
+
+what was the most difficult part of this project
+
+
+7. DO reasearch on the company to prepare questions when the interviewer gives you a cance to ask them questions.
+example question:
+
+what does a typical day look like for a software developer at X? //X is the company you are interviewing for. Duh.
+OR better, ask them about their tech stack
+How do you use solve problem Y using technology X?
+
+these questions show that you are passionate about the comany and its tech
+
+8. LEARN ABOUT :
+singleton design pattern
+factory designn pattern
+
+9. When asked a difficult problem, it is okay to take some time to come up with a solution - THINK ALOUD - better than keeping silent. 
+
+**sort an list
+here, list can be an array or linked list.
+
+10. ASK QUESTIONS seeking clarification if the question they asked is not clear. 
+
+11. When they ask you question, there is more often than not, a catch - which they want you to spot. for example note if the data is sorted. 
+
+write pseudo code before jumping on writing the code
+name your varialbes intelligently, follow good pratices, indentation
+
+when you are done, start testing the code for invalid inputs, negatives, zero, null etc
+
+12 Q: find the minimum in a sorted array - binary search
+what if the array is rotated - again, binary search - look for the 'reset' point. the max in the pt beside the reset point.
+
+13 Q: given a string MESSAGE(length m) and a large string POOL(length n), is it possible to construct MESSAGE from POOL ?
+naaive: for each character in MESSAGE, check of the character is there in POOL, if there, remove it from there.
+if all characters present, possible. O(mn)
+
+better: since we have repeated lookups, we can use a hash table. 
+**when ever we create a hash table, we need two things: key and value (remember, a hash table is just a dict really).
+So, we can have each character in POOL, map to the number of times it appears in POOL. Using the heapofy operation, we can load the data into a hash table in O(n) time. We then in O(m) time, create a character count for each character that appears in the MESSAGE. Then run a loop to check for each character in O(m) time [the check takes a constant time], hence the running time is linear O(max(m, n)), or really, just O(n) [THETA(n) ?]
+
+**how do we store the character, count tuple in java say? OQ
+
+14 Q: print all the permutations of a given string. (abcd = a, b, c, d, ab, ba, bc, cb, ..)
+we can write a recursive algorith for this. OQ
+
+def merge(single, long):
+    return [long[:i+1]+single+long[i+1:] for i in len(long)]
+
+def give_to_merge()
+for char in long:
+    merge(char, )
+
+QUESTIONS like these are called base case and build questions, you have to create their solution bottom up.
+
+15. Q: how to maintain a median of a stream of numbers
+two heaps.
+one max heap would store the smaller half of the numbers - you have to maintain this invariant
+one min heap would sotre the larger half of the numbers
+if you have odd number of elements, either of the heap can be bigger
+if even number, the roots are the medians
+if odd number, the larger heap has the median
+
+when a new number comes along, it can either go in the small number heap or in the large number heap or be exactly in between the two roots (it is then the median), you can put it in either (or smaller) heap.
+also, if two consequtive elements go in the smaller heap say, then push one element - the root to the larg number heap
+
+AT any point of time, the difference between the population of the heaps is 1 or 0 (it oscillates between these as the numbers arrive) - this runs in log(n) time.
+
+16. Q: given an odd numer of elements, how to create a perfectly balanced tree such that the median is at the top? this can be done if we follow the binary search tree property - left subtree smaller than the parent, right subtree bigger than the parent, root between both the subtrees.
+if the number is even, there are two medians and they are the root and the root of the larger of both the sub trees - this is log time too. 
+
+**LL is not great at random access and sorting, great at storing an indefinate number of elements
+array - great at random access 
+binary tree - great at good with ordering
+
+**if you have heard a question before, say that! this will bring big honesty points. also, you it is difficult to pretent as if you are thinking. like say you heard it for one or two questions, then not.
+
+
+17. Q: given a string determine if it has all unique characters? 
+optimal should be linear, right?
+naaive : run thru the array, for each character, if not there in our array, put it in, else ignore. this is n*n time, because we have to check also.
+
+this has space of O(n) also. a better solution would be to simply check each character against every other. this would take n^2 time and no space. 
+
+**the ascii char set is 256 characters long - it has 256 unique characters. SO, create a boolean array of size 256, run a loop thru each character (StringName.charAt(i)), if the index is 1, return false, if not set to 1. outside the loop, return true. time O(n), space O(n). 
+
+Otherwise, you can use a heap. store all the characters in a heap one by one after checking if it is not already there. if there, return false, else true. 
+
+public boolean uniqueString(String inputStr)
+{
+    boolean[] boolArray = new boolean[256];
+    for (int i=0;i<inputStr.length();i++)
+    {
+
+        int x = inputStr.charAt(i);
+        if (boolArray[i]==1) return false;
+        boolArray[i]==true;
+    }
+    return true;
+}
+
+if no storage should be used, sort the string array and run a linear scan to check if the neighbours are same - return false if they are. this will destroy the output but. this will take nlogn time. more than the linear time
+
+18. **C-Style string is the string that has an additional null character. so, "abcd" is 5 characters
+this question doesnt work for java.
+
+but, how to reverse the string?
+
+naaive:
+linear running time, and linear space complexicity
+
+public string reverseString(String str)
+{
+    String revStr = "";
+    StringBuffer strBuffer = new StringBuffer();
+    for (int i=0;i<str.length();i++)
+    {
+        char temp = str.charAt(str.length()-i);
+        strBuffer.append(temp);
+    }
+    return strBuffer.toString();
+}
+
+Better solution would be, exchange the ith index with length-ith-1 index, using a temp char variable. this has lower constants and does this inplace, space complexicity is constant, O(1). 
+public String reverseString(String str)
+{
+    StringBuffer strB = new StringBuffer();
+
+    for (int i=0;i<str.length();i++)
+    {
+        chat temp = str.charAt(i);
+        str
+    }    
+}
+
+How to remove any one element of an array, for eg if it is a int[] i_ = {1, 2, 3};, 
+how can I remove say 2. in python, del i_[1] would have worked. OP **
+
+
+19. remove duplicate characters in a string without using any additional buffer.
+naaive: in python, convert into set and then back to list
+otherwise, for each character, store it in heap if not already present. if present, do nothing
+in the end, print the characters in the heap
+--linear time in both cases.
+
+**when there are constraints given : such as no extra memory, no Data strucutre, you can give lousy running time solutions. then it is okay.
+
+buffer = additonal memory of any kind (array, hashtable etc)
+
+**write a method to solve the given problem. make it static and public. eg:
+public static String reverseString(String str)
+{
+    //code
+}
+
+When asked about the static keyword, say you did this so that the method can be used without having to create the class object first as the static method belongs to the class.
+
+soln:
+iterate thru each char, for each char, scan thru the array to see if already present, if present, remove one instance.
+
+20. Q: write a method to check if two strings are anagrams or not, they are if they have the same characters (with their counts)
+
+sort both the strings and then comapre element to element if they have the same characters. if they dont, they arent. 
+**YOU can sort strings. 
+what you need for this and many other string problems is this:
+given a string, return a hashtable with the 
+
+store all the chars of one string in a hashtable, each time increase its count if it is already present. do the same for the second string also. then check if the hashtables are exactly equal.
+linear time in both running and space. 
+
+if you do not want to use two hashtables, you can use two arrays. 
+
+**in all the string question, consider using ascii encoding i.e. bool[] letters = new bool[256];
+this for checking if a previous character was there or not
+
+21. it is important to write the pseudo code first. this will help immensly when writing java. and it is okay to have solutions that seem non optimal. like moving over each character and storing its count in a seperate array etc. this can be done  efficiently when you have the pseudo code written nicely. 
+
+22. Q: write a method to replace space character in a string with %20
+
+PC : convert string to char array, iterate thru the char array, if space, replace with %20
+
+public static String replaceSpace(String str)
+{
+    char[] charArray = str.toCharArray();
+    int counter = 0;
+    for (char c : charArray)
+    {
+        if (c.equals(" ")) OR c == " "
+        {
+            charArray[counter]='%20';
+        }
+        counter++;
+    }
+}
+
+This will not work because %20 is not a char.
+Now, do this: in the first scan, count the number of spaces and remember their location. store them in an array, the index of the array is the ith space and the value is the location of that ith space. then, iterate thru the array and at the value of the index, make the replacement. to do this in java is a little terse compared to how you would do it in java. (str is a char array)
+newLength = str.length + numSpaces*2;
+for (char c: str)
+if (c==" ")
+{
+    str[newLength - 1] = "0";
+    str[newLength - 2]="2";
+    str[newLength - 3] = "%";
+    else{
+    str[newLength - 1] = str[i];
+    newLength--;
+    }
+} YOU WILL BE ABLE TO WRITE THIS ONY AFTER YOU HAVE WRITTEN THE PSEUDO CODE VERY CAREFULLY
+**OQ : what is the difference between .equals and ==
+what does the \0 mean in strings specifically
+
+23: Q: given an image - NxN matrix, each pixel is 4 bytes = 32 bits - so, the value is b/w 0 and 2^32-1. 
+Now, you have to rotate the image by 90degrees, in place.
+
+P: this can be done if we take the transpose of the matrix. we can run a loop to iterate thru each row, and a nested loop for each column in each row
+so, we have i and j indices. we can interchange their values and store them in a new array - this would take O(n^2) time and space. 
+
+for in place, we have to change the inner loop to not start from 0 but from the outer index each time.
+for (int i=0;i<n;i++)
+{
+    for (int j=i;j<n;j++)
+    {
+        int temp = image[i][j];
+        image[i][j]=image[j][i];
+        image[j][i] = temp;
+
+    }
+}
+
+this will work, however, it will produce an upside down image. 
+note here:
+
+123 original
+456
+789
+
+147 transpose - rotated 90 degrees left
+258
+369
+
+369 rotated 90 degrees right
+258
+147
+
+dont be afraid to make this drawing on the paper before writing the pseudo code. ask if we need 90 degrees left or right rotation ! thinking aloud before them has several benefits:
+1. this helps you write the correct solution
+2. this shows how you think, they might like it
+3. they might even help you arrive at the solution
+
+24: write an algo to set the entire row and column of an mxn matrix to zero for that element that is zero.
+
+PS: have two nested loops, one runs till m, the other till n
+check each element, if it is zero, store the i and j values in two arraylists. 
+then, run a loop twice, once for row and once row column, setting them to 0
+so,
+for (int i=0;i<m;i++)
+{
+    for (int j=0;j<n;j++)
+    {
+        if (matrix[i][j]==0)
+        {
+            i_array.append(i); j_array.append(j);
+        }
+    }
+}
+
+for (int x=0;x<i_array.len();x++)
+{
+for (int i=0;i<m;i++)
+{
+    matrix[i][i_array[x]]=0;
+}
+
+for (int i=0;i<n;i++)
+{
+    matrix[j_array[x]][i]=0;   
+}
+}
+
+these TWO loops can be made into one, heres how:
+for (int i=0;i<matrix.length;i++)
+{
+    for (int j=0;j<matrix[0].length;j++)
+    {
+        if (i_array[i] == 0 || j_array[j]==0)
+        {
+            matrix[i][j]=0;
+        }
+    }
+}
+
+25. Q: Assume you have a method isSubstring which checks if one word is a substring of
+another. Given two strings, s1 and s2, write code to check if s2 is a rotation of s1 using
+only one call to isSubstring (i.e., “waterbottle” is a rotation of “erbottlewat”)
+
+This question I could not think of a feasible solution.
+ANSWER:
+if lengths not same, return false
+concatenate s1 with itself and check if s2 is a substring of the result. 
+s1 = apple, s2 = pleap -> apple is a substring of pleappleap
+
+public static boolean isRotated(String s1, String s2)
+{
+    if (s1.length()!=s2.length())
+    {
+        return false;
+    }
+
+    s2 = s2+s2;
+    if (isSubstring(s1, s2))
+    {
+        return true;
+    }
+    return false;
+}
+
+VERY VERY IMPORTANT POINT : in PS and then in code, after writing the solution and before starting to code, write the precautions for the trivial cases like zero length input and all. this shows you pay attention to detail
+
+now, instead of the last if statement, we could have done this:
+
+return isSubstring(s1, s2);
+
+LINKED LISTS
+
+CODE FOR LL:
+public class LinkedList
+{
+    Node head;
+
+    static class Node
+    {
+        int data;
+        Node next;
+        Node(int d)
+        {
+            data=d;
+            next=null;
+        }        
+    }
+}
+
+remember outer LL class, instance variable is head, inner static class Node, instance variables data and Node type next, and finally Node constructor which takes in an int - the data and also initializes non primitive Node type reference variable to null.
+
+WHEN writing code for LLs, take as input the node from which to perform whateveraction you are performing. dont assume it is the head straightway.
+
+CONCEPTUALLY, LL is very simple, you can come up with all kinds of solutions if you arent intimidated with implemention issues, and you shouldnt be, once you know what to do nicely, you can code it quite easily.
+
+26. write code to remove duplicates from an unsorted linked list
+PS : this is similar to when we removed duplicates from a string.
+we can iterate thru each element and check if it already there in the hashtable, if not, we enter it there, if present, we pass - we can use a bloom filter too because we just need a boolean yes or no. **get to know the basics of boom filters before you say so but.
+
+the above PS is missing one thing. we have to look for the data in each node, we have to compare that.
+
+public static void removeDuplicates(Node startNode)
+{
+    Hashtable hmap = new Hashtable();
+    Node pointer = startNode;
+    Node previousNode = null;
+    while (pointer!=null)
+    {
+        if (hmap.containsKey(pointer.data)):
+        previous.next=pointer.next
+        
+        else
+            hmap.put(pointer.data, true); previous = pointer; 
+        pointer = pointer.next;
+    }
+this is O(n), space complexicity is O(n)
+if we had to use no extra space, we can use two pointers.
+the first one does a single scan thru the elements and the second one scans the LL for each outer one.
+
+public static void removeDuplicates(Node startNode)
+{
+    Node slow = startNode;
+    Node runner = null;
+    Node previous = startNode;
+    while (slow!=null)
+    {
+        while (runner!=null)
+        {
+            if (runner.data==slow.data)
+            {
+                previous.next = runner.next;
+                runner=runner.next;                
+            }
+            else
+            {
+                previous = runner;
+                runner = runner.next;
+            }
+        }
+        runner = slow;
+        slow = slow.next;
+    }    
+}
+
+this is O(n^2). space complexicity is O(const)
+
+27. find the nth from last element of a singly LL
+PS: we can have two counters, one is ahead of the other by n steps. now, run a while loop, when the guy ahead reaches the end, the other one is n steps behind it. now, to delete it, you can by transfering the data from the other one's next to itself and removing the other's next.
+
+public static int nElement(Node startNode, int n)
+{
+    Node ahead = startNode;
+    Node behind = startNode;
+    for (int i=0;i<n, i++) //this is incorrect, this loop will run n times, so we will be n steps ahead of the other node but we should be only n-1 step ahead because the while will stop when the ahead Node is null. hence, either change this to i<(n-1) or change while condition to ahead.next!=null
+    {
+        if (ahead==null) return null;
+        ahead = ahead.next;
+    }
+    while (ahead!=null)
+    {
+        behind = behind.next;
+        ahead = ahead.next;
+    }
+    return behind.data;
+}
+
+this runs in O(n) linear time. 
+other way would be to scan the LL first and find the number of elements, then again go to #elements-nth node and return it. this too is linear but has higher constants
+
+**OQ, how to do this using recursion?
+
+28. given access to a particular node, how to delete it?
+PS: get the data of its next into itself and delete the next.
+
+public static void deleteThis(Node deleteNode)
+{
+    deleteNode.data = deleteNode.next.data;
+    deleteNode.next = deleteNode.next.next;
+}
+
+THIS wont work if the node to be deleted is the last node. check if the input nodes next is null, if it is, return false - cannot be done. 
+
+29. You have two numbers represented by a linked list, where each node contains a sin-
+gle digit. The digits are stored in reverse order, such that the 1’s digit is at the head of
+the list. Write a function that adds the two numbers and returns the sum as a linked
+list.
+EXAMPLE
+Input: (3 -> 1 -> 5), (5 -> 9 -> 2)
+Output: 8 -> 0 -> 8
+
+PS : iterate thru each node, by having two pointers. add the .data in each node at each iteration, if the number is greater than 10, carry over the ones digit and put the 0s digit there itself. 
+
+public static Node addLL(Node head1, Node head2)
+{
+    if (head1 == null || head2 == null)
+    {
+        return null;
+    }
+    Node resultLL;
+
+    while (head1!=null & head2!=null)
+    {
+        if ((head1.data+head2.data)> 10)
+        {
+            int zeros = (head1.data+head2.data)%10;
+            int ones = (head1.data+head2.data)- zeros / 10;
+        }
+        else
+        {
+            int zeros = head1.data+head2.data;
+            int ones = 0;
+        }
+        Node temp = zeros;
+
+    }
+}
+
+you will be able to do this with some nice pseudocode
+
+30. given a circular LL, find the node at the start of a loop. - this node will have two other nodes pointing to it.
+PS: run a linear scan thru the LL, store in hashtable, node reference as key and its data as value. 
+with each iteration of the loop, check of the node already present in the hmap, if not, store it. when faced with the first repeat, return it.
+
+public static Node findLoop(Node startNode)
+{
+    Hashtable ht = new Hashtable();
+    while (startNode!=null)
+    {
+        if (ht.containsKey(startNode))
+        {
+            return startNode;
+        } else
+        {
+            ht.put(startNode, startNode.data);
+            startNode = startNode.next;
+        }
+    }
+    return null;
+}
+
+
+STACKS and QUEUES
+
+Stacks are first in first out - lifo - or filo - different type
+queues are last in last out - fifo - or lilo - same type note
+
+31. Describe how you could use a single array to implement three stacks.
+PS: divide the array into three equal parts and use them as stacks
+
+int stackSize = 300;
+int[] buffer = new int[3*stackSize];
+int[] pointers = {0,0,0};
+
+void push(int stackNo, int value)
+{
+    int index = stackNo*stackSize + pointers[stackNo] + 1;
+    buffer[index]=value;
+    pointers[stackNo]++;
+}
+
+int pop(int stackNo)
+{
+    int index = stackNo*stackSize + pointers[stackNo];
+    pointers[stackNo]--;
+    int toReturn = buffer[index];
+    buffer[index]=0;
+    return toReturn;
+}
+
+to have variable size stacks,
+int stackSize = 300;
+int[] pointers = {-1,-1,-1};
+StackNode[] stackNodes= new StackNode[300]
+
+
+HACKERRANK
+
+there are two components to java - the java runtime - this will allow you to run java programs, websites etc. however, if you wish to compile java applications as well (eg, if you are a developer), you need the jdk as well
+
+    sudo apt-get install default-jre
+    sudo apt-get install default-jdk
+
+Input, output:
+
+import java.util.Scanner;
+
+class Main{
+    public static void main(String[] args){
+        Scanner sc = new Scanner(System.in);
+        int i = sc.nextInt();
+        System.out.println(i);
+    }
+}

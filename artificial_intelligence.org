@@ -1,3 +1,7 @@
+* Artificial intelligence
+** CS 188x: Artificial Intelligence
+*** Dan Klein, Pieter Abbeel. UCB
+
 # Algorithms and more
 
 * Lecture 1

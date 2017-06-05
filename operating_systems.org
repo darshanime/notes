@@ -1,5 +1,7 @@
 # Operating Systems.
 # Professor John Kubi. UCB-CS162, Fall 2010
+* Operating Systems
+** Professor John Kubi. UCB-CS162, Fall 2010
 
 * Time frame for sections
 

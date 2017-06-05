@@ -10,7 +10,7 @@ Available notes:
   * [Operating Systems](./operating_systems.org)
   * [Artificial Intelligence](./artificial_intelligence.org)
   * [Pro Python](./pro_python.org)
-  * [C language](./C-language.org)
+  * [C language](./C_language.org)
   * [Emacs](./emacs.org)
   * [Algorithms](./algorithms.org)
   * [Datastructures](./datastructures.org)

@@ -1,3 +1,5 @@
+## js
+
 in the head tag of html source code, you can put js and css links
 <head>
 <script src="js/jQuery.js"></script>

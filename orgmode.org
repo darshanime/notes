@@ -1,5 +1,4 @@
-org-mode
-~~~~~~~~
+## org-mode
 
 this emacs mode has a dedicated page, because it will change the way i make notes and organize information in my life
 

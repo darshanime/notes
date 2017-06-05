@@ -1,3 +1,5 @@
+## python
+
 1. Tuples are accessible like lists.
 a = (5, 4)
 print a[0] --> 5

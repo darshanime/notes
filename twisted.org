@@ -1,11 +1,6 @@
-Twisted
-~~~~~~~
-~~~~~~~
+## Twisted
 
 pure python implementation, many application layer algorithms already implemented
-
-krondo
-~~~~~~
 
 say, there are 3 tasks that need to be performed
 

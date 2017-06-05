@@ -1,4 +1,4 @@
-we will use django-oscar built on django as the backend
+## django
 
 start a new django project by:
 django-admin startproject mysite

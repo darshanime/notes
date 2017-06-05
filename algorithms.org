@@ -1,6 +1,4 @@
-# Algorithms
-# Start date - March 25, 2017
-# Glory is this
+## Algorithms
 
 * Data Structures and Java Collections Framework
 

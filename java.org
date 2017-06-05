@@ -1,4 +1,7 @@
+## java
+
 1. 
+#+begin_src java
 import java.util.*;
 
 public class one{
@@ -9,6 +12,8 @@ public class one{
 
     }
 }
+
+#+end_src
 
 
 ####HEAD FIRST JAVA

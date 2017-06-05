@@ -1,3 +1,5 @@
+## electronics
+
 digital devices - deal with 1s and 0s
 analog - deal with continious devices, often these circuits can do things like following a line without using a microprocessor
 

@@ -1,3 +1,5 @@
+## common python questions
+
 A1. Tuple can be created as : b = 1,
     now, what is the difference b/w __builtins__.hash(b), id(b)
 

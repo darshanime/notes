@@ -1,3 +1,5 @@
+## full stack
+
 1. We have one server that has the everything [viirtual private server]
 and then the second server that houses the testing framework
 VPS has the OS. 

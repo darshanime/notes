@@ -1,0 +1,805 @@
+git init creates a .git dir which houses the metadata about the project
+
+git init <dirname> creates the .dir there
+
+git init --bare <directory>
+
+Initialize an empty Git repository, but omit the working directory. Shared repositories should always be created with the --bare flag
+
+Bare repos act like as a storage facility, as opposed to a development enviornment. This means one cannot push branches to it
+
+so, the central repo is bare and all the developers local repos arent bare
+
+use git init to create a central repo
+
+so, create a bare repo, clone it and work in the cloned copy.
+
+git clone <repo> [dir]
+
+bare repo gets stored in .git folders
+so, git clone ssh://john@example.com/path/to/my-project.git 
+here, we see that the my-project central repo is bare and out local repo donest have the .git extension, meaning the local copy is not bare
+
+git config --global 
+add name, email etc
+
+
+git config --global alias.<alias-name> <git-command>
+Create a shortcut for a Git command.
+
+git config --global --edit --> open the git config file for editing. here, you can see all the shortcuts that dhilipsiva has put in
+
+Git stores the config files in 3 different levels:
+    <repo>/.git/config – Repository-specific settings.
+    
+    ~/.gitconfig – User-specific settings. This is where options set with the --global flag are stored.
+    
+    $(prefix)/etc/gitconfig – System-wide settings. 
+
+local for the repo, for the user, system wide
+
+
+git add -p
+Begin an interactive staging session that lets you choose portions of a file to add to the next commit. This will present you with a chunk of changes and prompt you for a command. Use y to stage the chunk, n to ignore the chunk, s to split it into smaller chunks, e to manually edit the chunk, and q to exit.
+
+git commit -a
+Commit a snapshot of all changes in the working directory. 
+
+ideally, you can stage a lot of shit and select the things for commiting. using git commit -a will commit everything that is staged
+
+git log --oneline
+show one line for each commit
+
+git log --stat
+show more stats
+
+git log -p
+show maximum details
+
+git log --author="<pattern>"
+
+git log --grep="<pattern>"
+Search for commits with a commit message that matches <pattern>, which can be a plain string or a regular expression.
+
+git log <file_name>
+
+
+git log --graph --decorate --oneline
+
+A few useful options to consider. The —graph flag that will draw a text based graph of the commits on the left hand side of the commit messages. —decorate adds the names of branches or tags of the commits that are shown. —oneline shows the commit information on a single line making it easier to browse through commits at-a-glance.
+
+commit id is the SHA-1 checksum of the commit's contents
+
+HEAD refers to current commit
+
+The ~ character is useful for making relative references to the parent of a commit. For example, 3157e~1 refers to the commit before 3157e, and HEAD~3 is the great-grandparent of the current commit.
+
+
+git log --author="John Smith" -p hello.py
+This will display a full diff of all the changes John Smith has made to the file hello.py.
+
+The .. syntax is a very useful tool for comparing branches. 
+
+this displays a brief overview of all the commits that are in some-feature that are not in master.
+git log --oneline master..some-feature
+
+
+git checkout
+checking out files, commits, branches
+
+
+git checkout <commit> <file>
+Check out a previous version of a file. This turns the <file> that resides in the working directory into an exact copy of the one from <commit> and adds it to the staging area.
+you can now commit this old version of that file.
+you can get back by doing git checkout HEAD <file>
+
+if you omit the file in git checkout commit, the entire dir is updated (downdated?) to match that commit
+here, your state is preserved and not affected. you can change files when the head is detached(and you are in an old commit), and if you wish to save that work, you can create a new branch for it
+
+create the branch first and then start commiting on the new branch
+
+git reset oldcommit removes the old commit from your history. but,if you want to keep the old commit in the project history, do git revert <commit>
+this will generate a new commit that will undo all the changes in the <commit> and you can then merge it
+
+git reset 
+this will removes the commit from the project history
+
+
+playground
+
+i created a demo git dir, commited 4-5 commits, checkout one previous commit, made changes and commited it. now, when I checkout master, it says there is Warning: you are leaving 1 commit behind, not connected to any of your branches. 
+
+If you want to keep it by creating a new branch, this may be a good time
+to do so with:
+
+ git branch <new-branch-name> 9e8a043
+
+so, now, if I am at the head, but that commit is danglig from the old commit I checked out. I can create a branch and merge it in if i want the change i made then (it is not present when i checkout master)
+
+i'll do that, 
+git branch file_six 9e8a043
+
+git branch file_six
+git status
+On branch file_six
+nothing to commit, working directory clean
+
+I can merge this now with the master branch
+i checkout file_six and issued:
+git merge master
+
+this merged the master branch into file_six
+so, file_six had all the commits of master as well, but master was lagging behind. I did this:
+git checkout master
+git merge file_six
+
+This gave me: 
+ git_try -> git merge file_six
+Updating 542a57d..e7ef023
+Fast-forward                            // what is this?? since the master did not update since we created                                  // the new file, merging into the master happends via ff
+ six | 1 +                               // no merge commit is generated
+ 1 file changed, 1 insertion(+)         // but when we merged master into the file_six branch, it was a 3                                          way commit and a merge commit was created
+ create mode 100644 six
+
+
+  git_try -> git log --oneline --graph
+ *   e7ef023 Merge branch 'master' into file_six //this is the merge commit, created due to 3 way merge
+ |\  
+ | * 542a57d add five
+ | * 4363fc5 add four
+ * | 9e8a043 add six
+ |/  
+ * 5018ddf add three
+ * 9f05443 commit one and two
+
+now, trying resetting and reverting:
+
+git revert commitid
+
+this created a new commit, 
+commit e8496ea7578caf76014e4c504b8d01f450af51c0
+Author: darshanime <deathbullet@gmail.com>
+Date:   Mon Jun 6 15:35:34 2016 +0530
+
+    Revert "add five"
+    
+    This reverts commit 542a57de0c08d1a8f872b970c11a7e5455bb07fd.
+
+I still have the history of the commits after the commitid in my project history
+
+now, resetting to last commit
+
+git reset reallyoldcommit
+
+this shows only commits only upto the reallyoldcommit in my git log now, also, git status shows that all the new files are there but they arent staged. I can stage them and commit them
+
+this is the deal with reset, it removes the old commits, undos them
+
+now, I cannot compare with the last version since the history is lost. see, you should use revert.
+BUT, they represent the EXACT same copy of the project
+
+demo:
+
+git commit -m "we'll revert this commit"
+git revert HEAD //read as, remove this commit ONLY. the commits after this commit arent affected.
+
+this will create a new commit that undoes the changes of the latest commit
+
+if i create a file f and commit several times, each time adding 
+c1 in commit 1
+c2 in commit 2 etc...
+and then, after 4 commits, if I revert saying git revert commit2id
+it says conflict
+nano f shows
+c1
+c2
+<<<<<<< HEAD
+c3
+c4
+=======
+>>>>>>> parent of f5c65ba... c3
+
+what is this?
+
+also, git reset commitid // read as, after this commitid, remove all the commits. the changes are there, you can stage them and commit them. 
+if you dont want the data aswell, do this:
+git reset --hard commitid
+
+git reset --soft HEAD~1 
+
+[[if you do git rest --soft ~HEAD, nothing happends because there is nothing aboive this commit]]
+
+this is the softest version, this will leave your changes not only present but staged as well. from here, git commit and you are back the where you were, use this to change the git commit message if you want
+
+git reset is dangerous:
+use it for unstaging things from your staging area
+resetting local changes, nothing that is pushed to a shared repo
+
+git reset file
+file removed from the staging area
+
+git reset
+staging area cleaned to match the latest commit
+
+here, in both the cases, the changes arent destroyed, they are still there
+
+git reset --hard HEAD
+this unstages the files and removes the changes. this is for obliderating all uncommited changes
+
+how is this different from:
+git checkout . --> this doesnt do shit, not even unstage this is beacuse . represents the present commit. so, this is like cd .
+
+you can git checkout commitid, to go there,without affecting the staging area or your newest commit stage
+go back to original state: git checkout master
+
+how is git checkout commitid different from git reset commitid
+git checkout wont touch the commits, git reset will undo the commits and if the --hard flag is provided, it will obliderate them as well
+
+reverting is designed to safely undo a public commit, git reset is designed to undo local changes.
+resetting completely removes a changeset, whereas reverting maintains the original changeset and uses a new commit to apply the undo.
+
+Don’t Reset Public History
+You should never use git reset <commit> when any snapshots after <commit> have been pushed to a public repository. After publishing a commit, you have to assume that other developers are reliant upon it.
+
+when you do git reset on a public commit, (something you should never do), your master moves to an older commit. when you commit again, git will think that your local history has diverged from origin/master and you will need a merge commit now to sync the repos. this will create a lot of confusion
+
+fast forward merge only happens if the branch on which you are on (branch on which you want to get the changes) branch doesnt update. so, if the master doesnt move, you can merge the new branch using git checkout master
+git merge new_feature 
+if the master didnt change, this will create a ff merge
+
+also:
+git revert someoldcommit
+git checkout -b new_branch
+git merge master
+this will be a ff merge too
+
+
+git reset is used a lot in unstagging files:
+# Edit both hello.py and main.py
+
+# Stage everything in the current directory
+git add .
+
+# Realize that the changes in hello.py and main.py
+# should be committed in different snapshots
+
+# Unstage main.py
+git reset main.py
+
+# Commit only hello.py
+git commit -m "Make some changes to hello.py"
+
+# Commit main.py in a separate snapshot
+git add main.py
+git commit -m "Edit main.py"
+
+you can also use git reset on LOCAL changes
+git add foo.py
+git commit -m "develop a crazy feature"
+nano foo.py //edit the foo file again
+git commit -m "continue to develop a crazy feature"
+
+git reset --hard HEAD~2
+
+this will remove the last 2 commits completely, the changes are oblidurated
+
+git clean removes untracked files from the working dir
+
+git clean -n
+perform a dry run, dont delete just yet
+
+git clean -f
+remove the files. the files in .gitignore wont be removed
+
+git clean -xf
+remove the files in gitignore as well
+
+git clean -df
+removes files and dirs
+
+The git reset --hard and git clean -f commands are your best friends after you’ve made some embarrassing developments in your local repository and want to burn the evidence. Running both of them will make your working directory match the most recent commit, giving you a clean slate to work with.
+
+so: git reset --hard, git -df clean
+now, the working dir will looklike the last commit
+
+to rewrite the commit message, 
+earlier, i used: git reset --soft HEAD~1 (if you dont want to add the files to the staging area again)
+or
+git reset HEAD~1 if you dont mind adding them again. and commit again
+
+however, better way:
+
+git commit --amend
+this lets you add to/combine staged changes with the previous commit instead of commiting a new commit entirely. so, if you have anything staged, it will be added when you run this command
+
+if nothing staged, this has tthe effect of just rewriting the commit msg
+
+the old commit is replaced with the new commit
+never amend commits that have been pushed to a public repository.
+
+Amended commits are actually entirely new commits, and the previous commit is removed from the project history. This has the same consequences as resetting a public snapshot. If you amend a commit that other developers have based their work on, it will look like the basis of their work vanished from the project history. This is a confusing situation for developers to be in and it’s complicated to recover from.
+
+# Edit hello.py and main.py
+git add hello.py
+git commit
+
+# Realize you forgot to add the changes from main.py
+git add main.py
+git commit --amend --no-edit
+--no-edit means i dont want to change the commit message, reuse the original one
+
+git rebase
+
+rebasing is moving a branch to a new base commit
+
+git internally writes new commits for all the commits in the branch
+it looks like we are moving a branch from one commit to another
+
+git rebase base-commit-it
+this will rebase the current branch to the new base-commit-it
+you can also use branch name, relative reference to HEAD
+
+say, you are on master. then, you create a new branch and work on a new feature on it
+when you are done, the master has moved.
+you can now:
+
+1    either merge directly into the master
+2    rebase and then merge
+
+1 will result in a 3 way merge and a merge commit
+2 will result in a fast forward merge and a perfectly linear history
+
+rebasing is a common way to integrate upstream changes into your local repo. its like saying, I want to rebase my changes on what everyone has already done
+
+since rebasing creates new commits, you shouldn't rebase publicly pushed commits
+
+demo:
+git checkout -b new_feature master //create a new_feature branch based off master
+git commit -a -m "work on a new feature"
+
+//realize there is some problem in master - to fix it, we'll work on a hotfix branch and merge it with the master
+git checkout -b hotfix master
+git commit -a -m "fix the problem in master"
+git checkout master
+git merge hotfix //ff merge since master hasnt moved
+git branch -d hotfix
+
+^this will create a forked project history
+we'll merge the new_feature using rebasing to have a linear history
+
+git checkout new_feature
+git rebase master  //rebase my current branch to master
+
+now, the entire new_feature is on the tip of master. 
+now, we can go back to master branch and merge the new commits
+git checkout master //here, at master, git status gives nothing, everything is clean, nobody is aware of the new branch commits put on top of the master
+
+git merge new_feature
+this will merge the new commits on master and point master to point to the lastest commit from the new_feature branch
+
+
+git rebase -i <base>
+this is interactive, lets you play with the rebsing process
+
+this is used when you have developed the feature and are ready to push the patch to the main code repo. this allows you to squash insignificant commits, rewrite commit messages, change the order of the commits etc - basically beautify your commit history.
+
+
+demo: 
+git checkout -b new_feature master
+git commit -a -m "start developing new feature"
+git commit -a -m "fix bud in new feature"
+
+git checkout master
+git commit -a -m "fix bug in master"
+
+git checkout new_feature
+git rebase -i master
+
+This will show this in the editor:
+pick 32618c4 start developing new feature
+pick 62eed47 fix bud in new feature
+
+you can now, choose which commits to pick, which ones to squash etc
+
+so:
+
+pick 32618c4 start developing new feature
+squash 62eed47 fix bud in new feature
+
+this will merge the 2nd commit into the first one and you will put only one commit to master's head
+
+next screen will allow you to give the commit message for the combined commit
+
+now, the rebase is complete. do a fast-forward merge to integrate the polished feature branch into master
+git checkout master
+git merge new_feature
+
+git reflog
+reflog == reflective log?
+
+
+git keeps track of updates to the tip of branches using reflog
+so, if you accidently deleted some commits, you can do this:
+
+git reflog
+this will show the entire history of updates to the tip of head
+
+0a2e358 HEAD@{0}: reset: moving to HEAD~2 //shows the lastest activity
+0254ea7 HEAD@{1}: checkout: moving from 2.2 to master
+c10f740 HEAD@{2}: checkout: moving from master to 2.2
+
+you can now do:
+
+git reset --hard 0254ea7
+this will undo all the changes above this commit and will discard the changes. so, this will get us back out two commits
+
+git reflog tracks movements, and is an additional safetly net
+
+git remote
+
+remote is your connection to other repos
+they are an alias to the url of the repo
+
+you can have a link to the central repo, and a link to another user's repo as well
+
+git remote -v
+list the remote names (the alias for the links) and the urls also
+
+git remote add <name> <url>
+Create a new connection to a remote repository. After adding a remote, you’ll be able to use <name> as a convenient shortcut for <url> in other Git commands.
+
+git remote rm <name>
+git remote rename <oldname> <newname>
+
+The origin is the default remote that is created by git when you clone a repo, it points back to the cloned repo
+
+This is useful for developers creating a local copy of a central repository, since it provides an easy way to pull upstream changes or publish local commits. This behavior is also why most Git-based projects call their central repository origin.
+
+git allows access to the repo via HTTP and SSH
+HTTP gets you only read access to the repo. thats why you have to provide your credentials when you push your commits. 
+
+with ssh, you dont need to do that because you are verified by your key
+
+apart from origin, you can also have remotes to your teammates repo
+git remote add john http://dev.example.com/john.git
+
+Having this kind of access to individual developers’ repositories makes it possible to collaborate outside of the central repository. This can be very useful for small teams working on a large project.
+
+
+git fetch imports the commands from a remote repo into your local repo
+The resulting commits are stored as remote branches instead of the normal local branches that we’ve been working with. This gives you a chance to review changes before integrating them into your copy of the project.
+
+git fetch remote
+Fetch all of the branches from the repository. This also downloads all of the required commits and files from the other repository.
+
+note, we are using the remote (which is just an alias) instead of the url beacuse it is convient
+
+or, you can be more specific
+
+git fetch remote branch
+
+fetching doesnt affect your local dev enviornment since what you fetch is stored in a remote branch
+and doesnt pollute your dev
+
+remote branch is just like regular branches but they contain commits from other people and they are read only, you can checkout out by going into a detached head state
+
+To view your remote branches, simply pass the -r flag to the git branch command. Remote branches are prefixed by the remote they belong to so that you don’t mix them up with local branches.
+
+you can merge the remote branches if you want to. using git merge
+so, gettings changes from others:
+git fetch and then, if you are satisfied, git merge
+
+the shortcut is : git pull
+
+say, you have a repo, you want to sync your repo with the central repo's master branch
+
+git fetch origin
+
+To see what commits have been added to the upstream master, you can run a git log using origin/master as a filter
+
+git log --oneline master..origin/master //does this show the commits not in master but in origin/master
+
+To approve the changes and merge them into your local master branch with the following commands:
+git checkout master
+Then we can use git merge origin/master
+The origin/master and master branches now point to the same commit, and you are synchronized with the upstream developments.
+
+the shortcut of course is git pull
+
+git pull <remote>
+
+so, pull = fetch + merge
+
+Fetch the specified remote’s copy of the current branch and immediately merge it into the local copy. This is the same as git fetch <remote> followed by git merge origin/<current-branch>.
+
+git pull --rebase <remote>
+Same as the above command, but instead of using git merge to integrate the remote branch with the local one, use git rebase.
+
+The following example demonstrates how to synchronize with the central repository's master branch:
+
+git checkout master
+git pull --rebase origin //pull does a rebase and merge
+
+This simply moves your local changes onto the top of what everybody else has already contributed.
+
+git push
+
+pushing exports commits to remote branches
+
+git push remote branch
+
+push the branch to remote, along with all the commits and internal stuff. This creates a local branch in the destination repository
+you can then create a pull request
+
+git push <remote> --all
+Push all of your local branches to the specified remote.
+
+git push origin branch 
+pushes only if it results in a fast forward merge, if is doesnt, you have to use
+git push origin branch --force
+So, if the remote history has diverged from your history, you need to pull the remote branch and merge it into your local one, then try pushing again
+
+git push <remote> --tags
+Tags are not automatically pushed when you push a branch or use the --all option. The --tags flag sends all of your local tags to the remote repository.
+
+
+ After you’ve accumulated several local commits and are ready to share them with the rest of the team, you (optionally) clean them up with an interactive rebase, then push them to the central repository.
+
+ The --force flag overrides the requirement of a fast-forward merge commit and makes the remote repository’s branch match your local one, deleting any upstream changes that may have occurred since you last pulled. The only time you should ever need to force push is when you realize that the commits you just shared were not quite right and you fixed them with a git commit --amend or an interactive rebase. However, you must be absolutely certain that none of your teammates have pulled those commits before using the --force option.
+
+ RULE is: NEVER CHANCE COMMITS THAT OTHERS MIGHT HAVE TAKEN IN/PULLED(PUBLIC COMMITs)
+
+how to push you local commits to central repo
+first you should get your local repo uptodate with the remote repo
+
+ git checkout master
+ git fetch origin master //get the remote commits
+ git rebase -i origin/master
+ //this is saying, i want my present branch to be based on origin/master
+ here, you can squash commits, fix messages etc
+ wont you have to do a git checkout or something to reach the latest code? not really, you are at the tip now, do a push origin master, this will create a ff since we have taken in the change in the central repo and based our changes on it. this again wont create a ff merge if in the time that we pull the new commits and rebase and push, the master has moved again
+ git push origin master //push your new commits to the local repo
+
+we get a fast forward merge only if the local master and the remote branch are in sync
+
+Pull Request is simply you asking the project maintaner to pull your branch and merge it into the central code repo
+
+This means that you need to provide 4 pieces of information to file a pull request: the source repository, the source branch, the destination repository, and the destination branch.
+
+Branches
+
+creating branches is like requesting a new project history
+A branch represents an independent line of development
+
+Branches serve as an abstraction for the edit/stage/commit process
+Hence, abstraction is just an additional layer of felxibility on top of the edit/stage/commit process
+
+git branch -d <branch>
+
+Delete the specified branch. This is a “safe” operation in that Git prevents you from deleting the branch if it has unmerged changes.
+
+git branch -D <branch>
+
+Force delete the specified branch, even if it has unmerged changes. 
+This is the command to use if you want to permanently throw away all of the commits associated with a particular line of development.
+
+
+git branch -m <branch>
+Rename the current branch to <branch>.
+
+git stores the branch as a reference to a commit
+ In this sense, a branch represents the tip of a series of commits—it's not a container for commits.
+
+ so when you create a new branch, you just create a pointer to the commit you are on, saying from this commit, there is a new branch
+
+ The git checkout command lets you navigate between the branches created by git branch. Checking out a branch updates the files in the working directory to match the version stored in that branch, and it tells Git to record all new commits on that branch. Think of it as a way to select which line of development you’re working on.
+
+ git checkout -b <new-branch> <existing-branch>
+
+Same as the git checkout -b new_branch, but base the new branch off of <existing-branch> instead of the current branch.
+
+
+Remember that the HEAD is Git’s way of referring to the current snapshot. Internally, the git checkout command simply updates the HEAD to point to either the specified branch or commit. When it points to a branch, Git doesn't complain, but when you check out a commit, it switches into a “detached HEAD” state.
+
+The point is, your development should always take place on a branch—never on a detached HEAD. hence, create a new branch first and then start coding on that new branch
+
+git merge <branch>
+
+Merge the specified branch into the current branch. Git will determine the merge algorithm automatically (discussed below).
+
+git merge --no-ff <branch>
+Merge the specified branch into the current branch, but always generate a merge commit (even if it was a fast-forward merge). This is useful for documenting all merges that occur in your repository.
+
+fast forward merge is when the merge commit is not generated. 
+
+A fast-forward merge can occur when there is a linear path from the current branch tip to the target branch. Instead of “actually” merging the branches, all Git has to do to integrate the histories is move (i.e., “fast forward”) the current branch tip up to the target branch tip
+
+this is possible by rebasing. use rebasing to get all the commits from the branch to rest on the tip of your master branch and then we will get a fast forward merge since merging is not a matter of making the head of master point to the lateset commit from the new branch
+
+However, a fast-forward merge is not possible if the branches have diverged. When there is not a linear path to the target branch, Git has no choice but to combine them via a 3-way merge. 3-way merges use a dedicated commit to tie together the two histories.
+
+it is called a 3 way merge because git uses the two commits on the tips of the branches and also generates the merge commit (which becomes their common ancestor), so, there are 3 commits involved
+
+While you can use either of these merge strategies, many developers like to use fast-forward merges (facilitated through rebasing) for small features or bug fixes, while reserving 3-way merges for the integration of longer-running features.
+
+
+if you have a merge confict, git stops the process just before the git merge step. git status shows you which files have the conflict, you can resolve the error, git add, and git commit to generate the merge commit
+
+there is not way you can have a merge conflict in fast forward merge
+
+
+The code below creates a new branch, adds two commits to it, then integrates it into the main line with a fast-forward merge.
+
+git checkout -b new_branch
+git add .
+git commit -m "commit 1"
+git add .
+git commit -m "commit 2"
+git checkout master
+git merge new_branch //this will result in a fast forward merge because the master branch wasnt changed, if it had, it would have been a 3 way merge and we would have got a merge commit
+
+git branch -d new_branch
+
+ALTERNATIVELY
+
+git rebase -i master //do this while you are on the new_branch. it is like saying, i want my present branch to be rebsed to master
+
+interactively take the commits you want to include, squash etc. basically rewrite your project history
+
+NOW, if the master branch had moved when we were working on the new_branch, we will get a 3 way merge
+
+git checkout -b new_branch
+git add .
+git commit -m "commit 1"
+git add .
+git commit -m "Commit 2"
+
+//in the mean time, the master branch has moved
+
+git checkout master
+git merge new_branch //this will create a 3 way merge
+
+here, you could avoid the 3 way merge by rebasing and them merging. you can do rebasing for small features when you dont want the merge commit, however, if the feature you worked on was a large one, you should probable have the 3 way merge for history
+~~~~~~~~~~~
+
+* the staging area is shared. so, you have some modified files, you checkout branch1, add them to staging area, go back to branch2, the staging area is still there. this is only for files that exist for both the branches
+
+
+case study - how dhilip resolved my merge conflict
+
+i was working on a branch A, subho made a change in master = removed file 1, i had that file commited in my branch A
+(the problem wouldnt have been caused had it not been commited and pushed). when i pushed my branch, i got a merge conflict.
+
+what to do:
+
+we replicate the situation locally - by first getting the lastest master locally (pull origin master when you are on master)
+and then, try to merge it in, we get a list of conflicts. we resolve them(by checkouting the branchA - the one you pushed,
+and looking at the changes, and resolving them), and put the changes in a commit and push that commit to the pr. 
+its okay if we merge as well, this will save  us bandwith when we pull after mergin the pr on github as we'll already
+have all the commits on our master branch
+
+checkout master
+git pull master
+git checkout branch A
+git merge master
+//conflict - resolve it (i removed the file that was removed in master as well)
+//we make the changes and push them to the pr by commiting and pushing to branch A
+git add .
+git commit -m "this is the merge commit for merging into master"
+git push origin branch A
+
+
+also, recall:
+                    rebase and master:
+
+git checkout featureA
+git rebase master //place all the commits on this branch (featureA) on the master branch
+
+git checkout featureA
+git merge master //merge the master into the present branch (featureA)
+
+
+
+INTERESTING CASE:
+i was on master, i made two branches at the same time. on one, i made a change to the followingmodel to following and
+changed the field types too. then, i merged it. i started work on the 2nd branch - it still had followingmodel, i did all
+my work and merged it - there was no merge conflict - because i did not change the code - i used it. and therein lies the
+problem, i used the followingmodel to create some new methods in dbapi - they still had followingmodel and not following just
+
+basically, what i want is the changes in master in my own branch.
+what i can do is, merge the master into featureA, or rebase featureA on master
+
+hence, what should be done is:
+
+
+option1:
+        get all the changes from the remote on your local branch master, rebase you branch on master, fix bugs,
+        and then push to a newBranch - this will push only the new commits to newBranch.
+
+        so:
+        git checkout master
+        git pull origin master
+        git checkout featureA
+        git rebase master
+        #fix bugs
+        git push --force origin featureA //this will rewrite the commits in featureA on remote
+
+option2:
+        pull the changes from the remote, merge master into featureA, fix bugs, push the changes to the remote repo
+        so:
+        git checkout master
+        git pull origin master
+        git checkout featureA
+        git merge master //this merges the master into featureA OR you can merge the branch that caused the namechange
+        # fix bugs
+        git push origin featureA
+
+option3:
+        create a new branch based upon the lastest version of master
+        merge the old feature branch into the new one
+        fix bugs, resolve merge conflicts
+        push the new branch to remote repo
+
+        git checkout master
+        git pull origin master
+        git checkout -b newBranch
+        git merge featureA
+        fix bugs, conflicts
+        git push origin newBranch (you can also push to the same branch on the remote, using a force push)
+
+option4:
+        you can cherry pick the commit that changed the name of the FollowingModel and get that commit specifically
+        into your branch.
+        git checkout master
+        git pull origin master
+        // get the commit id of the commit that changed the name from git log
+        git checkout featureA
+        git cherry-pick <the sha1 hash>
+        //fix bugs
+        git push origin newBranch
+
+Dhilip likes to follow option2!
+
+
+how to make changes to PRs and push to the same pr
+'tis simple
+say, mr. x made a pr and wants to merge x-branch to the repo's master
+
+you can do git fetch
+(difference b/w git pull and git fetch is that pul == fetch + merge
+when you do fetch, you can safely view what has changed on the main repo without
+it affecting your work)
+
+so, git checkout develop
+git fetch
+git checkout origin/x-branch
+make the changes, commit them
+then, git checkout -b x-branch
+git push origin x-branch
+
+of course, you could first create the branch, then pulled, made changes, pushed
+like so:
+git checkout -b x-branch
+git pull origin x-branch
+#  commit and push
+
+looks like you can directly checkout x-branch even if you don't have it locally (after git fetching I think)
+and commit and push
+
+git has a lot of ways of doing things, appreciate the flexibility. you should be comfortable enough to come up with
+your own solutions
+
+say you submit a pr, and then there is a merge conflict
+refer to this excellent article: https://confluence.atlassian.com/bitbucket/resolve-merge-conflicts-704414003.html
+
+I did git branch
+this showed me some branches
+then I did git branch -d crm-refactor
+I had made a PR for this branch and it is merge in origin/develop but I haven't pulled the latest code from origin
+since git checks that the branch is checked both in local copy and in remote, it says that the branch hasn't
+merged fully
+
+so, i did git fetch origin
+git merge origin/develop (or shortcut for these two, git pull origin develop)
+and the git -d crm-refactor worked
+

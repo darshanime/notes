@@ -1,4 +1,5 @@
-# Head first C
+* Head first C
+** Anthony J.F. Griffiths and Thomas Asbridge
 
 * Chapter 1 - Diving In
 

@@ -1,6 +1,5 @@
 * java
 
-1.
 #+begin_src java
 import java.util.*;
 
@@ -14,10 +13,9 @@ public class one{
 }
 
 #+end_src
+*** HEAD FIRST JAVA
 
-
-####HEAD FIRST JAVA
-
+1. Java is a compiled language.
 2. How java is executed
 Write the source code for your program in .java. The compiler checks for errors and if all passes, it converts .java to Java bytecode. This is sent to the JVM which reads and runs the bytecode
 

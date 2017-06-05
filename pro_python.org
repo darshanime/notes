@@ -1,0 +1,1945 @@
+# Python will be our friend to the end
+
+* Principles and Philosophy
+
+ - *Beautiful is better than ugly*
+this is for using "is not" and not != etc
+
+ - Explicit is better than implicit
+each variable must explicitly declared, each import must be individually imported
+
+ - Simple is better than complex
+if value:
+  // code 
+better than 
+if value is not None:
+  // code
+
+ - Complex is better than complicated
+complex - made up of many interconnected parts
+complicated - so complex that it is difficult to understand
+
+ - Flat is better than nested
+
+ - sparse is better than dense
+use blank lines to separate relevant parts of code
+
+ - readability counts
+
+ - special cases aren't special enough to break the rules
+ - Although practicality beats purity
+ - Errors should never pass silently
+ - Unless explicitly silenced
+ - In the face of ambiguity, refuse the temptation to guess
+Errors - problems with code, more severe than exceptions
+Exceptions - potential problems with code, less severe than errors
+     - the StopIteration exception is not a problem with code, it is just there to enhance the code flow
+
+raise exception like this:
+    raise ValueError("Username must being with underscore")
+
+catch exception like this:
+#+begin_src python
+try:
+   validate("username")
+except ValueError, TypeError as e:
+   print(e)
+#+end_src
+
+ - There should be only one way to do it
+
+ - Now is better than never
+ - Namespaces are one honking great idea - let's do more of those!
+
+functions+classes go in module
+modules go in packages
+
+ - Loose coupling
+This is about splitting the project into different independent segments. By independent, we do not mean that they don't talk to each other. instead it is about how much each subsystem relies on the other subsystems to work. It should be able to work independently, this way:
+ - any bug in one subsystem won't propagate to other subsystems
+ - each subsystem can be developed independently
+ - each subsystem can be used in other projects as well
+
+ - Robustness principle
+   - be conservative in what you do, liberal in what you accept
+   - your functions should accept various inputs because the input can be malformed etc
+   - but you should stick to the rule (the specification) and in that way - programs that don't follow the specifications can interact with your program, and you can interact with them as well
+
+
+
+* Advanced basics
+
+** Iteration
+ - the different types of sequences in Python can be used in 2 ways - those that actually use the sequence as a whole and those that just need the items within it
+   - using the whole sequence - randomly accessing the data and modifying it.
+   - needing the items - printing them to the console eg
+
+For some sequences, we don't need all the numbers in memory as we don't need to operate on them all at once. 
+eg: fibonacci sequence etc. 
+instead of storing the whole sequence in memory, we can calculate the next sequence on the fly by using a few state variables.
+
+Summary: a sequence of items can be looked on as: a collection of items or a way to access a single item at a time
+the former needs the entire sequence to be loaded in memory, while the latter needs just a few state variables from which the next sequence can be calculated.
+
+Iteration refers to the 2nd option - each item at a time
+eg: range(5)
+
+to load the entire thing in memory - list(range(5))
+*iterators (eg range) can be iterated thru many times* - they are special
+eg:
+#+begin_src python
+a = range(10)
+b = list(a) # here, a will be iterated thru once
+for i in a: # here, it will be iterated thru again
+    print(i)
+#+end_src
+
+*you can write your own iterator objects*
+
+** Transparency 
+Python doesn't support the notion of private variables in the typical manner, so all attributes are accessible to any object that requests them. 
+
+** Exceptions
+
+we can do this:
+
+#+begin_src python
+try:
+    return len(open(filename, 'r').readlines())
+except: # this will catch all the exceptions 
+    logger.log("some error")
+
+try:
+    return len(open(filename, 'r').readlines())
+except TypeError as e: # this will catch only typeerror
+    logger.log("some error") 
+
+try:
+    return len(open(filename, 'r').readlines())
+except (TypeError,EnvironmentError) as e : # this will catch both the exceptions as e
+    logger.log("some error", e)
+
+try:
+    return len(open(filename, 'r').readlines())
+except TypeError: # this will catch TypeError
+    logger.log("some typeerror") 
+except EnvironmentError: # this will catch TypeError
+    logger.log("some env error") 
+#+end_src
+
+*Exception chains*
+ - when you are in the except phase, if there is an error, it will lead to an implicit chain of exceptions, because the exceptions are linked only by how they're encountered during execution. 
+
+eg:
+
+#+begin_src python
+try:
+    return len(open(filename, 'r').readlines())
+except: # this will catch all the exceptions 
+    log = open("logfile.txt", 'w')
+    log.write("some log")
+    log.close()
+#+end_src
+
+here, if the logfile.txt is a read only file, (the process doesn't have write permission), there will be an exception caused. 
+output:
+
+#+begin_src python
+<old exception>
+
+During handling of the above exception, another exception occured
+
+<new exception>
+#+end_src
+
+
+Explicit chain - when you raise the exception yourself
+
+#+begin_src python
+
+def validator(value):
+    if len(value)>10:
+       raise ValueError("cannot be more than 10")
+
+def validate(value, validator):
+    try:
+        return validator(value)
+    except Exception as e:
+        raise ValueError("error") from e  # note the new syntax, from e
+
+#+end_src
+
+You get this:
+    <old exception>
+        The above exception was the direct cause of the following exception:
+    <new exception>
+
+*Like in Java, we have `else` which runs only when there is no exception*, we have that here as well
+#+begin_src python
+try:
+    len_ = len(open(filename, 'r').readlines())
+except: # this will catch all the exceptions 
+    logger.log("some error") 
+else:
+    logger.log("no error")
+#+end_src
+
+
+*Like in Java, we have `finally` which runs after the try/except/else clause*
+#+begin_src python
+try:
+    len_ = len(open(filename, 'r').readlines())
+except: # this will catch all the exceptions 
+    logger.log("some error") 
+else:
+    logger.log("no error")
+finally: # always gets executed
+    logger.log("we are done with this now")
+#+end_src
+
+#+RESULTS:
+
+Summary:
+#+begin_src python
+
+try:
+  # something
+except Exception as e:
+  # if errors
+else: 
+  # if no errors
+finally:
+  # always
+
+#+end_src
+
+** Looping
+
+Python has while -
+
+#+begin_src python
+while <something>:
+  # code
+
+# it also has do while
+while True: # this is optimized as the interpreter won't need to check the value of conditional, and will run the code till it is intererrupted 
+  # code    # before Py3000, True/False weren't reserved keywords and so the interpreter needed to check conditional, so use while 1 for performance with legacy code
+#+end_src
+
+** context managers
+
+Python2.6 and up have a context manager that eases the exception handling and the cleanup actions. to open a file:
+
+#+begin_src python
+with open('log.txt', 'r') as file:
+    return len(file.readlines())
+#+end_src
+
+here, the context manager knows how to handle the exceptions and perform the clearup actions for "open"
+To use with clause in Python versions before 2.6, use this:
+
+from __future__ import with_statement
+
+*you can write your own context managers*
+
+** Sequence unpacking
+
+#+begin_src python
+one, two = "one.two".split(".") # this works fine
+one, two = "one.two.three".split(".") # too many values to unpack - ValueError
+one, two, *more = "one.two.three.four.five".split(".") # the astric means more will be a list with the remaining entries
+one --> "one"
+two --> "two"
+more --> ["three", "four", "five"]
+#+end_src
+
+** List comprehensions
+
+When you have a sequence with more items that you really need, you can generate a new list and add the items that pass a test, or a modified version of each item using *list comprehension*
+
+consider this:
+#+begin_src python
+min([value for value in range(10) if value > 5])
+#+end_src
+
+here, we make the entire new list and then throw it away!
+we did not really have to reserve the space in the memory for this use case, we could have done it lazily
+
+this is done by *generators*.
+they lazily generate the elements of the list. 
+use the paranthesis to get a generator
+
+#+begin_src python
+
+gen = (value for value in range(10) if value>5)
+gen
+# <generator object <genexpr> at 0x...>
+min(gen)
+6
+min(gen)
+# Traceback: ValueError: min() arg is an empty sequence
+
+a = (i for i in range(3))
+print(list(a))
+[0, 1, 2]
+
+print(list(a))
+[]
+# always remember, generators generate the items only once
+#+end_src
+
+So, the generator generates the values as you iterate over it
+(which is what min() does)
+min() takes in an iterator(something which one can iterate) 
+
+the generator iterates once (it generates the values once) and the next time, it just returns an empty list
+this is unlike range which is also a generator, but it can be traversed several times
+so, it is upto the iterable itself (weather a generator or a normal list) to determine when and how the sequence gets reset
+
+Set comprehensions
+#+begin_src python
+{str(value) for value in range(100) if value%2} # this will create a set of odd numbers till 100
+#+end_src
+
+:top: is in Python3000
+earlier:
+
+#+begin_src python
+set(value for value in range(100) if value%2)
+#+end_src
+
+
+Dict comprehensions
+#+begin_src python
+
+# Py3
+{value: str(value) for value in range(10) if value>5}
+
+# Py2
+dict((value, str(value) for value in range(10) if value>5))
+#+end_src
+
+*Chaining iterables together*:
+itertools has the chain() function that takes in a number of iterables and returns a new generator that iterates thru them - one after the other
+
+#+begin_src python
+import itertools
+list(itertools.chain(range(3), range(4), range(5)))
+[0, 1, 2, 0, 1, 2, 3, 0, 1, 2, 3, 4] # len of list - len(1st iterator) + len(2nd iterator) + len(3rd iterator) etc
+#+end_src
+
+*Zipping iterables together*: - zip is std lib top level, don't need to import anything to use it
+to iterate thru some iterables together:
+#+begin_src python
+list(zip(range(3), reverse(range(5))))
+[(0,4), (1,3), (2,2)] # len of list - min(len(1st iterator), len(2nd iterator))
+
+# can be also passed to dict
+dict(zip(range(3), reverse(range(5)))) 
+{0:4, 1:3, 2:2}
+#+end_src
+
+Sets are stored as HashSet in java, i.e. in a hash table.
+
+sets don't have append() because *append is to add to the end*, and sets are unordered
+so, we have add()
+they also have update(<set>) to add the entire set to the old one
+also, is present the remove() method
+# remove will raise an error if item not present, discard won't
+ - pop() and clear() to remove one items and remove all items etc
+ - union(<set>), interaction, symmetric_difference
+ - set.issuperset(<set>), set.issubset(<set>)
+
+empty set - set()
+empty dicts - {}
+empty lists - []
+empty tuples - ()
+
+Named tuples - *to maintain a fixed set of possible keys value pairs.* 
+  - it gives you a dict with fixed keys which you can assign values to
+eg:
+#+begin_src python
+from collections import namedtuple
+Point = nampedtuple("point", "x y") # 1st arg - name of class, 2nd arg - args(keys) of that class
+p = Point(13, 15)
+p
+# Point(x=13, y=15)
+point.x
+# 13
+point[1]
+# 15
+
+#+end_src
+
+Defaultdict - from collections import defaultdict
+using defaultdict(int) will initialize each value to 0, so you do can dict_[key]+=1
+int -> 0
+str -> ""
+list -> []
+
+*any callable can be used* - int() gives 0, str() gives '', list() gives []
+eg:
+#+begin_src python
+In [18]: def foo():
+    ...:     return []
+    ...: 
+
+In [19]: b = defaultdict(foo)
+
+In [20]: b
+Out[20]: defaultdict(<function __main__.foo>, {})
+
+In [21]: b['a'].append(2)
+
+In [22]: b
+Out[22]: defaultdict(<function __main__.foo>, {'a': [2]
+#+end_src
+
+
+Using __all__ to customize imports
+
+#+begin_src python
+from itertools import *
+list(chain([1, 2, 3], [3, 4, 5]))
+[1, 2, 3, 3, 4, 5]
+#+end_src
+
+Here, when you do import *, the namespace of itertools gets dumped in the present one
+this means that all the functions, classes, variables etc which don't begin an underscore are imported
+
+but, you as the module builder can control this by using the __all__ variable to define a list of things that will be imported when someone does from foo import *
+eg: __all__ = ['func_one', 'class_one']
+now, only these 2 entries will be imported on from foo import *
+
+you can still use import foo
+and access the other funs by foo.new_fn etc
+or import new_fn explicitly - from foo import new_fn
+
+you should not use * to import generally, this would make it difficult to see where the module came from
+however, you should can use * for cases when you are wrapping it in another namespace - i.e. you want users to import a single namespace which will give you everything, you can do this.
+
+*relattive imports*
+
+for eg: if the *acme.shopping.cart* module needs to import from *acme.billing*, we can use:
+
+  from acme import billing # absolute import
+  from .. import billing # relative import
+
+. refers to current module - shopping
+.. - refers to acme module
+
+*relative imports cannot work in the interactive intrepreter, the mode the intrepreter runs isn't actually in the filesystem, so, relative paths don't work*
+
+
+* Functions
+
+** Args
+In python, functions are full - fledged objects that can be passed around in data structures, wrapped up in other functions or replaced entirely by new implementations
+
+*args -- variable positional arguments
+**kwargs - variable keyword arguments
+
+Using kwargs makes for more readable code
+
+# TODO - fix this example
+# foo(1, 2, quiet=True)
+# 1 and 2 are required arguments
+
+If you want to accept a "list", accept it as *args - args will be a _tuple_ here, you can use list.extend(argTuple) etc
+If you want to accept a dict, accept it as **kwargs - kwargs will be a dict here
+
+
+** Different types of arguments
+They are:
+ - required arguments
+ - optional arguments
+ - variable positional arguments - *args
+ - variable keyword arguments - **kwargs
+
+so, what order should we sent the args in so that there is no ambiguity:
+
+    def create_element(name, editable=True, *children, **attributes)
+
+but in :top:, we have to supply editable always to send in any children at all
+
+To support this, python *also* allows you to change the order but after *children, you must specify everything with keywords
+eg:
+
+#+begin_src python
+def join_with_prefix(prefix, *segments, delimtier):
+    return delimiter.join(prefix + segment for segment in segments)
+
+join_with_prefix('P', 'ro', 'ython', delimiter=' ' )
+# here, segments has ('ro', 'ython')
+
+# another example
+def join_with_prefix(*segments, delimtier=' ', prefix):
+    return delimiter.join(prefix + segment for segment in segments)
+
+join_with_prefix('ro', 'ython', prefix='P' )
+# here also segments has ('ro', 'ython')
+# also, delimtier has a default arg, so we don't need to define it
+# everything after *args needs to be keyvalue
+
+#+end_src
+
+** Preloading args
+
+For any function that accepts a plethora of arguments, we can preload some of them and add to them as the function is passed in the code. finally, we can call the function when everything has been defined
+
+There is a similar concept in Functional languages:
+*curry* - if a function accepts 3 args, and you call that function with 1 arg, you get back a function that accepts 2 args. you call it with 2 args this time, it will execute
+
+Python's *partial* - partials takes a function and some args and defines those args for that function. it returns a function with those args defined. you can assign the return value a new name and you now have a new function with some other default arg values
+
+#+begin_src python
+import os
+def load_file(file, base_path='/', mode='rb'):
+    return open(os.path.join(base_path, file), mode)
+
+f = load_file('example.txt')
+f.mode
+# 'rb'
+f.close()
+
+import functools
+load_writable = functools.partial(load_file, mode='w') # here, we defined an entire new function load_writable that loads files in writable format
+f = load_writable('example.txt') 
+f.mode
+# 'w'
+f.close()
+#+end_src
+
+*decorator* - passing one function to another to get a new function back
+
+*partials* can be used to customize a more flexible function into something simpler, so that it can be passed into an API that doesn't know how to access that flexibility
+
+To know the full arguments detail of any function, we can use:
+#+begin_src python
+import inspect
+
+def example(a:int, b=1, *c, d, e=2, **f) -> str:
+    pass
+
+ans = inspect.getfullargspec(example)
+
+FullArgSpec(args=['a', 'b'], varargs='c', varkw='f', defaults=(1,), kwonlyargs=['d', 'e'], kwonlydefaults={'e': 2}, annotations={'a': <class 'int'>, 'return': <class 'str'>})
+
+#+end_src
+
+It returns a named tuple (a tuple with fixed number of named keys)
+so, 
+
+#+begin_src python
+ans[0]
+# ['0', '1']
+
+ans.args
+# ['0', '1']
+
+#+end_src
+
+We have information about:
+ - args, varargs, varkw, defaults, kwonlyargs, kwonlydefaults, annotations
+
+** Decorators
+
+In large projects, one may need to perform some preprocessing (auth check, logging) or some post processing (caching) during a function call
+decorators are well suited for that. 
+
+we don't need to write the auth check, logging everywhere, we just decorate the function and have the decorator do what is needed
+
+*** Closures
+Closures are functions(FN_INNER) that are defined another functions(FN_OUTER). Here, FN_INNER is a closure 
+The good part is that FN_INNER can use the variables in the namespace of FN_OUTER
+
+eg:
+#+begin_src python
+def multiply_by(factor):
+  def multiply(value):
+    return factor*value
+  return multiply
+
+times2 = multiply_by(2)
+times2(5)
+10
+
+times3 = multiply_by(3)
+times3(5)
+15
+#+end_src
+
+Here, the multiply function which is a closure, used the factor arg from it's parent, and did not have it accept it itself
+Closures make decorators possible - we can defined nested functions and use the variables to do some custom logic; wrap some extra functionality around the function
+
+#+begin_src python
+In [58]: def suppress_errors(func): # decorator
+    ...:   def wrapper(*args, **kwargs): # wrapper function
+    ...:       ''' some docstring for wrapper'''
+    ...:       try:
+    ...:           return func(*args, **kwargs)
+    ...:       except Exception:
+    ...:           pass
+    ...:   return wrapper
+    ...: 
+    ...: @suppress_errors # this is just foo = supress_errors(foo)
+    ...: def foo(): # function being wrapped
+    ...:     ''' some docstring for foo'''
+    ...:     raise ValueError
+    ...: 
+
+In [59]: foo.__doc__
+Out[59]: ' some docstring for wrapper'
+
+In [60]: foo.__name__
+Out[60]: 'wrapper'
+#+end_src
+
+Wrapping a function means some potentially useful information is lost; it's name, docstring, argument list etc
+to preserve that information, we use:
+
+#+begin_src python
+import functools
+
+def suppress_error(func): # decorator
+
+  @functools.wraps(func) # the functools decorator copies the name, docstring and some other info over to the wrapped function. cannot copy over the arg list however
+  def wrapper(*args, **kwargs): # wrapper function
+      try:
+          return func(*args, **kwargs)
+      except Exception:
+          pass
+  return wrapper
+
+@suppress_errors # this is just foo = supress_errors(foo)
+def foo(): # function being wrapped
+    raise ValueError
+
+foo.__name__
+'foo'
+
+foo.__doc__
+'some docstring for foo'
+#+end_src
+
+Note, the functools.wraps decorator takes a argument - func
+it needs func to copy the information from
+
+*** Decorators with args
+
+Python actually evaluates the decorator statement as an expression
+so:
+    @supress_errors 
+is evaluated. Here, it is just a function, so it is simple.
+
+But in 
+    @function.wraps(func)
+    def wrapper(func)
+
+we get:
+    function.wraps(func)(wrapper)
+what the function.wraps(func) returns, the wrapper function is passed to that; what the function.wraps(func) returns, is used as the decorator
+
+Note, using this, we can write a decorator to churn out decorators.
+we have to have another layer of nested function in the decorator maker. 
+
+The new outermost function accepts all arguments for the decorator and returns a new function *as a closure* over the argument variables - this just means the new function can use the argument variables
+
+The decorator that takes an argument is generally a decorator that does different things based on the argument it receives, like the function.wraps(func) decorator. 
+
+
+example decorator with args:
+
+#+begin_src python
+
+def suppress_errors(log_func=None)
+
+    def decorator(func): # decorator
+      @functools.wraps(func)
+      def wrapper(*args, **kwargs): # wrapper function
+          try:
+              return func(*args, **kwargs)
+          except Exception:
+              pass
+      return wrapper
+
+    return decorator
+
+@suppress_errors(log_func=myLogger) # this line is evaluated to return the decorator which will take foo as the arg
+def foo(): # function being wrapped
+    raise ValueError
+
+#+end_src
+
+But in this scheme :top:, the arguments are compulsary, or we have to provide @suppress_errors() at least
+
+We need to have a decorator that takes an optional argument - we would be able to use it without the paranthesis and with the paranthesis both
+IE the outermost function must be able to accept both arbitary arguments *or* a single function, and behave accordingly.
+
+The problem is deciding which flow is indented, based on the args provided
+ - what if, if the first arg is a function, it is the function flow, else, the arguments flow -- this would not work with functools.wraps(func) which takes a function as the first argument
+ - we know that the decorators always receive the function it operates on as a positional argument. we can use this and the constraint that any argument must be provided as a keyword argument
+   - this has the added advantage that the keyword arguments are more readable anyway
+ - we can implement this by providing the func as the first argument and all the other arguments as keyword args - all need default values
+
+#+begin_src python
+
+def suppress_errors(func=None, log_func=None):
+
+  def decorator(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+      try:
+        return func(*args, **kwargs)
+      except Exception as e:
+        if log_func is not None:
+          log_func(str(e))
+    return wrapper
+
+    if func is None:
+      return decorator # here, no func provided, the arugmets must have been provided, we just provide the decorator eg: suppress_errors(log_func=Mylogger) on the def foo()
+    else:
+      decorator(func) # here, the func is provided, so, no arguments provided, eg: @suppress_errors on def foo()
+#+end_src
+
+
+Always provide the arguments to the decorator as keyword args *if* you want to use it both with args sometimes and without args sometimes
+functools.wraps(func) doesn't need keyword args because it always needs the first arg as func
+
+
+*** Example: Memoization
+
+This is what makes graph search simple, this makes DP possible
+
+#+begin_src python
+In [90]: def memoize(func):
+    ...:     vals = {}
+    ...:     @functools.wraps(func)
+    ...:     def wrapper(n):
+    ...:         if n not in vals.keys():
+    ...:             vals[n] = func(n)
+    ...:         return vals[n]
+    ...:     return wrapper
+    ...: 
+    ...: @memoize
+    ...: def f_num(n):
+    ...:     if n <= 0:
+    ...:         return 1
+    ...:     else:
+    ...:         return f_num(n-1) + f_num(n-2)
+    ...:     
+
+In [91]: f_num(37)
+Out[91]: 63245986
+
+In [92]: f_num(370)
+Out[92]: 247694960571651628711444594884429646292615632415916575771902992555242690154864
+  
+#+end_src
+
+*** Decorator to create decorators
+
+Notice the boilerplate involved around the decorators
+This can be a pain if we create a lot of decorators that more or less do similar things. 
+we can put this boiler plate off into a decorator of it's own 
+Like so:
+
+#+begin_src python
+
+# TODO
+
+#+end_src
+
+
+** Function Annotations
+
+Static typed languages - like Java - they provide what type of arguments are accepted(what types of values are acceptable for each argument) and what is is the type of returned value. 
+
+Python's response to that is function annotations
+you can do this:
+
+#+begin_src python
+def add(a: int, b: int) -> int:
+  return a+b
+#+end_src
+
+:top: this doesn't mean that the function will take only ints, you can give it floats (or anything else) as well
+
+We can annotate the function with any expression, not just types of class. Eg, we can use strings, or even inline functions (lambdas)
+
+#+begin_src python
+def add(a: int, b: int) -> "the sum":
+  return a+b
+#+end_src
+
+
+** Generators
+
+Generator expressions are useful for lazy evaluation but sometimes we need more fine grained control over the iteration, the items being returned, when the loop terminates etc.
+
+You need a real function that you would use to generate the values. then you would have the ultimate control.
+The function uses *yield* to return values. When it returns one value, the control is taken away, then some other function runs and when the generator gets the control back, it starts running from where it left off. It runs again till it hits another *yield* statement.
+
+Ex: an generator to generate f nos
+#+begin_src python
+def fibonacci(count):
+  a, b = 0, 1
+  while (count>0):
+    c = a+b
+    yield c
+    a, b = b, c
+    count = count - 1
+
+a = fibonacci(5)
+list(a)
+[0, 1, 1, 2, 3]
+list(a)
+[] # generators can be iterated only once
+
+list(fibonacci(5))
+[0, 1, 1, 2, 3]
+list(fibonacci(5)) # here, we are creating a new fibonacci generator everytime
+[0, 1, 1, 2, 3]
+#+end_src
+
+** Lambdas
+
+They are inline, anonymous functions. They are used to provide keys for sorting etc where defining a new function is an overkill
+
+#+begin_src python
+houses.sort(key=lambda h:h.price)
+#+end_src
+This is like the Comparable interface in Java
+
+    lambda: 1
+
+this :top: lambda function takes no args and returns 1 whenever it is called
+eg:
+
+    a = lambda : 1
+    a()
+    1
+    a()
+    1
+
+Also, lambda can accept various args:
+    a = lambda x, y: (y, x) # it can return only 1 thing like a normal function
+    a(1, 2)
+    (2, 1)
+
+*The entire body of the lambda function is just the return expression*
+
+** Introspection
+Every function has a __name__ attribute that stores it's name
+for lambda fns, it is <lambda>
+
+** Modules and packages
+
+In python, functions and classes are placed inside of modules. The modules are a part of a package structure. 
+All functions and classes have a __module__ attribute, which contains the import location of the module where the code was defined 
+eg: 
+
+#+begin_src python
+print(str.__module__) #--> 'builtins'
+
+# in intrepreter, since there is no source file on which we are working, any functions or classes are given the __main__ as the module location
+def foo():
+    return
+print(foo.__module__) # __main__
+#+end_src
+
+The __name__ gives the name of the module?
+eg: import mycroft, mycroft.__name__ --> 'mycroft'
+
+Also present, the __doc__ var
+this has the docstring of the function
+to see it nicely formatted:
+
+    print(fnName.__doc__)
+
+* Classes
+
+The class encapsulates the behavior of an object, while an instance of the class represents the data for the object
+Between objects, the data might change but the behavior will be the same
+
+All classes inherit the *object* class.
+Always inherit from the object class to get the "new-style" classes. "Old style" classes where removed from Python3, the objects were treated differently from builtins there. 
+
+** Inheritance
+Python supports the traditional inheritance model
+
+#+begin_src python
+class Contact:
+  name = TextField()
+  email = EmailAddressField()
+  phone = PhoneNumberField()
+
+class Person(Contact):
+  first_name = TextField()
+  last_name = TextField()
+  name = ComputedString('%(last_name)s, %(first_name)s')
+
+class Company(Contact):
+  industry = TextField()
+#+end_src
+
+Here, you are making a more specific version of the previous class
+
+** Multiple Inheritance
+You can also inherit from multiple classes. This horizontal approach to class inheritance means you are building up a class as a set of components. By taking up the behavior from different classes
+Such classes that provide some feature, such support classes are called *mixins*
+Ex of a mixin: 
+
+#+begin_src python
+class NoneAttributes:
+  def __getattr__(self, name):
+    return None
+#+end_src
+
+The NoneAttributes mixin returns None for when the class which inherits it does not have the attribute. (normally it would throw an error)
+The __getattr__() magic method is called only when the attribute requested isn't available on the object, not otherwise.
+
+
+In the wild, the vertical hierarchy will provide most of the functionality with the mixins throwing in some of the extras as necessary
+
+** Method Resolution Order (MRO)
+
+When accessing the class, with multiple inherited classes/mixins, Python needs to know where to call a requested method from
+*Always, the first namespace checked is of the object namespace. Then, the class namespace. Then the parents/mixins etc.*
+
+*** Vertical only 
+
+This is simple - if the method is there on the class itself, use that
+If not, check it's base class. 
+All the way to the *object* type
+
+Example:
+
+#+begin_src python
+class Book:
+  # code
+
+class Novel(Book):
+  # code
+
+class Mystery(Novel):
+  # code
+#+end_src
+
+the MRO for Book - [Book, object]
+the MRO for Novel - [Novel, Book, object]
+the MRO for Mystery - [Mystery, Novel, Book, object]
+
+*** Horizontal only
+
+Here it is simple as well. Go from left to right
+
+#+begin_src python
+class A:
+ # code
+
+class B:
+ # code
+
+class C:
+ # code
+
+class D(A, B, C):
+ # code
+
+D.mro() 
+[D, A, B, C, object]
+#+end_src
+
+*** Both mixed
+
+Python uses a simple algorithm to tackle situation like this. 
+It starts from root - *object* class. 
+At each iteration, it will select a candidate to put in the MRO. 
+It takes into consideration the class lists of the parent MROs and to combine them, looks at the first candidate in each list to find a "valid candidate"
+
+A valid candidate is the one which which exists in only the first position in any of the MRO lists being considered.
+Example:
+
+#+begin_src python
+class A:
+  pass
+
+class B(A):
+  pass
+
+class C(B, A):
+  pass
+
+#+end_src
+Starting from root - *object*
+# here, no parent lists to consider
+object -> [object]
+
+# here, we consider [object] - only 1 list to consider, only 1 valid candidate
+A -> [A, object]
+
+# here, we have [A, object] - only 1 list to consider, only 1 valid candidate
+B -> [B, A, object]
+
+# here, we have 2 lists to consider, [B, A, object] and [A, object]
+C -> [C, B, A, object]
+
+Here, if we had defined class C as class C(A, B) it would have resulted in an cannot create consistent MRO TypeError. 
+This is because B's MRO puts B before A. Thus, any subsequent subclass must also put B before A.
+
+
+*** super method
+
+In python, the super method returns an object. It takes in 2 params, a class and an instance of that class.
+The instance object determines which MRO will be used to resolve any attributes on the returned object -- the instance object's MRO is used?
+The class determines a subset of that MRO, super() only uses those entries in the MRO that occur after the class provided -- the class determines the portion of the MRO that is to be used?
+
+Recommended usage - super(ClassName, self)
+where ClassName is the name of the class where it is is used
+self is the instance of the class
+
+the resulting object will retain the instance namespace dict of self, but it only retrieves attributes that were defined on the classes found later in the MRO than the class provided, (parents of ClassName, which is what we want)
+
+*super(type, obj) --> obj must be an instance or subtype of type*
+
+TypeError - they are when you provide incorrect types where some other type was required, like in :top:
+
+** Introspection
+
+ - isinstance(10, int)
+   True
+
+ - issubclass(int, object)
+   True
+
+ - issubclass(int, int)
+   True
+
+ - __bases__
+this will give you the base class of any class. (only parent)
+
+ - __subclasses__()
+this will give you a list of all the subclasses of the class (only 1 level)
+
+ - __mro__
+gives the MRO for that class
+
+
+** Class creation
+When the code block to create a new class is found, a new namespace is assigned for the block of code inside the class
+The attributes are added to this namespace.
+
+When the contents of the class are processed, the namespace of the code block is fully populated with all the info the class is to have
+Now, Python takes the class namespace and passes it, along with some other pieces of information to the built-in *type()* which creates a new class object
+*So, all classes are subclasses of type*
+
+type() needs 3 pieces of information to instantiate the class:
+ - the name of the class that was declared
+ - the base classes the defined class should inherit from
+ - the namespace dict populated when executing the class body
+
+eg:
+#+begin_src python
+class Example(int):
+    spam = "dont"
+
+Example
+<class '__main__.Example'>
+
+Example = type('Example', (int, ), {'spam':'dont'})
+Example
+<class '__main__.Example'>
+#+end_src
+
+Here, the name of the class created is 'Example'. This class will be assigned the name Example in the present namespace. These 2 values can be different, that is allowed.
+
+** Metaclasses
+
+Till now, all the classes have been processes by the built-in *type* which accepts the class name, its base class and a namespace dict
+*type* is a metaclass in that it is a class used to create new classes
+But we can override *type* and ask our new class to be used to handle the creation of the new class
+
+We can override the __init__ method of the *type* class
+
+#+begin_src python
+class SimpleMetaClass(type):
+  def __init__(cls, name, bases, attrs): # we use cls here because the instance of SimpleMetaClass is a class object itself, (instance of type), so we use cls. 
+    print(name)
+    super(SimpleMetaClass, cls).__init__(name, bases, attrs)
+#+end_src
+
+Now, we need use this metaclass to create new classes
+
+#+begin_src python
+class Example(metaclass=SimpleMetaClass)
+  pass
+#+end_src
+
+In Py2, you need __metaclass__ as an attribute inside the class body
+
+*** Example: Plugin Framework
+
+We need 3 features:
+ - need to define a place where plugins can be mounted, this should be a class that other plugins can inherit from
+ - should be simple how to implement/make new plugins
+ - should be easy to access all the plugins that were found
+
+
+We can define interfaces that the new plugins must implement etc 
+Or we can use metaclasses
+
+We can ask the plugins to provide a validate(self, input) method that receives input as a string and raises a ValueError if the input is invalid.
+
+#+begin_src python
+class InputValidator:
+  def validate(self, input):
+    raise NotImplementedError
+  
+class ASCIIValidator(InputValidator):
+  def validate(self, input):
+    input.encode('ascii')
+#+end_src
+
+Now that we know where the plugins are mounted and how to define new plugins, we need a simple way to access them all.
+Ideally, the plugins should be accessible at InputValidator.plugins 
+then it be simple to use them:
+
+#+begin_src python
+class Foo:
+  def is_valid(input):
+    for plugin in InputValidator.plugins:
+      try:
+        plugin().validate(input)
+      except ValueError:
+        return False
+      return True
+#+end_src
+
+We can define a metaclass that, on the creation of every new class sees if it is a plugin and if it is, adds it to the InputValidator's plugins attribute
+If is doesn't have the validate method, it may be a mount point - if it has a plugins attribute
+
+This works because all the plugins have to extend the plugin mount point
+#+begin_src python
+class PluginMount(type):
+  def __init__(cls, name, bases, attrs):
+    if not hasattr(cls, 'plugins'):
+      # no plugins, so, this is a mount point
+      cls.plugins = []
+    else:
+      # this has a plugins attribute, so must be a plugin
+      cls.plugins.append(cls)
+#+end_src
+
+That's all that we need to do. 
+Now, for every mount we need to define metaclass=PluginMount
+we don't need to do this for every plugin that subclasses this class, since metaclasses are inherited
+
+** Controlling the namespace
+
+We can also use metaclasses to help control the creation of new classes by Python. 
+
+Since a metaclass is just extending the type class, we can override specific methods of type class to control what happens
+The __prepare__() method is run before processing the class code block even.
+It receives the name of the class and the base. It is responsible for returning the dict that will be used to store the namespace while Python executes the body of the class definition. 
+
+eg:
+
+#+begin_src python
+class SimpleMetaClass(type):
+  def __init__(cls, name, bases, attrs): # this is run after the class has been initialized
+    print(attrs) # we are printing the namespace dict
+
+class Foo(metaclass=SimpleMetaClass):
+   b = 1
+   a = 2
+   c = 3
+
+{'a':2, '__module__':'__main__', 'b':1, 'c':3} # here, the order isn't preserved
+
+class SimpleMetaClass(type):
+  def __init__(cls, name, bases, attrs): # this is run after the class has been initialized
+    print(attrs) # we are printing the namespace dict
+  
+  @classmethod
+  def __prepare__(cls, name, bases):
+    return OrderedDict()
+
+class Foo(metaclass=SimpleMetaClass):
+   b = 1
+   a = 2
+   c = 3
+
+OrderedDict([('__module__':'__main__'), ('b':1), ('A', 2), ('c':3)]) # here, the order is preserved
+# note, the ordereddict shows the data as a list of tuples
+#+end_src
+
+*Since the namespace dict has details of all the methods and attributes of the class, we can make any class implement the protocol/interface of any other by providing the methods that are expected of that class.*
+
+Access to the namespace dict is via the attributes of the object. It is a dict after all, you can add, update, remove attributes.
+To get attribute from string; getattr. Similar are delattr, setattr
+
+Attributes values can also be powered by functions; @property 
+Now, whenever the attribute is accessed, the function is run
+
+But the downside is that if you use @property to define an attribute, you cannot set it like with other attrs
+
+#+begin_src python
+class Foo:
+  a = 2
+  @property
+  def bar(self):
+    return "foobar"
+
+f = Foo()
+f.a
+2
+
+f.a = 3
+f.a
+3
+
+f.bar
+"foobar"
+
+f.bar = "barfoo"
+# ERROR. AttributeError: can't set attribute
+
+#+end_src
+
+We need to define a function to update that property. It should take in a value and set the attribute to that. The function should have the same name and must be decorated with @<fn_name>.setter
+You can also use @<fn_name>.deleter to delete the property
+
+#+begin_src python
+class Foo:
+  a = 2
+
+  def __init__(self):
+    self.bar = 'foobar'
+
+  @property
+  def bar(self):
+    return self.bar
+  
+  @bar.setter
+  def bar(self, value):
+    self.bar = value
+  
+  @bar.deleter
+  def bar(self):
+    del self.bar
+
+f = Foo()
+f.bar
+'foobar'
+
+f.bar = 'barfoo'
+f.bar
+'foobar' # TODO: why does this not work with Py3.5.2?
+#+end_src
+
+** Descriptors
+
+Earlier, we defined @property, getter and setter and deleter methods to define new properties for classes and their objects. 
+But when we don't have access to the class, say, we are using a class from some other lib, we need Descriptors.
+
+They allow you to define an object that can behave in the same way as a property on any class it's assigned to.
+Descriptors have any of the 3 possible methods for getting, setting, deleting values
+
+eg:
+#+begin_src python
+import datetime
+
+class CurrentTime: #  this is the descriptor
+  def __get__(self, instance, owner): # owner as in owner class, Example here
+    print(instance, owner)
+    return datetime.datetime.now()
+
+class Example:
+  time = CurrentTime() # time is a class attribute now. if it were defined in __init__ as self.time, it would be the instance attribute
+
+Example.time
+None <class '__main__.Example'> # here, no instance of the object
+datetime.datetime(2017, 5, 2, 8, 50, 31, 27981)
+
+Example().time
+<__main__.Example object at 0x7f57cc39d400> <class '__main__.Example'>
+datetime(2017, 5, 2, 8, 50, 36, 144998)
+
+# removing the print statements
+
+Example.time
+datetime.datetime(2009, 10, 31, 21, 27, 5, 236000)
+
+import time
+time.sleep(5 * 60) # Wait five minutes
+Example().time
+datetime.datetime(2009, 10, 31, 21, 32, 15, 375000)
+#+end_src
+
+Here, CurrentTime is a descriptor object. Each descriptor handles one attribute, each attribute is handled by one descriptor.
+
+*Each attribute is implemented as a descriptor behind the scenes.*
+Here, the only difference is that we ripped the implicit descriptor object that would have been created by Python and created the descriptor object ourself.
+
+__set__(self, instance, value) --> sets the attribute value for an instance
+__get__(self, instance, owner) --> it manages the retrieval of attributes on both class and its instances (so it receives both as args)
+__delete__(self, instance) --> it needs only the instance - this will delete the descriptor object? 
+
+
+another example:
+Let's define another attribute and it's descriptor object ourself. We will change the functionality to make sure that each time the attribute is called, we will log it
+#+begin_src python
+class LoggedAttribute: # descriptor to manage class Foo's value attribute
+  def __init__(self):
+    self.log = []
+    self.value_map = {}
+
+  def __set__(self, instance, value):
+    self.value_map[instance] = value
+    self.log.append((datetime.datetime.now, instance, value))
+
+  def __get__(self, instance, owner):
+    if not instance: # called on the class Foo
+      return self # we do this so that we can see the log, by Foo.value.log
+    return self.value_map[instance]
+
+class Foo:
+  value = LoggedAttribute()
+
+#+end_src
+Here, we use the dict to manage the values given to the attribute with the instance as the key. This is because the descriptor object is shared among all the instances of the class it's attached to(Foo.
+
+The best way to do this is not with a dict, we should add the value of the attribute to the object's namespace directly. Since we do not know the name of the attribute, we need to use metaclasses to solve this problem
+
+** Methods
+        *When a function is assigned to a class, it's considered to be a method.*
+
+The methods are like normal functions, but they have the class' information available with them. 
+
+Methods are descriptors as well. Method accessed on the class (and not the instance) are "unbound" methods. 
+
+#+begin_src python
+class Example:
+  def method(self):
+    return 'done!'
+
+type(Example.method)
+<class 'function'>
+
+Example.method
+<function method at 0x...> # calling it gives the function object itself
+
+Example.method()
+TypeError: method() takes 1 positional argument, (0 given) # self is not passed implicitly, because there is no self to give it, we are using the class to call it
+
+e = Example()
+
+type(e.method)
+<class 'function'>
+
+e.method
+<bound method Example.method of <__main.Example object at 0x...>> # calling it gives the function object itself
+
+e.method()
+'done!'
+
+# the underlying function is the same
+Example.method == e.method.__func__ 
+True
+#+end_src
+
+*** Class methods
+
+When a method doesn't need access to the instance object at all, but need access to only the class it's attached to, it's considered a class method. 
+@classmethod - use to define them
+Using :top: means the method will receive the class as the first argument -- regardless of weather it's called as an attribute of the class or it's instances 
+
+#+begin_src python
+class Example:
+  foo = 'foo' # class attribute
+
+  def __init__(self):
+    self.bar = 'bar' # instance attribute, can be accessed by Example().bar
+    foobar = 'foobar' # function's local attribute, cannot be accessed outside the __init__ fn
+
+  @classmethod
+  def method(cls): # since the @classmethod decorator has been applied, method will receive the class or it's subclass as the first positional arg. It receives whatever class was used to call the method
+    return cls.foo
+
+Example.method()
+'foo'
+#+end_src
+
+The class methods are bound to the class. 
+Earlier with methods bound to instances:
+    e.method
+    <bound method Example.method of <__main.Example object at 0x...>> # calling it gives the function object itself
+
+Here, with class methods, we have:
+
+    Example.method
+    <bound method type.method of <class '__main__.Example'>>
+
+Note the method is bound to class and "is defined in" type class which gives birth to all classes
+
+    *All classes are just instances of metaclasses*
+
+If you thus define a method in the metaclass and use that metaclass to create classes, each class (but NOT to it's instances) will have access to that method as a standard bound method. 
+*The method will behave like a standard @classmethod*
+just that it cannot be called from the class' instances now - this is because the method is defined in the metaclss namespace, which puts it in the MRO of instances of that metaclass; not of the instances of it's instances. 
+@classmethods are put in the namespace of the class itself, so, they are available to the instances of the class.
+
+    *namespace access is to instances of the class/metaclass, i.e. always one level deep, not 2 levels deep. True?*
+
+*** Static methods
+
+Sometimes, even the class information is not required by methods. Such methods don't need any info, they are just like regular functions but are there in the class body because they are related to the work class is doing sort of. Also, defining them at the module level will pollute the namespace, so they are kept close to the class that is close to their functionality area.
+
+Defined using: @staticmethod decorator
+
+#+begin_src python
+class Example:
+  @staticmethod
+  def foo():
+    return 'foo'
+
+Example.foo
+<function foo at 0x...> # they are just like regular function
+#+end_src
+
+
+*** Assigning functions to classes and instances
+
+In python, most attributes can be overwritten by assigning a new value.S
+This works for functions as well.
+
+#+begin_src python
+def dynamic(obj):
+  return obj
+
+Example.method = dynamic # Example().method = dynamic won't work; you have to assign to class, not it's instance
+Example.method()
+TypeError: dynamic() takes 1 positional argument, 0 given # we need to give the obj argument
+
+Example().method() # when we call any method bound to an instance, the first positional argument passed to the function is the instance
+<__main__.Example object at 0x>
+  
+#+end_src
+
+    *Any bound function will be given an instance of the class as the first positional argument*
+
+Functions can be assigned to classes directly like normal attributes, but they must take the first positional argument as the instance of the object
+
+    *When you print the instance on stdout, it looks like this: <__module_where_it_is_defined__.ClassName object at 0x>*
+
+** Magic methods
+
+*** Creating instances
+
+Going from class to instance is called instantiation. An instance is just a reference to the class that provides the behaviour and a namespace directory that's unique to the instance being created. 
+The __init__ method is for initialization of the instance namespace with some values. 
+
+Initialization is for initializing the object. For creating it, Python uses the __new__ method.
+The first argument to __new__ is the class of the object being created. It then receives all the arguments __init__ receives. 
+
+*** Example: random subclasses
+
+#+begin_src python
+import random
+
+class Example:
+  def __new__(cls, *args, **kwargs):
+    cls = random.choice(cls.__subclasses__())
+    return super(Example, cls).__new__(cls, *args, **kwargs)
+
+Example() # Banana object
+Example() # Apple object
+Example() # Apple object
+#+end_src
+
+This can be used where you for eg need to pass in the contents of a file to a single File class and have it automatically instantiate a subclass whose attributes and methods are built for the format of the file provided. 
+
+*** Dealing with attributes
+
+instance.attribute --> getattr(instance, attribute_name)
+
+When the instance is asked for an attribute that is not in it's namespace, it calls the __getattr__ method, which returns AttributeError by default.
+
+#+begin_src python
+class AttributeDict(dict):
+  def __getattr__(self, name):
+    return self[name]
+
+  def __delattr__(self, name):
+    del self[name]
+#+end_src
+
+ - __getattr__(self, name) called only when the attribute doesn't exist. You also have getattr to get by string
+ - __getattribute__(self, name) called every time any attribute is accessed. 
+ - __setattr__(self, name, value) called every time we need to set an attribute. You have setattr to set by string
+ - __delattr__(self, name) called every time we need to delete an attribute. Eg: del e.foo
+
+
+*** String representations
+
+    *When you do str(object), it's __str__ method is called.*
+    *print(object) also calls the __str__ method.*
+ 
+Override the __str__ method to see what is printed when your object is printed. Since Py3, __str__ always returns Unicode string (all strings became Unicode by default)
+
+In the interpreter, when you just write the name of the object, it prints out a string. It uses the __repr__ method of the object to decide what to print.
+
+__repr__ method is used to describe an object in the interactive console
+it provides more detail generally about the object. For eg, dict etc.
+
+    *So, use __repr__ to give a verbose representation of the object. Use __str__ to give a terse representation of the object*
+
+* Common Protocols
+
+** Basic operations
+You want your classes to behave familiarly; they should have default behavior that is not surprising and seems expected. Simple things like adding two datetime objects should be allowed etc. This functionality, this interface can be implemented using some methods.
+
+It is like the interpreter provides an interface, an API on which we can build our objects. The interpreter calls certain methods when the user interacts with the object in a certain way, and when we provide those method implementations, we can fake a certain behavior.
+
+| left method name                  | what it does                                          | comments                              | right method name |
+|-----------------------------------+-------------------------------------------------------+---------------------------------------+-------------------|
+| __bool__(self)                    | returns weather the object is true or false           | # it was __nonzero__() in Py2         | NA                |
+| -> True/False                     | use in cases like while object: # code                |                                       |                   |
+|                                   |                                                       |                                       |                   |
+| __add__(self, other)              | the method is bound to the object on the LHS,         | def __add__(self, other):             | __radd__()        |
+|                                   | while the RHS is the "other"                          | return self.value + other             |                   |
+|                                   |                                                       | Example(10)+20 = 30                   |                   |
+|                                   |                                                       |                                       |                   |
+| __sub__(self, other)              |                                                       |                                       | __rsub__()        |
+| __mul__(self, other)              |                                                       |                                       | __rmul__()        |
+| __truediv__(self, other)          | this is like in the calc, 5/2=2.5                     |                                       | __rtruediv__      |
+| __floordiv__(self, other)         | this is integer division, 5//4=1                      |                                       | __rfloordiv()     |
+| __mod__(self, other)              | 20%6 --> 2                                            | also used for strings; "%s" % someVar | __rmod()          |
+| __pow__(self, power, modulo=None) |                                                       |                                       | __rpow()          |
+
+
+#+ATTR_ORG: :width 600
+#+ATTR_ORG: :height 600
+[[./assets/ProPython_1.png]]
+#+ATTR_ORG: :width 600
+#+ATTR_ORG: :height 600
+[[./assets/ProPython_2.png]]
+
+
+#+begin_src python
+class Example:
+  def __init__(self, value)
+    self.value = value
+
+  def __add__(self, other):
+    return self.value+other
+
+Example(10)+20
+30
+
+# Python has a function divmod() that returns quotient and remainder
+divmod(10, 2) # override with __divmod(self, divisor)
+(5, 0)
+
+class Example:
+  def __init__(self, value)
+    self.value = value
+
+  def __divmod__(self, divisor):
+    return self.value // divisor, self.value % divisor # called on divmod(Example(5), 2)
+
+  def __pow__(self, power): # this is called on Example(5)**3
+    return self.value*power
+
+  def __lshift(self, other):
+    print(other)
+    return self.value << other
+
+Example(2) << 1
+1
+4
+
+# __and__ is Example(4) & Example(6)
+# __or__ is Example(4) | Example(6)
+# __xor__ is Example(4) ^ Example(6)
+# __invert__ is ~Example(4)
+
+#+end_src
+
+** Variations
+
+The above :top: works fine if the object with the custom logic appears on the LHS of the equation, like Example(4) + 10
+
+But here, it would fail: 10 + Example(4)
+So, we have the __radd__ for right add etc
+
+Also, you have inline methods: 
+
+#+begin_src python
+value = 5
+value *= 3
+value
+15
+
+class Example:
+  def __init__(self, value):
+    self.value = value
+
+  def __imul__(self, other):
+    return self.value*other
+
+e = Example(5) # here, Example(5)*=3 doesn't work
+e*=3
+15
+
+#+end_src
+
+** Numbers
+
+To coerce any number into believing that it is a number: __index__()
+
+When you try to use the number as an index to a list etc, and the *number is not an int*, this is called. If it doesn't return an int, python raises a TypeError
+
+The built-in method int() uses __int__
+                    float() uses __float__
+                    complex() uses __complex__
+                    floor() uses __floor__
+                    math.ceil() uses __ceil__
+                    round() uses __round__
+                    abs() uses __abs__
+                    "-" uses __neg__ --> -Example(4) --> -4
+                    "+" uses __pos__ --> +Example(4) --> 4
+
+
+There is no way to override "is" and "is not" since they operate directly on the internal identity of each object. The identity is typically implemented as the object's address in memory
+
+                    "==" uses __eq__ --> Example(4)==4 --> True
+                    "!=" uses __nq__ --> Example(4)!=4 --> False # note, this does not simply rely on the boolean of ==, it has a separate method
+                    "<" uses __lt__ --> Example(4)<20 --> True
+                    ">" uses __gt__ --> Example(4)>2 --> True
+                    "<=" uses __lte__ --> Example(4)<=20 --> True
+                    ">=" uses __gte__ --> Example(4)>=2 --> True
+
+** Iterables
+
+*An iterable is just any object that we can ask to yield numbers one at a time. 
+It does not depend weather they are in memory(like in an array, list) or are generated on the fly, lazily(like in generators).*
+
+*If we have a BST and we want to iterate thru the nodes, we can write an iterator to do that for eg*
+
+    Generators are just a special kind of iterators that calculate their values on the fly and cannot be reused. There can be many different kinds of iterators and generators are one type of them
+
+If passing the object to the built-in function iter() returns an iterator, the object is iterable. 
+when you iter() an object, __iter__ is looked for. It is called without any arguments are it must return an iterator. 
+The returned iterator object has a required interface of 2 methods - it should have an __iter__ method and __next__ method which returns the next element in the sequence.
+
+The iterator object should have __iter__ method so that the iterobject is itself iterable. Just return self. 
+
+When used in a for loop for eg, the next() method of the object will be called implicitly. The generator will start yielding None when it is done.
+But None can be a value that is stored in an iterator(array?), so, __next__ raises a StopIteration exception where there aren't any more items
+
+example:
+
+#+begin_src python
+
+# ITERATOR
+class Range:
+  def __init__(self, value):
+    self.value = value
+ 
+  def __iter__(self):
+    return RangeIterator(self.value)
+
+class RangeIterator:
+  def __init__(self, value):
+    self.value = value
+    self.counter = 0
+
+  def __iter__(self):
+    return self
+
+  def __next__(self):
+    # this is bad, you never need to use if-else with return statements
+    if self.counter < self.value:
+      self.counter+=1
+      return self.counter
+    else:
+      raise StopIteration
+
+    # this is better
+    if self.counter < self.value:
+      self.counter+=1
+      return self.counter
+    raise StopIteration
+
+
+r = Range(5)
+list(r)
+[0, 1, 2, 3, 4]
+list(r)
+[0, 1, 2, 3, 4]
+
+# GENERATOR - can be used only once
+def range_gen(count):
+  for x in range(count):
+    yield x
+
+r = range_gen(5)
+list(r)
+[0, 1, 2, 3, 4]
+list(r)
+[]
+#+end_src 
+
+Iterators are a powerful way to implement an iterable. There is an alternative however, useful for sequences.
+If the iter() method does not find __iter__, it looks for __getitem__ which accepts an index and is expected to return the item in that position
+
+Python handles the internals of sending the index etc. Python will continue to use it till it returns an IndexError
+
+#+begin_src python
+class Range:
+  def __init__(self, count):
+    self.count = count
+
+  def __getitem__(self, index):
+    if index > self.count:
+      raise IndexError
+    return index
+
+r = Range(5)
+list(r)
+[0, 1, 2, 3, 4]
+list(r)
+[0, 1, 2, 3, 4]
+
+#+end_src
+
+*** Example: Repeatable generators
+
+The problem with generators was that they cannot be reused. What we can do is, we can add __iter__ method to generator that returns the generator itself, so it can be iterated all over once
+
+#+begin_src python
+
+def repetable(generator):
+  class RepeatableGenerator:
+    def __init__(self, *args, **kwargs):
+      self.args = args
+      self.kwargs = kwargs
+
+    def __iter__(self): # this is called when you iterate thru the generator
+      return iter(generator(*self.args, **self.kwargs)) # this will just return a new instance of the generator which can be iterated once
+   
+  @functools.wraps(generator)
+  def wrapper(*args, **kwargs):
+    return RepeatableGenerator(*args, **kwargs)
+
+  return wrapper
+
+@repetable
+def some_generator(count): # this is a normal generator that can now be used more than once
+  for x in range(count):
+    yield x
+#+end_src
+
+** Sequences
+
+Lists, tuples, sets, strings --> all are sequences that (may, don't need to) have the entire contents in memory. They can yield items one by one, but also provide random access
+
+They support len(<sequence object>), which is supported by __len__(self)
+
+Sequences contain a fixed number of items, so, they can be iterated in reverse as well
+
+   reverse() takes a sequence as its only argument and returns an iterable that yields items from the sequence in reverse
+   __reversed__() is the method to implement in your own objects if you want this
+
+
+In a plain iterable, we can only provide items one by one. In sequences, we have random access, so we can access items via their index
+(recall this was how we could use sequences as iterables without having to satisfy the Iterator interface - of __iter__, __next__)
+
+  sequence[index] --> __getitem__(self, index)
+
+# :top: return the item or raise an IndexError
+
+We also have: 
+    
+    __setitem__(self, index, value)
+
+#+begin_src python
+In [45]: class Example:
+    ...:     def __init__(self, key, value):
+    ...:         self.key = key
+    ...:         self.value = value
+    ...:         
+    ...:     def __setitem__(self, key, value):
+    ...:         self.key = key
+    ...:         self.value = value
+    ...:         
+    ...:     def __getitem__(self, key): # always return self.value for any key
+    ...:         return self.value
+    ...:     
+In [47]: e = Example(1, 4)
+
+In [48]: e[1]
+Out[48]: 4
+
+In [49]: e[2]
+Out[49]: 4
+
+In [50]: e['a'] # the reason for this is that the methods for sequence[index] are same as methods for object[key], more details to follow
+Out[50]: 4
+
+In [51]: e[5] = 7
+
+In [52]: e[1]
+Out[52]: 7
+
+#+end_src
+
+
+__setitem__ is only for replacing existing items, for appending etc, we need:
+append(), insert()
+
+To remove an item: 
+  remove(index); this is O(n) as the rest of the items are copied over one place 
+  del sequence[index] - same as :top: --> __delitem__()
+
+  
+Finally, we have the contains method that tests for membership.
+Default behavior of Python is to iterate thru the elements and check against each item - this allows the membership test to be performed on iterables of any type, not just sequences.
+
+The method to override for yourself is: __contains__(self, num) --> return boolean
+The sequences can take advantage of domain knowledge, for eg, if the list is sorted always, you can use binary search in the __contains__ to get the answer in O(logN) time
+
+** Mappings
+
+Sequences are contiguous collections of objects. Mappings are key, value pairs.
+
+Keys aren't ordered like sequences, iterating over the keys is generally not the point. The goal of key-value pairs is to provide immediate access to the value referenced by given key
+
+Accessing the values by keys are uses the same syntax as using indexes in sequences. i.e. __getitme__, __setitem__, __delitem__
+sequence[index] ==== obj[key]
+
+The key can be any hashable object in python.
+
+Also, if you implement any mappings object, provide keys(), values() by implementing an __iter__ method
+Finally, don't forget to provide items() which iterates thru the mapping and returns (key, value)
+
+In Py2, mapping.keys() provided a list with all the keys. And iterkeys() provided an iterable. In Py3, keys() returns an iterable and iterkeys is removed
+
+** Callables
+
+In python, both functions and classes can be called anytime. Calling a function executes it, calling a class is the way to create an instance of that class.
+If you want to make any python object callable, for eg and instance of a class callable, use the __call__method
+
+#+begin_src python
+class Example:
+  pass
+
+e = Example()
+e
+<__main__.Example at 0x...>
+
+e()
+TypeError: 'Example' object not callable
+
+#+end_src
+
+
+** Context Managers
+
+Objects can be used as context managers for use in a *with* statement. 
+This is useful for setting up the boiler plate involved in working with the object, handling errors etc
+Eg: file handling
+
+How it works:
+ - __enter__(self) of context manager object-> called just prior to execution of the interior code block. *self is the instance of the context manager object itself*
+   - it's responsibility is to do some initialization on self etc
+   - if the *with* statement uses a *as* statement, the return value of this method is used to populate the reference variable in in that clause
+
+  # the code in the code block executes, it can interact with the context manage instance object
+
+ - __exit__() -> responsible for cleaning up any changes that were made during __enter__()
+   - always called, be it normal completion of execution, return, yield, continue, break, errors etc
+   - 3 args given to exit - class object for the exception raised, instance of that class, traceback object
+   - exit can suppress errors by returning True. If not returned(or false returned), the exception will be re-raised
+
+
+*** example - context manager to suppress errors
+
+#+begin_src python
+class SuppressErrors:
+  def __init__(self, *exceptions):
+    if not exceptions:
+      exceptions = (Exception,)
+    self.exceptions = exceptions
+
+  def __enter__(self):
+    pass
+
+  def __exit__(self, exc_class, exc_instance, traceback):
+    print("exit called")
+    if isinstance(exc_instance, self.exceptions):
+      return True
+    return False
+
+with SupressErrors():
+  print("1")
+  1/0 # raises a ZeroDivisionError
+  print("2")
+  1/0 
+  print("3")
+  1/0 
+
+# 1
+# exit called
+
+# once the error occurs, we exit the code block and enter __exit__
+#+end_src
+
+open(filename, mode) looks like a special case, it is a function and it doesn't have the __enter__ or __exit__ methods (not even nested __enter__/__exit__ functions)
+
+    *methods are for functions inside the class, the functions that have the class' namespace and context to use. Functions are lone wolves, they are outside the class*
+
+
+* Object Management
+
+Each object is a combination of 3 specific things:
+
+ - identity
+   - it's address in memory
+   - cannot be modified during the objects lifetime
+   - id(object) gives the id of the object
+ - type
+   - the class and base classes that support it. All the instances of a particular object share type
+   - each object has a namespace dict attributed to it, at __dict__
+ - value
+   - the values of the object that make it distinct from it's peers (other objects of the same type)
+   - the value is provided by a namespace dict specific to a given object
+   - the value is designed to work with the type to do useful things, identity is unrelated to type etc 
+
+** Borg pattern
+We can have a pool of objects that all share the namespace. They are different instances but all have the same namespace dict and change to any one reflects in all others. 
+
+We can write a meta class to do this on instantiation of new objects or we can just override the __dict__ attribute in the __init__ method
+
+#+begin_src python
+class Borg:
+  _namespace = {}
+  def __init__(self):
+    self.__dict__ = Borg._namespace
+
+a = Borg()
+b = Borg()
+
+hasattr(a, 'attribute')
+False
+
+a.attribute = 'foo'
+hasattr(a, 'attribute')
+True
+
+a.attribute
+'foo'
+#+end_src
+

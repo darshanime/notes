@@ -1,0 +1,3868 @@
+To check the effect of the changes in code on the working of scrapy: do this. 
+go to R/scrapy
+make the change - for eg, in the files download pipeline, I changed the log message from "referred" to "refferred"
+then, run this: python setup.py install
+then cd into time_covers
+then run scrapy list
+then scrapy crawl <spider-name>
+we will now see the new word, as chaged by us.
+GO!!
+
+1. To check if the change you have made doesn't break scrapy; use tests to check - tox docs for eg. DO IN VENV.
+
+use: 
+source venv/bin/activate FROM home
+deactivate
+
+to test a certain file, activate the enviormnet, then cd to scrapy/tests and then do;
+tox <filename.py>
+
+to test a certain test: 
+
+tox  -e py34 -- tests/test_pipeline_files.py::TestS3FilesStore tests/test_feedexport.py::S3FeedStorageTest
+
+To compile the docs, go to the docs folder and run *make html*
+
+2. Run the docs tests using tox docs, but they fail because the official sphnix_rtd_theme isn't running locally, dunno why.
+
+3. Push to the PR via this : 
+suppose you made the changes on branch "my_new_feature". Do this after add, commiting locally. git push origin my_new_feature.
+
+4. Look for text inside the dir
+grep -nrl "string" /path
+n is for the line number
+r is for recursive, this will look for text in all the files in the folder
+l is for printing only filenames that have the "string"
+
+
+THIS will give a lot of garbage too by looking at the .tox (sometimes docs can be noise too), in that case, use:
+$ grep -r --exclude-dir=.tox --exclude-dir=docs "SCHEDULER_DEBUG" .
+
+5. There was a class __init__.py
+with this code :
+class Settings(object):
+    def __init__(self, blah-blah):
+        self.attributes = {}
+
+    def __getitem__(self, opt_name):
+        value = None
+        if opt_name in self.attributes:
+            value = self.attributes[opt_name].value
+        return value
+
+    def one(self, blah):
+        return self[blah] ----> this is invoke the __getitem__ method with opt_name as blah. 
+
+6. Look for file in a dir
+find / -name process.txt
+
+7. To see the effects of the changes in code, do this : 
+go to dirbot inside scrapy, and check the try.py file. It uses the from_crawler() class method to get access to the crawler. If you go to crawler.py and add print "HI" in crawler's __init__(), you can see it prints the same when you run the file. To be able to run it from anywhere, create a new env with just python (in conda say) and install the six, w3lib etc and do the sitecustomize.py thingy. then you can run try.py from anywhere. 
+
+
+8. GSOC tip
+There is a lot of signals sent in the engine.py from core. Do this : grep -r "signals" . - this will give all the files where signals are mentioned because to attach a signal to anythign, you need to : signals.request_dropped etc.
+ALSO, look at jacobmaerer (the german dude)s proposal from last year. he later opted for the plug functionality project. 
+
+9. TIP
+A really useful way to learn how a system works - each test will define a instance from scratch, show how it is queried, what output it gives, what it should be equal to. 
+
+10. Look at github.com/scrapy/scrapy/issue/8 - refactor signals. This would be a important point to start thinking about the possible change.  pull/773 also has some nice changes.
+
+11. Look at dupefilters.py - there is a DUPEFILTER_DEBUG that allows the loggin of only the first duplicate request, setting it to true will log all. Look at the code the undersrand how to get the settings and use them to impact logging. 
+
+12. There is a folder commands in scrapy. Now, I was examining crawl.py in that folder. The crawl command inherited from a certain ScrapyCommand. I could not find the file anywhere I looked. Next, in .. I found command.py - it just issued a depreciation warning and imported scrapy.commands.* instead. In the end, I found the class in commands __init__.py file.
+
+13. In crawl.py of commands dir, how does class Command is extendted from ScrapyCommand, whihc has crawler_process = False, here we do this : self.crawler_process.crawl(spname, **opts.spargs) - spname is the spider name. How does this work ?
+I don't see scrapy.commands.crawl being imported in crawler.py to take extend it with the crawl method.
+
+14. To change the level of logging, there are three ways:
+1. on the command line give --loglevel = 'INFO' - this will log only the info level 
+2. On the settings.py set this : LOG_LEVEL = 'INFO'
+3. On the spider body, write this : 
+custom_settings = {
+        'LOG_LEVEL': 'INFO',
+    }
+
+15. Each @defer.inlineCallbacks always yield. This is because, they don't have anything to return yet. they yield something and as the thing that they yield gets ready, it is processed further. 
+
+16. SCRAPY PULLS/ISSUES/COMMENTS to look at
+490, pull - a big pr, implements big good changes. Dangra says to the creator; you rock
+496, issue - this is realted to the 490pull above. some error related to logging, tagged easy.
+
+
+17. HOW TO DOWNLOAD THE FILES AND IMAGES FROM SCRAPY
+Just make sure that your item has files_urls and files attributes. When you yield, just make sure that the item has the files_urls filled (with the url) and also make sure files is empty. ie. the item is yielded without mentioning it.
+For files: simple examples
+
+ITEM_PIPELINES = [
+    'yourproject.files.FilesPipeline',
+]
+FILES_STORE = '/path/to/yourproject/downloads'
+
+FILES_STORE needs to point to a location where Scrapy can write (create it beforehand)
+
+3) add 2 special fields to your item definition
+    file_urls = Field() # --> this pattern, file_urls and files are common everyhwere. don't change them
+    files = Field()
+
+4) in your spider, when you have an URL for a file to download,
+add it to your Item instance before returning it
+
+...
+    myitem = YourProjectItem()
+    ...
+    myitem["file_urls"] = ["http://www.example.com/somefileiwant.csv"]
+    yield myitem
+
+5) run your spider and you should see files in the FILES_STORE folder
+
+anotehr eg :
+
+
+from scrapy.item import Item, Field
+
+class FiledownloadItem(Item):
+    file_urls = Field()
+    files = Field()
+ 
+
+this is the code for the spider:
+
+from scrapy.spider import BaseSpider
+from filedownload.items import FiledownloadItem
+
+class IetfSpider(BaseSpider):
+    name = "ietf"
+    allowed_domains = ["ietf.org"]
+    start_urls = (
+        'http://www.ietf.org/',
+        )
+
+    def parse(self, response):
+        yield FiledownloadItem(
+            file_urls=[
+                'http://www.ietf.org/images/ietflogotrans.gif',
+                'http://www.ietf.org/rfc/rfc2616.txt',
+                'http://www.rfc-editor.org/rfc/rfc2616.ps',
+                'http://www.rfc-editor.org/rfc/rfc2616.pdf',
+                'http://tools.ietf.org/html/rfc2616.html',
+            ]
+        )
+
+For images : take a look at the time_covers project in scrapy_codes. 
+The only difference, is that you have to activate the images pipeline. 
+
+Then, the same thing, just yield the ITEM with file_urls as the url of the file and files as empty.
+
+
+18. GSOC TIP
+Now, currently, the files and images pipeline mandates that the downloaded files/images be given random names. If you wish, you can give them custom names by ovveriding the files/images pipeline. You do that by passing along with the urls in your item, one more parameter "file_name" --> this will be passed to the Request's meta parameter when the request will be created. <<work on the internals>> 
+You can work on a PR that will do this: 
+allows you to pass one optional parameter "file_name" with the item you yield. The files will be stored by that name. In case the user enters invalid filenames, issue a warning/error and fallback on the default naming scheme. Write tests too.Make this PR, you will get the You rock thingy from dangra or someone ! 
+
+URL here : https://groups.google.com/forum/#!msg/scrapy-users/kzGHFjXywuY/O6PIhoT3thsJ
+
+HOW TO DO THIS :
+
+from scrapy.spider import Spider
+from scrapy.http import Request
+from scrapy.item import Item, Field
+
+
+class IetfItem(Item):
+    files = Field()
+    file_urls = Field()
+
+
+class IETFSpider(Spider):
+    name = 'ietfpipe'
+    allowed_domains = ['ietf.org']
+    start_urls = ['http://www.ietf.org']
+    file_urls = [
+        'http://www.ietf.org/images/ietflogotrans.gif',
+        'http://www.ietf.org/rfc/rfc2616.txt',
+        'http://www.rfc-editor.org/rfc/rfc2616.ps',
+        'http://www.rfc-editor.org/rfc/rfc2616.pdf',
+        'http://tools.ietf.org/html/rfc2616.html',
+    ]
+
+    def parse(self, response):
+        for cnt, furl in enumerate(self.file_urls, start=1):
+            yield IetfItem(file_urls=[{"file_url": furl, "file_name": "file_%03d" % cnt}])
+
+
+Custom FilesPipeline
+
+from scrapy.contrib.pipeline.files import FilesPipeline
+from scrapy.http import Request
+
+class MyFilesPipeline(FilesPipeline):
+
+    def get_media_requests(self, item, info):
+        for file_spec in item['file_urls']:
+            yield Request(url=file_spec["file_url"], meta={"file_spec": file_spec})
+
+    def file_path(self, request, response=None, info=None):
+        return request.meta["file_spec"]["file_name"]
+
+
+running scrapy from a script
+
+Remember that Scrapy is built on top of the Twisted asynchronous networking library, so you need to run it inside the Twisted reactor.
+
+the scrapy.crawler.CrawlerProcess is used to start a Twisted reactor. configuring the logging and setting shutdown handlers. This class is the one used by all Scrapy commands.
+
+import scrapy
+from scrapy.crawler import CrawlerProcess
+
+class MySpider(scrapy.Spider):
+    # Your spider definition
+    ...
+
+process = CrawlerProcess({
+    'USER_AGENT': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)'
+})
+
+process.crawl(MySpider)
+process.start() # the script will block here until the crawling is finished
+
+your projects settings is a object of the Settings class
+
+The twisted framework works on an event loop. The event loop is a programming construct that waits for and dispatches events or messages in a program. It works by calling some internal or external “event provider”, which generally blocks until an event has arrived, and then calls the relevant event handler (“dispatches the event”). The reactor provides basic interfaces to a number of services, including network communications, threading, and event dispatching.
+
+There are multiple implementations of the reactor, each modified to provide better support for specialized features over the default implementation
+
+ISSUES TO WORK ON:
+
+2 already in progress
+
+1. exceptions raised in downloader middleware are quietly suppressed #496, #899
+2.  Shortcut method for spider_Idle signal #740 
+there are 2 prs in review already
+3. LOG_SHORT_NAMES option to disable TopLevelFormatter #1731 - look at pull 1583 for a headstart
+4.  LogCounterHandler should only handle messages from self.crawler #1362 - issues/1362
+5.  response.body is duplicate #1606  - issue
+6.  Download delay does not work as documented when CONCURRNT_REQUESTS_PER_IP > 0 #1659 
+7.  File is not downloading when response.status is 201 #1615
+
+Crawler object provides access to all Scrapy core components like settings and signals
+
+The main entry point to Scrapy API is the Crawler object, passed to extensions through the from_crawler class method. This object provides access to all Scrapy core components, and it’s the only way for extensions to access them and hook their functionality into Scrapy.
+
+trivial:
+https://github.com/scrapy/scrapy/issues/1673 - help solve this issue
+
+The main workhorse of Scrapy is the Crawler. it must be instantiated with a Spider subclass and settings object.
+
+a spider is bound to a crawler object. 
+
+
+METHODS AND MORE
+
+>>> class Pizza(object):
+...     def __init__(self, size):
+...         self.size = size
+...     def get_size(self):
+...         return self.size
+...
+>>> Pizza.get_size
+<unbound method Pizza.get_size>
+
+Here, the get_size method is unbound, it is not bounded to any object
+if we mark get_size with @classmethod, it becomes a bound method, bound to the class.
+
+If we call Pizza.get_size(), we will get: 
+
+TypeError: unbound method get_size() must be called with Pizza instance as first argument (got nothing instead)
+
+see, get_size, it requires "an Pizza instance" as the first argument.
+so, this should work:
+print Pizza.get_size(Pizza(42))
+
+Python binds the methods of the class to ANY instance of the class. 
+so, Pizza(42).get_size - is a bound method, it can be called
+
+here, we didnt have to provide any argument to the get_size() method, this is because it is bound to the pizza instance (craeted by Pizza(42)).
+
+now, the bound method can be called without bothering about the "self" argument
+
+
+then, there are the staticmethods
+staticmethods dont use the class at all - it is self sufficient in itself
+eg:
+class Blah(Object):
+    @staticmethod
+    def add_nums(x,y):
+        return x+y
+note, we didnt need the self here.
+
+seeing @staticmethod we know that the method doesnt depend on the class at all.
+also, now python doesnt have to instantiate a bound-method for each pizza object we instantiate. this is one less method to make 'bound'
+
+also, we can override the staticmethods in a subclass.
+
+classmethods are a little different. they are bound to a class!
+    
+class Pizza(object):
+    radius = 42
+    @classmethod
+    def get_rad(cls):
+        return cls.radius
+
+Pizza.get_rad - is a bound method, bound to the class
+Pizza().get_rad - same as above - bound to the class
+it works too, returns 42
+
+the classmethod is bound to the class. so, it needs a reference to the class itself as the first argument.
+the regular methods were bound to the object, so they needed a reference to the object.
+
+the static methods shouldnt use any of the classes variables.
+
+THIS WILL WORK
+class Pizza(object):
+    def __init__(self, size):
+        self.size = size
+    def get_size(self):
+        return self.size
+
+print Pizza(12).get_size()
+
+THIS WONT WORK, WE WILL HAVE TO PROVIDE get_size with an object of the Pizza class [Pizza(12)] for eg.
+class Pizza(object):
+    def __init__(self, size):
+        self.size = size
+    @staticmethod
+    def get_size(self):
+        return self.size
+
+print Pizza(12).get_size()
+
+
+In scrapy/pipelines/media.py - we have the MediaPipeLine class, it does not extend/inherit from anything, still it is able to use the from_crawler method. and also the from_settings method.
+how?
+
+this is simple. we arent using the methods as much as defining them or overriding them. look at the signals example we wrote. we inherited from the Spider class, it already had the from_crawler method implemented. we overrode it here to connect to the signal.
+
+notice the extensions, they implement this method to add some functionality.
+
+this method provides the class with the crawler object. 
+we create an instance of the class. and use that instance and the crawler to access settings for example [crawler.settings], connect signals to the crawler [crawler.signals.connect(self.close, signals.spider_closed)], 
+this method is (at its bare version) is used to create an instance of the class implementing it. 
+
+this is what the spider does:
+
+    @classmethod
+    def from_crawler(cls, crawler, *args, **kwargs):
+        spider = cls(*args, **kwargs)
+        spider._set_crawler(crawler)
+        return spider
+
+    def _set_crawler(self, crawler):
+        self.crawler = crawler
+        self.settings = crawler.settings
+        crawler.signals.connect(self.close, signals.spider_closed)
+
+note, we create an object of the spider class, set the crawler attribute to point to the crawler given to us, set the settings of the spider to those received by the crawler, connect the signal to the close method (which just sets the spider's close attribute to closed)
+
+heres how the corestats uses the classmethod.
+
+class CoreStats(object):
+
+    def __init__(self, stats):
+        self.stats = stats
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        o = cls(crawler.stats)
+        crawler.signals.connect(o.spider_opened, signal=signals.spider_opened)
+        return o
+
+    def spider_opened(self, spider):
+        self.stats.set_value('start_time', datetime.datetime.utcnow(), spider=spider)
+
+    Note, here for instantiating the CoreStats object, we needed stats, which we got from the crawler. we created an object of CoreStats and then used the signals, and retuned it.
+
+what happens is that this method is used by the engine when the spider is proceesed - when it asked to work.
+the engine passes the crawler object and expects the object of the class in return
+
+now, how is this crawler object created??
+it is an instance of the Crawler class in crawler.Crawler
+
+The Crawler object must be instantiated with a scrapy.spiders.Spider subclass and a scrapy.settings.Settings object.
+
+it has the following attributes:
+
+        self.spidercls = spidercls //the spider class is needed.
+        this is okay, recall in the spider initialization, what we did was just take the settings from the crawler and tell the spider that the crawler is attached to it.
+        self.settings = settings.copy() //settings
+        self.signals = SignalManager(self) //signal manager
+        self.stats = load_object(self.settings['STATS_CLASS'])(self) //stats
+        self.signals.connect(self.__remove_handler, signals.engine_stopped) //signals connected
+        lf_cls = load_object(self.settings['LOG_FORMATTER'])
+        self.logformatter = lf_cls.from_crawler(self)
+        self.extensions = ExtensionManager.from_crawler(self) //extensions
+        self.crawling = False
+        self.spider = None
+        self.engine = None
+
+we also have a few more helper methods in crawler.py
+CrawlerRunner - manages crawlers in the Twisted reactor - needs to be initiated with the settings object.
+CrawlerProcess - A class to run multiple scrapy crawlers in a process simultaneously. This class extends CrawlerRunner by adding support for starting your own Twisted `reactor`_ and handling shutdown signals, like the keyboard interrupt command Ctrl-C. It also configures top-level logging.
+
+
+now, the filepipeline extension is thus implemented
+
+the working class is the FilesPipeline (file.py) which extends the MediaPipeline (media.py)
+
+The MediaPipeline takes in the crawler from the from_crawler method.
+
+
+**to identify any request, use the fp = request_fingerprint(request) function.
+Deferred
+Why do we want this? Well, in cases where a function in a threaded program would block until it gets a result, for Twisted it should not block. Instead, it should return a Deferred.
+
+
+
+Krondo tutorial series An Introduction to Asynchronous Programming and Twisted
+
+
+Part 1: In Which We Begin at the Beginning
+
+we have many types of programs.
+1. the first one is the single-threaded synchronous model
+
+task1
+task2
+task3
+.
+.
+.
+
+the later tasks can assume that the previous tasks have been completed and that their result is available.
+
+2. the multi - threaded model
+each task is performed in a seperate thread of control. they may run concurrently on a multicore processor.
+the problem can be thread communication and coordination. 
+
+multithreads is different from multi processes. but we can consider them same for pratical purposes. 
+
+3. the asynchronous model
+there is a single thread and the tasks are interleaved with each other. now, if you use multi threads on a single processor, it will execute in the same interleaved pattern, but dont think of it in that way, treat it as model two, otherwise it may cause problems when you shift to the multicore processor system.
+
+here, there is a single thread and the tasks are interleaved - even on a multi processor system.
+in the threaded model, the starting and stopping of the threads is out of the users hand. in the asynchronous model, a task continues to run until it explicitly relinquishes control to other tasks. this makes the things simpler.
+
+so, in terms of complexity, the asynchronous case is more complex that the single threaded synchronous application. 
+
+so, in the case of asynchronous code, if one task uses the output of another, the dependent task must be written to accept the output in bits and pieces and not all together. 
+
+we use this model when we have many tasks running in parallel [though there is no true parallelism here]
+also, this model will be faster when there are tasks which have some "waiting parts" [eg when they are waiting for I/O, transfering data etc][such a synchronous program is called a blocking program]. if the code is asynchronous, we can perform some other task here and get good speedups.
+
+
+so, reiterating, the fundamental idea behind the asynchronous model is that an synchronous program when faced with a blocking call, will execute some other task that can still make progress.
+So an asynchronous program only “blocks” when no task can make progress and is thus called a non-blocking program. so, the asynchronous program switches tasks when the first task ends or comes to a point where it would have to block
+
+it works best when the tasks are largely independent, as then we dont have to worry about inter-task communicaiton.
+
+this is what happens in a webserver for eg, each request is independent of the other and involves a lot of I/O too.
+
+
+
+Part 2: Slow Poetry and the Apocalypse
+
+Before than, Python HOWTO Socket Programming
+
+  INET Sockets, STREAM sockets. there are two types of sockets, 
+  "client" socket - an endpoint of a conversation, "server" socket, switchboard operator
+
+  the browser uses "client" sockets and the webserver uses both client and server.
+  port number 80 is the normal HTTP port.
+
+  our browser creates a socket and the uses it to connect it to the webpage we want to visit. the socket reads the reply from the webserver and then gets destroyed.
+
+  s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  s.connect(("www.google.com", 80))
+
+  the webserver creates a server socket, binds it to the url of the website and the port. then we ask it to listen to the mentioned port for connections.
+
+  serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  serversocket.bind((socket.gethostname(), 80))
+  serversocket.listen(5) //listen to 5 concurrent requests
+
+  [here, s.bind(('localhost', 80))  would mean that the socket is visible only to the local machine - takes requests only for the localmachine]
+
+  so, now we have a "Server" socket listening on port 80. now, we can write the mainloop of the webserver
+
+  while 1:
+    (clientsocket, address) = serversocket.accept()
+    ct = client_thread(clientsocket)
+    c.run()
+
+  So, note that the only duty of the serversocket is create other client sockets. so, the serversocket just creates a new client socket for any client requests it receives - it receives this request when some client socket connects to the host and port the serversocket is listening at.
+
+  now, the client socket on the client(browser) and the webserver are the same more or less. this means that this is peer to peer communication. you use "send" or "recv" for communication. 
+
+  you can now send and recieve data using the sockets.
+  after the transfer, we can disconnect the sockets
+  after the client is done sending the request, we can do shutdown(1), or send 0 bytes to indicacte EOF
+
+  non blocking sockets. here the main difference from blocking sockets is that end, recv, connect and accept can return without having done anything. you can use "select" here.
+
+  ready_to_read, ready_to_write, in_error = \
+               select.select(
+                  potential_readers, //all the sockets you want to try reading
+                  potential_writers, //all the sockets you want to try writing to
+                  potential_errs, // all the sockets you want to check for errors
+                  timeout)
+
+  the select call is blocking, so you also pass it a timeout
+
+  you pass three lists to select (mentioned above) and also get back three lists. 
+
+      A simple SERVER
+    import socket               # Import socket module
+
+    s = socket.socket()         # Create a socket object
+    host = socket.gethostname() # Get local machine name
+    port = 12345                # Reserve a port for your service.
+    s.bind((host, port))        # Bind to the port
+
+    s.listen(5)                 # Now wait for client connection.
+    while True:
+       c, addr = s.accept()     # Establish connection with client.
+       print 'Got connection from', addr
+       c.send('Thank you for connecting')
+       c.close()             
+
+    A SIMPLE CLIENT
+
+
+    import socket               # Import socket module
+
+        s = socket.socket()         # Create a socket object
+    host = socket.gethostname() # Get local machine name
+    port = 12345                # Reserve a port for your service.
+
+    s.connect((host, port))
+    print s.recv(1024)
+    s.close   
+
+    Got connection from ('127.0.0.1', 48437)
+    Thank you for connecting
+
+now, we will serve some poetry. the blocking-server/slowpoetry.py sets up a server and serves poetry at port number 40042.
+by deafult it sends up 10 bytes every 0.1 seconds.
+you can read the data being send on the mentioned port using the tool netcat.
+also, the server also listens at the local loopback interface, to access the server from another machine you have to specify the interface to listen on with the -iface option
+
+this server only sends to one client at a time. so, others have to wait before the entire poem is sent to the one client first.
+
+sock.sendall(bytes) -----> this is the blocking call
+
+you also have clients that is ready to accept data from the servers. do:
+  python blocking-client/get-poetry.py 10001 10002 10003
+
+to grab poetry from servers on ports 10001, 10002, and 10003.
+note, you need to have servers listening on those ports for that to work
+
+here, we are listening to the three servers one by one. the client first gets the poem from server 1 then 2 and then 3. this is similar to synchronous task, of method one.
+
+you get this:
+Task 1: get poetry from: 127.0.0.1:10000
+Task 1: got 3003 bytes of poetry from 127.0.0.1:10000 in 0:00:10.126361
+Task 2: get poetry from: 127.0.0.1:10001
+Task 2: got 623 bytes of poetry from 127.0.0.1:10001 in 0:00:06.321777
+Task 3: get poetry from: 127.0.0.1:10002
+Task 3: got 653 bytes of poetry from 127.0.0.1:10002 in 0:00:06.617523
+Got 3 poems in 0:00:23.065661
+
+now, we have the asynchronous client. this one does not wait for one server to finish sending the poem, in the delay time, it connects to another one.
+
+Task 1: got 30 bytes of poetry from 127.0.0.1:10000
+Task 2: got 10 bytes of poetry from 127.0.0.1:10001
+Task 3: got 10 bytes of poetry from 127.0.0.1:10002
+Task 1: got 30 bytes of poetry from 127.0.0.1:10000
+Task 2: got 10 bytes of poetry from 127.0.0.1:10001
+...
+Task 1: 3003 bytes of poetry
+Task 2: 623 bytes of poetry
+Task 3: 653 bytes of poetry
+Got 3 poems in 0:00:10.133169
+
+to be very precise, the print statements are blocking calls! so, the client is also a blocking client in the strictest sense. twisted has asynchronous i/o capabilites too. 
+
+we have a "REACTOR LOOP"
+which is basically a loop wherein our client goes to a server to take poems, and on getting a blocking call, it moves on to the next server, all this until all the poems from all the servers are obtained. this is exactly what happens in scrapy as well, the reactor ends when all the requests are done.
+
+here, in the asynchronous client, we get the sockets that are ready to serve the poems using 
+rlist, _, _ = select.select(sockets, [], [])
+then, we iterate thru the rlist and on receiving the blocking call, we print Task 1: got 10 bytes of .... from ....:10001 etc.
+and store then data in a dict.
+we end the reactor loop (get_poetry in the source code) when we get alll the data from all the sockets.
+
+here, the main differences:
+the asynchronous client connects to all the servers at once
+sock.connect(address) line 111
+
+The socket objects used for communication are placed in non-blocking mode with the call to setblocking(0).
+
+this loop of waiting for events to happen and then reacting to them(in this case, storing the data to a dict) is called a reactor loop or event loop. or select loop since a select loop is used to wait for i/o.
+
+what select does is basically:
+take a set of sockets (really file descriptors) and block until one or more of them is ready to do I/O.
+
+here, we arent being very sophisticated coders. this is because the loop logic is not implemented seperately from the "bussiness logic" that is storing the data in the dicts here. 
+a better implementation of the reactor pattern would implement the loop as a seperate abstraction with the ability to change the options very easily, provide public protocols etc.
+
+this is what Twisted is. It is a robust, cross-platform implementation of the reactor pattern with a lot of extras. 
+
+
+Part 3: Our Eye-beams Begin to Twist
+
+twisted gives us an object that represents the reactor, or event loop that is at the heart of any twisted program. 
+
+from twisted.internet import reactor //import the reactor object
+reactor.run() //run the loop
+
+we generally give the loop one or more file descriptors[aka sockets connected to say a poetry server]
+the run command will do nothing, as the loop is stuck at the top cycle of the reactor pattern, waiting for an event that never comes. [it is waiting on the select call with no file descriptors]
+
+the reactor isnt created specifically, it is just imported and asked to start running.
+this is important, the reactor is basically a singleton.
+
+the singleton is a class that can be instantiated only once and hence there is only one object of that class. 
+that is, there is only one reactor object and it is created when you import the reactor.
+
+a set of sockets (or really file descriptors)
+
+twisted contains many reactor implementations, as the "select" call is just one method of waiting on the set of sockets (or the file descriptors)
+
+we can make the reactor call a function when it starts by using reactor.callWhenRunning(hello) method.
+
+def hello():
+    print 'Hello from the reactor loop!'
+    print 'Lately I feel like I\'m stuck in a rut.'
+ 
+from twisted.internet import reactor
+ 
+reactor.callWhenRunning(hello)
+ 
+print 'Starting the reactor.'
+reactor.run()
+
+here, we just used our first callback function. hello is the callback function here. 
+A callback function is any function reference that we give to Twisted(or any other library/framework) to call [“call us back”] when the right event happens (here, when the reactor is started)
+
+Since Twisted’s loop is separate from our code, most interactions between the reactor core and our business logic will begin with a callback to a function we gave to Twisted using various APIs.
+
+we can see the traceback using:
+
+import traceback
+ 
+def stack():
+    print 'The python stack:'
+    traceback.print_stack()
+ 
+from twisted.internet import reactor
+reactor.callWhenRunning(stack)
+reactor.run()
+
+Many frameworks (especially GUI frameworks) based on reactor pattern use callbacks
+
+when the callbacks are running, the twisted code is not running.
+the reactor loop resumes when the callback function terminates.
+
+During a callback, the Twisted loop is effectively “blocked” on our code. So we should make sure our callback code doesn’t waste any time. In particular, we should avoid making blocking I/O calls in our callbacks. 
+
+Twisted will help you do the common tasks you might want to do, like reading or writing from a non-socket file descriptor etc. 
+
+we can stop the reactor using reactor.stop()
+
+also, like callWhenRunning, you have the callLater method. It takes two arguments, the first one is the #seconds you want the callback to run and the second is the reference to the callback function.
+
+class Counter:
+    counter = 5
+    def counter(self):
+        if self.counter==0:
+            reactor.stop()
+        else:
+            print "...."
+            reactor.callLater(1, self.counter)
+from twisted.internet import reactor
+reactor.callWhenRunning(Counter().counter)
+reactor.run()
+
+why doesnt the loop get stuck at select loop like other? this is because, we are also supplying a timeout value for the select loop. If a timeout value is supplied and no file descriptors have become ready for I/O within the specified time then the select call will return anyway.
+
+One can think of a timeout as another kind of event the event loop/reactor loop is waiting for.
+
+if we have an exception in one of the callbacks, it is okay, the others execute nonetheless. 
+
+NOW, IF WE HAVE TWO COUNTERS:
+
+class Countdown(object):
+ 
+    counterA = 5
+    counterB = 5
+ 
+    def countA(self):
+        if self.counterA == 0:
+            reactor.stop()
+        else:
+            print "A", self.counterA, '...'
+            self.counterA -= 1
+            reactor.callLater(1, self.countA)
+
+
+    def countB(self):
+        if self.counterB == 0:
+            reactor.stop()
+        else:
+            print "B", self.counterB, '...'
+            self.counterB -= 1
+            reactor.callLater(1, self.countB)
+ 
+from twisted.internet import reactor
+ 
+reactor.callWhenRunning(Countdown().countA)
+reactor.callWhenRunning(Countdown().countB)
+
+ 
+print 'Start!'
+reactor.run()
+print 'Stop!'
+
+this will print:
+
+Start!
+A 5 ...
+B 5 ...
+A 4 ...
+B 4 ...
+A 3 ...
+B 3 ...
+A 2 ...
+B 2 ...
+A 1 ...
+B 1 ...
+
+exception
+
+Stop!
+
+so, the reactor first executes A 5, then there is a waiting call, so, it goes on to the next callwhenrunning, which is B 5, later, the callLater kicks in and we get A 4 and so on...
+
+We also have the LoopingCall, which runs the function in a loop forever till the reactor is stopped. it takes in a time delay after which to run the loop again.
+
+from datetime import datetime
+from twisted.internet.task import LoopingCall
+from twisted.internet import reactor
+
+def hyper_task():
+    print "I like to run fast", datetime.now()
+
+def tired_task():
+    print "I want to run slowly", datetime.now()
+
+lc = LoopingCall(hyper_task)
+lc.start(0.1)
+
+lc2 = LoopingCall(tired_task)
+lc2.start(0.5)
+
+reactor.run()
+
+ANOTHER EXAMPLE
+If we want a task to run every X seconds repeatedly, we can use twisted.internet.task.LoopingCall:
+
+from twisted.internet import task
+from twisted.internet import reactor
+
+def runEverySecond():
+    print "a second has passed"
+
+l = task.LoopingCall(runEverySecond)
+l.start(1.0) # call every second
+
+# l.stop() will stop the looping calls
+reactor.run()
+
+
+Part 4: Twisted Poetry
+
+twisted is more often used to write servers. but, we can use it to write clients too.
+
+like before, we can start the blocking servers. and run the client 
+
+python twisted-client-1/get-poetry.py 10000 10001 10002
+
+and we get the exact same output as we did in our asynchronous non-Twisted client. 
+
+the code for the asynchronous client in twisted uses low level funcitons and does away with the cool abstractions that twisted provides.
+
+we basically create a set of PoetrySockets, it initializes iteself by creating the sockets, and connecting to the server and swithcing to the non-blocking mode
+
+
+code in PoetrySockets __init__:
+
+self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+self.sock.connect(address)
+self.sock.setblocking(0)
+
+
+then the PoetrySocket passes itself to the reactor using the addReader method.
+
+this code is in the PoetrySocket class too:
+
+from twisted.internet import reactor
+reactor.addReader(self)
+
+the addReader method is used to give Twisted the file descriptors (or sockets) you want to monitor for incoming data.
+
+
+There are a number of submodules in Twisted, called interfaces. they are just like interfaces in java - they define the empty methods which the class implementing them has to define.
+
+There are a number of sub-modules in Twisted called interfaces. Each one defines a set of Interface classes
+As of version 8.0, Twisted uses zope.interface as the basis for those classes, 
+
+A quick note on terminology: with zope.interface we say that a class implements an interface and instances of that class provide the interface 
+
+the addReader method is defined in the IReactorFDSet interface.
+
+http://twistedmatrix.com/trac/browser/tags/releases/twisted-8.2.0/twisted/internet/interfaces.py
+
+According to the docstring of the addReader method, the reader argument of addReader should implement the IReadDescriptor interface. And that means our PoetrySocket objects have to do just that.
+
+This is how twisted will know which method to call when some event fires. here, by assigning
+the self to addReader, we tell tacitly to twisted that the 'self', which is an object of
+the PoertySockets will implement the IReadDescriptor interface and without fail will have the doRead method
+
+now, the IReadDescriptor interface has just one method as can be seen in the link. this, we will make out PoetrySocket class implement that method.
+
+class IReadDescriptor(IFileDescriptor):
+
+    def doRead():
+        """
+        Some data is available for reading on your descriptor.
+        """
+
+what the method does in our code is it reads the data from the socket whenever it is called by the twisted reactor. hence, to think about it, doRead is really a callback, but we dont pass the function directly, we pass an object with a doRead method. 
+This is a common idiom in the Twisted framework — instead of passing a function you pass an object that must provide a given Interface - eg, here the PoetrySocket object.
+
+This allows us to pass a set of related callbacks (the methods defined by the Interface) - all packaged into an object - with a single argument. 
+
+note, that the IReadDescriptor is a subclass of IFileDescriptor, so our PoetrySocket also implemenets those methods defined in the IFileDescriptor interface. 
+
+class IFileDescriptor(ILoggingContext):
+    """
+    A file descriptor.
+    """
+
+    def fileno():
+        ...
+
+    def connectionLost(reason):
+        ...
+
+now, in turn, the IFileDescriptor extends the ILoggingContext class, so those methods need to be implemented too. it luckily has only one method: def logPrefix()
+
+the effect of our custom asynchronous client and Twisted asynchronous client is the same, the only difference being we dont need a custom select loop when we are using Twisted. 
+
+looking at the source code, we see that the doRead callback is the most important. twisted uses it to indicate that there is more data to read from our socket. 
+
+we can make the client blocking also [and hence, synchronous effectively] by not making the sockets non-blocking.
+
+the doRead callback reads the data till the socket is closed.
+By using a blocking recv call in our callback, we’ve turned our nominally asynchronous Twisted program into a synchronous one.
+
+Twisted will tell us when it’s OK to read or write to a file descriptor
+
+the twisted synchronous client is still faster than the original custom synchronous client - this is because the twisted client connects to all the servers immediately and the OS stores some of the data streaming from the servers in the buffers - so, we are literally reading from all the 3 sockets here.
+
+here, we mainly used the reader APIs, but we have the writer apis too.
+
+ The reason reading and writing have separate APIs is because the select call distinguishes between those two kinds of events (a file descriptor becoming available for reading or writing, respectively). It is, of course, possible to wait for both events on the same file descriptor.
+
+
+ THE asynchronous CLIENT :
+
+         while True:
+            try:
+                bytesread = self.sock.recv(1024) //reading data
+                if not bytesread: //if we get no data, it is EOF
+                    break
+                else:
+                    bytes += bytesread //read data, all normal, read again. 
+            except socket.error, e:
+                if e.args[0] == errno.EWOULDBLOCK: //socket blocked?
+                    break
+                return main.CONNECTION_LOST //socket not blocked, but error, it must have been closed
+
+        if not bytes:
+            print 'Task %d finished' % self.task_num
+            return main.CONNECTION_DONE //no data received, so, EOF reached, done transfering the complete poem.
+        else:
+            msg = 'Task %d: got %d bytes of poetry from %s' //got data, but then the socket went into blocking mode, so we came out
+            print  msg % (self.task_num, len(bytes), self.format_addr())
+
+
+The synchronous CLIENT : note, we dont have the self.sock.setblocking(0) line here. it is used to make the sockets nonblocking.
+
+        while True: # we're just reading everything (blocking) -- broken!
+            bytes = self.sock.recv(1024) //READ THE DATA, 
+            if not bytes: //no data received, break
+                break
+            poem += bytes
+
+        msg = 'Task %d: got %d bytes of poetry from %s'
+        print  msg % (self.task_num, len(poem), self.format_addr())
+
+        self.poem = poem
+
+        return main.CONNECTION_DONE //the data stream has stopped, the poem has been transferred.
+
+
+what if we wanted the connection to close after say 5 seconds. then, we can use callBack to call a funciton close_everything after the required time. the funciton close_everything that is, it deregisters the PoetrySocket objects from the reactor and closes the raw socket.
+
+reading the documentation of the callLater method, we see that its arguments are:
+delay, callbable_funciton, args_for_that_fn, kw_args_for_that_fn
+
+it returns an object which provides the IDelayedCall interface which and can be used to cancel the scheduled call, by calling its cancel() method. It also may be rescheduled by calling its delay() or reset() methods.
+
+NOTE: 
+self.scenario.__iter__() -> iter(self.scenario)
+self.sc.next() -> next(self.sc)
+
+Part 5: Twistier Poetry
+
+twisted is loosely composed of layers of abstractions and learning the twisted framework means learning what those layers provide i.e, what APIs, Interfaces, and implementations are available for use in each one
+
+we earlier used the IReadDescriptor - the abstraction of a “file descriptor you can read bytes from”.
+
+A Twisted abstraction is usually defined by an Interface specifying how an object embodying that abstraction should behave.
+
+now, we will write our client such that we dont have to deal with the low level sockets etc by using the high level API provided by twisted.
+
+so, using the high level APIs to create sockets etc is an abstraction.
+
+At the center of every program built with Twisted, no matter how many layers that program might have, there is a reactor loop spinning around and making the whole thing go
+Much of the rest of Twisted, in fact, can be thought of as “stuff that makes it easier to do X using the reactor” where X might be “serve a web page” or “make a database query” or some other specific feature
+
+Moving to higher-level abstractions generally means writing less code (and letting Twisted handle the platform-dependent corner cases).
+
+When you choose to use Twisted you are also choosing to use the Reactor Pattern, and that means programming in the “reactive style” using callbacks and cooperative multi-tasking.
+
+Let's talk about three new abstractions: Transports, Protocols, and Protocol Factories.
+
+1. Transports
+the Transport abstraction is defined by ITransport in the interface module.
+A Twisted Transport represents a single connection that can send and/or receive bytes. 
+
+For our poetry clients, the Transports are abstracting TCP connections like the ones we have been making ourselves in earlier versions. But Twisted also supports I/O over UNIX Pipes and UDP sockets among other things
+
+ITransport doesnt have any methods for reading data, this is because it reads data asynchronously using low level functions and gives us callback funcitons to get the data.
+
+Telling a Transport to write some data means “send this data as soon as you can do so,  subject to the requirement to avoid blocking”
+
+when we ask the reactor to make a connection, we get a Transport object (which is used to send/receive data as mentioned)
+
+2. Protocols
+
+defined in the iprotocol interface
+That is to say, a particular implementation of a Twisted Protocol should implement one specific networking protocol, like FTP or IMAP or some nameless protocol we invent for our own purposes.
+
+Our poetry protocol, such as it is, simply sends all the bytes of the poem as soon as a connection is established, while the close of the connection signifies the end of the poem.
+
+each connection requires on protocol, thus it makes protocol object the ideal place to store partially received messages. 
+
+the protocol object is connected to the connection using the IProtocol interfaces which define a method - makeConnection - this method takes a Transport instance which is the connection that protocol is going to use.
+
+Twisted includes a large number of ready-built Protocol implementations for various common protocols. You can find a few simpler ones in twisted.protocols.basic. 
+some of the protocols already implemented: LineReceiver, IntNStrReceiver etc
+
+SO, you create a connection that is used to read and write data  - this is the Transport Object. The transport object is passed to the Protocols according to which data is transfered.
+
+3. Protocol factories
+So each connection needs its own Protocol and that Protocol might be an instance of a class we implement ourselves. 
+
+we need a system that makes Protocol [predefined or custom protocols] instances(objects) as and when they are required. this is done by the protocol factories defined by the IProtocolFactory (which gives us the Protocol factory API)
+
+All Twisted programs work by interleaving tasks and processing relatively small chunks of data at a time 
+
+we did not use the sockets in the latest code. we instead connected to the poerty servers like this:
+
+    factory = PoetryClientFactory(len(addresses))
+
+    from twisted.internet import reactor
+
+    for address in addresses:
+        host, port = address
+        reactor.connectTCP(host, port, factory)
+
+the method connectTCP is important - the third argument is the instance of the PoetryClientFactory - the Protocol Factory for poetry clients and passing it to the reactor allows Twsited to create instances of PoetryProtocol on demand.
+
+clients make connections, servers listen for connections
+
+here is the entire dynamics:
+
+we have a parse_args function that takes parses the cmd args - the port number, the host etc
+we define our custom protocol in the PoetryProtocol class which extends Protocol interface.
+it has :
+
+    Method  logPrefix Return a prefix matching the class name, to identify log messages related to this protocol instance.
+    Method  dataReceived  Called whenever data is received.
+    Method  connectionLost  Called when the connection is shut down.
+
+Protocol interface is inherited from BaseProtocol :
+
+    Method  makeConnection  Make a connection to a transport and a server.
+    Method  connectionMade  Called when a connection is made
+
+also, we have the Protocol Factory class.
+We called it PoetryClientFactory and it extends ClientFactory, ClientFactory is a class which extends Factory(twisted.internet.protocol.Factory) and is spealized for clients. 
+
+The factory class has a method buildProtocol - used to make instances of the protocol.
+
+the protocol attribute of the class takes in the name of the class which defines the protocol whoes instances the PF must create.
+
+Things are pretty modular as they should be - the Protocol class only defines the protocol
+the ProtocolFactory takes care of initializing the protocol instance, cancelling connection, storing auxillary logic related to the program like the number of connections established etc, stopping the reactor. also, all the different protocol instances share the Factory (accesible with self.factory) and hence can use it for custom logic
+
+It also has these methods:
+
+    def __init__(self, poetry_count): -----> the number of instances the PF will have to create
+        self.poetry_count = poetry_count
+        self.poems = {} # task num -> poem
+
+    def buildProtocol(self, address): -----> this funciton craeted the instance.
+        proto = ClientFactory.buildProtocol(self, address)
+        proto.task_num = self.task_num
+        self.task_num += 1
+        return proto
+
+    def poem_finished(self, task_num=None, poem=None):
+        if task_num is not None:
+            self.poems[task_num] = poem
+
+        self.poetry_count -= 1
+
+        if self.poetry_count == 0: //all the instances have been built, close the reactor
+            self.report()
+            from twisted.internet import reactor
+            reactor.stop()
+
+    def report(self):
+        for i in self.poems:
+            print 'Task %d: %d bytes of poetry' % (i, len(self.poems[i]))
+
+    def clientConnectionFailed(self, connector, reason):
+        print 'Failed to connect to:', connector.getDestination()
+        self.poem_finished()
+
+        note, that we used the self.transport.getPeer() method to get the server to whom we connect.
+
+
+Twsited calls the buildProtocol() method of the PF class, it builds a protocol object and returns it. "the protocol object also has an attribute "factory" which is set to PF."
+
+As we mentioned above, the factory attribute on Protocol objects allows Protocols created with the same Factory to share state we can use the factory attribute to communicate back results to the code that initiated the request 
+   
+Note that while the factory attribute on Protocols refers to an instance of a Protocol Factory, the protocol attribute on the Factory refers to the class of the Protocol. In general, a single Factory might create many Protocol instances.
+
+
+the second stage is connecting the protocol with a transport using the makeConnection method. we dont have to implement this method, since it is defined in the twisted base class of protocol.
+what this method does is:
+it stores a reference to the transport object using the "transport" attribute and sets the "connected" attribute to True. then, it can write data using it - like so: self.transport.write("hi")
+Note, the data is read by the dataReceived method which accepts the arguments - dataReceived(slef, data)
+
+now, the protocol instance can start doing its real job - converting low level stream of data into high level stream of protocol messages.
+we can access this incoming data by the dataReceived method - this method is called each time we get a new sequence of bytes. here, we keep adding the data to self.poem and when the connection is closed, we print it.
+
+the self.transport.getPeer method is used to identify which server the data is coming from.
+the dataReceived method calls doRead under the hood.
+
+so, now the reactor loop is thus:
+*wait for events* - we get some data - reader.doRead() - protocol.dataReceived(data) - your code - back to listening for events.
+
+The connectionLost callback is invoked when the transport’s connection is closed.
+
+def connectionLost(self, reason):
+    self.poemReceived(self.poem)
+
+The reason argument is a twisted.python.failure.Failure object with additional information on whether the connection was closed cleanly or due to an error. 
+
+we also define what to do when the connection couldnt be successfully established - def clientConnectionFailed method
+
+check the get-poetry-simple.py for the simplest version that does away with the task numbers.
+
+
+Part 6: And Then We Took It Higher
+
+our PF is also used to shut down the reactor and all, so that is bad. it should just be used to create Protocol instances. decouplling is a good pratice in general!
+
+Also, We need a way to send a poem to the code that requested the poem in the first place. In a synchronous program we might make an API like this:
+
+def get_poetry(host, post):
+    """Return a poem from the poetry server at the given host and port."""
+
+    but this is not a solution we can use. this is because this would mean we are blocking the code at this point till we get the entire poem. we dont want to do that. what we can do is use a callback here just like twisted uses them to notify us when somehthing happens - like a socket receiving data.
+
+    def get_poetry(host, port, callback):
+    """
+    Download a poem from the given host and port and invoke
+
+      callback(poem)
+
+    when the poem is complete.
+    """
+
+    lets implement this.
+
+    def get_poetry(host, port, callback):
+        from twisted.internet import reactor
+        factory = PoetryClientFactory(callback)
+        reactor.connectTCP(host, port, factory)
+
+we are just passing the callback argument to the PoetryClientFactory.the factory uses this callback to deliver the poem. heres how:
+
+class PoetryClientFactory(ClientFactory):
+
+    protocol = PoetryProtocol
+
+    def __init__(self, callback):
+        self.callback = callback
+
+    def poem_finished(self, poem):
+        self.callback(poem)
+
+
+what is happening is this:
+we are using the get_poetry method here:
+
+    def got_poem(poem):
+        poems.append(poem)
+        if len(poems) == len(addresses):
+            reactor.stop()
+
+
+    for address in addresses:
+        host, port = address
+        get_poetry(host, port, got_poem)
+
+    and get_poetry is defined as:
+
+
+    def get_poetry(host, port, callback):
+
+        from twisted.internet import reactor
+        factory = PoetryClientFactory(callback)
+        reactor.connectTCP(host, port, factory)
+
+hence, what is happening is we are passing the callback [got_poem] function to the PF and then on connectionLost, we are calling poemReceived which is calling self.factory.poem_finished passing the poem as the argument.
+
+PF's poem_finished calls the callback funciton - which is got_poem fn.
+
+THE REFERENCE TO THE PF IS STORED IN THE FACTORY ATTRIBUTE OF THE PROTOCOL OBJECT/instance.
+so, say the PF has a method one(), it can be called in the protocol instance using : 
+self.factory.one()
+
+now, since we de-coupled the parts, we can reuse the protocol, the PF and the get_poetry funciton.
+
+so, the events:
+
+wait for events - we get the entire data, then, the socket is closed - protocol.connectionLost(reason) - protocol.poemReceived(poem) - factory.poem_finished(poem) - got_poem(poem)
+
+
+
+Keep this in mind when choosing Twisted for a project. When you make this decision:
+
+    I’m going to use Twisted!
+
+You are also making this decision:
+
+    I’m going to structure my program as a series of asynchronous callback chain invocations powered by a reactor loop!
+
+this is the reactor based programming - the same is true for GUI programming.
+
+also, there is a problem with our client. we dont worry about the failure to connect to the server (for eg when the server is down) - it just waits there forever. it doenst even print the stack.
+
+The clientConnectionFailed callback still gets called, but the default implementation in the ClientFactory base class doesn’t do anything at all -- as we havent overriden the default from twisted which does nothig.
+
+in normal synchronous programming, we can use try and except to catch the problems. but, here, we cant do that simply, because there isnt only one task running, there are multiple processes that happen in bits and pieces one after the other and we don't want to disturb them. 
+so, Twisted includes an abstraction for this: Failure object.
+By passing Failure objects to callbacks we can preserve the traceback information that’s so handy for debugging.
+
+so, our solution would be :
+
+def get_poetry(host, port, callback):
+    """
+    Download a poem from the given host and port and invoke
+
+      callback(poem)
+
+    when the poem is complete. If there is a failure, invoke:
+
+      callback(err)
+
+    instead, where err is a twisted.python.failure.Failure instance.
+    """
+
+    we generally need to do different things based on success or failure. in synchronous systems, we can do:
+
+    try:
+        attempt_to_do_something_with_poetry()
+    except RhymeSchemeViolation:
+        # the code path when things go wrong
+    else:
+        # the code path when things go so, so right baby
+
+
+    here, we have to do:
+
+    def get_poetry(host, port, callback, errback):
+    """
+    Download a poem from the given host and port and invoke
+
+      callback(poem)
+
+    when the poem is complete. If there is a failure, invoke:
+
+      errback(err)
+
+    instead, where err is a twisted.python.failure.Failure instance.
+    """
+
+    note, we are calling errback in case of failures and callback in case of successes.
+
+
+    so, in the poem_main() we define a new funciton, poem_failed, pass it to get_poety as the last argument, and in the PF for clientConnectionFailed, we call this function with the reason.
+
+    NOTE, here is the full defination of the clientConnectionFailed.
+
+
+    def clientConnectionFailed(self, connector, reason):
+        self.errback(reason)
+
+        Here, Twisted API calls clientConnectionFailed with the reason and the connector. WE do not have to worry about reason, we get it on a silver platter by the Twisted API. We just use it!
+
+        The same thing happens with in many cases in scrapy also, we get the paramteres, we just use them
+
+        NOTE, the reason argument is the Failure object we talked about earlier.
+
+    Here’s what we’ve learned in Part 6:
+
+    The APIs we write for Twisted programs will have to be asynchronous.
+    We can’t mix synchronous code with asynchronous code.
+    Thus, we have to use callbacks in our own code, just like Twisted does.
+    And we have to handle errors with callbacks, too.
+
+
+Part 7: An Interlude,  Deferred
+
+callbacks are the fundamental aspect of asynchronous programming. using any reactive system (eg, Twisted) means organising our code as a series of callback chaines invoked by a reactor loop
+
+there are problems with using vanilla callbacks and errbacks
+we arent sure that we'll catch the errors - if we miss the callback, our program will blisfully be unaware that there is even a problem. also, there is no gurantee that the call/err-backs will be called only once.
+
+TO manage the callbacks, we have an abstraction - the Deferred class. SO, the deferred is an object of the Deffered class. READ THE DEFERRED AS ""THE DEFERRED RESULT""
+
+A deferred [an object of the deferred class] has 2 callback CHAINS. one for normal results and the second one for errors. 
+
+A newly-created deferred has two empty chains. We can populate the chains by adding callbacks and errbacks and then fire the deferred with either a normal result (here’s your poem!) or an exception (I couldn’t get the poem, and here’s why). Firing the deferred will invoke the appropriate callbacks or errbacks in the order they were added.
+
+example code:
+
+from twisted.internet.defer import Deffered
+
+def got_poem(res):
+    print "poem served"
+    print res
+
+def poem_failed(err):
+    print "poem didnt get served, some error"
+
+d = Deferred()
+d.addCallBacks(got_poem, poem_failed) //we add the callback, errback pair
+d.callback("here is a poem") //we fire the normal chain using callback, if we wanted to fire the errback, we could have done d.errback("haha, this is the errback") //THATS NOT CORRECT, we'll have to wrap the exeption as an instance of the Failure class.
+
+
+print "Fininshed"
+
+WE can add multiple callbacks too
+
+from twisted.internet.defer import Deferred
+
+def got_poem(res):
+    print "poem served"
+    print res
+
+def cb2(res):
+    print "in cb2"
+
+def poem_failed(err):
+    print "poem didnt get served, some error"
+
+d = Deferred()
+d.addCallbacks(got_poem, poem_failed)
+d.addCallbacks(cb2, poem_failed)
+d.callback("ok, shoot")
+
+the callbacks we add to this deferred take one argument: either a normal result or the error result.  It turns out that deferreds support callbacks and errbacks with multiple arguments, but they always have at least one, and the first argument is always either a normal result or an error result.
+
+We add callbacks and errbacks to the deferred in pairs.
+
+FOR THE FAILURE CASE:
+you have to do this:
+
+from twisted.internet.defer import Deferred
+from twisted.python.failure import Failure
+
+def got_poem(res):
+    print 'Your poem is served:'
+    print res
+
+def poem_failed(err):
+    print 'No poetry for you.'
+
+d = Deferred()
+
+# add a callback/errback pair to the chain
+d.addCallbacks(got_poem, poem_failed)
+
+# fire the chain with an error result
+d.errback(Failure(Exception('I have failed.')))
+
+print "Finished"
+
+we passed a Failure object to the errback method, but a deferred will turn ordinary Exceptions into Failures for us.
+
+so, this would have worked too:
+d.errback(Exception('I have failed.'))
+
+A deferred will not let us fire the normal result callbacks a second time. In fact, a deferred cannot be fired a second time no matter what
+
+d.callback("string") is calling the callback, not adding it to the queue
+
+So, this wont work
+from twisted.internet.defer import Deferred
+def out(s): print s
+d = Deferred()
+d.addCallbacks(out, out)
+d.callback('First result')
+d.callback('Second result')
+print 'Finished'
+
+First result
+Traceback (most recent call last):
+  ...
+twisted.internet.defer.AlreadyCalledError
+
+
+Hence, even this wont work:
+from twisted.internet.defer import Deferred
+def out(s): print s
+d = Deferred()
+d.addCallbacks(out, out)
+d.callback('First result')
+d.errback(Exception('First error'))
+print 'Finished'
+
+we can call any funciton only once.
+this will help us catch errors in our callbacks, errbacks
+
+we can use callWhenRunning to fire the deferred after the reactor starts up. 
+The addBoth method adds the same function to both the callback and errback chains. 
+
+Take the common parts from callback and errback and put them in a third function - and addBoth it!
+
+Invoking callbacks multiple times will likely result in subtle, hard-to-debug problems. Deferreds can only be fired once, making them similar to the familiar semantics of try/except statements.
+
+Programming with plain callbacks can make refactoring tricky. With deferreds, we can refactor by adding links to the chain and moving code from one link to another.
+
+
+Part 8: Deferred Poetry
+
+now, in get_poetry, we can add a deferred and return it. and initialized the PF factory object with the deferred and not the callback, errback pair
+
+Then, we can use it thus:
+
+class PoetryClientFactory(ClientFactory):
+
+    protocol = PoetryProtocol
+
+    def __init__(self, deferred):
+        self.deferred = deferred
+
+    def poem_finished(self, poem):
+        if self.deferred is not None:
+            d, self.deferred = self.deferred, None
+            d.callback(poem)
+
+    def clientConnectionFailed(self, connector, reason):
+        if self.deferred is not None:
+            d, self.deferred = self.deferred, None
+            d.errback(reason)
+
+Notice the way we release our reference to the deferred after it is fired. this is beacuse now, that deferred is useless and cant be called again, so, we might as well drop it
+
+Also, in main:
+    for address in addresses:
+        host, port = address
+        d = get_poetry(host, port)
+        d.addCallbacks(got_poem, poem_failed)
+        d.addBoth(poem_done)
+
+        note that get_poetry returns the deferred.
+
+        note how we are use the chanining to put the common code of poem_done which stops the reactor after len(poems)+len(error)==len(address) is true.
+        poems and errors are two lists, we add to them on each callback or errback.
+
+
+With our new client the asynchronous version of get_poetry accepts the same information as our synchronous version, just the address of the poetry server. The synchronous version returns a poem, while the asynchronous version returns a deferred.
+
+""""""d = get_poetry(host, port)""""""
+
+the deferred represents a work in progress. when the poem streaming comes across an error, we will call the errback or on successfull transfer, we will call callback. its just that we dont know what we will have to call later, it is a work in progress as of now.
+
+"""""A Deferred object represents an “asynchronous result” or a “result that has not yet come”."""""
+
+I’m an asynchronous function. Whatever you want me to do might not be done yet. But when it is done, I’ll fire the callback chain of this deferred with the result. On the other hand, if something goes wrong, I’ll fire the errback chain of this deferred instead.
+
+Of course, that function itself won’t literally fire the deferred, it has already returned. Rather, the function has set in motion a chain of events that will eventually result in the deferred being fired.
+
+So deferreds are a way of “time-shifting” the results of functions to accommodate the needs of the asynchronous model.
+
+When You’re Using Deferreds, You’re Still Using Callbacks, and They’re Still Invoked by the Reactor
+
+So, now our function calls are thus:
+
+wait for events ---> a socket is closed ---> protocol.connectionLost(reason) ---> protocol.poemReceived(poem) ---> factory.poem_finished(poem) ---> d.callback(poem) ---> got_poem(poem)#the common part
+
+
+facts to memorize:
+
+    Only one callback runs at a time.
+    When the reactor is running our callbacks are not.
+    And vice-versa.
+    If our callback blocks then the whole program blocks.
+
+Deferreds are a solution (a particular one invented by the Twisted developers) to the problem of managing callbacks. They are neither a way of avoiding callbacks nor a way to turn blocking callbacks into non-blocking callbacks.
+
+By returning a Deferred, a function tells the user “I’m asynchronous” and provides a mechanism (add your callbacks and errbacks here!) to obtain the asynchronous result when it arrives.
+
+say you have a chain of 20 callback and errback functions. what you can do is, you can return control to the reactor before the entire chain is finished. The reactor doesn’t really know anything about deferreds, it’s just invoking callbacks[WHEN EVENTS HAPPEN] and a deferred is just a fancy callback.
+
+"""firing a deferred means calling the call/err-back function."""
+
+Part 9: A Second Interlude, Deferred
+
+when the reactor gets a problem, it logs it and does not crash
+
+It’s just that in a typical synchronous program “up the stack” and “towards higher-context” are the same direction.
+
+The problem is now clear: during a callback, low-context code (the reactor) is calling higher-context code which may in turn call even higher-context code, and so on. 
+
+So if an exception occurs and it isn’t handled immediately, close to the same stack frame where it occurred, it’s unlikely to be handled at all. Because each time the exception moves up the stack it moves to a piece of lower-context code that’s even less likely to know what to do.
+
+the exceptions are caught by the deferred. it passes it to the next errback in the chain.
+so, the first errback is there to handle whatever error is signalled when the deferred's .errback method is called. but the second errback will handle any exception raised by the 1st callback or the 1st errback.
+
+At a given stage N, if either the callback or the errback (whichever was executed) fails, then the errback in stage N+1 is called with the appropriate Failure object and the callback in stage N+1 is not called.
+
+so, the deferred moves the exceptions in the direction of higher context - i.e. more specific parts of the code, the part that knows what the code is doing and away from the general purpose, low level code.
+
+This also means that invoking the callback and errback methods of a deferred will never result in an exception for the caller (as long as you only fire the deferred once!), so lower-level code can safely fire a deferred without worrying about catching exceptions.
+
+at a given stage N, if either the callback or errback succeeds (i.e., doesn’t raise an exception) then the callback in stage N+1 is called with the return value from stage N, and the errback in stage N+1 is not called.
+
+Let’s summarize what we know about the deferred firing pattern:
+
+    A deferred contains a chain of ordered callback/errback pairs (stages). The pairs are in the order they were added to the deferred.
+    Stage 0, the first callback/errback pair, is invoked when the deferred is fired. If the deferred is fired with the callback method, then the stage 0 callback is called. If the deferred is fired with the errback method, then the stage 0 errback is called.
+    If stage N fails, then the stage N+1 errback is called with the exception (wrapped in a Failure) as the first argument.
+    If stage N succeeds, then the stage N+1 callback is called with the stage N return value as the first argument.
+
+so, stage 0 callback called, passes, stage 1 passes, stage 2 has error - so, stage 3 errback called, it passes, so, stage 4 callback called and so on.
+
+when a call succeds, the result value is passed on to the next callback
+when a call fails(raises an exception), the failure object is passed to the next errback
+
+note: all the stages will be covered, but in each stage, only one of the callback or errback will be called.
+
+in the last stage, if the callback succeds, there is no problem.
+but if it doesnt, then it the failure is *unhandled* since there is no errback to handle it.
+and we get "Unhandled error" - this is shown when the program ends, after the reactor stops
+
+
+In synchronous code an unhandled exception will crash the interpreter, and in plain-old-callbacks asynchronous code an unhandled exception is caught by the reactor and logged.
+ 
+
+note, 
+The last print statement runs, so the program is not “crashed” by the exception.
+That means the Traceback is just getting printed out, it’s not crashing the interpreter.
+The text of the traceback tells us where the deferred itself caught the exception.
+
+Now, in synchronous code we can “re-raise” an exception using the raise keyword without any arguments. Doing so raises the original exception we were handling and allows us to take some action on an error without completely handling it
+
+we can do the same thing in an errback.
+
+Since an errback’s first argument is always a Failure, an errback can “re-raise” the exception by returning its first argument, after performing whatever action it wants to take.
+
+in a deferred, callbacks and errbacks always occur in pairs.
+
+There are four methods on the Deferred class you can use to add pairs to the chain:
+
+    addCallbacks //adds both callback and errback
+    addCallback //adds callback and an implicit errback
+    addErrback //adds an errback, implicit callback
+    addBoth //adds to both 
+
+Since the first argument to an errback is always a Failure, a pass-through errback will always “fail” and send its error to the next errback in the chain.
+
+since the first argument to a callback is never a Failure, a pass-through callback sends its result to the next callback in the chain.
+
+
+Part 10: Poetry Transformed
+
+here is the callback/errback chain:
+
+try_to_cummingsify          pass-thru
+got_poem                    poem_failed
+poem_done                   poem_done
+
+note, poem_failed never fails for it doesnt ever return failure.
+
+To make any function faile (and ensure that you are calling the next errback below it), make it raise Exception or return a Failure.
+If you want it to pass, return anything else.
+
+the addBoth method ensures that a particular function will run no matter how the deferred fires, using addBoth is analogous to adding a finally clause to a try/except statement.
+
+
+The scheme is this:
+
+try:
+    //try to do somehting
+except:
+    //if error occurs, do this
+else:
+    //if no errors, do this
+finally:
+    //in either case, do this
+
+
+if you try to connect to a non existent server, you get a ConnectionRefuseError
+
+cummingsify function:
+randomly returns poem.in.lower.caps / GibberishError / ValueError
+
+for GibberishError and ValueError, we are calling different deferred callback lines.
+if we want to get rid of try, except, we have to identify the ValueError and if it is that, we have to return the original poem.
+
+[GibberishError is when the poem is not downloaded properly]
+
+for that, we need to have the poem along with the ValueError. What we can do is, we create a custom exception called CannotCummingsify which takes the original poem as the first argument.
+
+    def cummingsify_failed(err): //stage 0 errback
+        if err.check(CannotCummingsify): //if ValueError, return poem, will call callback next
+            print 'Cummingsify failed!'
+            return err.value.args[0]
+        return err //GibberishError - we reraise the error, call the next errback
+
+
+We are using the check method on Failure objects to test whether the exception embedded in the Failure is an instance of CannotCummingsify. 
+
+the exception is available as the value attribute on the Failure.
+
+So when we are using a deferred, we can sometimes choose whether we want to use try/except statements to handle exceptions, or let the deferred re-route errors to an errback.
+
+
+Part 11: Your Poetry is Served
+
+look at a very simple protocol:
+
+class PoetryProtocol(Protocol):
+
+    def connectionMade(self):
+        self.transport.write(self.factory.poem)
+        self.transport.loseConnection()
+
+this is just: when the connection is made, send the poem and close the connection
+
+Like the client, the server uses a separate Protocol instance to manage each different connection (in this case, connections that clients make to the server). 
+
+our wire protocol requires the server to start sending the poem immediately after the connection is made, so we implement the connectionMade method, a callback that is invoked after a Protocol instance is connected to a Transport.
+
+The protocol object connecting to the Transport object is the even the reactor is waiting for, as soon as it happens, the ""connectionMade"" callback is fired.
+
+NOTE, the call is not blocking - the write and loseConnection are asynchronous - they will not block
+
+SEE how to read documentaiton:
+
+Notice that we are sub-classing ServerFactory instead of ClientFactory. Since our server is passively listening for connections instead of actively making them, we don’t need the extra methods ClientFactory provides. How can we be sure of that? Because we are using the listenTCP reactor method and the documentation for that method explains that the factory argument should be an instance of ServerFactory.
+
+
+The highlight funciton is:
+
+port = reactor.listenTCP(options.port or 0, factory,
+                             interface=options.iface)
+
+
+the listenTCP function is to tell twisted to listen for connections on which port number, to use the factory[PF instance] to make protocol instances for each new conneciton
+
+so, the factory is a object of the PF - the object of the PF is used to make Protocol objects for each connection - not the PF class itself
+
+recall how a new Protocol instanec is created and initialized after twisted makes a new connection on our behalf. 
+
+Twisted calls PF objects (factorys) .buildProtocol() --> this method creates an instance of the Protocol and sets the .factory attribute of the Protocol to point to the PF object - its father. that is why we could call the PF's methods using self.factory.poem_done
+
+Note that while the factory attribute on Protocols refers to an instance of a Protocol Factory, the protocol attribute on the Factory refers to the class of the Protocol.
+
+Adding the transport to the scene:
+
+now, after the Protocol is created (and its factory attribute is set to point to the PF object)(this is an example of the activity the reactor is looking for - and when it happens, the reactor fires its callback which here is makeConnection method), we connect it to the Transport using makeConnection method. 
+
+How this happens is Twisted calls the makeConnection(transport) method (it gives the transport object).
+1. this method sets the .transport attribute of the Protocol to point to this Transport object
+2. sets .connected to True
+
+Once initialized in this way, the Protocol can start performing its real job — translating a lower-level stream of data into a higher-level stream of protocol messages (and vice-versa for 2-way connections).
+
+
+you read and write to and from a Transport
+
+what is happening under the hood, when we use the listenTCP method?
+calling that method tells Twisted to create a listening socket and add it to the even loop - an "event" being there is a client waiting to conenct to it.
+
+what the listening socket does is:
+it accpets any incoming connection and creates a new client socket that links the server directly to an individual client - the client socket is added to the event loop
+Now, twisted creates a new Transport and (via the PF instance), a new PoetryProtocol instance to service that specific client(for that specific connection)
+
+So the Protocol instances are always connected to client sockets, never to the listening socket. 
+
+
+so, if three clients are connected to the server, we will have three client sockets in the server, three PoetryProtocol instances and three Transport instances, one for each conneciton. all of them are in the event loop. the listening socket is actively listening for any new connecitons too, the PF object is ready to churn out more PoetryProtocol instances if required.
+(OQ - in scrapy, when is the new socket made up? is it for each new request?)
+
+Each Transport represents a single client socket, and the listening socket makes a total of four file descriptors for the select loop to monitor
+
+When a client is disconnected the associated Transport and PoetryProtocol will be dereferenced and garbage-collected 
+
+The PoetryFactory, meanwhile, will stick around as long as we keep listening for new connections which, in our poetry server, is forever. 
+
+Twisted has no built-in limits on the number of connections it can handle
+Twisted also imposes no limit on the number of ports we can listen on.
+
+You can listen to dozens of ports and provide different service to each of them using a different PF object for each listenTCP call. Note, the PF class is bound to a protocol class(not instance) by the class's .protocol attribute.
+
+the server doesn’t run as a daemon, making it vulnerable to death by accidental Ctrl-C (or just logging out). 
+
+When a connection is done, the associated protocol receives a connectionLost callback, where you can take any cleanup actions you need to.
+
+__________TO BE CONTINUED____________
+
+
+DOING THE BUG - ISSUE #1615
+
+media.py - the base class is MediaPipeline. it defines some methods and also have some empty method - which serve as an interface that the future classes which extend this class can implement.
+
+the class has a spider attached to it, in the spiderinfo attribute (by the open_spider method which is called with a spider).
+pipe is an instance of the MediaPipeline class itself, the crawler attribute is set to the crawler received from the from_crawler method
+
+process_item - takes in item and spider
+we take in the item and convert it to request using get_media_request (which is not implemented here), 
+
+here is the implementation for files.py:
+
+def get_media_requests(self, item, info):
+        return [Request(x) for x in item.get(self.FILES_URLS_FIELD, [])]
+
+RECALL?? When we wanted to download the images, we kept this constant:
+"""
+    file_urls = Field() # --> this pattern, file_urls and files are common everyhwere. don't change them
+    files = Field()
+"""
+so, we get the url required here.
+
+also, here is the __init__ for Request object of scrapy:
+
+
+    def __init__(self, url, callback=None, method='GET', headers=None, body=None,
+                 cookies=None, meta=None, encoding='utf-8', priority=0,
+                 dont_filter=False, errback=None):
+
+
+     Note, it has callback and errback attributes which are set to None by default.
+
+ so, each request we are processing and storing in "dlist"
+ we are storing it's cb, eb. then, we are checking if it is already downloaded, (info.downloaded), 
+ (if it is, we are returning it and reattaching the cb, eb)
+
+ else, we are waiting for result, adding it to the info.waiting and put in downloading.
+
+ scrapy.utils.defer has some important methods dealing with Deffers
+
+1. defer_succeed(result)
+It is the same as: twisted.internet.defer.succeed   -  only change in our version is that we add a small delay to let the reactor get a chance to do other things
+
+t.i.d.succed:
+
+ Return a Deferred that has already had '.callback(result)' called. So, it is a deferred that is sure to have its callback fired
+
+ from twisted.internet import defer, reactor, task
+
+    from twisted.internet import defer, reactor, task
+
+    def cb(result):
+        print "in cb"
+
+    def cb2(result):
+        print "in cb2"
+
+    result="string"
+    d = defer.succeed(result)
+    d.addCallback(cb)
+    d.addCallback(cb2)
+
+    in cb
+    in cb2
+    [Finished in 0.1s]
+
+so, d is not a Deferred, it is sure to succeed. and the callback is fired as soon as it is attached to the deffered.
+
+we also have mustbe_deffered - same as maybeDeferred:
+
+Call the given function with the given arguments. If the returned object is a Deferred, return it. If the returned object is a Failure, wrap it with fail and return it. Otherwise, wrap it in succeed and return it. If an exception is raised, convert it to a Failure, wrap it in fail, and then return it. 
+
+now, we give the request to media_to_download - an interface method defined in files.py
+in files, it does this:
+finds the path to store the downloaded file - and calls _onsuccess on success
+it also adds an errback - which logs the error
+and returns the deferred.
+
+now, to this deferred, we add the callback - _check_media_to_download
+it does this:
+it asks the engine to download the request
+dfd = self.crawler.engine.download(request, info.spider)
+and adds callback[media_downloaded] and errback[media_failed]
+
+NOTE, it also allows for a custom download_func - used only in tests
+
+
+media_downloaded - interface in media, defined in files
+checks if the status code is 200, if the response body is empty. if both are cool, we log the succesful download, we find its path and checksum and return it.
+
+in media_failed - interface in media, defined in files
+we just log the failure to download and raise an exception
+
+then, we addBoth - _cache_result_and_execute_waiters
+here, we remove the fp(fingerprint of the request) from info.downloading, and cache the result in info.downloaded[fp] = result
+
+and then we return the deferred - if the result was successful, we return a t.i.d.sucess else we return a failure.
+
+then, we have a last Errback - which is a one liner lamdba funciton which just logs the error.
+lastly, we have the addBoth which just returns wad - the deferred with the cb and eb attached,as taken from the original request.
+
+
+NOW: dfd.addBoth(lambda _: wad)
+this means that for both errback and callback, we are returninng wad
+lambda is the function here, wad is the output irrespectie of the input (it takes only one input note)
+also, y = lambda:1
+means that y is a function that takes in no arguments and returs only 1
+y() --> 1
+
+so, dList is a list of wads - one for each request
+dList is given to DefferedList and what DL gives is returned - with the callback - item_completed - it is just used to log the errors (if the LOG_FAILED_RESULTS setting is set to true) and returned.
+
+when ever we log, we use the utils.log funciton:
+
+failure_to_exc_info which takes in a failure object and extracts info from it
+
+def failure_to_exc_info(failure):
+    """Extract exc_info from Failure instances"""
+    if isinstance(failure, Failure):
+        return (failure.type, failure.value, failure.getTracebackObject())
+
+HOW to call a parents method/attribute in a subclass?
+
+class One(object):
+    def one_one(self):
+        print "hello, 1, 11"
+    varOne = 1
+
+class Two(One):
+    def two_one(self):
+        print "hello, 2, 21"
+        super(Two, self).one_one()
+        # super(<present, containing classname>, self)
+        #OR
+        print One.varOne
+        
+one = Two()
+print one.varOne
+one.two_one()
+
+__________krondo continued____________
+
+Part 12: A Poetry Transformation Server
+
+upto now, the interactions between the client and the server have been one way. the server only sends, the client only receives.
+but lets now write a "poem transformation service" server. the client sends the poem, the server sends back the transformed poem
+
+ So we’ll need to use, or invent, a protocol to handle that interaction.
+ also, lets allow the client to select which kind of transformation it wishes to get.
+ this is a very simple Remote Procedure Call
+
+ Twisted includes support for several protocols we could use to solve this problem, including XML-RPC, Perspective Broker, and AMP.
+
+ we'll write our own protocol.
+ the client sends:
+ <transform-name>.<text of the poem>
+ the entire thing will be encoded as a netstring
+ Since netstrings use length-encoding, the client will be able to detect the case where the server fails to send back a complete result (maybe it crashed in the middle of the operation). 
+
+ if you note the code of twisted-server-1/transformedpoetry.py, we see that the transformation logic is completely different from the protocol logic. what we did is in the protocol, call the respective functions having the transformation logic, we did not put the logic in the protocol itself
+
+ Doing so makes it easy to provide the same service via multiple protocols without duplicating code.
+
+ the NetstringReceiver protocol needs us to implement the stringReceived method
+
+ stringReceived is called with the content of a netstring sent by the client, without the extra bytes added by the netstring encoding. 
+
+ The base class also takes care of buffering the incoming bytes until we have enough to decode a complete string.
+
+ we send the transformed poem back to the client using the sendString method provided by NetstringReceiver (and which ultimately calls transport.write()
+
+ we can quickly test the server by using the netcat to stream some bytes to the server
+
+ echo -n "27:cummingsify.HERE IS MY POEM," | netcat -q -1 localhost $1
+
+ Notice how we used a service object to separate functional logic from protocol logic.
+ that is, we stored the functional logic in a seperate service class. we initiated the factory by setting its "service" attribute to point to this service class object.
+
+ The last new idea we introduced, the use of a Service object to separate functional and protocol logic, is a really important design pattern in Twisted programming. 
+
+ by making the Service independent of protocol-level details, we can quickly provide the same service on a new protocol without duplicating code.
+
+what we have here is that the Protocol Factory has a attribute "service" that points to the service class. the service class has the transformation logic. also,the protocol just takes in the data, checks that it is valid and then asks factory to transform it. the factory in turn turns to it's service attribute and asks it to transform it. then, the factory returns it to the protocol, the protocol sends it back to the client. 
+
+
+ to serve transformed poetry using a new protocol, we can just write a new protocol class, a new protocol factory (and set its protocol attribute to refer to the Protocol class{not Protocol object}), and it will have its own Transport object - but we will share the Service class' code
+
+
+ Part 13: Deferred All The Way Down
+ earlier, the poetry transformation engine was implemented as a synchronous function call in the client itself.
+
+ but we will use asynchronous i/o for the client now - for our asynchronous server we wrote in part 12. In other words, the try_to_cummingsify callback is going to return a Deferred in our new client. 
+ recall it was: 
+     def try_to_cummingsify(poem):
+        try:
+            return cummingsify(poem)
+        except GibberishError:
+            raise
+        except:
+            print 'Cummingsify failed!'
+            return poem
+
+    where cummingsify randomly returned success, or gibberish, or bug
+    Now, we will make it return a deferred.
+
+    but realize this. we (the try_to_cummingsify function) is already inside a deferred chain of functions.
+    if we return a deffered here, it will amount to returning a deffered inside a deffered.
+
+""""
+Let’s call the first deferred the ‘outer’ deferred and the second the ‘inner’ one. Suppose callback N in the outer deferred returns the inner deferred. That callback  is saying “I’m asynchronous, my result isn’t here yet”. Since the outer deferred needs to call the next callback or errback in the chain with the result, the outer deferred needs to wait until the inner deferred is fired. Of course, the outer deferred can’t block either, so instead the outer deferred suspends the execution of the callback chain and returns control to the reactor (or whatever fired the outer deferred).
+""""
+
+look at twisted-deferred/defer-10.py for details
+
+now, implementing the client to use the new twisted server(which is capable of two way communication)
+
+earlier, we used the deferred for when we had to download the poem from the server only. if the download was successful (or gibberish or valueerror), we used the try/except to find out. but now, apart from that deferred, we also have another nested deferred - this one for the transformation of the poem (cummingsifation). so, we have this chain:
+
+The Factory creates a single Deferred which represents the result of the transformation request. 
+                                        d
+
+            try_to_cummingsify                         
+
+                    d[nested deferred]
+                                fail
+
+            gotPoem                                        poem_failed
+
+            poem_done                                      poem_done
+
+
+
+if download failed - poem_failed, if successful - try_to_cummingsify
+so, try_to_cummingsify returns a deferred - which has only one errback - fail. which is for error in transformation service. if successful - gotPoem which always passes as it just prints the poem then, poem_done - which stops the reactor (if len(poems) + len(errors) == len(addresses))
+
+In general, an object that makes a Deferred should also be in charge of firing that Deferred.
+like here, the TransportClientFactory creates a deferred on its initialization and it also fires it in its own subsequesnt method.
+
+there is also a Proxy class which hides the details of making the TCP connection to a particular transform server:
+
+due to this class(and the xform method in general), 
+
+    def xform(self, xform_name, poem):
+        factory = TransformClientFactory(xform_name, poem)
+        from twisted.internet import reactor
+        reactor.connectTCP(self.host, self.port, factory)
+        return factory.deferred //the deferred attribute of factory instance is a deferred.
+
+    people can just request a transform and get back a deferred  without worrying about the hostnames, port numbers etc.
+    like this:
+
+    xform_addr = addresses.pop(0)
+    proxy = TransformProxy(*xform_addr)
+
+We are returning the result of d.addErrback(fail). That’s just a little bit of syntactic sugar. The addCallback and addErrback methods return the original deferred. We might just as well have written:
+
+        d.addErrback(fail)          IS SAME AS              return d.addErrback(fail)
+        return d
+
+The first version is the same thing, just shorter.
+
+
+Part 14: When a Deferred Isn’t
+
+now, the load on the transformation server is too high, lets make a caching proxy server - the clients will connect to this server - this server will return the poem immediately (if it was cahced in the server) [this is synchronous treatment] or send the request to the transformation server (this is asynchronous treatment). 
+
+So the proxy’s internal mechanism for getting a poem will sometimes be asynchronous and sometimes synchronous. to handle this situation of only partially synchronous/asynchronous function, we have the option of returning a deferred that is already fired.
+
+
+This works because, although you cannot fire a deferred twice, you can add callbacks and errbacks to a deferred after it has fired. And when you do so, the deferred simply continues firing the chain from where it last left off
+
+the new callback/errback of the already fired deferred may be fired immediately.
+
+However, we can pause() a deferred so it doesn’t fire the callbacks right away. When we are ready for the callbacks to fire, we call unpause(). That’s actually the same mechanism the deferred uses to pause itself when one of its callbacks returns another deferred.
+
+How to read the scripts??
+lets take an example: twisted-server-1/poetry-proxy.py
+
+Read the class names just.
+so, we have:
+PoetryProxyProtocol
+PoetryProxyFactory
+
+PoetryClientProtocol
+PoetryClientFactory
+
+ProxyService
+
+Okay, now read the main(), dont go anywhere else. you have:
+service is an object of the ProxyService class.
+factory  is an instance of the PoetryProxyFactory and its service attribute is set to service.
+
+now, the main thing is here:
+
+    port = reactor.listenTCP(options.port or 0, factory,
+                             interface=options.iface)
+
+    look at the listenTCP arguments; it takes in factory.
+    factory is an instance of the PoetryProxyFactory class.
+    and that class is for protocol = PoetryProxyProtocol
+    so, PoetryProxyProtocol, connectionMade method is called when the client connects to the server.
+
+    it creates a new Deferred object [it is actually a maybeDeferred object] of the ProxyService's get_poem method.
+    it checks if its self.poem is none, it is, so, it connects to the server using the 
+        reactor.connectTCP(self.host, self.port, factory)
+    method where factory is an instance of PoetryClientFactory class.
+
+    and to deferred attribute of the PoetryClientFactory class, it adds the set_poem method
+
+    now, the client [inside the proxy server] connects to the transformation service server and gets the poem. this Deffered is fired when the poem comes back - is downlaoded from the transformation service.
+
+Everything is fine if you know what the duty of Protocol is, ProtocolFactory is
+
+    meanwhile, earlier, we had along with 
+    d = maybeDeferred(self.factory.service.get_poem)
+    so, d is the deferred factory's deferred - that is PoetryClientFactory's deferred.
+
+    we also had added:
+
+        d.addCallback(self.transport.write) //the self.transport.write method will send the poetry back to the client connected to our proxy server. 
+        This will be fired after the poem is received by the proxy-client from the transformation server [first, the set_poem is fired, then this method].
+        
+        d.addBoth(lambda r: self.transport.loseConnection()) //this will be fired when we have successfully transfered the entire poem to the client. it will close the connection.
+
+since the proxy acts as both a client and a server, it has two pairs of Protocol/Factory classes. 
+
+
+Observe this class:
+
+class PoetryProxyProtocol(Protocol):
+
+    def connectionMade(self):
+        d = maybeDeferred(self.factory.service.get_poem)
+        d.addCallback(self.transport.write)
+        d.addBoth(lambda r: self.transport.loseConnection())
+
+
+Note, we arent calling the getPoem method directly, we are wrapping it in maybeDeferred method in t.i.defer module.
+
+
+The maybeDeferred function takes a reference to another function, plus some optional arguments to call that function with (we aren’t using any here). Then maybeDeferred will actually call that function and:
+
+    If the function returns a deferred, maybeDeferred returns that same deferred, or
+    If the function returns a Failure, maybeDeferred returns a new deferred that has been fired (via .errback) with that Failure, or
+    If the function returns a regular value, maybeDeferred returns a deferred that has already been fired with that value as the result, or
+    If the function raises an exception, maybeDeferred returns a deferred that has already been fired (via .errback()) with that exception wrapped in a Failure.
+
+In other words, the return value from maybeDeferred is guaranteed to be a deferred, even if the function you pass in never returns a deferred at all.  This allows us to safely call a synchronous function (even one that fails with an exception) and treat it like an asynchronous function returning a deferred.
+
+but, the deferred returned by a synchronous function wrapped in maybeDeferred will already have been fired. so, if you add any callbacks or errbacks, it will run immediately.
+
+
+earlier, we used the maybeDeferred method, what we could also have done is, when checking if the poem is cached or not:
+
+        if self.poem is not None:
+            print 'Using cached poem.'
+            # return an already-fired deferred
+            return succeed(self.poem)
+
+
+
+The defer.succeed function is just a handy way to make an already-fired deferred given a result.
+
+the actual source code of t.i.d.succeed is:
+
+def succeed(result):
+    d = Deferred()
+    d.callback(result)
+    return d
+
+This Returns a Deferred that has already had '.callback(result)' called.
+
+      This is useful when you're writing synchronous code to an
+      asynchronous interface: i.e., some code is calling you expecting a
+      Deferred result, but you don't actually need to do anything
+      asynchronous. Just return defer.succeed(theResult).
+
+
+so, we can use Deferreds in synchronous code in two ways:
+wrap the synchronous function in maybeDeferred
+when returning the normal value,return is as succeed(returnValue) or fail(returnValue) - as this will return a already fired deferred with the returnValue as the argument for the next function in its callback chain
+
+which to choose?
+
+The former emphasizes the fact that our functions aren’t always asynchronous while the latter makes the client code simpler.
+
+CONSIDER THIS CODE:
+
+from twisted.internet.defer import Deferred
+
+def callback(res):
+    raise Exception('oops')
+
+d = Deferred()
+
+d.addCallback(callback) //this means there are two levels, one callback, passthru-errback
+d.addErrback(callback) // and here, passthru-callback and errbacl
+
+d.callback('Here is your result.')
+
+print "Finished"
+
+
+We see that the last callback fails and we get an "Unhandled error"
+
+We learned that an “unhandled error” in a deferred, in which either the last callback or errback fails, isn’t reported until the deferred is garbage collected (i.e., there are no more references to it in user code). Now we know why — since we could always add another callback pair to a deferred which does handle that error, it’s not until the last reference to a deferred is dropped that Twisted can say the error was not handled.
+
+***Deferreds are just an abstraction for managing callbacks.***
+
+Part 15: Tested Poetry
+
+One may be wondering how you can test asynchronous code using a synchronous framework like the unittest package that comes with Python.
+
+we can't. so we'll use twisted's own testing framework called "trial" which supports testing synchronous code.
+
+you create tests by defining a class with a specific parent class (usually called something like TestCase), and each method of that class starting with the word “test” is considered a single test.
+
+The framework takes care of discovering all the tests, running them one after the other with optional setUp and tearDown steps, and then reporting the results.
+
+what we can do to say check connection to the server is, we can write a function get_poetry that returns a deferrend and connects to the server. then, we can add all our tests as a series of callbacks for that deferred. 
+
+some tests in test_downloader_handlers.py return asserFailure
+
+
+def test_failure(self):
+        """The correct failure is returned by get_poetry when
+        connecting to a port with no server."""
+        d = get_poetry('127.0.0.1', 0)
+        return self.assertFailure(d, ConnectionRefusedError)
+
+        See this. self.assertFailure returns a deferred that succeeds if the given deferred [d] fails with the given ConnectionRefusedError
+
+
+cd Part 16: Twisted Daemonologie
+
+we need to make our server run as a daemon process
+
+Run as a daemon process, unconnected with any terminal or user session. You don’t want a service to shut down just because the administrator logs out.
+
+read this part if you wish to deploy twisted powered servers.
+
+
+Part 17: Just Another Way to Spell “Callback”
+
+there is another way to write callbacks - using generators
+
+recall generators!
+
+they are restartable functions - that use yield and not return like normal functions. 
+
+def genOne():
+    yield 1
+    yield 2
+    yield 3
+
+a = genOne()
+print a.next()
+print a.next()
+print a.next()
+print type(a)
+print type(getOne)
+
+1
+2
+3
+<type 'generator'>
+<type 'function'>
+
+note, this funciton returns an generator - so, a is a generator. it can be queried for the next element in it. after all the elements are exhausted, we get a StopIteration exception. "a" can be queried only once.
+
+when you say :
+for i in genOne():
+    print i
+you will get 1 2 3
+
+"for i in genOne()" means, that the results will be returned until you get StopIteration when performing the yield. 
+
+
+
+def genOne():
+
+    def genTwo():
+        yield 1
+        yield 2
+
+    a = genTwo()
+
+    for i in range(10):
+        yield i, a.next()
+
+for j in genOne():
+    print j
+
+    So, this will only give: 
+
+    (0, 1)
+    (1, 2)
+this is because during the i=2 in the for i in range(10), we get StopIteration.
+
+
+
+Generators (and iterators) are often used to represent lazily-created sequences of values.
+
+consider this:
+
+    def my_generator():
+        print 'starting up'
+        yield 1
+        print "workin'"
+        yield 2
+        print "still workin'"
+        yield 3
+        print 'done'
+
+    gen = my_generator()
+
+    while True:
+        try:
+            n = gen.next()
+        except StopIteration:
+            break
+        else:
+            print n
+
+    note:
+        the generator starts only after the next method
+        it runs until it returns the control to the while loop using yield and in this time, the while loop isnt running
+
+IF you think about it, this is exactly the way callbacks work. the while loop is the reactor, and the generator as a series of callbacks seperated by the yeild statements. also, all the callbacks share the same local variable persistent[from one callback to another] namespace
+
+
+so, it works like this: there are many deferreds that are existing and ready to be fired. now, the reactor is waiting for events, when say, a client connects to a server, the reactor fires the connectionMade method, when it loses it fires the connectionLost method. now, the connectionLost method may fire a deferred. thus, this will fire its chain of callbacks - in which it might fire other deferreds, return control to the reactor etc.
+
+
+Callbacks aren’t just called by the reactor, they also receive information. When part of a deferred’s chain, a callback either receives a result, in the form of a single Python value, or an error, in the form of a Failure.
+
+we can pass information to generators too:
+
+look at the code:
+
+class Malfunction(Exception):
+    pass
+
+def my_generator():
+    print 'starting up'
+
+Yield is a two way communication channel. here, yield 1 will return 1 to the caller of my_generator().next(). but, yield can also accept values and give them to the variable val here.
+so, if you call 
+
+my_generator().next() --> None given to yield
+my_generator().send("hi") --> the yield will yield whatever it planned to originally [1 here], but val=yield 1 will give val "hi"
+
+    val = yield 1
+    print 'got:', val
+
+    val = yield 2
+    print 'got:', val
+
+    try:
+        yield 3
+    except Malfunction:
+        print 'malfunction!'
+
+    yield 4
+
+    print 'done'
+
+gen = my_generator()
+
+print gen.next() # start the generator
+print gen.send(10) # send the value 10
+print gen.send(20) # send the value 20
+print gen.throw(Malfunction()) # raise an exception inside the generator
+
+try:
+    gen.next()
+except StopIteration:
+    pass
+
+starting up
+1
+got: 10
+2
+got: 20
+3
+malfunction!
+4
+done
+
+
+Note, you can actually raise an arbitrary exception inside the generator using the throw method.
+
+now, our comparision of generators as deferreds is complete. we can throw exceptions too in generators, just like some callBacks in deferreds can fail and give Failure to the next errback in line
+
+now, what if we asked our generators to return deferreds instead of ordinary python values?
+then, what will happen is what we yield will be returned to the variable too and to the point calling the function as well.
+
+That would make our generator a genuine sequence of asynchronous callbacks and that’s the idea behind the inlineCallbacks function in twisted.internet.defer.
+
+NOTE:
+
+def my_generator():
+    a = yield 1
+    print "a is", a
+    b = yield 2
+    print "b is", b
+    yield 3
+
+_ = my_generator()
+print _.next() //this will yield 1 just, a is not given anything
+
+print _.send(2) //this will resume control from the last yield. so, the value of 2 will go to a, then "a is 2" will be printed and then 2 will be yielded
+
+print _.send(10) //this will assign 10 to b, print "b is 10" and then yield 3
+
+1
+a is 2
+2
+b is 10
+3
+[Finished in 0.1s] 
+
+inlineCallbacks is a decorator and it always decorates generator funcitons. i.e. functions that use "yield"
+
+"""The whole purpose of inlineCallbacks is turn a generator into a series of asynchronous callbacks"""
+
+secondly, when we invole an inlineCallbacks decorated function, we dont need to call next or send or throw to the generator, it will complete to the end on its own - GIVEN IT DOENST THROW AN EXCEPTION
+
+
+from twisted.internet.defer import inlineCallbacks, Deferred
+
+@inlineCallbacks
+def my_callbacks():
+    from twisted.internet import reactor
+
+    print 'first callback'
+    result = yield 1 # yielded values that aren't deferred come right back. this will restart the generator immediately with the same result as the result of the yield
+
+    print 'second callback got', result
+    d = Deferred()
+    reactor.callLater(5, d.callback, 2)
+    result = yield d # yielded deferreds will pause the generator
+
+    print 'third callback got', result # the result of the deferred
+
+    d = Deferred()
+    reactor.callLater(5, d.errback, Exception(3))
+
+    try:
+        yield d
+    except Exception, e:
+        result = e
+
+    print 'fourth callback got', repr(result) # the exception from the deferred
+
+    reactor.stop()
+
+from twisted.internet import reactor
+reactor.callWhenRunning(my_callbacks)
+reactor.run()
+
+    ***Deferreds that dont have a callback defined, just takes the value passed to them and returns nothing***
+
+    d = Deferred()
+    print d.callback(2)
+    None
+
+if we yield a deferred from the generator, it will not be restarted until that deferred fires. If the deferred succeeds, the result of the yield is just the result from the deferred. And if the deferred fails, the yield statement raises the exception. Note the exception is just an ordinary Exception object, rather than a Failure, and we can catch it with a try/except statement around the yield expression.
+
+also, when you call the inlineCallbacks decorated function, you get back a ...deferred. it gets fired when the entire generator has finished executing. If the generator throws an exception, the returned deferred will fire its errback chain with that exception wrapped in a Failure. 
+
+But if we want the generator to return a normal value, we must “return” it using the defer.returnValue function. Like the ordinary return statement, it will also stop the generator
+
+https://raw.githubusercontent.com/jdavisp3/twisted-intro/master/inline-callbacks/inline-callbacks-2.py
+
+shows two inline-callbacks - both executed asynchronously
+
+this is what is happening in twisted-client-6:
+
+the code is for the client. it first downloads the poem and then sends the poem to the transformation service server/proxyserver to get the cummingsfied response.
+
+the code starts executing first at get_poetry:
+we get a deferred there "d"
+we add the callback - try_to_cummingsify
+and got_poem   |    poem_failed
+and poem_done   |   poem_done
+
+now, this deferred's reference is given to the PoetryClientFactory. and the protocol for that factory is: PoetryProtocol. so, we have the dataReceived which adds the data to self.poem. when the connectionLost is fired by the reactor, we call poemReceived. which calls PoetryClientFactory's poem_finished. which calls the callback of "d" with the poem as argument - which is the try_to_cummingsify function!
+
+now, try_to_cummingsify returns a deferred too. and adds a errback to it - funciton "fail" and passes it to TransformClientFactory. this TransformClientFactory's protocol is TransformClientProtocol. here, reactor fires connectionMade then we fire sendRequest - reactor fires stringReceived - we lose the connection and fire poemReceived which fires factory.handlePoem which calls the callback of the poem - which is: got_poem. got_poem calls poem_done and we are done.
+
+we didnt talk about the alternate path that would be taken if the errback was fired in get_poetry for eg. do that yourself, its pretty simple.
+
+NOW, we will use inlineCallbacks here to do the same thing:
+
+    @defer.inlineCallbacks
+    def get_transformed_poem(host, port):
+        try:
+            poem = yield get_poetry(host, port) //this will download the poem from the poetry server
+        except Exception, e:
+            print >>sys.stderr, 'The poem download failed:', e
+            raise //this will stop the execution of the genrerator and call poem_done - the next errback in chain
+
+        try:
+            poem = yield proxy.xform('cummingsify', poem)// once we get download the poem, we will try to transform it using the transformation server
+        except Exception:
+            print >>sys.stderr, 'Cummingsify failed!' //we dont raise an exception here, so that the downloaded poem is returned as is, without being cummingsifed
+
+        defer.returnValue(poem) //the generator has to return the deferred. this poem is the cummingsifed poem, we just print it now in the next callback
+
+            def got_poem(poem):
+        print poem
+
+    def poem_done(_):
+        results.append(_)
+        if len(results) == len(addresses):
+            reactor.stop()
+
+    for address in addresses:
+        host, port = address
+        d = get_transformed_poem(host, port)
+        d.addCallbacks(got_poem)
+        d.addBoth(poem_done)
+
+we can use try/except statements to handle asynchronous errors inside the generator.
+
+
+Recall when we introduced Deferred object, it was to help us manage the callbacks better
+Like the Deferred object, the inlineCallbacks function gives us a new way of organizing our asynchronous callbacks
+
+Benefits of using inlineCallbacks:
+
+    Since the callbacks share a namespace, there is no need to pass extra state around.
+    The callback order is easier to see, as they just execute from top to bottom.
+    With no function declarations for individual callbacks and implicit flow-control, there is generally less typing.
+    Errors are handled with the familiar try/except statement.
+
+And here are some potential pitfalls:
+
+    The callbacks inside the generator cannot be invoked individually, which could make code re-use difficult. With a deferred, the code constructing the deferred is free to add arbitrary callbacks in an arbitrary order.
+
+    we learned about the inlineCallbacks decorator and how it allows us to express a sequence of asynchronous callbacks in the form of a Python generator.
+
+
+
+Part 18: Deferreds En Masse
+
+
+inlineCallbacks give us a new way of structuring sequential asynchronous callbacks using a generator
+
+Thus, including deferreds, we now have two techniques for chaining asynchronous operations together.
+
+sometimes we want to run a group of asynchronous operations in ""parallel"".
+we want to use asynchronous I/O to work on a group of tasks as fast as possible. 
+Our poetry clients, for example, download poems from multiple servers at the same time, rather than one server after another. that was the motivation behind using twsited for poetry after all.
+
+Another question. how do we know that all the asynchronous operations we have started are done? uptil now, we used to keep a counter of poems and errors and if the sum was equal to the one we required, we stopped the reactor. but, Twisted has an abstraction for this. 
+
+Enter the DeferredList
+
+The DeferredList allows us to treat a list of deferred object as a single deferred. That way we can start a bunch of asynchronous operations and get notified only when all of them have finished (regardless of whether they succeeded or failed).
+
+
+from twisted.internet import defer
+
+def got_results(res):
+    print 'We got:', res
+
+print 'Empty List.'
+d = defer.DeferredList([]) //DeferredList is created form a Python List. all elements must be Deferred objects
+print 'Adding Callback.' 
+d.addCallback(got_results) //we are adding the callback to call when all the deferreds in the DeferredList have finished executing. now, since the list is empty, the callback will be called immediately.
+
+Empty List.
+Adding Callback.
+We got: []
+
+
+Note, here the result of the deferred list was itself a list (empty).
+
+***A DeferredList is itself a deferred (it inherits from Deferred). That means you can add callbacks and errbacks to it just like you would a regular deferred.***
+
+
+Another example:
+
+from twisted.internet import defer
+
+def got_results(res):
+    print 'We got:', res //gets printed 4th.
+
+print 'One Deferred.' //gets printed 1st
+d1 = defer.Deferred()
+d = defer.DeferredList([d1])
+print 'Adding Callback.' //gets printed 2nd
+d.addCallback(got_results)
+print 'Firing d1.' //gets printed 3rd
+d1.callback('d1 result') 
+
+One Deferred.
+Adding Callback.
+Firing d1.
+We got: [(True, 'd1 result')]
+____
+
+***when you fire a deferred's callback without defining it first, it just succeeds and passes the argument given to it to the next callback in its chain***
+
+
+from twisted.internet.defer import Deferred
+
+def print_res(res):
+    print res
+
+d = Deferred()
+d.callback("must be printed first")
+d.addCallback(print_res) //will be fired immediately. 
+print "done"
+
+must be printed first
+done
+____
+
+note the result is a list of tuples where the 2nd value is the result of the deffered in the list
+
+
+Another example:
+
+from twisted.internet import defer
+
+def got_results(res):
+    print 'We got:', res
+
+print 'Two Deferreds.'
+d1 = defer.Deferred()
+d2 = defer.Deferred()
+d = defer.DeferredList([d1, d2])
+print 'Adding Callback.'
+d.addCallback(got_results)
+print 'Firing d1.'
+d1.callback('d1 result')
+print 'Firing d2.'
+d2.callback('d2 result') 
+
+Two Deferreds.
+Adding Callback.
+Firing d1.
+Firing d2.
+We got: [(True, 'd1 result'), (True, 'd2 result')]
+
+
+DeferredList itself doesn’t fire until all the deferreds in the original list have fired. 
+ And a DeferredList created with an empty list fires right away since there aren’t any deferreds to wait for.
+
+
+ NOTE: The output list has the results in the same order as the original list of deferreds, not the order those deferreds happened to fire in.
+
+ so, if you fire d2 before d1, the results still say the same.
+
+ now, if one fails:
+
+ from twisted.internet import defer
+
+def got_results(res):
+    print 'We got:', res
+
+d1 = defer.Deferred()
+d2 = defer.Deferred()
+d = defer.DeferredList([d1, d2], consumeErrors=True)
+d.addCallback(got_results)
+print 'Firing d1.'
+d1.callback('d1 result')
+print 'Firing d2 with errback.'
+d2.errback(Exception('d2 failure'))
+
+Firing d1.
+Firing d2 with errback.
+We got: [(True, 'd1 result'), (False, <twisted.python.failure.Failure <type 'exceptions.Exception'>>)]
+
+This is since we used the consumeErrors, if we didn't it would raise an "Unhandled error in Deferred". (reacll this was raised when the last callback/errback failed and the deferred is garbage collected)
+
+Also, if any of the deffered fails in the DeferredList, the DeferredList needs to know which one failed.
+
+we can add handle the error (we already know this, nothing new here):
+
+from twisted.internet import defer
+
+def got_results(res):
+    print 'We got:', res
+
+d1 = defer.Deferred()
+d2 = defer.Deferred()
+d = defer.DeferredList([d1, d2])
+d2.addErrback(lambda err: None) # handle d2 error
+d.addCallback(got_results)
+print 'Firing d1.'
+d1.callback('d1 result')
+print 'Firing d2 with errback.'
+d2.errback(Exception('d2 failure'))
+
+Recall the motivation of DeferredList, it is to tell us when a group of deferreds have finished executing. earlier we counted the #failures and #successes, i.e.:
+
+    def poem_done(_):
+        results.append(_)
+        if len(results) == len(addresses):
+            reactor.stop()
+
+    for address in addresses:
+        host, port = address
+        d = get_transformed_poem(host, port)
+        d.addCallbacks(got_poem)
+        d.addBoth(poem_done)
+
+Now, we can do this:
+
+    ds = []
+
+    for (host, port) in addresses:
+        d = get_transformed_poem(host, port)
+        d.addCallbacks(got_poem)
+        ds.append(d)
+
+    dlist = defer.DeferredList(ds, consumeErrors=True)
+    dlist.addCallback(lambda res : reactor.stop())
+
+    Clean, eh?
+
+    Note, here we don’t need the poem_done callback or the results list.
+
+
+Part 19: I Thought I Wanted It But I Changed My Mind
+
+we have a new feature in Twisted -  cancellation to the Deferred class. 
+suppose we make a request, and before/during the arrival of the response, we decide that we dont want what we requested for. eg, if we decide that we send the request for the wrong poem for eg.
+
+in asynchronous programming, this is possible - because the high level code gets control of the program before the low level code is done. the lower-level is embodied by the "deferred" object. 
+The normal flow of information in a deferred is downward, from low-level code to high-level code, which matches the flow of return information in a synchronous program. 
+
+starting Twisted 10.1.0, the high level code can send information back the other direction and tell the low level code that it doesnt want the result anymore
+
+The Deferred class got a new method - "cancel"
+
+let's hack:
+
+d = defer.Deferred()
+
+def callback_one(res):
+    print "we got", res
+
+d.addCallback(callback_one)
+d.cancel()
+print 'done'
+
+done
+Unhandled error in Deferred:
+Traceback (most recent call last):
+Failure: twisted.internet.defer.CancelledError:
+
+so, we see that when we created the deferred and cancelled it without firing it, we get an error - is its errback called?
+
+adding that too:
+
+def errback(err):
+    print "we got err:", err
+
+d.addCallbacks(callback_one, errback)
+d.cancel()
+print "done"
+
+
+we got err: [Failure instance: Traceback (failure with no frames): <class 'twisted.internet.defer.CancelledError'>: 
+]
+done
+
+indeed, the errback is called. we can catch the errback from a cancel just like any ohter deferred failure
+
+* if we cancel a already fired deferred, nothing happens - no complaints
+
+now, what if fire the deferred after we cancel it?
+we get the same error as before (when we cancelled it, did not fire it)
+
+errback got: [Failure instance: Traceback (failure with no frames): <class 'twisted.internet.defer.CancelledError'>: 
+]
+done
+
+the call to fire it, after it was cancelled (and which led to the firing of its errback chain) was ignored - didnt raise an exception [as you cant fire an already fired deferred]
+
+this is because cancel does two things:
+1. tell the deferred object that we dont want the result if it hasnt shown up yet. AND also to ignore any subsequent invocation of callback or errback
+
+2. tell the low level code that is responsible for producing the result to take whatever steps are required to cancel the operation. But canceling the deferred might not actually cancel the asynchronous operation.
+
+so, what if we want to cancel the deffered, REALLY cancel it? stop the asynchronous operations too that it was suppose to perform?
+by asking it to forward the cancel request to the low level code using - A CALLBACK
+
+def cancelled(d): //note, this funciton recevies the deferred which we wish to cancel
+    print "I need to cancel this deferred", d
+
+def callback(res):
+    print "callback got", res
+
+def errback(err):
+    print "Errback got: ", err
+
+d = defer.Deferred(cancelled)
+d.addCallbacks(callback, errback)
+d.cancel()
+print "done"
+
+the callback cancelled has to perform the context-specific actions required to abort the asynchronous operation
+
+RESULT:
+I need to cancel this deferred: <Deferred at 0xb7669d2cL>
+errback got: [Failure instance: Traceback (failure with no frames): <class 'twisted.internet.defer.CancelledError'>: 
+]
+done
+ 
+
+note, the cancelled callback is given the deferred whose result we arent interested in anymore, and there in that function, we do what we have to cancel the asynchronous operations.
+
+Notice that canceller is invoked before the errback chain fires.
+
+so, if we pass a callback when we create the deferred object, it will be called when we cancel it. from there, we can call the callback if we wish to, or if we dont, the errback will be called.
+after cancelling the deferred, all calls to fire the callback/errback outside the "cancelled" function are ignored simply.
+
+the "cancelled" function is given the deferred to be cancelled.
+
+if we cancel a already fired deferred, nothing happens and the "cancelled" method is not called on the .cancel(). And that’s as we would expect since there’s nothing to cancel.
+
+CONSIDER THIS:
+
+from twisted.internet.defer import Deferred
+
+def send_poem(d):
+    print 'Sending poem'
+    d.callback('Once upon a midnight dreary')
+
+def get_poem():
+    """Return a poem 5 seconds later."""
+    from twisted.internet import reactor
+    d = Deferred()
+    reactor.callLater(5, send_poem, d)
+    return d
+
+
+def got_poem(poem):
+    print 'I got a poem:', poem
+
+def poem_error(err):
+    print 'get_poem failed:', err
+
+def main():
+    from twisted.internet import reactor
+    reactor.callLater(10, reactor.stop) # stop the reactor in 10 seconds
+
+    d = get_poem() //the reactor will call the send_poem in 5 seconds. even though the deffered will have got cancelled by then. so, we'll have Sending poem printed
+    d.addCallbacks(got_poem, poem_error)
+    reactor.callLater(2, d.cancel) //after 2 seconds, the errback of the deferred will be called.
+
+    reactor.run()
+
+main()
+
+get_poem failed: [Failure instance: Traceback (failure with no frames): <class 'twisted.internet.defer.CancelledError'>: 
+]
+Sending poem
+
+HENCE, we reiterate that:
+“Canceling” the deferred causes the eventual result to be ignored, but doesn’t abort the operation in any real sense.
+ to make a truly cancelable deferred we must add a cancel callback when the deferred is created.
+
+ How to cancel the callLater??
+ Take a look at the documentation for the callLater method. The return value of callLater is another object, implementing IDelayedCall, with a cancel method we can use to prevent the delayed call from being executed.
+
+ delayed_call = reactor.callLater(5, send_poem, d)
+ delayed_call.cancel()
+
+ see defer-cancel-11.py to see how we use the "cancelled" method to actually stop the asynchronous operation from happening.
+
+ see how it applies to the poetry client and what happens if we have nested deferreds that we cancel.
+
+
+ Check the documentation and/or the source code to find out whether canceling the deferred will truly cancel the request, or simply ignore it.
+
+****look the order of adding the callbacks****
+
+from twisted.internet.defer import Deferred
+
+def two(res):
+    print "two"
+
+def one(res):
+    print "one"
+
+
+def get_def():
+    d = Deferred()
+    d.addCallback(two)
+    return d
+
+def main():
+    d = get_def()
+    d.addCallback(one)
+    d.callback(1)
+
+main()
+
+two
+one
+
+****done****
+
+when we add a callback, we have to give a funciton. that takes in a res and returns somehting.
+so, if we do this:
+d.addCallback(lambda _ : None) ----> what we are essentially doing is that we are adding the lamda function as the callback from this deferred, so it returns None for all/any result
+
+the maybeDeferred is used when you want to return a deferred positively. this can be the case when you want to store the output of a function as in Deferred variable. 
+so, d = maybeDeferred(some_func)
+now, if some_func returns a deferred, we are good. but if it returns a normal value, we will be screwed. so, we'll have to wrap some_func in maybeDeferred.
+
+Take a look at chainDeferred:
+
+    chainDeferred(otherDeferred)
+
+    Add otherDeferred to the end of this Deferred's processing chain. When self.callback is called, the result of my processing chain up to this point will be passed to otherDeferred.callback. Further additions to my callback chain do not affect otherDeferred
+
+    This is the same as self.addCallbacks(otherDeferred.callback, otherDeferred.errback)
+
+
+Using boto to upload something (an image for example) to S3 bucket.
+import boto
+from boto.s3.key import Key
+import requests
+
+#setup the bucket
+c = boto.connect_s3(your_s3_key, your_s3_key_secret)
+b = c.get_bucket(bucket, validate=False)
+
+#download the file
+url = "http://en.wikipedia.org/static/images/project-logos/enwiki.png"
+r = requests.get(url)
+if r.status_code == 200:
+    #upload the file
+    k = Key(b)
+    k.key = "image1.png"
+    k.content_type = r.headers['content-type']
+    k.set_contents_from_string(r.content)
+
+note, k.set_contents_from_string takes in the content and uploads it.
+
+
+______doing the bug - fake-s3______
+
+earlier we had xUnit style of setup/teardown functions - now, we have fixtures [both in pytest]
+they are modular and can be built upon to setup complex tests
+
+test functions can receive fixture objects by naming them as input arguments. each argument has a fixture function[a funciton decoreated with @pytest.fixture] with the name which provides the fixture object.
+
+ example:
+
+ we have :
+ 1. a fixture function :
+ IT must return a fixture object required by the test
+
+
+ @pytest.fixture
+ def smpt():
+    import smtplib
+    return smtplib.SMTP("smtp.gmail.com")
+
+2. the test calling the fixture method.
+
+HERE, the function test_ehlo will receive a smtp object : so, we effectively have:
+
+test_ehlo(<SMTP instance>)
+
+def test_ehlo(smtp):
+    response, msg = smtp.ehlo()
+    assert response == 250
+    assert msg == "ok"
+
+
+we will use "funcargs" to allow test functions to easily receive and work against specific pre-initialized applicaiton objects without having to care about import/setup/cleanup details.
+
+fixture functions take the role of injectors and test functions are the consumers of fixture objects. this is an example of "Dependecy injection"
+
+we can declare fixtures in a seperate conftest.py file and declare their scope as "module". this will make sure we use the same fixture for every test in the module.
+
+# content of conftest.py
+import pytest
+import smtplib
+
+@pytest.fixture(scope="module")
+def smtp():
+    return smtplib.SMTP("smtp.gmail.com")
+
+
+# content of test_module.py
+
+def test_ehlo(smtp):
+    response, msg = smtp.ehlo()
+    assert response == 250
+
+def test_noop(smtp):
+    response, msg = smtp.noop()
+    assert response == 250
+
+we can make a test fail to check that we are using the same smtp(module scoped) object in both the tests.
+we also have a session scoped smtp instance.
+
+
+sometimes we need to do cleanup work as well
+pytest supports execution of fixture specific finalization code when the fixture goes out of scope.
+
+By accepting a request object into your fixture function you can call its request.addfinalizer one or multiple times from your test. 
+# content of conftest.py
+
+import smtplib
+import pytest
+
+@pytest.fixture(scope="module")
+def smtp(request):
+    smtp = smtplib.SMTP("smtp.gmail.com")
+    def fin():
+        print ("teardown smtp")
+        smtp.close()
+    request.addfinalizer(fin)
+    return smtp  # provide the fixture value
+
+if we decorated our fixture function with scope='function' then fixture setup and cleanup would occur around each single test. 
+
+if you want to introspect the context of the "requesting" test, we can use the request argument that the fixture function accepts
+
+eg:
+@pytest.fixture(scope="module")
+def smtp(request):
+    server = getattr(request.module, "smtpserver", "smtp.gmail.com") //gets reqest.smtpserver
+    smtp = smtplib.SMTP(server)
+    return smtp
+
+we can set the required attribute in the module namespace like this:
+
+# content of test_anothersmtp.py
+
+smtpserver = "mail.python.org"  # will be read by smtp fixture
+
+def test_showhelo(smtp):
+    assert 0, smtp.helo()
+
+
+
+fixture functions can be parametrized in which case they will be called multiple times, each time executing the set of dependent tests.
+
+Fixture parametrization helps to write exhaustive functional tests for components which themselves can be configured in multiple ways.
+
+example:
+
+# content of conftest.py
+import pytest
+import smtplib
+
+@pytest.fixture(scope="module",
+                params=["smtp.gmail.com", "mail.python.org"])
+def smtp(request):
+    smtp = smtplib.SMTP(request.param)
+    def fin():
+        print ("finalizing %s" % smtp)
+        smtp.close()
+    request.addfinalizer(fin)
+    return smtp
+
+each test will be run twice, one with each value of params
+params is a list of values for each of which the fixture function will execute and can access a value via request.param.
+
+we can give the fixtures not only the request object, but other fixtures as well
+
+class App:
+    def __init__(self, smtp):
+        self.smtp = smtp
+
+@pytest.fixture(scope="module")
+def smtp(request):
+    return smtplib.HTTP()
+
+@pytest.fixture(scope="module")
+def app(smtp):
+    return App(smtp)
+
+here, we are extending the smpt fixture by passing to the the app fixture and use it. 
+
+the more specific fixture must be broader. so, here: if smtp had a "session" scope, it would still do. but if app had a "Session", it wouldnt be able to use the module scoped smtp meaningfully
+
+ If you have a parametrized fixture, then all the tests using that fixture will first execute with one instance and then finalizers are called before the next fixture instance is created
+
+ there is an example of this optimization at work in https://pytest.org/latest/fixture.html#fixtures
+
+ Some tests do not need the fixture object directly, but just use it to create a special enbiormnet for example.
+
+ For example, tests may require to operate with an empty directory as the current working directory but otherwise do not care for the concrete directory.
+
+ so, we will use tempfile to achieve it
+
+ #content of conftest.py
+
+ import tempfile, os, pytest
+
+ @pytest.fixture
+ def cleandir():
+    newpath = tempfile.makedir()
+    os.chdir(newpath)
+
+use it like this:
+
+#content of test_setenv.py
+import os, pytest
+
+@pytest.mark.usefixtures("cleandir")
+class TestDirInit:
+    def test_empty_dir(self):
+        assert os.listdir(os.getcwd())==[]
+        with open("myfile", "w") as f:
+        f.write("hello")
+
+    def test_cwd_again_starts_empty(self):
+        assert os.listdir(os.getcwd()) == []
+
+note, both the tests pass - this is because due to the usefixtures marker, cleandir fixture will be required for each test of the class - just as if you specified a “cleandir” function argument to each of them
+
+multple fixtures possible : @pytest.mark.usefixtures("cleandir", "anotherfixture")
+
+ The discovery of fixtures functions starts at test classes, then test modules, then conftest.py files and finally builtin and third party plugins.
+
+
+Using unittest.mock or mock
+suppose we had this function to test:
+
+import os
+
+def rm(filename):
+    os.remove(filename)
+
+
+TRADIONAL test:
+
+from mymodule import rm //importing the rm function
+import os.path
+import tempfile
+import unittest
+
+class RmTestCase(unittest.Testcase):
+    tmpfilepath = os.path.join(tempfile.gettempdir(), "tmp-testfile")
+
+    def setUp(self):
+        with open(self.tmpfilepath, "wb") as f:
+            f.write("this file has to be deleted")
+
+    def test_rm(self):
+        rm(self.tmpfilepath)
+        self.assertFalse(os.path.isfile(self.tmpfilepath), "failed to remove")
+
+Mocked test:
+
+from mymodule import os
+
+class RmTestCase(unittest.Testcase):
+    @mock.patch('mymodule.os') // we will filter calls to mymodule's os import
+    def test_rm(self, mock_os):
+        rm("any path")
+        mock_os.remove.assert_called_with("any path")
+
+here, we are filtering the calls passed to mymodule.os
+and we are using mock_os to query the calls.
+
+Mock an item where it is used, not where it came from.
+
+
+anotehr example:
+
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import os
+import os.path
+
+def rm(filename):
+    if os.path.isfile(filename):
+        os.remove(filename)
+
+we can test this too:
+
+from mymodule import rm
+
+class RmTestCase(unittest.Testcase):
+    @mock.patch("mymodule.os")
+    @mock.patch("mymodule.os.path")
+    def test_rm(self, mock_os, mock_path):
+        mock_path.isfile.return_value = False //this will make the return value False
+        rm("any path")
+        self.assertFalse(mock_os.remove.called, "called, failed")
+
+        mock_path.isfile.return_value = True //this will make the return value False
+        rm("any path")
+        mock_os.remove.assert_called_with("any path")
+
+
+Now, if we use the removal service as a class:
+
+
+import os
+import os.path
+
+class RemovalService(object):
+    """A service for removing objects from the filesystem."""
+
+    def rm(filename):
+        if os.path.isfile(filename):
+            os.remove(filename)
+
+then the tests become:
+from mymodule import RemovalService
+
+import mock
+import unittest
+
+class RemovalServiceTestCase(unittest.TestCase):
+    
+    @mock.patch('mymodule.os.path')
+    @mock.patch('mymodule.os')
+    def test_rm(self, mock_os, mock_path):
+        reference = RemovalService()
+        mock_path.isfile.return_value = False
+        reference.rm("any path")
+        self.assertFalse(mock_os.remove.called, "Failed to not remove the file if not present.")
+        mock_path.isfile.return_value = True
+        reference.rm("any path")
+        mock_os.remove.assert_called_with("any path")
+
+
+When using multiple decorators on your test methods, order is important, and it’s kind of confusing. Basically, when mapping decorators to method parameters, work backwards.
+
+
+    @mock.patch('mymodule.sys')
+    @mock.patch('mymodule.os')
+    @mock.patch('mymodule.os.path')
+    def test_something(self, mock_os_path, mock_os, mock_sys):
+        pass
+
+        is:
+
+    patch_sys(patch_os(patch_os_path(test_something)))
+
+
+HOW to read tests:
+
+Here is a typical test from test_pipeline_files.py
+now, the first thing I did was to chalk down the callback chain for the deferred being processed for downloading.
+
+we see that the first method that is 
+
+    @defer.inlineCallbacks
+    def test_file_not_expired(self):
+        item_url = "http://example.com/file.pdf"
+        item = _create_item_with_files(item_url)
+        patchers = [
+            mock.patch.object(FilesPipeline, 'inc_stats', return_value=True),
+            mock.patch.object(FSFilesStore, 'stat_file', return_value={
+                'checksum': 'abc', 'last_modified': time.time()}),
+            mock.patch.object(FilesPipeline, 'get_media_requests',
+                              return_value=[_prepare_request_object(item_url)])
+        ]
+        for p in patchers:
+            p.start()
+
+        result = yield self.pipeline.process_item(item, None)
+        self.assertEqual(result['files'][0]['checksum'], 'abc')
+
+        for p in patchers:
+            p.stop()
+
+Whenever you see result as one of the arguments in the functions arguments signature, know that the function is a part of some deferred's callback chain and that the "result" is a result/outcome of the previous callback function in of that deferred. 
+
+**scrapy first check in the downloads folder to see if the file has been downloaded already or not
+if it hasnt been, then only it downloads it.**
+first insight from the "change and see" insight.
+
+how modules are made is:
+say you want to create a file downloader. you first see what work has to be done. then, you divide the work in various methods. then, you write the initialization methods - this is where you get the settings, crawler, spider etc.
+after this, it is just a matter of giving each method the required parameters and then coding their logic
+
+
+
+you can access the via the def from_settings method
+
+     @classmethod
+     def from_settings(cls, settings):
+         s3store = cls.STORE_SCHEMES['s3']
+         s3store.AWS_ACCESS_KEY_ID = settings['AWS_ACCESS_KEY_ID']
+         s3store.AWS_SECRET_ACCESS_KEY = settings['AWS_SECRET_ACCESS_KEY']
++        s3store.POLICY = settings['S3_STORE_ACL']
+
+here, you have class variables - POLICY, AWS_ACCESS_KEY_ID etc.
+
+NOW, recall that a callback function is said to have failed iff:
+
+
+    The callback/errback raises any kind of exception, or
+    The callback/errback returns a Failure object.
+
+
+so, if our errback function is: 
+def errback(err):
+    print "error"
+    return err --> this is us passing the error onto the next errback function in the chain
+
+def errback(err):
+    print "error logged"
+    return --> now, we disposed the error and this will call the next callback in the chain
+
+**GSOC tip
+Write a small module that connects a listener to every signal present, do this before anything else - write about this to talk about how signals are fired in scrapy. say you will use this module to debug signals etc. this can be implemented simply by connceting a function to all the signals in scrapy [they are listed in one place] and then just logging them as they arrive.
+write stats too, saying that in a typical crawl of say dmoz page, 1241 signals are fired - etc
+
+
+
+___________________
+Twisted experiments
+~~~~~~~~~~~~~~~~~~~
+
+in pure python, we create sockets to transfer data
+
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.connect("someaddress") //if it a client socket
+        sock.bind(("some port"))  sock.listen(5)  //if it is a server socket, listen(5) means, accept 5 simultaneous connections
+        sock.setblocking(0)
+
+to receive data, sock.recv(1024) to get 1024 bytes
+if we setblocking as 1, this will block till the data transfer is done.
+
+        SELECT call
+this function is used to select from a list of sockets, the socket that is ready for IO
+
+
+1. async client
+    while True:
+        try:
+            new_data = sock.recv(1024) //this receives data from the sock
+        except socket.error, e:
+            if e.args[0] == errno.EWOULDBLOCK: //this means that the socket is blocked
+                # this error code means we would have
+                # blocked if the socket was blocking.
+                # instead we skip to the next socket
+                break //we break and go on to the next socket
+            raise
+
+2. blocking client
+   sock.setblocking(1) //this is the default, don't need to mention it
+    data = sock.recv(1024) //this is a blocking call
+    if not data:
+        sock.close()
+        break
+    poem += data
+
+3. blocking server
+    while True:
+        sock, addr = listen_socket.accept()
+        print 'Somebody at %s wants poetry!' % (addr,)
+        while True:
+          try:
+            sock.sendall("some bytes")
+          except socket.error:
+            sock.close()
+
+        TWISTED!
+4. Calling a function when running
+
+        class Counter():
+            counter=5
+            def count(self):
+                if self.counter==0:
+                    reactor.stop() //we can stop the reactor anyhwere
+                else:
+                    print self.counter
+                    self.counter-=1
+                    reactor.callLater(1, self.count) //we can add a function to be called later anywhere, [time, fn_to_call]
+
+        from twisted.internet import reactor
+        reactor.callWhenRunning(Countdown().count)
+        reactor.run()
+
+Twisted fact: you can add multiple functions to the list for the reactor to run when it is started
+if one of the functions has an exception, it's okay, the others will execute normally
+
+5. loggin in Twisted
+
+the nice format we get for our logs in scrapy is from twisted logging
+
+        from twisted.python import log
+        log.msg('this wont be logged since we havent started it')
+        log.startLogging(sys.stdout)
+        log.err('this is an error')
+        try:
+            call_a_fn_which_raises_an_exception()
+        except:
+            log.err() //this would log the traceback as error
+
+if any function in defer raises an exception, it can be logged as failure
+
+        def on_error(failure):
+            log.err('The next function call will log the failure as an error.')
+            log.err(failure)
+
+        d.addCallback(bad_callback) // the bad_callback raises an exception
+        d.addErrback(on_error) //this function will be called as the callback failer
+
+        d.callback(True) // here, we fire the first callback function (bad_callback) here, passing True as the
+                         // initial result
+
+**Python intrepreter starts reading from the top and reads all the way till the end
+if there are class definations etc, they are registered it internally, if there are executable
+statements, they are executed**
+Python has a module called as traceback, which has the traceback till the moment it is called.
+        import traceback
+        traceback.print_stack()
+
+6. using Twisted without it's api - with sockets
+
+summary:
+we will create a non blocking socket in the __init__ method of the PoertySocket class
+and pass the class to the reactor via the addReader method
+
+it also has the methods:
+
+doRead - read the data, it just handles the data reading logic. return either main.CONNECTION_LOST or
+        main.CONECTION_DONE
+        (main is from twisted.internet import main)
+
+connectionLost - this removes self from the reactor via the removeReader method
+returns None or can stop the reactor also
+
+create a normal socket
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.connect(address)
+        self.sock.setblocking(0)
+
+We can give this class as a file descriptor (or socket) for twisted to monitor
+        # tell the Twisted reactor to monitor this socket for reading
+        from twisted.internet import reactor
+        reactor.addReader(self)
+
+The Twisted Reactor implements the IReactorFDSet interface. thus, any reactor has the methods defined by that
+interface like addReader. If you see the documentation of Twisted, you will see that the class passed to
+the addReader will have to implement the IReadDescriptor. This means that it will have to have methods like
+doRead (which will be called when some data is available from the socket) etc.
+
+The interfaces like IReadDescriptor etc are defined as classes
+        class IReadDescriptor(IFileDescriptor):
+            def doRead():
+                """
+                Some data is available for reading on your descriptor.
+                """
+
+Twisted uses zope.interface to define interfaces. zope.interface is just a library that let's you easily define
+interfaces. say, you want to define a interface that has two attributes, called "x" and a method "bar"
+
+import zone.interface
+
+class IFoo(zope.interface.Interface):
+      "this is a docstring for the interface"
+
+      x = zope.interface.Attribute("""this is the doc for the attribute that has to defined by the classes
+                                      this this interface")
+
+      def bar(q, r=None):
+         ""now, this method has to be defined too by any object that implements this interface,
+           and the argument signature is as given in the defination of the method""
+
+Some lingo:
+
+     classes implement interface. if the classes implement interface, we say the instances of the class (the objects) provide
+     the interface
+
+     we say that objects provide interfaces. this means, that if the object is the object of a class that implements
+     the interface, the object is sure to have the methods as defined by the interface.
+
+
+Now, writing a class that implements the above defined interface
+
+        >>> class Foo:
+        ...     zope.interface.implements(IFoo) //this means that this class implements the interface
+        ...
+        ...     def __init__(self, x=None):
+        ...         self.x = x  //this was mandated by the interface
+        ...
+        ...     def bar(self, q, r=None): //this was mandated by the interface too
+        ...         return q, r, self.x
+        ...
+        ...     def __repr__(self): // we can have extra methods, that's cool
+        ...         return "Foo(%s)" % self.x
+
+Now, foo = Foo(2)
+here, foo "provides" the IFoo Interface.
+
+Okay, that's how Twisted defines it's interfaces. The reactor implements some, we are required to implement some depending on
+what we want to do (which protocol we use, how we want to interact with the reactor)
+
+
+7. Twsited Client using the API
+
+We will use the full force of Twisted API.
+
+main components - PoertyClientFactory and PoetryProtocol
+generally, the protocolfactory class and the protocol class
+
+The PoertyClientFactory class has an attribute protocol - give the protocol class here
+also, it's init method handles the logic for data storage
+
+
+buildProtocol
+The Protocol factor extends the ClientFactory class.
+The buildprotocol method is used to make protocol objects
+we can override it to add custom logic like number of protocol objects created etc
+
+
+clientConnectionFailed
+this takes in the connector and reason attributes
+it is invoked by the reactor when the connecion is not created successfully
+the connector object has methods like connector.getDestination() that shows where the connection was attempted
+
+The PoetryProtocol class has: dataReceived with attributes data
+connectionLost, connectionMade methods (apart from the ones you define)
+It extends the Protocol class
+In the protocol class, use self.factory.<method_name> to access the methods of the ProtocolFactory
+
+The transport is used to send the data back, so, use self.transport.write("hello") to send the data to the client
+connected to the server.
+
+eg:
+    from twisted.internet.protocol import Protocol
+
+    class Echo(Protocol)
+        def dataReceived(self, data):
+            self.transport.write(data)
+
+This server echoes back whatever it gets
+
+In a client, doing self.transport.write("hello") won't matter if the server isn't listening
+
+When the data is received, calling the dataReceived method, when we do ctrl-c, connectionLost method called,
+call the self.factory.poem_finished method to print the data and stop the reactor etc
+
+    class PoetryProtocol(Protocol):
+
+        poem = ''
+
+        def dataReceived(self, data):
+            self.poem += data
+
+        def connectionLost(self, reason):
+            self.poemReceived(self.poem)
+
+        def poemReceived(self, poem):
+            self.factory.poem_finished(poem)
+
+
+
+Twisted-client 3
+
+Better organization of code would be:
+we have callback as a function that is assigned to "callback" attribute of the PoetryClientFactory class.
+this will be called when the poem has finished downloading
+
+       factory = Poertyclientfactory(callback)
+       reactor.connectTCP(host, port, factory)
+
+the PF factory only has this code now:
+
+    class PoetryClientFactory(ClientFactory):
+        protocol = PoetryProtocol
+        def __init__(self, callback):
+            self.callback = callback
+        def poem_finished(self, poem):
+            self.callback(poem)
+
+Also, the protocol has this code:
+    class PoetryProtocol(Protocol):
+        poem = ''
+        def dataReceived(self, data):
+            print data
+            print dir(self.factory)
+            self.poem += data
+        def connectionLost(self, reason):
+            self.poemReceived(self.poem)
+        def poemReceived(self, poem):
+            self.factory.poem_finished(poem)
+
+Here, we are decoupling the poem handling logic from the PF class. The duty of the PF class is to handle creation
+of protocol objects and not handling the data recieved. here, it takes in a function to call when the data has been received
+
+The logic of handling the data is seperated from the ProtocolFactory and the Protocol
+
+
+
+Twisted-client 4
+
+Now, adding the ability to handle errors
+we now don't pass callback to the PF class, we pass the deferred
+and later, we add the required methods to the deferred (corresponding to success, failure)
+like so:
+
+in main() method:
+    for address in addresses:
+        host, port = address
+        d = get_poetry(host, port)
+        d.addCallbacks(got_poem, poem_failed)
+        d.addBoth(poem_done)
+
+the got_poem just print the poem, the poem_failed just prints the error
+
+here is the full defination of get_poetry:
+
+def get_poetry(host, port)
+    d = defer.Deferred()
+    from twisted.internet import reactor
+    factory = PoetryClientFactory(d)
+    reactor.connectTCP(host, port, factory)
+    return d
+
+see, we accept the defered from the get_poetry method and add the required callback/errback to it
+
+now, in the ProtocolFactory (PF), when the connection is not successful, we call the errback like so:
+    self.deferred.errback(reason)
+the reason is provided to us by the reactor itself
+similarly, we call the callback on successful transmission with the data received
+    self.deferred.callback(poem)
+
+
+Twisted-client 5
+
+We here, add 3 custom exceptions that can happen after we get the poem from the server. no new concept here, the PF and P remain the same
+
+
+Twisted-client 6
+
+Now, here, we add a proxy service for cummingsification.
+what it does is, after getting the poem, we connect to the server again and transform it
+
+when the deferred returns another deferred, the outer deferred needs to know what to call next, callback or errback
+hence, the outer deferred needs to wait until the inner has finished executing
+
+    return d.addErrback(fail)
+           is same as,
+    d.addErrback(fail)
+    return d
+
+
+Twisted-server 1
+
+When we use a proxy to return the poem to the client if in cache, else get from server, what the client gets
+is a deferred or sometimes the result straightway. so, we can return a fired deffered. i.e. fire it before it is
+returned to the caller
+
+you can add callbacks and errbacks after it is fired
+you can pause the deferred using d.pause() this will stop the deferreds from firing
+
+on paper, write the sketch of what you want. then, divide the work in functions according to what they do, then make the
+deferreds and assign callbacks/errbacks.
+
+
+Twisted inlineCallbacks
+
+What the author does is shows us how generators are similar to callbacks. the generator functions return some value,
+and can resume operations from the last point. similarly, the callbacks can stop and then continue again. the callbacks
+return some value, the generators can too
+
+
+
+        The generator function doesn\u2019t start running until \u201ccalled\u201d by the loop (using the next method).
+
+        Once the generator is running, it keeps running until it \u201creturns\u201d to the loop (using yield).
+
+        When the loop is running other code (like the print statement), the generator is not running.
+
+        When the generator is running, the loop is not running (it\u2019s \u201cblocked\u201d waiting for the generator).
+
+        Once a generator yields control to the loop, an arbitrary amount of time may pass (and an arbitrary amount of other code may execute) until the generator runs again.
+
+
+We can think of the generator as a series of callbacks. like the ones in a deferred which receive eithes resuts or
+failures. the callbacks can be represented by yield and the result of each callback can be viewed as the result for the
+next callback.
+
+i.e:
+
+def my_gen(arg1, arg2):
+    blah = blah*arg1
+    result = yield blah*3                    First callback
+
+    foo = result+1                           2nd callback
+    result = yield something()
+
+    try:
+        something()                          3rd callback
+    except:
+        handle_bad_things()
+
+example code with comments:
+
+        from twisted.internet.defer import inlineCallbacks, Deferred
+        @inlineCallbacks
+        def my_callbacks():
+            from twisted.internet import reactor
+            print 'first callback'
+            result = yield 1 # yielded values that aren't deferred come right back. here, result will get
+            # 1 immediately and the generator will be restarted immediately
+            print 'second callback got', result
+            d = Deferred()
+            reactor.callLater(5, d.callback, 2)
+            result = yield d # yielded deferreds will pause the generator. here, the deferred will fire after 2 seconds and
+            # result will get the value 2
+
+            print 'third callback got', result # the result of the deferred
+            d = Deferred()
+            reactor.callLater(5, d.errback, Exception(3))
+
+            try:
+                yield d
+            except Exception, e:
+                result = e
+
+            print 'fourth callback got', repr(result) # the exception from the deferred
+            reactor.stop()
+
+        from twisted.internet import reactor
+        reactor.callWhenRunning(my_callbacks)
+        reactor.run()
+
+
+SO:
+The function decorated with @inlineCallbacks is just a regular generator that can yield Deferreds as well.
+it is yeilds a deferred, the generator is paused until the deferred has finished firing and then the result of the
+deferred is given to the function (using result = yield some_deferred)
+If the deferred fails, the yield statement raises an exception and it returns the Failure which can be caught using try/catch
+
+
+when the inlinecallback yields a deferred, will it be fired by the reactor when the "event" that fires it comes.
+
+inlineCallbacks is a decorator which always decorates generator functions
+The whole purpose of inlineCallbacks is to turn a generator into a series of async callbacks. it helps organize the callbacks
+nicely. 
+
+The inlinecallbacks decorated function itself returns an deferred.
+HENCE, all scrapy is is, a complex series of deferreds. there maybe many levels of deferreds, long series of
+callbacks and errback chains.
+
+
+the deferred that is returned by an inlinecallbacks decorated function is fired when the generator terminates. you can attach
+callback/errback to it
+
+if we want the generator to return a normal value, (and not an error), we use defer.returnValue funciton.
+it stops the generator note.
+
+inlinecallbacks solves the problem of trying to make sense of flow of logic by jumping all over the place. now, we can
+see the entire callbacks in one place. it helps us organizing our callbacks just like deferreds.
+
+"""
+we have a series of callbacks and errbacks. how do we organize them? we have deferreds. now we have 2 options,
+use deferreds directly or organize them in an generator (inlinecallbacks decorated function)
+"""
+
+When you have a series of callbacks, which one should you use?
+
+the advantanges of using inlinecallbacks -
+callbacks share a namespace, so no need to pass extra state around
+callback order is easier to see
+no function declarations for individual callbacks, less typing
+errors are handles using try/except
+
+
+Twisted - Deferreds
+
+when we want to run a group of async operations in parallel, we use DeferredList
+
+The DeferredList allows us to treat a list of deferred objects as a single deferred. we can start a bunch of
+async opetaions and get notified when they all finish
+
+the DeferredList is created from a python list made up of deferred objects
+the DeferredList is itslef a deferred
+
+Hence:
+
+from twisted.internet import defer
+
+def got_results(res):
+    print "we got:", res
+
+d1 = defer.Deferred()
+d = defer.Deferredlist([d1])
+d.addCallback(got_results)
+d1.callback("d1 result")
+
+Here, we are firing d1 with the result "d1 result". since all the deferreds in deferredlist have been fired, the DL fires it's callback got_results.
+
+We got: [(True, 'd1 result')]
+
+The result of DL is a list with same number of elements as the input list.
+the order of the results are also preserved irrespective of the order in which the deferreds completed
+
+if we give 2 deferres and one fails
+
+d = defer.DeferredList([d1, d2], consumeErrors=True)
+d2.errback(Exception('da'))
+d1.callback('we')
+
+We got: [(True, 'd1 result'), (False, <twisted.python.failure.Failure <type 'exceptions.Exception'>>)]
+
+Hence, the result of the deferred list is:
+(True, result) or (False, failure)
+
+had we not passed the consumeErrors option, and one of the deffered had failed, we would have the case of
+a deferred whose exception is not handled and we get a Failure (this is generated when the defer is garbage collected,
+not before, because you can add callbacks/errbacks to it till the time it is dereferenced)
+
+Nicely written code should make sure the right parts do the right thing. so, the protocols or protocol factory shouldnt
+be responsible for stoping the reactor, they should be responsible only for getting/sending the data etc
+
+use DL to end the reactor by connecting the callback like so:
+    dlist.addCallback(lambda res: reactor.stop())
+
+
+Twisted Last lesson:
+
+we can cancel the deferred too.
+
+    ""
+    asynchronous programming decouples requests from responses"
+    ""
+
+the deferred class has a new method - cancel
+so,
+    d = defer.Deferred()
+    d.addCallback(callback)
+    d.cancel()
+
+on cancelling a deferred, the errback runs. we can catch the errback like so:
+
+
+from twisted.internet import defer
+
+def callback(res):
+    print 'callback got:', res
+
+def errback(err):
+    print 'errback got:', err
+
+d = defer.Deferred()
+d.addCallbacks(callback, errback)
+d.cancel()
+print 'done'
+
+errback got: [Failure instance: Traceback (failure with no frames): <class 'twisted.internet.defer.CancelledError'>: ]
+done
+
+here, we catch the exception. recall, the excpetion only when it is unhandled, raises an exception
+
+if we fire the deferred and *then* cancel it, nothing happends, the cancel is never called
+
+if we cancel and then fire the callback, firing the callback doesn't have any effect as 
+
+
+_________________________________________________________________________________________________________________
+dec 7, '16      
+_________________________________________________________________________________________________________________
+
+tox
+it is used to automate and standardize testing in python.
+it manages virtualenvs - creates them, destroys them for testing against different variables
+
+it plays well with travis cli
+ref: https://www.dominicrodger.com/2013/07/26/tox-and-travis/
+
+minimal tox.ini
+
+[tox]
+envlist = py26,py27
+## here, we are specifying we want to test our build/tests in py26, py27 environments
+
+
+[testenv]
+## here, we can specify how to test in each environment
+## we are basically saying, use pytest, run py.test command
+deps=pytest # or 'nose' or ...
+commands=py.test  # or 'nosetests' or ...
+
+
+here, we used the buildin environment names, we can create our own as well
+by: [testenv:some_name]
+basically, we only create envs in the tox.ini file
+when we do
+$ tox
+we test against all the envs
+to test only some, say
+$ tox -e some_name
+
+also, in travis.yml, we mention which devs we want to test.
+____
+
+a typical tox.ini looks like this:
+
+[tox]
+envlist = py33-1.6.X,docs,flake8
+ 
+[testenv]
+commands=python setup.py test
+
+## we define the different test envs that will be created and destroyed
+[testenv:py33-1.6.X]
+basepython = python3.3
+deps = https://www.djangoproject.com/download/1.6b1/tarball/
+ 
+# Omitted for brevity
+ 
+[testenv:docs]  
+basepython=python
+changedir=docs
+deps=sphinx
+commands=
+sphinx-build -W -b html -d {envtmpdir}/doctrees . {envtmpdir}/html
+ 
+[testenv:flake8]
+basepython=python
+deps=flake8
+commands=
+flake8 djohno
+
+
+typical travis file to play with tox
+
+language: python
+python: 2.7
+env:
+ - TOX_ENV=py33-1.6.X
+ - TOX_ENV=py33-1.5.X
+ - TOX_ENV=py27-1.6.X
+ - TOX_ENV=py27-1.5.X
+ - TOX_ENV=py27-1.4.X
+ - TOX_ENV=py26-1.5.X
+ - TOX_ENV=py26-1.4.X
+ - TOX_ENV=docs
+ - TOX_ENV=flake8
+install:
+ - pip install tox
+script:
+ - tox -e $TOX_ENV
+
+the env sets up individial builds for each environment, the process is parallelised
+
+looking at the same files for scrapy
+the tox:
+
+[tox]
+envlist = py27
+
+[testenv]
+deps =
+    -rrequirements.txt
+    # Extras
+    botocore
+    -rtests/requirements.txt
+passenv = ## this is for passing env varialbes
+    S3_TEST_FILE_URI
+    AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY
+commands =
+    py.test --cov=scrapy --cov-report= {posargs:scrapy tests}
+
+[testenv:precise]
+basepython = python2.7
+deps =
+    pyOpenSSL==0.13
+    -rtests/requirements.txt
+
+[docs]
+changedir = docs
+deps =
+    Sphinx
+    sphinx_rtd_theme
+
+[testenv:docs]
+changedir = {[docs]changedir}
+deps = {[docs]deps}
+commands =
+    sphinx-build -W -b html . {envtmpdir}/html
+
+
+testenv is a tox keyword. it says what you need to install in the virtualenvs
+the [testenv] contents is the common part
+
+[testenv:precise]
+here, we are giving the name "precise" to this specific virtualenv and we are
+adding the specific dependencies for it. also, we can add it to the travis and
+have it build
+
+what additional things you need for that particular build
+
+there are some default available python envs like py27, py26 etc
+

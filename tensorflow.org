@@ -1,0 +1,65 @@
+1. To do efficient numerical computing in Python, we typically use libraries like NumPy that do expensive operations such as matrix multiplication outside Python, using highly efficient code implemented in another language. Unfortunately, there can still be a lot of overhead from switching back to Python every operation. This overhead is especially bad if you want to run computations on GPUs or in a distributed manner, where there can be a high cost to transferring data.
+
+TensorFlow also does its heavy lifting outside python, but it takes things a step further to avoid this overhead. Instead of running a single expensive operation independently from Python, TensorFlow lets us describe a graph of interacting operations that run entirely outside Python. (Approaches like this can be seen in a few machine learning libraries.)
+
+2. Placeholder - a variable of unfixed length - use it when you wish to ask tf to run a computation
+This is used for the variables that don't change during the training eg. vectors carrying the test/train samples and they outputes
+
+3. A Variable is a modifiable tensor that lives in TensorFlow's graph of interacting operations.
+Tensor is nothing but a vector/matrix. It can be modified by computation
+This is for variables that can change during computation. eg W, b
+
+4.tf.reduce_sum adds all the elements of the tensor.
+
+5. sess = tf.Session()
+sess.run(init) --> run the initialization
+
+for i in range(1000):
+    sess.run(train_step, feed_dict={x:sample_of_x_to_process, y:sample_of_y_to_process})
+
+6. tf.reduce_mean
+this will find the mean of the tensor.
+
+7. When writing the dimensions of the Weight vector, think about the layers which the matrix would join 
+axb a=#number neurons in l-1, b=#in l
+When writing the bias, think about the number of neurons in the layer : nx1 - n = #of neurons in that layer
+
+8. Type cast values in TF. eg boolean to float
+tf.cast(bool_tensor, "float")
+
+9. to execute any command, create a session, 
+sess = tf.Session()
+then, use : sess.run(FN_NAME, feed_dict={x:___, y:___}) - here, the feed_dict must contain all the variables that are needed to execute the FN_NAME with the key as the actual name being used in the FN_NAME defination. 
+
+10.More specifically, as a mixture of an infinite number of normal distributions with a common mean μ but with precisions (the inverse of the variance) that are randomly distributed according to a gamma distribution
+
+11. tf.reshape(tensor_to_reshape, [1, 2, 3])
+
+12. We are converting the input image into a 4D tensor. SO, the convulation layer needs strides as a 4D tensor too - describing the stride in each direction of each dimension of the input. 
+Max pool layer doesn't need the weights. It needs the ksize, and the strides.
+Officialy, :
+ksize: A list of ints that has length >= 4. The size of the window for each dimension of the input tensor.
+strides: A list of ints that has length >= 4. The stride of the sliding window for each dimension of the input tensor.
+
+13. When defining the weights for the conv layer shape = [5, 5, 1, 32]
+The first two are for the dimensions of the patch size, the 1 is for the #of input channels, and the 32 is for the number of output channels. Here, we will have 32 different 5x5 weight matrices, think of them as 32 neurons.
+
+
+14. tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
+the inputs are x, W, strides.
+
+15. cross entropy error reduces the entropy between the outcome you predicted and the true one. 
+(Summation over : y_true*tf.log(y_predicted))
+
+16. After defining the model, all the statements seem like one liner functions. for eg :
+cross_entropy = -tf.reduce(y_*tf.log(y_conv))    
+train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
+correct_pred = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
+accuracy = tf.reduce_mean(tf.cast(correct_pred, "float")) - when called, with accuracy.eval(feed_dict={blah:blah})
+
+Run the functions using fn_name.eval(feed_dict={blah:blah})
+OR fn_name.run(feed_dict={blah:blah})
+
+
+
+

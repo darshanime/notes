@@ -1,4 +1,4 @@
-## ember
+* ember
 * Introduction
 
 ember new project_name starts new project

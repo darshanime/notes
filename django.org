@@ -1,4 +1,4 @@
-## django
+* django
 
 start a new django project by:
 django-admin startproject mysite

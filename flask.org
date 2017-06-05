@@ -1,4 +1,4 @@
-## flask
+* flask
 
 flask is just the barebones server
 to add functionality, you need to install the addons.

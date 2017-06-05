@@ -1,5 +1,3 @@
-## Algorithms
-
 * Data Structures and Java Collections Framework
 
 ** Chapter 0 - Introduction to Java

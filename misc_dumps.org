@@ -1,4 +1,4 @@
-## misc dumps
+* misc dumps
 
 This file mostly has emacs and general shortcuts, django tips and other fun stuff
 

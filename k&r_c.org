@@ -1,4 +1,4 @@
-## k&r c
+* k&r c
 
 C has basic data types, variable scoping etc
 

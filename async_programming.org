@@ -1,5 +1,5 @@
-## Async programming
-### [Krondo helps us see the light](http://krondo.com/in-which-we-begin-at-the-beginning/)
+* Async programming
+** [Krondo helps us see the light](http://krondo.com/in-which-we-begin-at-the-beginning/)
 ~~~~
 
 

@@ -1,4 +1,4 @@
-## js
+* js
 
 in the head tag of html source code, you can put js and css links
 <head>

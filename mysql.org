@@ -1,0 +1,334 @@
+1. what is dbms?
+database management system
+it helps us :   
+store data, query data, maniputlate data.
+
+row/tuple - column/attribute
+
+relational database - data is stored in tables and the tables are related with each other. 
+
+2. we have a primary key
+it uniquely identifies each record in the table
+
+3. candidate key
+In a table, there may be more than one field that uniquely identifies a record. All such 
+fields are called candidate keys.
+
+4. alternate key
+only one of the candidate key is selected as primary key and all others become alternate keys.
+
+5. create a database
+create database school;
+use school;
+
+6. create a table
+create table learner
+(   rollno INTEGER,
+    Name varchar(25)
+);
+
+7. insert data into table
+ insert into learner values (1, 'raj');
+
+8. statements in mysql are not case sensitive. 
+
+9. view data from table
+select name from learner;
+
+10. data types in mysql
+char(4), varchar(25), decimal(size, d) eg : decimal(4, 2) --> 17.32
+int or integer
+date() [yyyy-mm-dd, eg: 2009-07-02]
+time() [hh:mm:ss, eg: 12:31:31]
+
+11. types of mysql commands
+data defination language {DDL}, data manipulation language{DML}
+
+12. DDL
+create database, create table, alter table, drop table. 
+
+13. DML
+select, update, delete, insert into
+
+14. create a table
+
+CREATE TABLE Student(
+Rollno INTEGER,
+Name VARCHAR(25),
+Gender  CHAR(1),
+Marks1 DECIMAL(4,1));
+
+insert into student values (3, 'darshan', 'M', 91);
+
+tables with samenames not allowed.
+
+15. view structure of table
+desc tablename, describe tablename
+
+
+16.alter the table - add or remove columns
+alter table tablename add/drop columnname columnDataType
+alter table tablename modify columnname new-column-defination
+
+ALTER TABLE Student ADD Games VARCHAR(20);
+ALTER TABLE Student MODIFY games INTEGER;
+
+ALTER TABLE Student DROP Games;
+
+16. view only unique values
+select distinct columname from tablename;
+SELECT DISTINCT Marks1 FROM Student;
+
+17. show modified data
+SELECT Marks1+5 FROM Student;
+
+SELECT Name,Marks1+0.05*Marks1 FROM Student ;
+SELECT 7*3+1;
+
+18. use columns alias
+SELECT Marks1 AS "Marks Secured" FROM Student;
+SELECT Marks1 "Marks Secured" FROM Student; [as is optinal]
+
+19. display external data
+SELECT  Rollno,Name,'has  secured  marks',marks1  FROM 
+student;
+
+20. using where clause.
+select name from students where marks>40;
+select name from students where name='darshan'
+select name from students where city = 'pune' and marks>90;
+
+options : and, or, not
+select name from employee where not(designation='manager');
+
+SELECT Name,TotalMarks FROM Candidate WHERE 
+writtenmarks>80 || Interviewmarks>10;
+
+SELECT Name,TotalMarks FROM Candidate WHERE 
+writtenmarks>80 && Interviewmarks>10;
+
+21. select * from employee where firstname = 'amit' and (lastname='sharma' or lastname='verma');
+
+22. between keyword
+select rollno, name, marks from students where marks between 70 and 80;
+select rollno, name, marks from students where marks not between 70 and 80;
+select rollno, name, marks from students where marks in (70, 71, 72, 73, 74, 75);
+
+23. like keyword
+select * from student where name like '%s';
+
+% - allows as many characters as needed
+so, hellos matches
+
+for just one character, use _
+eg:
+select * from student where name like 'da_shan';
+darshan matches
+thus, '_ _ %' - matches at least 2 character long strings
+
+select * from students where name not like '%g';
+
+24. mysql has null
+select * from students where marks is null;
+
+25. sorting the results
+select * from student order by marks;
+default is ascending
+
+for descnding
+select * from student order by marks desc;
+
+you can use more than one clolumns also
+select * from students order by name, marks desc;
+
+(you can replace the name of the column by the number of the column)
+
+26. random inserting order
+insert into student (rollno, name, marks) values (12, 'darshan', 99);
+
+27. explicitly inserting null values
+insert into students(name, rollno) values ('xyz', 12); //this will insert null in marks
+
+implicitly inserting null
+insert into students values('da', 12, null); //this will insert null in marks
+
+28. inserting dates
+INSERT INTO my_table (idate) VALUES ('97-05-05');
+
+you can also use curdate() for the current date
+Standard time format is "hh:mm:ss". 
+
+29. update statement
+update tablename set columnname=value [where condition];
+eg:
+update students set marks = 91, height = 185 where rollno=12;
+
+30. delete statement
+delete from tablename [where condition];
+delete from student; //emptyies the table
+delete from student where name='dadaa';
+
+31. functions in mysql
+single row functions [numeric, string, date and time] and 
+multiple row functions [sum(), avg(), count()]
+
+numeric - 
+
+1. pow - select pow(3, 2);
+select pow(salary, 2) from employees where rollno=3;
+
+2. round - select round(2.3); - defaults to rounding to nearest integer
+or, select round(2.12, 1); - 2.1,
+
+3. truncate(x, d); -- truncate x to d decimal places
+
+string - 
+1. length(str) -- select length('hello');
+
+2. concat(str1, str2) -- select concat(firstname, ' ', lastname) as fullname from students;
+
+3. instr(str, substr) -- returns the position fo the first occurance of the substring in string
+
+4. lower(str) or lcase(str) AND upper(str) or ucase(str)
+
+5. left(str, n) --> returns the specified #of characters from left side of str
+[similarly right(str, n)]
+
+6.ltrim(str), rtrim(str), trim(str) - remove spaces
+
+7. substring(str, m, n) or min(str, m, n)
+1 indexing
+so, select ('informatics', 3, 4); --> form
+
+8. ascii('a')
+
+date and time
+1. curdate(); -- '2010-02-26'
+2. select now(); -- '2010-02-26 21:30:26'
+3. select sysdate();
+4. month(date), year(date), dayname(date), dayofmonth, dayofweek, dayofyear
+
+misc : select now(), sleep(20), now();
+
+//now() shows the time at whihc the statement begins to execute
+so, here, both the times will be same
+
+select sysdate(), sleep(20), sysdate();
+//here, we will get a diff of 20 secs, this shwos the current time
+
+32. we have multi row functions also
+eg: max(), min(), sum(), count()[returns the number of non null values in the column], 
+select max(price) from shoes;
+select count(distinct type) from shoes;
+select count(margin) from shoes where margi>5; 
+//FIRST THE NUMBER OF ENTRIES ARE OBTAINED THAT SATISFY THE GIVEN CONDITION AND THEN, THE SUM/COUNT OPERATOR IS APPLIED
+
+33. GROUP BY
+select type,max(price), min(price), sum(qty) from shoes group by type;
+
+34. HAVING 
+sometimes we want to further filter the group by results. so, we can use HAVING for that.
+select avg(qty) from shoes group by shoe_type having sum(qty)>500;
+
+select type, min(size), max(size), avg(size) from shoes where size in (6, 7, 8,9, 10) group by type having min(qty)>100;
+
+35. displaying data from multiple tables
+cartesian product of two sets is when each item of each set is combined with each item of the other set.
+eg:
+(1, 2, 3) * (a, b)
+
+--> (1, a), (1, b), (2, a), (2, b), (3, a), (3, b)
+
+so, if you select from two tables, the result shown will be the cartesian product of those two tables.
+select * from table1, table2;
+-result will have #rows in table1 * #rows in table2 entries
+
+36. equi join
+select * from order_table, product_table where p_code=code;
+
+or, more robustly:
+select * from ordertalbe, product_table where ordertalbe.code = product_table.code
+
+equijoin from 3 tables
+select order_no, T1.name, T2.value from T1, T2, T3 where T1.row1 = T2.row2 and T1.row1=T3.row3 having min(T1.row1) > 100 and t1.order_qty>100;
+
+
+SELECT order_no, Order_Qty, customers.name,
+cost*order_qty as 'Order Cost'
+FROM orders, shoes, Customers
+WHERE Shoe_Code = code
+and Orders.Cust_Code = Customers.Cust_Code
+order by order_no;
+
+37. referential integrity
+the property that no entry in a foreign key column of a table can be made unless it mathces a primary key in the corresponding related table in called referential integrity.
+
+38. union
+union is the opetation of combining the outputs of two select statements. it can be done only if the outputs have the same number of columns and datatypes of the corresponding columns are the same. 
+select name from class12 union select name from class11;
+
+select name from class12 union all select name from class11;
+
+Union does not display any duplicate rows unless ALL is specified with it
+
+39. constrains on columns
+
+1. primary key - null and dupicates not allowed
+2. not null - no nulls accepted
+3. foreign key - data accepted if same data value exists in a column in another related table.
+4. unique
+5. enum - define a set of values as the columns domain.
+6. set - same as above. also, any value will be a subset of the set given here
+
+40. creating a table with the constraints
+create table student (
+rollno int primary key, 
+name varchar(50) not null,
+marks int non null
+);
+
+**we can set a combination of columns as the primary key
+eg:
+CREATE TABLE bills
+(Order_Num INT(4), cust_code VARCHAR(4),
+bill_Date date, Bill_Amt DECIMAL(8,2),
+PRIMARY KEY(Order_Num, cust_code));
+
+41. alter table
+alter table students add primary key(name);
+alter table students drop primary key;
+alter table students modify name varchar(55) not null;
+//after the modify keyword, you can change the datatype of the column.
+//remove columns by:
+alter table students drop qty, drop name;
+
+42. drop table
+drop table tablename;
+drop table student;
+
+43. transactions
+unit of work that must be done completely or not at all
+start transaction:
+
+START TRANSACTION;
+
+to end the transaction and save the changes:
+
+COMMIT;
+
+
+to undo the entire transaction:
+
+ROLLBACK;
+
+After the ROLLBACK command is issued to the database, the database itself
+starts a new transaction; though no explicit command of starting a transaction
+like START TRANSACTION is issued.
+
+you can have savepoints too:
+
+SAVEPOINT <SAVEPOINT NAME>;
+
+
+by default, autocommit is on, set it to off by:
+SET AUTOCOMMIT=0;

@@ -1,0 +1,3631 @@
+we will use django-oscar built on django as the backend
+
+start a new django project by:
+django-admin startproject mysite
+
+this will create this:
+.
+|-- db.sqlite3
+|-- manage.py
+`-- mysite
+    |-- __init__.py // empty file to tell python intrepreter that this dir is a package.
+    |-- settings.py //settings for the project
+    |-- urls.py //url declarations for the project, a "table of contents" of sorts
+    |-- wsgi.py //an entry point for the wsgi-compatible web servers to serve your projects
+
+we can use the development webserver shipped with django to serve the pages:
+python manage.py runserver
+
+this will host on localhost: http://127.0.0.1:8000/ 
+
+project is a collection of apps + configuration files etc
+we can create apps. lets create one called polls
+
+what we had uptill now was the django enviornment.
+the settings.py file was for the entire enviroment - the global setting of sorts
+
+let's create an app in this enviornment.
+
+python manage.py startapp polls
+polls/
+    |-- admin.py
+    |-- apps.py
+    |-- __init__.py
+    |-- migrations
+    |   `-- __init__.py
+    |-- models.py
+    |-- tests.py
+    `-- views.py
+
+the pages that are shown are the views. lets write the first view.
+in polls/views.py we put the code.
+
+to call the view, we need to map it to a url using the urlconf
+to create a urlconf, we need to create a file called urls.py
+
+in views.py, we define a function that takes in a request and returns a HttpResponse object.
+
+in django, to use any of the cmd command, we have to pass it as an argument to the manage.py file, which basically passed the argument to execute_from_command_line in django.core.management
+
+we create urls.py and put in the urlpatterns list an entry - a url object
+then, we go to the root urls.py [urls.py = URLconf] and make it point to the polls.urls module.
+
+there, in the main URLconf, the urlpatterns has two entries - two url objects.
+one for the admin and one for polls
+
+all the url patterns have to use include().
+
+so, we have now url of the index view mentioned in the main root urlconf.
+
+the url function is passed 4 arguments
+1. regex
+used to search the urls list looking for what the user entered, it does this for all the entries in the urlpatterns
+
+it looks only for the page, not for the get and post parameters.
+
+2. view
+that given view is called with HttpRequest object as the 1st argument and any captured regex matches as the second. 
+
+3. kwargs - we can pass a dict of additional arguments to the targer view
+
+4. name - naming your url lets you refer to it expicitly from anywhere in django.
+
+##summary
+so, we have a file views.py which houses all the views.
+each view is a page - it is written as a function that accepts an request and returns a httpresponse with the html as its argument.
+
+
+now, we have two urlconf files. the local one aka the app one aka the polls one has the urlpatterns with only the entry[url function] for the one view we created in views.py
+1. regex - r'^$' -- matches all the urls passed by the user
+2. view - has views.index // the only view defined in views.py
+3. no kwargs
+4. name is given as 'index'for the function that we used to define it in views.py - 'index'
+
+in the end, we give the root urlconf the view information. we have these two entries in the root urlconf:
+
+urlpatterns = [
+    url(r'^polls/', include('polls.urls')),
+    url(r'^admin/', admin.site.urls),
+]
+
+the first one looks for 'polls/' and for everthing, calls the index view
+the second one looks for 'admins/' and brings up the builtin admin view
+
+now, we'll focus on the database. by default, SQLite is used as the database.
+
+in the settings, we can see the apps being used by our project - we are using admin, auth, contenttypes, sessions, messages, staticfiles
+
+according to the installed apps, we will need to create some tables. this will be done automatically using python manage.py migrate
+
+The migrate command will only run migrations for apps in INSTALLED_APPS.
+
+some apps in the INSTALLED_APPS need tables etc, that are created when we run python manage.py migrate. these tables can be viewed by:
+$ sqlite3
+> .schema
+_____all tabless create statements_____
+
+
+
+models are the database layouts - with the additional metadata
+
+the model is pretty much like Scrapy's items. where we write what we want.
+here, we mention what we want to store.
+
+A model is the single, definitive source of truth about your data. It contains the essential fields and behaviors of the data you’re storing.
+
+in the polls app for example, we will create two models:
+Question and Choice
+Question has question_text and pub_date
+
+
+Choice has question it is associated with, the text of the choice, the #of votes for that choice.
+
+put all this info in polls/models.py
+
+the format is this:
+
+class Question(models.Model):
+    question_text = models.CharField(max_length=200)
+    pub_date = models.DateTimeField('date_published')
+
+    so, we have models.CharField, DateTimeField, IntegerField, ForeignKey[with the model as the first argument]
+
+Note, each custom model we defined here is sublcass of the django.db.models.Model class
+each class has some instance variables that represents a database field of the model
+
+Also, each field is an instance of the Field class, eg: CharField, DateTimeField etc
+
+the name we associate with each field [eg: question_text, pub_date] - is the fields name, this will serve as column name in the database
+
+an optional first argument is for the human-readable name. **OQ: why do we need it, dont we have the variable we are assigning this Field object to, to serve as its name
+
+we need to install the polls app, we need to mention it in the settings file in the root settings file for the site. so, each app is a piece of functionality. we can have many apps, each app doing some work in the project. we have to 'install' the individual apps by mentioning them in the site's root.
+
+so, installing polls app by:
+   'polls.apps.PollsConfig'
+
+after we make the models, we again apply the migrations - now, django will be able to create the database tables using the models
+
+python manage.py makemigrations polls
+
+makemigrations is telling django that you have made changes in models. 
+so, migrations are just how django handles your data layout. you can change it in the migrations dir.
+
+
+There’s a command that will run the migrations for you and manage your database schema automatically - that’s called migrate
+
+we can view what sql commands it will run using sqlmigrate option.
+python manage.py sqlmigrate polls 0001
+//0001 is the name of the migrate file
+
+python manage.py check; this checks for any problems in your project without making migrations or touching the database.
+
+sqlmigrate shows the commands, doesnt execute them
+to execute them, run python manage.py migrate
+
+the migrate commands basically takes all the new/changed migrations and runs them against the database - this will effectively sync the changes made to the models with the schema in the database.
+
+Migrations are very powerful and let you change your models over time, as you develop your project, without the need to delete your database or tables and make new ones
+
+3 step guide to making model changes:
+1. change models in polls/models.py
+2. run python manage.py makemigrations - to create migrations for those changes
+(you can view these files in migrations/__, they show what django thinks your data is organized like)
+3. run python manage.py migrate - to apply those changes to the database.
+
+django comes with its own shell, (pretty much like scrapy shell)
+
+python manage.py shell
+using this instead of vanilla python will make sure that the settings.py for your site is in the python path by adding it to the DJANGO_SETTINGS_MODULE 
+
+we can explore the database api from the shell. we can import the Question and Choice models and add questions, choices etc.
+
+"""playing with the shell"""
+
+we have the object Questions and Choices - thye are the subclasses of models.Model, they extend them
+so, we have new methods and variables:
+
+1. Question.objects.all()
+THIS shows the objects of the Question class
+you can create one by creating a object and then running save()
+
+we can add them to the database using Question(question_text="What's new?", pub_date=timezone.now()).save()
+or, q = Question(question_text="What's new?", pub_date=timezone.now())
+q.save()
+
+we can further change the __str__ method of the Question and Choice so that they print well
+
+Question.objects.all() - this will print all the Question objects in the databse - and since we changed their __str__ to print the text of the question, we are good.
+
+Question.objects.filter(id=1)
+Question.objects.filter(question_text__startswith='What')
+Question.objects.get(pub_date__year=current_year)
+
+>>> q = Question.objects.get(pk=1)
+>>> q.was_published_recently()
+True
+//so, out custom method worked too
+
+we now create the choices. using create function
+
+q = Question.objects.get(pk=1) //same as id=1
+q
+<Question: What's new?>
+EARLIER, IT WAS: <Question: Question object>
+
+q.choice_set.all() //this is empty now
+[]
+
+q.choice_set.create(choice_text = "Not much", votes=0)
+c = q.choice_set.create(choice_text='Just hacking again', votes=0)
+c.question
+<Question: What's new?>
+
+# And vice versa: Question objects get access to Choice objects.
+>>> q.choice_set.all()
+[<Choice: Not much>, <Choice: The sky>, <Choice: Just hacking again>]
+>>> q.choice_set.count()
+3
+
+
+the API does this:
+we can follow relationships as deeply as we want -
+
+"" by using double underscores to seperate relationships, as in to access the attributes of the object""
+example:
+
+choice_text.startwith="okay"   ---> choice_text__startwith="okay"
+question.pub_date.year=2016    ---> question__pub_date__year=2016
+
+SO, DOUBLE UNDERSCORES ARE JUST USED FOR FIELD LOOKUPS
+
+Choice.objects.filter(question__pub_date__year=current_year)
+here, question, pub_date, year are all the fields of the Choice class. note, we also have question_id as its the foreign key for the choice class.
+
+we can delete choices like this
+c = q.choice_set.filter(choice_text__startswith='Just hacking')
+c.delete()
+
+
+django admin - the site moderators - they add the data, they change the data, they delete the data. 
+
+to create a new user:
+python manage.py createsuperuser
+
+what we see when we log in is the ability to add users, create groups and users - all this is provided by the auth app shipped with django.
+
+this is the general admin - for the entire enviornment
+
+to get the Polls app on the admin page too, we need to register it:
+
+polls/admin.py
+from django.contrib import admin
+# Register your models here.
+from .models import Question
+admin.site.register(Question)
+
+
+the admin page now has the questions too, and the form is automatically generated to enable you to add/delete questions.
+
+django knows what type of data is to be entered, as defined when we created the models. so, for the date, we have a convient calender and for time too, we have the common times.
+
+what are views
+views are the basic building blocks of the public interface
+a view is a "type" of webpage in the djago webapp that serves a specific functionality, and has a specific template.
+
+in the poll app, we have the following views:
+questionl "index" page - shows the latest quesitons
+quesitons "detail" page - shows the text of the quesitons and options to vote from
+quesitons "results" page - results of a particular quesitons
+vote action - handles voting for a particular choice in a particular quesiton
+
+so, each view is a simple python function [or a method in case of class based views]. Django will look at the url and then choose which view to use. the view function will take the post/get arguemnts in the url and fill create the view
+
+A URL pattern is simply the general form of a URL - for example: /newsarchive/<year>/<month>/. 
+to go from a url to a view, django uses URLconfs. it mathces url patterns(via regex) to views
+
+general pattern to follow:
+add more views, add the url patterns to urlconf - in the local one [or root, decide]
+
+how it works is: the global urls.py handles the global level settings
+like darshan.xyz/polls --> this will open the polls app
+darshan.xyz/stark --> this will open the stark app
+
+now, the polls app should handle the urls of the polls app
+like: polls/question, polls/choices, polls/detail etc
+
+whenever someone loads the site, django loads mysite.urls - the root one [because the ROOT_URLCONF points to it]. it finds the urlpatterns varialbe in it and tarverses the regex in that order.
+include() function simple is used to include urlconfs files too. [recall it is include(polls.urls)]
+
+Note that the regular expressions for the include() functions don’t have a $ (end-of-string match character) but rather a trailing slash. Whenever Django encounters include(), it chops off whatever part of the URL matched up to that point and sends the remaining string to the included URLconf for further processing.
+
+
+django mathces a text and strips it off and sends the remaining forward.
+so, in /polls/34/ - the root urlconfs will match polls and send 34 forward
+34 will be matched in (?P<question_id>[0-9]+). Using parentheses around a pattern “captures” the text matched by that pattern and sends it as an argument to the view function; ?P<question_id> defines the name that will be used to identify the matched pattern; and [0-9]+ is a regular expression to match a sequence of digits (i.e., a number).
+
+each view has to return either an HttpResponse or raise an exception such as Http404
+it can do whatever processing you need done - create a zip, pdf, crunch numbers, read the database etc
+
+uptil now, we were hardcoding the page. this is not good, what we can do is use a template. then, the view just has to fill the data in the template and we are done. the view should serve the data, not worry about the design
+
+we create the index.html template in polls/templates/polls/index.html
+but we can refer to it by: polls/index.html
+this is because django looks for templates subdir in each of the installed apps
+
+in the template, we define how the page should be displayed. i.e. given a list of questions, we would show them in a list for eg.
+
+to use templates, we use djangos loader class
+temp = loader.get_template('polls/index')
+context is a dict with the key as the what is mentioned in the template and the value as the variable to be passed to the template for that varialbe. 
+so here:
+
+    context = {
+        'latest_q_list':latest_q_list
+    }
+
+finally, we return
+    return HttpResponse(temp.render(context, request))
+
+so, what we did was load a template, fill a context, return an HttpResponse.
+shortcut:
+
+from django.shortuts import render
+return render(request, 'polls/index.html', context)
+
+note render's arguments: request object, template, variables to be passed to it
+
+
+raising a 404 error
+from django.http import Http404
+    try:
+        question = Question.objects.get(pk=question_id)
+    except Question.DoesNotExist:
+        raise Http404("Question does not exist")
+
+this is very very common, to try to retrieve something, if not present, give 404. so much so that to avoid the try except, we have a shortcut method: get_object_or_404
+
+note it takes a model as the first argument and then kwargs passed to model
+
+question = get_object_or_404(Question, pk=question_id)
+return render(request, 'polls/detail.html', {'question':question})
+
+the templates are powerful, we can write them in strage {{% something %}} syntax, which can take python commnands, can look up files, etc.
+
+so, in index.html template:
+
+<li><a href="/polls/{{ question.id }}/">{{ question.question_text }}</a></li>
+
+changes to:
+
+<li><a href="{% url 'detail' question.id %}">{{ question.question_text }}</a></li>
+
+this says, in the polls.url, look for the urlpattern entry [the url() function] named 'details'
+
+this way, we prevented the hardcodeing of the url - this gets power to the center. the best pratice is to when if you wish to make a change, you should have to make it in one place and it should work, you shouldnt need to make the same change at many places - so, to change the url now, just chage the regex pattern in urls.py in polls.
+
+you can add namesapace to your polls urls.py, this way if there are many apps that have the same view names, django will know which app's view to call.
+
+we can play with the templates more and add a form etc. 
+
+//just the heading like before
+<h1>{{ question.question_text }}</h1>
+
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+//action = call the vote() view in views.py and pass it question.id as the parameter, call it using POST
+<form action="{% url 'polls:vote' question.id %}" method="post">
+
+{% csrf_token %}//to prevent cross site request forgeries
+
+{% for choice in question.choice_set.all %}
+//display each choice as a radio button
+    <input type="radio" name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}" />
+    <label for="choice{{ forloop.counter }}">{{ choice.choice_text }}</label><br />
+{% endfor %}
+<input type="submit" value="Vote" />
+</form>
+
+the value of each radio button is the choice id, the name is choice, so when one selects the radiobutton and submits, we get in the POST request, choice=#, # is the choice id of the choice selected.
+
+forloop.counter indicates how many times the for tag has gone through its loop
+
+""
+two things when dealing with POST requests, 
+use csrf token in the templates
+use return an HttpResponseRedirect and not HttpResponse just
+""
+
+lets change the vote view now.
+the vote view is called when the user visits the page. we can see what the user entered as his choice by :
+
+whenever you modify the model instance, save it to save it to the database
+
+the information about which choice was selected is pressent in the request that the votes view receives as argument.
+
+question = get_object_or_404(Question, pk=quesion_id)
+selected_choice = question.choice_set.get(pk=request.POST['choice'])
+selected_choice.votes+=1
+selected_choice.save()
+
+        # Always return an HttpResponseRedirect after successfully dealing
+        # with POST data. This prevents data from being posted twice if a
+        # user hits the Back button.
+return HttpResponseRedirect(reverse('polls:results', args=(question.id,)))
+HttpResponseRedirect takes one argument - the url to which the user will be redirected.
+
+reverse function here takes the name of the view we want to pass control to and also the args we want to [have to] pass to the view
+here, we are calling the results view of polls app and passing the question.id as the argument
+
+request.POST is a dict with the arguments the user selects as the values
+
+we define a view and then a template for the view to use. we call the template and render it using render function.
+
+we can avoid a race condiiton using F().
+
+look what we are doing with our views. gettings data from database according to the url parameters passed, loading a template and returning the rendered template
+
+this is very common, so django has a shortcut to handle it - generic views
+this isnt a shortcut actually, just a convience view class. this helps you do the common things like retreive data easilly
+to use them, create a class which inherits from the generic.ListView, generic.DetailView etc
+
+we can shift to generic views - this will make our code consice. steps:
+1. convert the urlconf
+2. delete the old, unneeded views
+3. use the new django's generic views
+
+urlpatterns = [
+    url(r'^$', views.IndexView.as_view(), name='index'),
+    url(r'^(?P<pk>[0-9]+)/$', views.DetailView.as_view(), name='detail'),
+    url(r'^(?P<pk>[0-9]+)/results/$', views.ResultsView.as_view(), name='results'),
+    url(r'^(?P<question_id>[0-9]+)/vote/$', views.vote, name='vote'),
+]
+
+we renamed the name of the regex pattern match from question_id to pk
+
+we are using generic views here: ListView, DetailView
+each generic view needs:
+    what model it will act upon
+we can override the deault names chosen by the DetailView
+
+TESTS
+
+test-driven development
+writing tests before writing the code itself
+
+we write tests conventionally in tests.py
+the testing framework will find any file whose name begins with "test"
+
+all out test classes will be subclasses of the django.test.TestCase subclass 
+django looks for methods starting with the name 'test'
+
+we can test views too.
+django comes with a test Client
+
+from django.test.utils import setup_test_environment
+setup_test_enviornment()
+
+
+testing:
+from django.test import Client
+client = Client()
+response = client.get('/')
+response.status_code
+
+use reverse() to go to a certain view
+>>> response = client.get(reverse('polls:index'))
+>>> response.status_code
+200
+
+response.content
+response.context['lastest_q_list']
+
+changing the IndexView for polls/index.html to:
+
+    return Question.objects.filter(
+        pub_date__lte=timezone.now()
+    ).order_by('-pub_date')[:5]
+
+will not show the questions with the pubdate into the future.
+
+we will now write a test to test this functionality
+writing a utility fn:
+def create_question(question_text, days):
+    time = timezone.now() + datetime.timedelta(days=days)
+    return Question.objects.create(question_text=question_text, pub_date=time)
+
+see django documnatation https://docs.djangoproject.com/en/1.9/intro/tutorial05/ for tests testing for when there are no questions, past questions and future questions.
+
+response = self.client.get(reverse('polls:index'))
+a common way to get any view ^
+
+django has LiveServerTestCase to facilitate integration with tools like selenium
+we can also think about continous integration and code coverage
+
+Static files:
+html, css, js are all static files
+
+we use django.contrib.staticfiles to help manage static files.
+
+django's STATICFILES_FINDERS setting that has "finders". the finders find the static files, one example of a finder is the default AppDirectoriesFinder - it looks for static files in each of the installed apps.
+
+we create a dir static and then polls and then a file style.css
+but because of the way AppDirectoriesFinder staticfile finder works, we can refer to style.css simply by:
+polls/style.css
+
+{% load staticfiles %}
+
+the static tag gets the full path of the mentioned file - style.css
+<link rel="stylesheet" type="text/css" href="{% static 'polls/style.css' %}" />
+
+to change the look and feel of admin, change polls/admin.py
+
+we create a admin class for the model, for example:
+
+this is the admin class for the Question model
+class QuestionAdmin(admin.ModelAdmin):
+    fields = ['pub_date', 'question_text']
+
+pass it as the second argument to register, 
+
+admin.site.register(Question, QuestionAdmin)
+this will change the presence of the Question in admin
+
+
+you can make the Question more intuitive by having the fields in different headers:
+
+class QuestionAdmin(admin.ModelAdmin):
+    fieldsets = [
+        (None,               {'fields': ['question_text']}),
+        ('Date information', {'fields': ['pub_date']}),
+    ]
+
+
+Django knows that a ForeignKey should be represented in the admin as a <select> box
+
+for choices too, we can register it with the admin
+simply reigistering it will allows us to create new choice (by specifing all the details mentioned in the Choice model) just like questions.
+but, to create the choices with the questions:
+
+////code:
+
+class ChoiceInline(admin.StackedInline):
+    model = Choice
+    extra = 3
+
+
+class QuestionAdmin(admin.ModelAdmin):
+    fieldsets = [
+        (None,               {'fields': ['question_text']}),
+        ('Date information', {'fields': ['pub_date'], 'classes': ['collapse']}),
+    ]
+    inlines = [ChoiceInline]
+
+admin.site.register(Question, QuestionAdmin)
+
+you just say, you want the choices inline
+now, to save space, display it in a tabular format
+
+class ChoiceInline(admin.TabularInline):
+
+we played with the add part till now, lets customise the change part now.
+
+in QuestionAdmin, add this:
+
+    list_display = ('question_text', 'pub_date')
+
+    this will display these details now.
+you can change the title and the value etc by adding this to the Question model
+
+    was_published_recently.admin_order_field = 'pub_date'
+    was_published_recently.boolean = True
+    was_published_recently.short_description = 'Published recently?'
+
+    you can also add a filter by: list_filter = ['pub_date']
+    you can add a search field by: search_fields = ['question_text'] //powered by a LIKE query
+
+we can further change the look and feel of the admin page by changing the templates.
+
+in settings.py :
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+
+note, DIRS is a search path, checked when loading django templates.
+
+Just like the static files, we could have all our templates together, in one big templates directory, and it would work perfectly well. However, templates that belongs to a particular application, we should put in the application’s template directory (e.g. polls/templates) rather than the project’s (templates). 
+
+the django admin uses base_site.html template.
+find it in django/contrib/admin/templates
+create a templates dir in the project root dir, create a admin in it and paste the file there and then change it from there.
+
+or, better, you can change the django.contrib.admin.AdminSite.site_header 
+
+The {% and {{ tags are part of Django’s template language.
+
+the index page is the admin's homepage.
+
+PROJECT STRUCUTRE
+
+mysite/ ----> project root dir
+    manage.py ----> used to use the django cmd commands
+    mysite/ ---->houses the settings and deployment files
+        __init__.py
+        settings.py
+        urls.py ----> the urls for the entire site
+        wsgi.py
+    polls/ ----> the dir for our app
+        __init__.py
+        admin.py ----> describes how the polls part in the site's admin looks
+        migrations/ ----> describes the models, used to create database automatically
+            __init__.py
+            0001_initial.py
+        models.py ----> has all the models defined like Question, Choice
+        static/ ----> has the static images, css files
+            polls/
+                images/
+                    background.gif
+                style.css
+        templates/ ----> the templates for the views for poll app
+            polls/
+                detail.html
+                index.html
+                results.html
+        tests.py ----> the tests for the app
+        urls.py ----> the url specifically for the poll app
+        views.py ----> has the view for the app
+    templates/ ----> templates for the project
+        admin/ ----> changing the default admin page for the website
+            base_site.html
+
+
+OSCAR DJANGO
+we have installed oscar. 
+create a new shop using: django-admin.py startproject frobshop
+this will create a normal django project
+.
+|-- frobshop
+|   |-- __init__.py
+|   |-- settings.py
+|   |-- urls.py
+|   `-- wsgi.py
+`-- manage.py
+
+change frobshop.frobshop.settings.py and import all oscars default settings.
+
+**what are the OPTIONS in the TEMPLATES setting? they are "extra context processors". Erm, what?
+
+oscar is just a collection of many apps, templates, authorization+payment gateways etc
+include the urls in frobshop/urls.py
+
+add the search backend settings and database settings
+
+each product belongs to exactly one product class.
+each product class governs the product's attributes - i.e. the size, color, price in case of t-shirts.
+
+Oscar's apps. 
+
+OSCAR_CORE_APPS = [
+    'oscar',
+    'oscar.apps.analytics',
+    'oscar.apps.checkout',
+    'oscar.apps.address',
+    'oscar.apps.shipping',
+    'oscar.apps.catalogue', //the main app that manages catalogues.
+    'oscar.apps.catalogue.reviews',
+    'oscar.apps.partner',
+    'oscar.apps.basket',
+    'oscar.apps.payment',
+    'oscar.apps.offer',
+    'oscar.apps.order',
+    'oscar.apps.customer',
+    'oscar.apps.promotions',
+    'oscar.apps.search',
+    'oscar.apps.voucher',
+    'oscar.apps.wishlists',
+    'oscar.apps.dashboard',
+    'oscar.apps.dashboard.reports',
+    'oscar.apps.dashboard.users',
+    'oscar.apps.dashboard.orders',
+    'oscar.apps.dashboard.promotions',
+    'oscar.apps.dashboard.catalogue',
+    'oscar.apps.dashboard.offers',
+    'oscar.apps.dashboard.partners',
+    'oscar.apps.dashboard.pages',
+    'oscar.apps.dashboard.ranges',
+    'oscar.apps.dashboard.reviews',
+    'oscar.apps.dashboard.vouchers',
+    'oscar.apps.dashboard.communications',
+    'oscar.apps.dashboard.shipping',
+    # 3rd-party apps that oscar depends on
+    'haystack',
+    'treebeard',
+    'sorl.thumbnail',
+    'django_tables2',
+]
+
+
+`-- sandbox
+    |-- apps
+    |   |-- gateway --> uses the oscar.apps.customer.utils import normalise_email
+ to check if the user already exists
+
+ the entire code of the normalise_email fnciton is here:
+
+    so, oscar is just a collection of such small funcitons that make up the apps, and some templates and models that can be used to very quickly set up ecommerce shops.
+
+ def normalise_email(email):
+    """
+    The local part of an email address is case-sensitive, the domain part
+    isn't.  This function lowercases the host and should be used in all email
+    handling.
+    """
+    clean_email = email.strip()
+    if '@' in clean_email:
+        local, host = clean_email.split('@')
+        return local + '@' + host.lower()
+    return clean_email
+
+
+HOW to build your own shop
+
+1. from oscar.defaults import *
+here, there rest the most common settings for the site. you can chnage the name of the shop, the cookie information, the #of results on one page etc
+
+the path for oscar_image_folder is given as: images/products/%Y/%M
+which translates to:
+
+/home/radar/projects/loccart/django-oscar/sites/sandbox/public/media/images/2016/12
+for the demo site
+
+the templates of the site are built in Bootstrap and reside in:
+/home/radar/projects/loccart/django-oscar/src/oscar/templates/oscar
+
+read the readme.rst there for more info.
+there are many many templates that need to be changed.
+
+in the settings, we add the oscar templates.
+
+django uses the django template language which is it's own template system. you can use jinja2
+
+the template option is thus:
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates', //backend to compile DTL
+        'DIRS': [], //where to look for templates 
+        'APP_DIRS': True, //weather to look for templates inside installed applications
+        'OPTIONS': {
+            # ... some options here ... //contains backend specific settings
+            Extra parameters to pass to the template backend.
+        },
+    },
+]
+
+Now, in the options, you can pass the context_processors 
+
+they are:
+A list of callables that are used to populate the context in RequestContext. These callables take a request object as their argument and return a dictionary of items to be merged into the context.
+
+
+context is the arguments that are passed to the template, the variables. 
+consider this:
+>>> from django.template import Context, Template
+>>> template = Template("My name is {{ my_name }}.")
+
+>>> context = Context({"my_name": "Adrian"})
+>>> template.render(context)
+"My name is Adrian."
+
+>>> context = Context({"my_name": "Dolores"})
+>>> template.render(context)
+"My name is Dolores."
+
+
+Hence, what is happening is that the callable functions that we use to populate the RequestContext are:
+
+TEMPLATE_CONTEXT_PROCESSORS = (
+    "django.contrib.auth.context_processors.auth",
+    "django.core.context_processors.request",
+    "django.core.context_processors.debug",
+    "django.core.context_processors.i18n",
+    "django.core.context_processors.media",
+    "django.core.context_processors.static",
+    "django.contrib.messages.context_processors.messages",
+    # Oscar specific
+    'oscar.apps.search.context_processors.search_form',
+    'oscar.apps.promotions.context_processors.promotions',
+    'oscar.apps.checkout.context_processors.checkout',
+    'oscar.core.context_processors.metadata',
+    'oscar.apps.customer.notifications.context_processors.notifications',
+)
+
+
+next, add oscars apps to the installed apps list
+django-compressor and django-widget-tweaks are used by templates to make them simpler to creat? oscars defaults templates use them
+
+we add the middleware, auth backend
+then the urls : send all urls to oscar - 
+from oscar.app import application
+url(r'', include(application.urls))
+
+basically as seen from the app.py file:
+
+            url(r'^catalogue/', include(self.catalogue_app.urls)),
+            url(r'^basket/', include(self.basket_app.urls)),
+            url(r'^checkout/', include(self.checkout_app.urls)),
+            url(r'^accounts/', include(self.customer_app.urls)),
+            url(r'^search/', include(self.search_app.urls)),
+            url(r'^dashboard/', include(self.dashboard_app.urls)),
+            url(r'^offers/', include(self.offer_app.urls)),
+
+this file is important to see where each page goes, how the navigation is set up.   
+then, set the database. then migrate and runserver
+
+defining an order pipeline:
+OSCAR_INITIAL_ORDER_STATUS = 'Pending'
+OSCAR_INITIAL_LINE_STATUS = 'Pending'
+OSCAR_ORDER_STATUS_PIPELINE = {
+    'Pending': ('Being processed', 'Cancelled',),
+    'Being processed': ('Processed', 'Cancelled',),
+    'Cancelled': (),
+}
+
+now, with the front end out of the way, we will look at how the backend works and get it to work for us too.
+
+products are divided into product classes. 
+how are the products grouped on the front end?
+disable taxes
+disable availability
+disable shipping
+disable payment - or allow it - stripe!
+
+the buyers and sellers are anon. so, you can charge a little higher from the buyer and give a little less to the seller.
+
+how to model your database. 
+
+the tests show how to create a product, how to define custom properties for products. look at product_tests.py for details.
+
+create a new product category with:
+
+product_class, _ = ProductClass.objects.get_or_create(
+    name='Books')
+
+add custom attributes to it by:
+
+ProductAttribute.objects.create(product_class=product_class,
+                                        name='Number of pages',
+                                        code='num_pages',
+                                        type='integer')
+so, here, we are creating a new attribute "Number of pages" for the book product category.
+let's add a book:
+
+        product_one = Product(upc='1234',
+                          product_class=product_class,
+                          title='Book 1')
+
+Now, assigning a value to the custom product attribute
+        product_one.attr.num_pages = 100
+        product_one.save()
+
+        this product is not saved in the database.
+        look at product_tests for more info about child product etc.
+
+        TODO: look at how the dashboard works, adds products etc.
+
+this can be done to create products etc. if you wish, we can customise the product model itself.
+
+look at 
+http://django-oscar.readthedocs.org/en/latest/howto/how_to_disable_an_app.html
+to learn how to overrule the urls.
+
+how to customise oscar
+create python module with same name as the oscar app you want to extend. eg: to customise oscar.apps.order, we can do this:
+
+$ mkdir yourproject/order
+$ touch yourproject/order/__init__.py
+
+in the new folder, create a file models.py if it was there in the older dir too
+
+If two models with the same name are declared within an app, Django will only use the first one. That means that if you wish to customise Oscar’s models, you must declare your custom ones before importing Oscar’s models for that app.
+
+You have to copy the migrations directory from oscar/apps/order and put it into your order app. 
+
+get_core_apps([]) will return a list of Oscar core apps. If you supply a list of additional apps, they will be used to replace the Oscar core apps. In the above example, yourproject.order will be returned instead of oscar.apps.order.
+
+READ : http://django-oscar.readthedocs.org/en/latest/topics/customisation.html
+
+we can customise those classes that are dynamically loaded using the get_class() method - which are almost all the classes.
+
+For get_class to pick up the customised class, the Oscar apps need to be forked.
+
+first thing to do is to create a modified, customised version of the catalogue app for your custom product types changing INSTALLED_APPS to point to your local version rather than Oscar’s.
+
+once you change the product types, i.e. add a new attribute for eg, we need to update the database schema also. 
+The recommended way to handle migrations is to copy the migrations directory from oscar/apps/catalogue into your new catalogue app. Then you can create a new (additional) schemamigration using the schemamigration management command:
+
+./manage.py schemamigration catalogue --auto
+
+which will pick up any customisations to the product model.
+
+To apply the migration you just created, all you have to do is run ./manage.py migrate catalogue and the new column is added to the product table in the database.
+
+this is common to customisation: make a copy of the oscar app, with the same name and place it before the original one. import the settings of the original one but also make the necessary changes.
+
+
+
+
+
+
+
+
+
+POLLER
+resources:
+
+1. Sidebar
+http://blackrockdigital.github.io/startbootstrap-simple-sidebar/
+
+A nice bootstrap transition, adjusts to the screen size
+
+2. Python Social Auth
+http://artandlogic.com/2014/04/tutorial-adding-facebooktwittergoogle-authentication-to-a-django-application/
+
+3. django-allauth
+http://django-allauth.readthedocs.org/en/latest/advanced.html
+
+4. weblate docs
+https://docs.weblate.org/en/latest/admin/quick.html
+
+5. glucose tracker source
+https://github.com/jcalazan/glucose-tracker
+
+6. django-allauth tute
+http://www.sarahhagstrom.com/2013/09/the-missing-django-allauth-tutorial/
+https://godjango.com/65-starting-with-django-allauth/
+
+7. DEMOAPP - https://github.com/hmarr/django-mumblr
+
+
+OQ: what is collectstatic used for?
+I needed to serve the static files for a page, I did it by keeping the static files in that app which served the page itself. Why do I need to collect all of them at the project's home static
+
+after collectstatic, it got admin, home, polls static files
+
+how to setup the home page
+http://grasshopperpebbles.com/django-python/how-to-set-up-a-home-page-with-django/
+
+
+
+
+WRITE VIEWS::
+
+from django.template import loader
+def index(request):
+    latest_question_list = Question.objects.order_by('-pub_date')[:5]
+    template = loader.get_template('polls/index.html')
+    context = {
+        'latest_question_list': latest_question_list,
+    }
+    return HttpResponse(template.render(context, request))
+
+
+from django.shortcuts import render
+def index(request):
+    latest_question_list = Question.objects.order_by('-pub_date')[:5]
+    context = {'latest_question_list': latest_question_list}
+    return render(request, 'polls/index.html', context)
+
+Why do we need a web-framework like django?
+this is because even the most simple apps, have a lot of boilerplate code - it reduces the developer productivity and also introduces chances of errors. so, django takes care of it and allows you to focus on building the app.
+
+MVC - model view controller pattern
+models.py - contains a description of the data(database table)
+views.py - contains the bussiness logic of the page, manipulation of the data, processing the data etc
+
+these loosely follow the MVC pattern - 
+the code for defining and accessing the data - MODEL
+request routing logic - CONTROLLER
+the user interface - VIEW
+
+are seperate. this allows for loosely coupled code. 
+
+On creation of the new project (just a project, no app yet), we have these files:
+
+mysite/
+    manage.py
+    mysite/
+        __init__.py
+        settings.py
+        urls.py
+        wsgi.py
+
+
+    mysite/: The outer mysite/ directory is just a container for your project. Its name doesn’t matter to Django; you can rename it to anything you like.
+
+    manage.py: A command-line utility that lets you interact with this Django project in various ways. Type python manage.py help to get a feel for what it can do. You should never have to edit this file; it’s created in this directory purely for convenience.
+
+    mysite/mysite/: The inner mysite/ directory is the actual Python package for your project. Its name is the Python package name you’ll need to use to import anything inside it (e.g. import mysite.settings).
+
+    __init__.py: A file required for Python to treat the mysite directory as a package (i.e., a group of Python modules). It’s an empty file, and generally you won’t add anything to it.
+
+    settings.py: Settings/configuration for this Django project. Take a look at it to get an idea of the types of settings available, along with their default values.
+
+    urls.py: The URLs for this Django project. Think of this as the “table of contents” of your Django-powered site.
+
+    wsgi.py: An entry-point for WSGI-compatible webservers to serve your project. See How to deploy with WSGI (https://docs.djangoproject.com/en/1.4/howto/deployment/wsgi/) for more details.
+
+
+
+    Django removes the slash from the front of every incoming URL before it checks the URLpatterns. This means that our URLpattern doesn’t include the leading slash in /hello/.
+
+what happens when you go to localhost:8000/hello
+
+
+
+    A request comes in to /hello/.
+    Django looks for settings.py and for root URLconf by looking at the ROOT_URLCONF setting.
+    Django looks at all of the URLpatterns in the URLconf for the first one that matches /hello/.
+    If it finds a match, it calls the associated view function.
+    The view function returns an HttpResponse.
+    Django converts the HttpResponse to the proper HTTP response, which results in a Web page.
+
+ Simply put, loose coupling is a software-development approach that values the importance of making pieces interchangeable. If two pieces of code are loosely coupled, then changes made to one of the pieces will have little or no effect on the other.
+
+ Django’s URLconfs are a good example of this principle in practice. In a Django web application, the URL definitions and the view functions they call are loosely coupled; that is, the decision of what the URL should be for a given function, and the implementation of the function itself, reside in two separate places. This lets you switch out one piece without affecting the other.
+
+ Pretty URLs are a characteristic of a quality Web application.
+
+consider this:
+ url(r'^time/plus/(\d{1,2})/$', hours_ahead)
+
+ here, we are carturing the 2 digit number [ time/plus/12 for eg] by paranthesis, the hours_ahead view will receive this data - this number which is in the paranthesis
+
+ def hours_ahead(request, offset):
+//code
+
+earlier, the views handled the UI and the bussiness logic both. if we wanted to change how to page looked, we'd have to change the views.py. this isnt loose coupling. to enforce loose coupling, lets take the UI part away from views.py (the controller) - let's introduce templates
+
+A Django template is a string of text that is intended to separate the presentation of a document from its data. 
+Usually, templates are used for producing HTML, but Django templates are equally capable of generating any text-based format.
+
+DTL - django template language
+1. Any text surrounded by a pair of braces (e.g., {{ person_name }}) is a variable. This means “insert the value of the variable with the given name.” 
+
+2. Any text that’s surrounded by curly braces and percent signs (e.g., {% if ordered_warranty %}) is a template tag. The definition of a tag is quite broad: a tag just tells the template system to “do something.”
+
+3. We have filers specified by the pipe character |
+It is the most convenient way to alter the formatting of a variable.
+{{ ship_date|date:"F j, Y" }}, we’re passing the ship_date variable to the date filter, giving the date filter the argument "F j, Y". The date filter formats dates in a given format, as specified by that argument. 
+
+DTL example
+from django import template
+
+//create the template object
+temp = template.Template("My name is {{ name }}")
+
+//create the context dict - the dict of variables to pass to the template
+context = template.Context({"name":"Darshan"})
+
+print temp.render(context)
+
+
+the django shell is different from the native python shell in that it has the projects settings.py files loaded. it is loaded via the DJANGO_SETTINGS_MODULE which the python manage.py shell sets
+
+<django.template.Template object at 0xb7d5f24c>
+here, 0xb7d5f24c is the Python's identity of the Template object
+
+For varialbes, why not pass the dict iteself, why wrap it as an Context object and pass it?
+a Context provides additional functionality
+
+
+In context, you dont need to pass just strings, you can pass complex data structues too, like dicts for eg
+>>> from django.template import Template, Context
+>>> person = {'name': 'Sally', 'age': '43'}
+>>> t = Template('{{ person.name }} is {{ person.age }} years old.')
+>>> c = Context({'person': person})
+>>> t.render(c)
+u'Sally is 43 years old.'
+
+or even custom objects!
+
+>>> from django.template import Template, Context
+>>> class Person(object):
+...     def __init__(self, first_name, last_name):
+...         self.first_name, self.last_name = first_name, last_name
+>>> t = Template('Hello, {{ person.first_name }} {{ person.last_name }}.')
+>>> c = Context({'person': Person('John', 'Smith')})
+>>> t.render(c)
+u'Hello, John Smith.'
+
+
+or even methods!
+
+>>> from django.template import Template, Context
+>>> t = Template('{{ var }} -- {{ var.upper }} -- {{ var.isdigit }}')
+>>> t.render(Context({'var': 'hello'}))
+u'hello -- HELLO -- False'
+>>> t.render(Context({'var': '123'}))
+u'123 -- 123 -- True'
+
+note, no parentheses, so no methods that can take arguments
+
+
+Dot lookups can be summarized like this: when the template system encounters a dot in a variable name, it tries the following lookups, in this order:
+
+    Dictionary lookup (e.g., foo["bar"])
+    Attribute lookup (e.g., foo.bar)
+    Method call (e.g., foo.bar())
+    List-index lookup (e.g., foo[2])
+
+If, in an {% include %} tag, a template with the given name isn’t found, Django will do one of two things:
+
+    If DEBUG is set to True, you’ll see the TemplateDoesNotExist exception on a Django error page.
+    If DEBUG is set to False, the tag will fail silently, displaying nothing in the place of the tag.
+
+All the {% block %} tags do is tell the template engine that a child template may override those portions of the template.
+Now that we have this base template, we can modify our existing current_datetime.html template to use it:
+
+
+
+PARENT - base.html
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html lang="en">
+<head>
+    <title>{% block title %}{% endblock %}</title> //this will be overriden by the child
+</head>
+<body>
+    <h1>My helpful timestamp site</h1>
+    {% block content %}{% endblock %} //this too will be overriden by the child
+    {% block footer %}
+    <hr>
+    <p>Thanks for visiting my site.</p>
+    {% endblock %}
+</body>
+</html>
+
+CHILDREN
+{% extends "base.html" %}
+
+{% block title %}The current time{% endblock %}
+
+{% block content %}
+<p>It is now {{ current_date }}.</p>
+{% endblock %}
+
+
+Note that since the child template doesn’t define the footer block, the template system uses the value from the parent template instead. Content within a {% block %} tag in a parent template is always used as a fallback.
+
+Many modern Web sites are database-driven: the content of the Web site is stored in a relational database. This allows a clean separation of data and logic (in the same way views and templates allow the separation of logic and display.)
+
+a view is responsible for doing some arbitrary logic, and then returning a response. 
+
+Models are actually database tables
+
+
+THE DUMB WAY OF INTERACTING WITH DATABASES
+from django.shortcuts import render
+import MySQLdb
+
+def book_list(request):
+    db = MySQLdb.connect(user='me', db='mydb', passwd='secret', host='localhost')
+    cursor = db.cursor()
+    cursor.execute('SELECT name FROM books ORDER BY name')
+    names = [row[0] for row in cursor.fetchall()]
+    db.close()
+    return render(request, 'book_list.html', {'names': names})
+
+
+THE DJANGO WAY-USING THE DJANGO'S DATABASE API/LAYER
+
+def book_list(request):
+    booklist = Book.object.order_by('name')
+    return render(request, 'book_list.html', {'books':booklist})
+
+
+   
+Those three pieces together – data access logic, business logic, and presentation logic – comprise a concept that’s sometimes called the Model-View-Controller (MVC) pattern of software architecture. In this pattern, 
+
+“Model” refers to the data access layer - the models
+“View” refers to the part of the system that selects what to display and how to display it - the views and templates
+
+“Controller” refers to the part of the system that decides which view to use, depending on user input, accessing the model as needed.  --> django does this itself
+
+Instead of having to tell your coworkers, “Let’s make an abstraction of the data access, then let’s have a separate layer that handles data display, and let’s put a layer in the middle that regulates this,” you can take advantage of a shared vocabulary and say, “Let’s use the MVC pattern here.”
+
+
+    M, the data-access portion, is handled by Django’s database layer, which is described in this chapter.
+    V, the portion that selects which data to display and how to display it, is handled by views and templates.
+    C, the portion that delegates to a view depending on user input, is handled by the framework itself by following your URLconf and calling the appropriate Python function for the given URL.
+
+Because the “C” is handled by the framework itself and most of the excitement in Django happens in models, templates and views, Django has been referred to as an MTV framework. In the MTV development pattern,
+
+    M stands for “Model,” the data access layer. This layer contains anything and everything about the data: how to access it, how to validate it, which behaviors it has, and the relationships between the data.
+    T stands for “Template,” the presentation layer. This layer contains presentation-related decisions: how something should be displayed on a Web page or other type of document.
+    V stands for “View,” the business logic layer. This layer contains the logic that access the model and defers to the appropriate template(s). You can think of it as the bridge between models and templates.
+
+We’ll assume you’ve set up a database server, activated it, and created a database within it (e.g., using a CREATE DATABASE statement). If you’re using SQLite, no such setup is required, because SQLite uses standalone files on the filesystem to store its data.
+
+a Django app – a bundle of Django code, including models and views, that lives together in a single Python package and represents a full Django application.
+
+what’s the difference between a project and an app? The difference is that of configuration vs. code:
+
+    A project is an instance of a certain set of Django apps, plus the configuration for those apps.
+
+    Technically, the only requirement of a project is that it supplies a settings file, which defines the database connection information, the list of installed apps, the TEMPLATE_DIRS, and so forth.
+
+    An app is a portable set of Django functionality, usually including models and views, that lives together in a single Python package.
+
+    For example, Django comes with a number of apps, such as a commenting system and an automatic admin interface. A key thing to note about these apps is that they’re portable and reusable across multiple projects.
+
+there’s one requirement regarding the app convention: if you’re using Django’s database layer (models), you must create a Django app. Models must live within apps. 
+
+Models -  It’s your data layout – the equivalent of your SQL CREATE TABLE statements 
+Django uses a model to execute SQL code behind the scenes and return convenient Python data structures representing the rows in your database tables.
+
+
+“Isn’t it redundant to define data models in Python instead of in SQL?
+
+introspection requires overhead. django needs to know the database layout 
+2 ways to do this:
+i. explicitly describe the data in python
+ii. introspect the database at runtime
+
+the 2nd way is problematic because the database inspection incurs overheads.
+
+but the 1st way needs the django that the python code representing the data needs to be kept in sync with what is in the database. 
+ 
+ If you make changes to a Django model, you’ll need to make the same changes inside your database to keep your database consistent with the model. 
+
+Finally, we should note that Django includes a utility that can generate models by introspecting an existing database. This is useful for quickly getting up and running with legacy data
+
+
+each model is represented by a Python class that is a subclass of django.db.models.Model. The parent class, Model, contains all the machinery necessary to make these objects capable of interacting with a database – and that leaves our models responsible solely for defining their fields, in a nice and compact syntax
+
+"Each model generally corresponds to a single database table, and each attribute on a model generally corresponds to a column in that database table"
+
+The attribute name corresponds to the column’s name, and the type of field (e.g., CharField) corresponds to the database column type (e.g., varchar)
+
+ Unless you instruct it otherwise, Django automatically gives every model an auto-incrementing integer primary key field called id. Each Django model is required to have a single-column primary key.
+
+ validate your models by:
+
+  Unless you instruct it otherwise, Django automatically gives every model an auto-incrementing integer primary key field called id. Each Django model is required to have a single-column primary key.
+
+  The validate command checks whether your models’ syntax and logic are correct. 
+
+
+  to view the table creation commands that django will execute, use:
+  python manage.py sqlall books
+
+  these statements can be execcute by piping or by using syncdb
+
+  python manage.py sqlall books | psql mydb ORRR python manage.py syncdb
+
+
+The syncdb command is a simple “sync” of your models to your database.
+Note that syncdb does not sync changes in models or deletions of models; if you make a change to a model or delete a model, and you want to update the database, syncdb will not handle that. 
+
+Ergo, it’s always safe to run python manage.py syncdb – it won’t clobber things.
+
+You can manually run the command-line client (e.g., psql for PostgreSQL) or you can run the command python manage.py dbshell, which will figure out which command-line client to run, depending on your DATABASE_SERVER setting. The latter is almost always more convenient.
+
+IN THE OFFICIAL TUTORIAL:
+
+$ python manage.py makemigrations polls --> to make the migrations
+
+By running makemigrations, you’re telling Django that you’ve made some changes to your models (in this case, you’ve made new ones) and that you’d like the changes to be stored as a migration. migrations is how you store changes to your models.
+
+$ python manage.py sqlmigrate polls <migration file number> --> shows the sql code
+
+$ python manage.py migrate --> executes the migrations
+
+
+when we create a new Book object, we can save it to the database by first_book.save(), django will execute an INSERT statement here, behind the scenes.
+
+when you do Book.objects.all() to see the list of all the books in the database, django executes an SELECT statement here.
+
+when you create a new book object, its not saved automatically. it is saved on save()
+to create it and save it in one step, use create()
+
+>>> p1 = Publisher.objects.create(name='Apress',
+...     address='2855 Telegraph Avenue',
+...     city='Berkeley', state_province='CA', country='U.S.A.',
+...     website='http://www.apress.com/')
+
+
+when you do
+
+Publisher.objects.all()
+
+This roughly translates to this SQL:
+
+SELECT id, name, address, city, state_province, country, website
+FROM books_publisher;
+
+Next, we have the objects attribute. This is called a manager.
+managers take care of all “table-level” operations on data including, most important, data lookup.
+All models automatically get a objects manager; you’ll use it any time you want to look up model instances.
+
+we can have double score in the filter when querying the data models
+Publisher.objects.filter(name__contains="press")
+
+That’s a double underscore there between name and contains. Like Python itself, Django uses the double underscore to signal that something “magic” is happening – here, the __contains part gets translated by Django into a SQL LIKE statement:
+
+SELECT id, name, address, city, state_province, country, website
+FROM books_publisher
+WHERE name LIKE '%press%';
+
+The filter() examples above all returned a QuerySet, which you can treat like a list. Sometimes it’s more convenient to fetch only a single object (not 2, not 0, just 1), as opposed to a list. That’s what the get() method is for. 
+
+you can order your results too
+
+Publisher.objects.order_by("name")
+
+==
+
+SELECT id, name, address, city, state_province, country, website
+FROM books_publisher
+ORDER BY name;
+
+you can get reverse ordering by using a -ve before the name
+ Publisher.objects.order_by("-name")
+
+We can specify default ordering too for a model
+
+class Publisher(models.Model):
+    name = models.CharField(max_length=30)
+    website = models.URLField()
+
+    def __unicode__(self):
+        return self.name
+
+    class Meta:
+        ordering = ['name']
+
+You can use this Meta class on any model to specify various model-specific options.
+If you specify this, it tells Django that unless an ordering is given explicitly with order_by(), all Publisher objects should be ordered by the name field whenever they’re retrieved with the Django database API.
+
+chaining lookups is possible too:
+Publisher.objects.filter(country="U.S.A.").order_by("-name")
+
+when you want to update any data entrys value, you can use 
+
+p = Publisher.objects.get(name='Apress')
+p.name = 'Apress Publishing'
+p.save()
+
+You can see in this example that Django’s save() method sets all of the column values, not just the name column. If you’re in an environment where other columns of the database might change due to some other process, it’s smarter to change only the column you need to change. To do this, use the update() method on QuerySet objects. Here’s an example:
+
+>>> Publisher.objects.filter(id=52).update(name='Apress Publishing')
+
+Publisher.objects.all().update(country='USA') --> update works on query set
+
+you can delete records too
+>>> p = Publisher.objects.get(name="O'Reilly")
+>>> p.delete()
+
+
+CHAPTER 06 - ADMINS
+
+With Django, building an admin interface is a solved problem. The feature works by reading metadata in your model to provide a powerful and production-ready interface that site administrators can start using immediately
+
+
+Django’s automatic admin is part of a larger suite of Django functionality called django.contrib – the part of the Django codebase that contains various useful add-ons to the core framework.
+
+ optional, de facto implementations of common patterns. They’re bundled with Django so that you don’t have to reinvent the wheel in your own applications.
+
+ The admin page lists all the available types of data that can be edited on the admin site. At this point, because we haven’t activated any of our own models yet, the list is sparse: it includes only Groups and Users, which are the two default admin-editable models.
+
+ Beyond these, the Django admin site offers a wealth of options that let you customize how the admin site works for a particular model. Such options live in ModelAdmin classes, which are classes that contain configuration for a specific model in a specific admin site instance.
+
+
+ python has two types of arguments, positional arguments or, keyword arguments.
+
+ keyword:
+ email = models.EmailField(blank=True, verbose_name='e-mail')
+
+ positional
+   email = models.EmailField('e-mail', blank=True)
+
+
+polls/admin.py
+class AuthorAdmin(admin.ModelAdmin):
+    list_display = ('first_name', 'last_name', 'email')
+
+admin.site.register(Author, AuthorAdmin)
+
+We created the class AuthorAdmin. This class, which subclasses django.contrib.admin.ModelAdmin, holds custom configuration for a specific admin model.
+
+We altered the admin.site.register() call to add AuthorAdmin after Author. You can read this as: “Register the Author model with the AuthorAdmin options.”
+The admin.site.register() function takes a ModelAdmin subclass as an optional second argument. If you don’t specify a second argument (as is the case for Publisher and Book), Django will use the default admin options for that model.
+
+For all the options, look at the instance variables of admin.ModelAdmin
+
+We’d highly recommend using filter_horizontal for any ManyToManyField that has more than 10 items. It’s far easier to use than a simple multiple-select widget. Also, note you can use filter_horizontal for multiple fields – just specify each name in the tuple.
+
+Giving a user permission to edit users is essentially turning a user into a superuser.
+
+CHAPTER 07 - FORMS
+
+
+def hello(request):
+    return HttpResponse("Hello world")
+
+
+HttpRequest objects, such as the variable request here, have a number of interesting attributes and methods that you should familiarize yourself with, so that you know what’s possible. You can use these attributes to get information about the current request (i.e., the user/Web browser that’s loading the current page on your Django-powered site), at the time the view function is executed.
+
+request.META is a Python dictionary containing all available HTTP headers for the given request 
+Beyond basic metadata about the request, HttpRequest objects have two attributes that contain information submitted by the user: request.GET and request.POST. Both of these are dictionary-like objects that give you access to GET and POST data.
+
+POST data generally is submitted from an HTML <form>, while GET data can come from a <form> or the query string in the page’s URL.
+
+In forms, the action parameter takes in the url where to redirect the page with the data entered by the user.
+the method used is specified by the method parameter.
+
+<body>
+    <form action="/search/" method="get">
+        <input type="text" name="q">
+        <input type="submit" value="Search">
+    </form>
+</body>
+
+--> in the views.py, 
+  message = 'You searched for: %r' % request.GET['q']
+
+Because GET data is passed in the query string (e.g., /search/?q=django)
+
+What’s the difference between GET and POST? Use GET when the act of submitting the form is just a request to “get” data. Use POST whenever the act of submitting the form will have some side effect – changing data, or sending an e-mail, or something else that’s beyond simple display of data. In our book-search example, we’re using GET because the query doesn’t change any data on our server. 
+
+books = Book.objects.filter(title__icontains=q)
+        return render(request, 'search_results.html',
+            {'books': books, 'query': q})
+
+            icontains = i is for ignore case
+
+ pluralize template filter, which outputs an “s” if appropriate, based on the number of books found.
+
+ The action="" means “Submit the form to the same URL as the current page.” 
+
+ always validate user-submitted data server-side (i.e., in your Django views)
+
+ We’re using the function django.core.mail.send_mail to send an e-mail. This function has four required arguments: the e-mail subject, the e-mail body, the “from” address, and a list of recipient addresses. send_mail is a convenient wrapper around Django’s EmailMessage class, which provides advanced features such as attachments, multipart e-mails, and full control over e-mail headers.
+
+ Note that in order to send e-mail using send_mail(), your server must be configured to send mail, and Django must be told about your outbound e-mail server. See http://docs.djangoproject.com/en/dev/topics/email/ for the specifics.
+
+ to redirect the user to someplace else,  return HttpResponseRedirect('/contact/thanks/')
+
+ we should explain why we initiate a redirect instead of, for example, simply calling render() with a template right there.
+
+The reason: if a user hits “Refresh” on a page that was loaded via POST, that request will be repeated. This can often lead to undesired behavior, such as a duplicate record being added to the database – or, in our example, the e-mail being sent twice. If the user is redirected to another page after the POST, then there’s no chance of repeating the request.
+
+You should always issue a redirect for successful POST requests. It’s a Web development best practice.
+
+from django import forms
+
+class ContactForm(forms.Form):
+    subject = forms.CharField()
+    email = forms.EmailField(required=False)
+    message = forms.CharField()
+
+>>> f = ContactForm({'subject': 'Hello', 'email': 'adrian@example.com', 'message': 'Nice site!'})
+
+>>> f.is_bound --> true if you provide data to the form
+>>> f.is_valid() --> true if the data is valid
+
+>>> f['message'].errors
+[]
+
+In views.py
+
+from mysite.contact.forms import ContactForm
+
+>>> f.cleaned_data -->converts form data into appropriate types
+{'message': u'Nice site!', 'email': u'adrian@example.com', 'subject': u'Hello'}
+
+all POST forms that are targeted at internal URLs should use the {% csrf_token %} template tag
+
+by default, all input boxes come as textboxes. but if you want to see say, textarea, do this:
+
+message = forms.CharField(widget=forms.TextArea) 
+
+here, the widget takes care of the presentation logic and the Field classes, [message here] takes care of the validation logic. appreciate the loose coupling here, you can change the presentation logic or the validation logic without affecting the other.
+
+We want additional validation on the message field, so we add a clean_message() method to our Form class:
+
+Django’s form system automatically looks for any method whose name starts with clean_ and ends with the name of a field. If any such method exists, it’s called during validation.
+
+
+ (r'^articles/(\d{4})/(\d{2})/$', views.month_archive)  --->   this will result in positional arguments, 
+ month_archive(request, '2006', '03')
+
+ (r'^articles/(?P<year>\d{4})/(?P<month>\d{2})/$', views.month_archive) --> this will result in keyword arguemnts, 
+ month_archive(request, year='2006', month='03')
+
+ you can pass arguments to your views too from urls
+
+     (r'^foo/$', views.foobar_view, {'template_name': 'template1.html'}),
+
+     def foobar_view(request, template_name):
+
+another example:
+
+(r'^mydata/(?P<month>\w{3})/(?P<day>\d\d)/$', views.my_view)
+
+note, here we have 2 positional arguemnts - month and day
+so, this is received as:
+def my_view(request, month, day):
+
+REFACTORING example:
+
+def say_hello(person_name):
+    print 'Hello, %s' % person_name
+
+def say_goodbye(person_name):
+    print 'Goodbye, %s' % person_name
+
+we can factor out the greeting to make it a parameter:
+
+def greet(person_name, greeting):
+    print '%s, %s' % (greeting, person_name)
+
+
+look what we did here, we say that the methods did the same thing - both of them, so, we combined them into one.
+the code is similar, the function is similar, so we have a refactoring oppurtunity.
+
+With this in mind, you can start making higher-level abstractions of your views. Instead of thinking to yourself, “This view displays a list of Event objects,” and “That view displays a list of BlogEntry objects,” realize they’re both specific cases of “A view that displays a list of objects, where the type of object is variable.”
+
+duck typing: “If it walks like a duck and talks like a duck, we can treat it like a duck.”
+so, if we dont know what type of a model a variable is, but that it is a model, we can use it in our code without needing to know its reality, like:
+    obj_list = model.objects.all()
+
+
+Short-circuit logic
+Although that URL matches the second pattern, it matches the top one first and that one will be used.
+
+
+
+For example, in a request to http://www.example.com/myapp/, Django will try to match myapp/. In a request to http://www.example.com/myapp/?page=3, Django will try to match myapp/.
+
+The request method (e.g., POST, GET) is not taken into account when traversing the URLconf.
+
+
+A lesson in Good programming pratice:
+
+Say we have a view which has different logic for processing GET and POST requests. Now, what we could do is:
+
+def some_page(request):
+    if request.method == 'POST':
+        do_something_for_post()
+        return HttpResponseRedirect('/someurl/')
+    elif request.method == 'GET':
+        do_something_for_get()
+        return render(request, 'page.html')
+    else:
+        raise Http404()
+
+But this is inelegant. what would be better is, shifting the checking logic to anothr view and having that new view call the appropriate view to process the request.
+
+
+def method_splitter(request, GET=None, POST=None):
+    if request.method == 'GET' and GET is not None:
+        return GET(request)
+    elif request.method == 'POST' and POST is not None:
+        return POST(request)
+    raise Http404
+
+def some_page_get(request):
+    assert request.method == 'GET'
+    do_something_for_get()
+    return render(request, 'page.html')
+
+def some_page_post(request):
+    assert request.method == 'POST'
+    do_something_for_post()
+    return HttpResponseRedirect('/someurl/')
+
+IN URLS.py
+        (r'^somepage/$', views.method_splitter, {'GET': views.some_page_get, 'POST': views.some_page_post})
+
+this has the advantage that the code is cleaner and we can resuse the method_splitter whereever we want, its not tied inside our view.
+
+*args and **kwargs (note the asterisks). This is a Python feature that allows a function to accept a dynamic, arbitrary number of arguments whose names aren’t known until runtime. If you put a single asterisk in front of a parameter in a function definition, any positional arguments to that function will be rolled up into a single tuple. If you put two asterisks in front of a parameter in a function definition, any keyword arguments to that function will be rolled up into a single dictionary.
+
+
+If the global/project accepts a positional argument, it will be passed to all the URLs in the include
+
+# root urls.py
+
+from django.conf.urls.defaults import *
+
+urlpatterns = patterns('',
+    (r'^(?P<username>\w+)/blog/', include('foo.urls.blog')),   //here, the username will be passed to all the 
+)
+
+# foo/urls/blog.py
+
+from django.conf.urls.defaults import *
+
+urlpatterns = patterns('',
+    (r'^$', 'foo.views.blog_index'),
+    (r'^archive/$', 'foo.views.blog_archive'),
+)
+
+CHAPTER 09 - Advanced templates
+
+sometimes you need to pass a specific set of context variables to all your templates. you can use RequestContext for that
+
+def custom_proc(request):
+    "A context processor that provides 'app', 'user' and 'ip_address'."
+    return {
+        'app': 'My app',
+        'user': request.user,
+        'ip_address': request.META['REMOTE_ADDR']
+    }
+
+def view_1(request):
+    # ...
+    return render(request, 'template1.html',
+        {'message': 'I am view 1.'},
+        context_instance=RequestContext(request, processors=[custom_proc]))
+
+def view_2(request):
+    # ...
+    return render(request, 'template2.html',
+        {'message': 'I am the second view.'},
+        context_instance=RequestContext(request, processors=[custom_proc]))
+
+Django provides support for global context processors. The TEMPLATE_CONTEXT_PROCESSORS setting (in your settings.py) designates which context processors should always be applied to RequestContext. This removes the need to specify processors each time you use RequestContext.
+examples of such global context dicts are:
+django.core.context_processors.auth
+
+
+django.core.context_processors.request
+
+If this processor is enabled, every RequestContext will contain a variable request, which is the current HttpRequest object. Note that this processor is not enabled by default; you have to activate it.
+
+You might want to use this if you find your templates needing to access attributes of the current HttpRequest such as the IP address:
+
+{{ request.REMOTE_ADDR }}
+
+(Python eggs are a way of compressing Python code into a single file.)
+
+CHAPTER 10 - MODELS
+
+The database can have extra tables, extra columns in those tables - even when it isnt present in the model. but, if it is present in the model and not in the database, django will complain
+
+
+
+When adding a field to a table/model in a production setting, the trick is to take advantage of the fact that Django doesn’t care if a table contains columns that aren’t defined in the model. The strategy is to add the column in the database, and then update the Django model to include the new field.
+
+how to add new fields to the database
+First, take these steps in the development environment (i.e., not on the production server):
+
+    Add the field to your model.
+    Run manage.py sqlall [yourapp] to see the new CREATE TABLE statement for the model. Note the column definition for the new field.
+    Start your database’s interactive shell (e.g., psql or mysql, or you can use manage.py dbshell). Execute an ALTER TABLE statement that adds your new column.
+    Launch the Python interactive shell with manage.py shell and verify that the new field was added properly by importing the model and selecting from the table (e.g., MyModel.objects.all()[:5]). If you updated the database correctly, the statement should work without errors.
+
+Then on the production server perform these steps:
+
+    Start your database’s interactive shell.
+    Execute the ALTER TABLE statement you used in step 3 of the development environment steps.
+    Add the field to your model. If you’re using source-code revision control and you checked in your change in development environment step 1, now is the time to update the code (e.g., svn update, with Subversion) on the production server.
+    Restart the Web server for the code changes to take effect.
+
+
+
+In short, a model’s manager is an object through which Django models perform database queries. Each Django model has at least one manager, and you can create custom managers in order to customize database access.
+
+There are two reasons you might want to create a custom manager: to add extra manager methods, and/or to modify the initial QuerySet the manager returns.
+
+Adding extra manager methods is the preferred way to add “table-level” functionality to your models. (For “row-level” functionality – i.e., functions that act on a single instance of a model object – use model methods, which are explained later in this chapter.)
+
+so, the model class is the table, the model class instance is the row, the entry in the table
+
+each model has its own default manager. if you want to have it have your own custom manager, you can define a class called models.Manager, and define methods in it
+then, in the model class, use "object" attribute to assign it an object of the custom manager class.
+
+EXAMPLE of custom manager:
+from django.db import connection, models
+
+class PersonManager(models.Manager):
+    def first_names(self, last_name):
+        cursor = connection.cursor()
+        cursor.execute("""
+            SELECT DISTINCT first_name
+            FROM people_person
+            WHERE last_name = %s""", [last_name])
+        return [row[0] for row in cursor.fetchone()]
+
+class Person(models.Model):
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    objects = PersonManager()
+
+>>> Person.objects.first_names('Lennon')
+['John', 'Cynthia']
+
+Django ships with generic views to do the following:
+
+    Perform common “simple” tasks: redirect to a different page, or render a given template.
+    Display “list” and “detail” pages for a single object. The event_list and entry_list views from Chapter 8 are examples of list views. A single event page is an example of what we call a “detail” view.
+    Present date-based objects in year/month/day archive pages, associated detail, and “latest” pages. The Django Weblog’s (http://www.djangoproject.com/weblog/) year, month, and day archives are built with these, as would be a typical newspaper’s archives.
+
+If DEBUG is True, Django displays the useful 404 error page. But if DEBUG is False, then it does something different: it renders a template called 404.html
+
+
+
+As an alternative to mod_python, you might consider using mod_wsgi
+
+When SessionMiddleware is activated, each HttpRequest object – the first argument to any Django view function – will have a session attribute, which is a dictionary-like object. You can read it and write to it in the same way you’d use a normal dictionary.
+
+GET method on python dicts
+>>> a = {'a':'avalue','b':'bvalue'}
+>>> a
+{'a': 'avalue', 'b': 'bvalue'}
+>>> a.get('a')
+'avalue'
+>>> a.get('a', 'cool')
+'avalue'
+>>> a.get('c', 'cool')
+'cool'
+>>> 
+
+DJANGO MIDDLEWARE
+
+On occasion, you’ll need to run a piece of code on each and every request that Django handles. This code might need to modify the request before the view handles it, it might need to log information about the request for debugging purposes, and so forth.
+
+You can do this with Django’s middleware framework, which is a set of hooks into Django’s request/response processing. It’s a light, low-level “plug-in” system capable of globally altering both Django’s input and output.eg:  the middleware makes request.session and request.user available to you in views
+i.e. the Authentication Support Middleware
+Middleware class: django.contrib.auth.middleware.AuthenticationMiddleware.
+
+This middleware enables authentication support. It adds the request.user attribute, representing the currently logged-in user, to every incoming HttpRequest object.
+The sitewide cache discussed in Chapter 15 is actually just a piece of middleware that bypasses the call to your view function if the response for that view has already been cached.
+The flatpages, redirects, and csrf applications from Chapter 16 all do their magic through middleware components.
+
+On the request and view phases, Django applies middleware in the order given in MIDDLEWARE_CLASSES, and on the response and exception phases, Django applies middleware in reverse order. That is, Django treats MIDDLEWARE_CLASSES as a sort of “wrapper” around the view function: on the request it walks down the list to the view, and on the response it walks back up.
+
+So, each middleware is just a class that takes in the request/response, does some logic and returns it's modified version - maybe say, appends to its headers etc.
+
+There are a few standard methods available to the Middleware classes.
+
+__init__(self)
+Use __init__() to perform systemwide setup for a given middleware class.
+
+Request Preprocessor: process_request(self, request)
+
+This method gets called as soon as the request has been received – before Django has parsed the URL to determine which view to execute. It gets passed the HttpRequest object, which you may modify at will.
+
+process_request() should return either None or an HttpResponse object.
+
+process_view(self, request, view, args, kwargs)
+This method gets called after the request preprocessor is called and Django has determined which view to execute, but before that view has actually been executed.
+
+
+
+process_response(self, request, response)
+This method gets called after the view function is called and the response is generated. Here, the processor can modify the content of a response. One obvious use case is content compression, such as gzipping of the request’s HTML.
+
+process_exception(self, request, exception)
+This method gets called only if something goes wrong and a view raises an uncaught exception. You can use this hook to send error notifications, dump postmortem information to a log, or even try to recover from the error automatically.
+
+
+HOW TO INCLUDE JS AND CSS
+        <link rel="stylesheet" href="{% static "css/base.css" %}" /> <!-- CSS -->
+        <script src="{% static "js/jquery.js" %}"></script> <!-- JavaScript -->
+
+The settings module from django.conf allows us access to the variables defined within our project’s settings.py file. 
+
+from django.conf import settings
+if settings.DEBUG:
+    print "debug is true"
+
+THE BASE_DIR variable points to the root of the project - the mysite root, the place where manage.py lives. recall, when we stored the urls for the static files,
+
+we did static path as 
+STATIC_PATH = os.path.join(BASE_DIR, 'static')
+
+this means that to serve static files, we would need the files to be present in "static" in the project root, but we were able to serve it from the polls/static/polls/__files here__
+
+this could be due to the staticfiles app - it could search the apps for a static file and could allow us to serve them from their respective app dirs - just as if they were present in the project root's static
+
+the static files have to be in the static folder in the project root. you could use ./manage collectstatic to traverse each app's static folder and copy them to the project roots static folder
+
+One of the Zens of python is that "Namespaces are a great idea, let's do more of those"
+Now, this design principle is implemented in the language.
+Consider:
+
+class Test:
+    varOne = 1
+    def methodOne(self, varOne=2):
+        print varOne //will print 2
+        print self.varOne //will print 1
+
+    here, the method had its own namespace, scope and is different from the classes one
+
+this was old versions of django
+$ python manage.py syncdb
+
+new verisons:
+
+after making models:
+$ python manage.py makemigrations rango --> create the migrations, files visible in the app/migrations dir
+$ python manage.py migrate --> apply the migrations
+
+
+Whenever you add to existing models, you will have to repeat this process running python manage.py makemigrations <app_name>, and then python manage.py migrate
+
+When I run the server, I get this:
+
+/home/radar/projects/loccart/mysite/rango/urls.py:15: RemovedInDjango110Warning: Support for string view arguments to url() is deprecated and will be removed in Django 1.10 (got django.views.static.serve). Pass the callable instead.
+  'document_root': settings.MEDIA_ROOT,
+
+
+This is because, there are two ways (at least), of calling a particular view:
+
+        url(r'^media/$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT,}),
+
+        or, 
+
+        from import django.views.static import serve
+        url(r'^media/$', serve, {'document_root': settings.MEDIA_ROOT,}),
+
+        I was using the former, after shifting to the 2nd one, the error went away. 
+
+""
+""
+When importing Django models, make sure you have imported your project’s settings by importing django and setting the environment variable DJANGO_SETTINGS_MODULE to be the project setting file. Then you can call django.setup() to import the django settings. If you don’t, an exception will be raised. This is why we import Category and Page after the settings have been loaded.
+""
+""
+
+The DJANGO_SETTINGS_MODULE env var is used by django to look for the path to the settings file
+so, in the populating file, we set it to the path to the settings.py file
+
+
+For the hundredth time, after you have performed this update to the Model, you will need to perform the migration.
+
+$ python manage.py makemigrations rango
+$ python manage.py migrate
+
+In the admin, when you use it to create new categories, you can ask one of the field os the Category model to be pre-filled by:
+
+
+class CategoryAdmin(admin.ModelAdmin):
+    prepopulated_fields = {'slug':('name',)}
+
+admin.site.register(Category, CategoryAdmin)
+
+Now, if you url object in urlpatterns is this:
+
+url(r'^category/(?P<category_name_slug>[\w\-]+)/$', views.category, name='category')
+
+and the url is : category/python-books/ 
+what would be passed to the category view is what is captured in the parantheses, which here is:
+
+"python-books"
+
+It’s not the position of the additional parameters that matters, it’s the name that must match anything defined within the URL pattern.
+
+ a ModelForm is a helper class that allows you to create a Django Form from a pre-existing model.
+
+ widgets are the JS utilities that help us enter the data easily. eg: date and time choser
+
+ now, the form we create will be a subclass of forms.ModelForm
+ this will help us in creating the html, validation, providing the constraints and default values etc.
+
+ we can associate each form to a model. using the Meta class in the form's class defination.
+eg:
+     class Meta:
+        # Provide an association between the ModelForm and a model
+        model = Category
+
+now, for some fields, you might not want the user to enter the data.
+do this there:
+likes = forms.IntegerField(widget=forms.HiddenInput(), initial=0)
+
+we need to include the field in the form if we are to have the form infrastructure give it a default value. if we did not define the default value in the model, and we dont include the field here as well, we may get NULL values for that field for that entry
+
+Perhaps the most important aspect of a class inheriting from ModelForm is the need to define which model we’re wanting to provide a form for.
+
+We also use the Meta class to specify which fields that we wish to include in our form through the fields tuple. Use a tuple of field names to specify the fields you wish to include.
+fields = ('name',)
+
+FORM HANDLING VIEW
+
+def add_category(request):
+    if request.method=='POST': # this means the form was filled and submitted - since Django handles
+                               # form machinery via POST requests.
+        form = CategoryForm(request.POST) #create a new form instance, giving the data submitted by the user
+
+        if form.is_valid(): # if the data is valid, save it
+            form.save(commit=True)
+            return index(request)
+        else:
+            print form.errors #if there are errors, print them on console
+    else:
+        form = CategoryForm() #the form wasnt submitted - the request wasnt POST, the page is rendered
+                              # for the first time, so, we'll show the form
+        #HENCE, when the form is rendered for the first time, will we have issued 2 requests?
+        # No, the first time we request this view, it is by the GET request, so the form is displayed
+        # the second time, we fill the data, django issues a post request to the action attribute
+        # of the form given in add_category template. hence, we come to this view again and we check if the
+        # data is valid, if it is, we save it and redirect the user to the index page. 
+    return render(request, 'rango/add_category.html', {'form':form})
+
+    The need for hidden as well as visible form fields is necessitated by the fact that HTTP is a stateless protocol. You can’t persist state between different HTTP requests which can make certain parts of web applications difficult to implement.
+
+Sophisticated form data validation:
+
+Within the clean() method, a simple pattern is observed which you can replicate in your own Django form handling code.
+
+    Form data is obtained from the ModelForm dictionary attribute cleaned_data.
+    Form fields that you wish to check can then be taken from the cleaned_data dictionary. Use the .get() method provided by the dictionary object to obtain the form’s values. If a user does not enter a value into a form field, its entry will not exist in the cleaned_data dictionary. In this instance, .get() would return None rather than raise a KeyError exception. This helps your code look that little bit cleaner!
+    For each form field that you wish to process, check that a value was retrieved. If something was entered, check what the value was. If it isn’t what you expect, you can then add some logic to fix this issue before reassigning the value in the cleaned_data dictionary for the given field.
+    You must always end the clean() method by returning the reference to the cleaned_data dictionary. If you don’t, you’ll get some really frustrating errors!
+
+
+example:
+
+class PageForm(forms.ModelForm):
+
+    ...
+
+    def clean(self):
+        cleaned_data = self.cleaned_data
+        url = cleaned_data.get('url')
+
+        # If url is not empty and doesn't start with 'http://', prepend 'http://'.
+        if url and not url.startswith('http://'):
+            url = 'http://' + url
+            cleaned_data['url'] = url
+
+        return cleaned_data
+
+You template points to "/rango/category/{{ category.name }}/add_page"
+
+This means, clicking on it will make django look for the match for the url in urls.py, this will load the corresponding view which will in turn load the required templated and hence the page.
+
+While django.contrib.auth provides Django with access to the authentication system, django.contrib.contenttypes is used by the authentication application to track models installed in your database.
+
+Django has a default User model, it has:
+
+The User model comes complete with five primary attributes. They are:
+
+    the username for the user account;
+    the account’s password;
+    the user’s email address;
+    the user’s first name; and
+    the user’s surname.
+Stored in : django.contrib.auth.models.User
+
+To include more attributes, either:
+1. extend the User by creating a new user model from AbstractUser
+2. create a new model with one-one association with the User model.
+
+Note that the ImageField field has an upload_to attribute. The value of this attribute is conjoined with the project’s MEDIA_ROOT setting to provide a path with which uploaded profile images will be stored. For example, a MEDIA_ROOT of <workspace>/tango_with_django_project/media/ and upload_to attribute of profile_images will result in all profile images being stored in the directory <workspace>/tango_with_django_project/media/profile_images/.
+
+
+To create auth system:
+
+you can use the django.contrib.auth.User model which is predefined. to add to it, create another model UserProfile with one to one mapping with User.
+
+Now, design two forms so that folks can register
+one for User [UserForm] - with password
+and one for UserProfile [UserProfileForm]
+
+now, create a view to process it. do this:
+
+""
+WHENEVER, you have verified that the data entered by the user is correct, you can save the form instance using formInstance.save() --> this will return you the instance of the model with which the form is associated. eg, by saving the PageForm, you will get the page model instance. you can save the page instance to the database using page.save()
+""
+
+if the page is renderd for the first time, i.e. if request.method!=POST, 
+render the posts
+
+if the user has entered the data, 
+create form instances with the data, check if the data is valid
+if it is, when you do userform.save() --> it will give you a user model instance, save it using user.save()
+
+similarly, save the UserProfileForm - and before saving the returned UserProfile instance, assign the user model field to point to the just recently saved user instance.
+also, assign the picture model field to request.FILES['picture'] - then save it.
+
+USER AUTHENTICATION:
+
+        # This information is obtained from the login form.
+                # We use request.POST.get('<variable>') as opposed to request.POST['<variable>'],
+                # because the request.POST.get('<variable>') returns None, if the value does not exist,
+                # while the request.POST['<variable>'] will raise key error exception
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+
+        # Use Django's machinery to attempt to see if the username/password
+        # combination is valid - a User object is returned if it is.
+        user = authenticate(username=username, password=password)
+
+Remember, each template is give some context variables by the template context processers - for eg, each template can use "user" out of the box - it maybe given by the auth contex processer.
+
+
+To restrict access of certain pages to only registered users, two ways:
+1. check manually for each view using request.user.is_authenticated()
+
+def some_view(request):
+    if not request.user.is_authenticated():
+        return HttpResponse("You are logged in.")
+    else:
+        return HttpResponse("You are not logged in.")
+
+2. use the login_required decorator
+
+@login_required
+def restricted(request):
+    return HttpResponse("Since you're logged in, you can see this text!")
+
+
+There is a difference between MEDIA and STATIC files
+media is that images etc that the users upload
+static files are the images/js/css etc that the website needs to operate
+
+we need to include a Template Tag to indicate what can be overridden in the base template - this is done through the use of blocks.
+
+<body>
+        {% block body_block %}{% endblock %}
+</body>
+
+You can also specify ‘default content’ for your blocks, for example:
+{% block body_block %}This is body_block's default content.{% endblock %}
+
+When using template inheritance, have one base.html template have all the html and body and title tag defining work. also, include some block elements - for eg: block body_block, block title_block. 
+for all the templates inheriting from it, simply do this:
+{% extends "base.html" %}
+{% load staticfiles %}
+{% block body_block %}
+    //fill in the blanks
+{% endblock %}
+
+{% block title %}{{ category_name }}{% endblock %}
+
+thats it. no, <html> ... </html> etc required
+
+
+**OQ answered. Recall earlier we asked why we name the urls. a typical url object in the urlaptterns goes like
+
+urlpatterns = [
+    url(r'^$', view.index, name='index'),
+]
+
+Here, we named the url pattern "index". this we did because we can use that name, and we should to refer to that url in the templates and elsewhere when we want to redirect the user to that page
+
+eg, uptil now:
+<a href="/rango/about/"> About  </a>
+
+but, recommended:
+<a href="{% url 'about' %}">About</a>
+OR
+<a href="{% url 'rango.views.about' %}">About</a>
+
+THe url template tag does all the work
+
+For the urls where you need to give parameters, 
+like:
+<a href="/rango/category/{{ cat.slug }}">{{ cat.name }} </a>
+
+do:
+<a href="{% url 'category' cat.slug %}">{{ cat.name }} </a>
+
+Django template modules must be imported individually for each template that requires them - you can’t make use of modules included in templates you extend from!
+
+For each view, the request has information about the user, weather he is logged in, authenticated etc - recall, it is give this information by the context_processors, middleware etc
+Now, in case you did this:
+
+def about(request):
+    return HttpResponse('Rango says: Here is the about page. <a href="/rango/">Index</a>')
+
+this page will be visible to everyone, because we are not using *request.user.is_authenticated(). but this problem is over in:
+
+def about(request):
+    return render(request, 'rango/about.html', {})
+ONLY IFF in the template, we check by: 
+{% if user.is_authenticated %}
+//code
+{% endif %}
+
+
+Sessions and Cookies
+
+HTTP is a stateless protocol. so, to persist state between the independent requests, we can store the session id of the user. the next time the same user logs in, the browser sends back the cookie with the request and we can use the hash map to check the cookie id and get the details of the user and identify him!
+
+In django, the middleware:
+django.contrib.sessions.middleware.SessionMiddleware 
+generates the sessionid cookies.
+
+The SessionMiddleware is designed to work flexibly with different ways to store session information. There are many approaches that can be taken - you could store everything in a file, in a database, or even in a cache. The most straightforward approach is to use the django.contrib.sessions application to store session information in a Django model/database (specifically, the model django.contrib.sessions.models.Session). 
+If you are looking for lightning fast performance, you may want to consider a cached approach for storing session information
+
+When you install a new package to handle login for you,
+do this:
+url(r'^accounts/', include('registration.backends.simple.urls')),
+in the global project's urls.py
+this means that we are giving all accounts related urls to django-registration-reflux app, which is installed as 'registration' [it is included as 'registration' in the INSTALLED_APPS setting]
+
+You can decide where the user goes after this page is done, by:
+logout to point to <a href="{% url 'auth_logout' %}?next=/rango/">
+so, here, we are sending the user to the index page after logout
+
+when using the django-registration-reflux note:
+we have to create the templates just, and we must also know the context variables passed to the template by the app. for eg, for the login form, the context variable passed is, form. and you can generate the form by providing this template:
+
+{% extends "rango/base.html" %}
+
+{% block body_block %}
+<h1>Register Here</h1>
+        <form method="post" action=".">
+                {% csrf_token %}
+                {{ form.as_p }}
+
+                <input type="submit" value="Submit" />
+        </form>
+{% endblock %}
+
+Also, the app has default pages to redirect the user to when the user successfully logs in for eg, we can change it too:
+
+from registration.backends.simple.views import RegistrationView
+
+# Create a new class that redirects the user to the index page, if successful at logging
+class MyRegistrationView(RegistrationView):
+    def get_success_url(self,request, user):
+        return '/rango/'
+
+CUSTOM TEMPLATE TAGS
+write custom template tags - create a dir rango/templatetags
+and create two files in it, __init__.py and rango_extras.py
+
+from django import template
+from rango.models import Category
+
+register = template.Library()
+
+@register.inclusion_tag('rango/cats.html')
+def get_category_list():
+    return {'cats': Category.objects.all()}
+
+Here, we associated this new template get_category_list with some python code, and also with some html code present in rango/cats.html
+put this in rango/cats.html
+
+{% if cats %}
+    <ul class="nav nav-sidebar">
+    {% for c in cats %}
+        <li><a href="{% url 'category'  c.slug %}">{{ c.name }}</a></li>
+    {% endfor %}
+
+{% else %}
+    <li> <strong >There are no category present.</strong></li>
+
+    </ul>
+{% endif %}
+
+To use it, do this:
+
+<div class="col-sm-3 col-md-2 sidebar">
+
+    {% block side_block %}
+    {% get_category_list %}
+    {% endblock %}
+
+</div>
+
+TESTS
+Recall that when you run tests, a new database is created, which by default is not populated.
+So, you can test your view like this:
+
+from django.core.urlresolvers import reverse
+
+
+class IndexViewTests(TestCase):
+
+    def test_index_view_with_no_categories(self):
+        """
+        If no questions exist, an appropriate message should be displayed.
+        """
+        response = self.client.get(reverse('index'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "There are no categories present.")
+        self.assertQuerysetEqual(response.context['categories'], [])
+
+
+HTML and CSS primer
+Each element within a HTML document can be styled. each element has properties that can be assigned values. foreg, a div element has font-size property that can be assigned a value of 24pt
+
+We could also set the text-align property to a value of right to make text appear within the HTML element on the right-hand side.
+
+CSS works by following a select and apply pattern - for a specified element, a set of styling properties are applied. - just like JQuery
+
+To select objects on the html, we can use:
+1. element selectors --> eg, h1, h2, body etc
+the styling in this case applies to all the instances of the element
+
+2. id selectors
+The id selector is used to map to a unique element on your webpage. Each element on your webpage can be assigned a unique id via the id attribute, and it is this identifier that CSS uses to latch styles onto your element.
+This type of selector begins with a hash symbol (#), followed directly by the identifier of the element you wish to match to.
+
+<h1 id="blue_header"> Hello World! </h1>
+
+#blue_header {
+    color: #003366
+}
+
+3. class selectors
+use class to select the elements. the difference is that you can select multiple elements using this selector.
+If you have a group of HTML elements that you wish to apply the same style to, use a class-based approach.
+
+The selector for using this method is to precede the name of your class with a period (.) before opening up the style with curly braces ({ }
+
+The following CSS for example changes all the text within an element using class red to...red!
+.red {
+    color: #FF0000;
+}
+
+id selector:
+#some-unique-element {
+    background-image: url('../images/filename.png');
+    background-color: #000000;
+}
+
+A <span> is considered to be a so-called container element. Along with a <div> tag, these elements are themselves meaningless and are provided only for you to contain and separate your page’s content in a logical manner. 
+
+Containers come in two flavours: block-level elements and inline elements.
+
+element selector:
+a {
+    color: red;
+    text-decoration: none;
+}
+//this will impact all the hyperlinks on the page
+
+""
+An app at its very basic, stripped form is a set of models and a set of views. thats it.
+""
+
+One problem I faced and scratched my head over was this:
+I had this as my global project url:
+
+urlpatterns = [
+    url(r'^admin/', admin.site.urls),
+    url(r'^$', index, name='index'),
+    url(r'^polls/', include('polls.urls')),
+    url(r'^accounts/profile', profile, name='profile'),
+    url(r'^accounts/', include('allauth.urls')),
+]
+
+And in the polls urls.py, i had this:
+
+app_name = 'polls'
+urlpatterns = [
+    url(r'^$', views.home, name='home'),
+    url(r'^accounts/', include('allauth.urls')),
+    url(r'^vote/', views.vote, name='vote'),
+    url(r'^create/', views.create, name='create'),
+]
+Now, in one of the templates in polls, I had this:
+
+<a href="{% url 'vote' %}"> Vote </a>
+
+This did not work, I got NoReverseMatch error. This was because, what was searched was only the global urls.py and not the polls one. If I put the url object with 'vote' name in the global one, it worked. This was because I was using namespaces!
+
+Look at my polls urls.py, 
+i used app_name to define a namespace.
+so, to refer to the vote in this namespace, in my templates, I will have to do:
+
+<a href="{% url 'polls:vote' %}"> Vote </a>
+
+No namespace means only the global namespace searched. 
+
+OneToOne vs ForeignKey field
+When I created the question model, the created_by field orginally had a OneToOne relationship with User. This means that there can only be one User for all Question instances[each user can create only one question?], created_by fields. 
+We need a foreign key relationship here. That means that each Question instances' created_by field needs a User.
+Same with the Votes model
+
+
+REDIS tutorial
+
+nosql databases are the databases where the schema is not limited to just tabular databases. 
+some databases allow you to define your own schema and dont have one defined for you
+
+redis is a key value store, each key has a value, we can have a lot of types of values. schemas are not enforced, your applicaiton defines it
+
+all key value stores are at the very basic level just that; a key value store, just like memory, just like  a hash map.
+redis is best used as a cache, and also by using its pub-sub feature, a messaging platform
+
+use nosql if you want to have a flexible data model. this can be when you are a startup and you dont know what your models will end up looking like. you want them to be flexible and change radically if need be.
+
+on the other hand, use sql if you have very relational data. it means say a table with persons name and another with account names. here, using redis may have you query the key-value store several times before getting what you want.
+
+set "key1" "value1"
+OK
+get "key1"
+"value1"
+
+setnx - set it if it doesnt exist. 
+set num1 1
+OK
+incr num1
+//increased
+
+decr num1
+//decreased
+
+append key1 "new value"
+we append to the existing string at this key
+
+the datatypes that are supported by redis: strings, integers
+
+you can use redis as a queing system because it can implement queues, stacks, 
+
+use lrange to find out whats in the list
+
+you can scan for keys as well - takes O(n) though
+keys <glob pattern> eg: keys list*
+
+you can also keep a list that is a list of all they keys - a key that holds keys - helps you avoid scanning for keys
+
+expire an element : expire element_name time_to_expire
+ttl element_name 
+50 secs (say)
+
+persist element_name
+OK //we cancelled the expiration
+
+to represent tabular data in redis, use hashes
+
+hset account:0 type "Investment"
+//sets it
+
+account:0 is the hash, its type attribute is "Investment"
+similarly, you can put in multiple attributes at once: 
+
+hmset person:0 first_name "rami" last_name "sayar"
+so, hget person:0 first_name
+"rami"
+
+to get all key value pairs, use:
+hgetall account:0
+
+find the number of key value pairs, hlen
+the number of keys hkeys
+the number of values hvals
+
+a lot of caches focus on keys and strings
+
+we also have sets
+sadd add set1, srem, sismember, 
+smembers, sdiff A B, sdiffstore A B C, 
+this store the diff of A and B in C
+
+spop
+
+we also have sorted sets
+zadd key score member [score member ...]
+zadd A 100 "value1"
+zrem, zrange
+
+
+bitmaps are not data types as much as they are bit operations
+
+hyperloglogs designed to keep a counter of unique elements
+have some error. 
+
+to keep a track of visitors to your website:
+1. keep a list of IP addresses, for each new IP, search if the IP in the list, if not, add it. 
+O(n)
+
+2. keep a set of IPs. add the new IP to the set, it will be ignored silently if it is there already
+
+3. Use a hyperloglog (bloom filter??) that doesnt take as much space as the set, but has some error. 
+
+___
+
+
+So, I have been reading about how to optimize the webapps. I can go with brute force approach, for each time that a person views the play page, query the database for the list of facebook uids and randomly pick two and display them. (this is similar in performace to asking mysql to randomly give us two rows, I read)
+
+But, what can be done is, we can store the queryset (the set of rows from the database that match a certain criteria), in a cache and read it directly from there. Then the question is, how to know when to update the cache, for eg, when a new user joins etc. So, for that we can either have the cache expire in some time or better, use signals sent by django-allauth, listen for "USER_SIGNEDUP" and then update the cache and also send out a tweet welcoming the user from the handle @loccart_
+
+But this is again problematic, doing this in between the request/response cycle. Hence, I am thinking about using Celery to do this in the background so as to not hinder the user experience.
+
+I can also use the background tasks to update the scoreboard in realtime, update the vote count in realtime, all of that. 
+
+Celery requires a solution to send and receive messages; usually this comes in the form of a separate service called a message broker.
+
+Celery, like a consumer appliance, doesn’t need much to be operated. It has an input and an output, where you must connect the input to a broker and maybe the output to a result backend if so wanted. But if you look closely at the back there’s a lid revealing loads of sliders, dials and buttons: this is the configuration.
+
+Okay, so I went in for filessystem based caching in djago
+
+# Cache settings
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': '/home/radar/projects/loccart/facevote/cache',
+    }
+}
+
+REMEMBER THE DEFAULT WAS: Local-memory caching
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+    }
+}
+
+You can also use the database, but lets chuck that
+
+____
+
+How to connect signals:
+
+we created a folder signals and in that made a new file, handlers.py
+now, in the apps.py file, we imported the signals module (we have to create a module out of it first by creating __init__.py empty file)
+
+Django provides a lot of signals, eg: django.db.models.signals which has pre_save, pre_delete, post_save, post_delete
+
+Now, the data we get from the social accounts, eg, facebook is accessible in the request sent by the signal etc. to access it:
+
+
+from allauth.account.signals import user_signed_up, user_logged_in
+from django.dispatch import receiver
+
+@receiver(user_logged_in)
+def test_handler(sender, **kwargs):
+    user = kwargs.get("user") //this is the django.contrib.auth USER MODEL
+    request = kwargs.get("request") //this is the request data
+    print user.first_name //the default django USER has these fields
+    print user.last_name
+
+    //to access the user data, as received from facebook etc, use this:
+
+So, here, the User object has a field socialaccount that has a foreign key relation to the socialaccount's user model - the socialaccount's user model has fields that are provided by facebook, google etc.
+now, to add another field say, phone number to user..., create a new model, phonenumbers and make it have a one to one relation/foreign key relation with the user
+
+**to view all the fields of the model:
+model._meta.get_all_field_names()
+doing this for the user gives:
+
+    >>> User._meta.get_all_field_names()
+    ['username', 'first_name', 'last_name', 'groups', 'is_active', 'email', 'is_superuser', 'is_staff', 'last_login', 'logentry', 'user_permissions', 'emailaddress', 'password', u'id', 'date_joined', 'socialaccount']
+
+    print request.user.socialaccount_set.filter(provider='facebook')[0].extra_data
+
+    {u'first_name': u'Darshan', u'last_name': u'Chaudhary', u'verified': True, u'name': u'Darshan Chaudhary', u'locale': u'en_GB', u'gender': u'male', u'updated_time': u'2015-06-06T09:24:34+0000', u'link': u'https://www.facebook.com/app_scoped_user_id/10154447735692580/', u'id': u'10154447735692580', u'timezone': 5.5, u'email': u'deathbullet@gmail.com'}
+
+    Now, in the auth_user table, we have only limited fields, like first_name, last_name etc. to have this info too, we can either: 
+    1. add this info to the USER model django has
+    THIS IS not always possible because the django User has limited and strange fields
+
+    username, first_name, last_name, email, password, groups, user_permissions, is_staff, is_active and some methods that allow to encapuslate(right word?)/check these models eg: is_staff()
+
+    THE RECOMMENDED METHOD IS:
+    2. create a UserProfile which has a OneToOne mapping with User, like we did in rango
+
+    Now, when the UserProfile has a one to one mapping with User, dir(User instance) has an attribute known as userprofile which has the fields defined in our UserProfile
+
+    When we have Category, and we have Page with ForeignKey realationship, we have the Category instance have page_set!
+
+    HENCE, when we see this:
+    user.socialaccount_set.filter(provider='google')[0].extra_data
+
+    we should see that socialaccount has a foreignkey relation with, user. which means that many socialaccounts can be associated with each user (just like many pages can be associated with each category). it is something like this:
+
+    class Socialaccounts(model.Model):
+        user_id = models.ForeignKeyField(User)
+
+        NOW, the USER's primary key - the """"id"""" will be same as the user_id of the account in socialaccounts.
+        THIS IS INDEED THE CASE
+
+
+    Now, hence, we dont need to create a new UserProfile table/model with a OneToOne relationship with the uesr because we have this socialaccount setup already. It has these fields:
+
+    id, provider, uid, last_login, date_joined, extra_data, user_id
+
+    extra_data has all the data in json that fb sends. 
+    corresponding values for my login:
+
+    |  8 | facebook | 10154447735692580 | 2016-04-10 17:40:52 | 2016-04-10 14:34:07 | {"first_name": "Darshan", "last_name": "Chaudhary", "verified": true, "name": "Darshan Chaudhary", "locale": "en_GB", "gender": "male", "email": "deathbullet@gmail.com", "link": "https://www.facebook.com/app_scoped_user_id/10154447735692580/", "timezone": 5.5, "updated_time": "2015-06-06T09:24:34+0000", "id": "10154447735692580"} |       9 |
+
+
+So, to access the uid foreg, we can do:
+    fb_uid = SocialAccount.objects.filter(user_id=request.user.id, provider='facebook')
+
+http://loccart.com/?oauth_token=P-BqHQAAAAAAukiYAAABVAG2R6s&oauth_verifier=QxMubphbxCAFcffbBwBfNhQDAAcCKnun
+
+Now, to implement the leaderboard, we can use redis. or simply, the django cache framework
+
+in redis, we would have used the sorted set data structure
+
+Recall that if we have a model like this:
+
+    class Vote(models.Model):
+        voted_by = models.ForeignKey(User)
+
+Django will create a reverse relation from the user back to the Vote class and will call it vote_set. However, we have this model:
+
+
+    class Vote(models.Model):
+        voted_by = models.ForeignKey(User)
+        won = models.ForeignKey(User)
+        lost = models.ForeignKey(User)
+        time = models.DateTimeField()
+
+        def __str__(self):
+            return self.voted_by.user.first_name + " " + self.voted_by.user.last_name + " choose " + \
+            self.won.user.first_name + " " + self.won.user.last_name + " over " + \
+            self.lost.user.first_name + " " + self.lost.user.last_name + " on " + self.time
+
+Here, we have three foreignkey relations with User. Thus, we will need three reverse relations in User model. We need to specify what they will be called because Django wont choose a default for us. **OQ: Why not? I think django can do with automatic names
+
+If you use related_name='+'. This tells Django to create a one way relation and ignore the reverse relation
+
+Solve it like this:
+
+won = models.ForeignKey(User, related_name = 'vote_won')
+//same for lost, time
+
+TESTING lessons
+I wanted to start testing facevote. so, because I am using mysql, I had to add this to my database setting:
+
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'facevote',
+        'USER': 'facevote_user',
+        'PASSWORD': 'leonardo1!',
+        'HOST': 'localhost',
+        'PORT': '',
+        'TEST': {
+            'NAME': 'test_facevote',
+        },
+    }
+
+
+[[the TEST key is new]]
+
+Also, I had to grant my user full access to the new database
+so: 
+
+grant all privileges to test_facevote.* to 'facevote_user'@'localhost' identified by 'leonardo1!'
+
+Also, note, test_facevote.* means, all the tables in test_facevote
+
+
+We also have the teardown and setup features
+
+class TestBasic2(unittest.TestCase):
+    "Show setup and teardown"
+
+    def setUp(self):
+        self.a = 1
+
+    def tearDown(self):
+        del self.a
+
+    def test_basic1(self):
+        "Basic with setup"
+
+        self.assertNotEqual(self.a, 2)
+
+Cache implementation
+
+    For each user, we will have: 
+    by:<user_id>, on:<user_id>, won:<user_id>, gender:<user_id>
+    url:<user_id>, uid:<user_id>, name:<user_id>
+    
+    by == number of votes sent out by this user to others
+    
+    on == number of votes sent out on this user by others
+    
+    won == the number of times this user has won
+    sanity check --> won <= on
+
+    gender == stores the gender of the user
+    url == the "Real" url of the profile for that user
+    uid == the facebook uid for the user
+    name == the facebook, fullname of the user
+
+
+    Apart from this, we will have a common cache:
+    total
+
+    total == has the total number of votes by everyone
+
+
+    When using it, we will use cache.get_or_set('my_new_key', 'my new value', [time_out])
+
+    Here, the my_new value will be the return value of a function that does the necessary computation.
+    Also, we can make out cache value expire after say, 5mins, (300 secs) so that everyone in a while, we hit the database and calculate the correct values. 
+
+    Now, how to calculate the leaders?
+    we dont have the sorted set data structure here.
+    so, we will do this:
+    we will iterate thru the won:<user_id>s and store the values obtained in a dict:
+    {124:9, 12:10,  ...wins:user_id} //this will be wrong because if two users have the same #wins, the 
+
+    value will be overritten. Hence, we will store it as:
+    {9:124, 10:12, ....user_id:wins}
+
+    Now, we will sort the dict acc to the keys and populate the leaderboard.
+
+    Also, we will maintain the following caches:
+    guys, gals
+    each will have a list as the value. 
+
+    HERE, I face a serious design choice. should I keep the guys and gals cache as common for ALL the users of the site or should I keep them for each user. guys:<user_id> bolke. 
+
+
+    I was thinking about maintaining two additional tables,
+    Guys:
+        user_id
+        name
+    and the same for girls, but this is not required because, we have the socialaccounts linked to each user in auth_user, so we have that information already.
+
+    we need to write functions that recalculate for our cache [when it expires after 5 mins]:
+        1. the total number of votes
+            get_total_votes()
+
+        2. the total number of wins given a user_id
+        3. the total votes by a given user_id
+        4. the total number votes on a given user_id by others
+        
+        5. the list of user_id for guys and girls
+            get_guys, get_gals
+
+        6. the leaderboard calculator
+        7. the function that takes in the fb uid and returns the path of the file on fb's static server - the "real" url.
+
+        8. return the name, fb-uid given the user_id. 
+            get_name, get_uid
+
+        9. return the gender of the user given the user_id
+            get_gender(pk)
+
+
+Logging
+
+I am setting up logging to log the failure of sending tweets. 
+So, there are 5 log levels in python:
+
+debug, info, warning, error, critical
+
+Now, there are Loggers. They handle a certain type of log records. So, a Warning Logger will handle Warning log records etc. 
+Hence, both Loggers and Log Records have log levels
+
+A log record can also contain useful metadata that describes the event that is being logged. This can include details such as a stack trace or an error code.
+
+When a message is given to the logger, the log level of the message is compared to the log level of the logger. If the log level of the message meets or exceeds the log level of the logger itself, the message will undergo further processing. If it doesn’t, the message will be ignored.
+
+Once a logger has determined that a message needs to be processed, it is passed to a Handler.
+
+HANDLERS
+
+The hander is the engine that decides what to do with the message that the logger gives it. It describes a particular logging behavior, such as writing a message to the screen, to a file, or to a network socket.
+
+Like loggers, handlers also have a log level. If the log level of a log record doesn’t meet or exceed the level of the handler, the handler will ignore the message.
+
+A logger can have multiple handlers, and each handler can have a different log level. In this way, it is possible to provide different forms of notification depending on the importance of a message. For example, you could install one handler that forwards ERROR and CRITICAL messages to a paging service, while a second handler logs all messages (including ERROR and CRITICAL messages) to a file for later analysis.
+
+So, we can have a logger with log level as warnings. Now, this logger will accept all the log records that have log level warning or more [error, critical]
+
+Say our logger also has 3 handlers, one for each warning, error or critical.
+the warning handler just writes the event to the file, the error handler sends an email to the root, the critical handler calls the root for eg.
+
+But things can get messy. So, we have filters. Each logger can have one or more installed that filters the log records before sending them to the handler. 
+""
+A filter is used to provide additional control over which log records are passed from logger to handler.
+""
+
+So, say you can have a filter that only allows ERROR log records from a particular source.
+Filters can change the log record level also, say from warning to debug
+
+Filters can be installed on loggers or on handlers; multiple filters can be used in a chain to perform multiple filtering actions.
+
+
+Finally, FORMATTERS
+Ultimately, a log record needs to be rendered as text. Formatters describe the exact format of that text.
+
+By convention, the logger name is usually __name__, the name of the python module that contains the logger. 
+Python’s logging library provides several techniques to configure logging, ranging from a programmatic interface to configuration files. By default, Django uses the dictConfig format.
+
+In order to configure logging, you use LOGGING to define a dictionary of logging settings. These settings describes the loggers, handlers, filters and formatters that you want in your logging setup, and the log levels and other properties that you want those components to have.
+
+Django has a default loggin setup. you can use it by setting
+disable_existing_loggers key in LOGGING dictConfig to false. it is true by default
+
+or you can opt out of the default setup completely and set LOGGING_CONFIG to None.
+
+ALSO, DJANGO has a general setup() function that sets everything up, so logging is always ready for use in the project.
+
+from django.apps import AppConfig
+class MyAppConfig(AppConfig):
+    name = 'myapp'
+    verbose_name = "My Application"
+    def ready(self):
+        pass # startup code here
+
+
+
+EXAMPLE LOGGING SETTING:
+
+# Logging setting
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': { //defining the handler here
+        'file': { //this handler is called "file", because it writes to a file
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'warning.log'),
+        },
+    },
+    'loggers': { //defining the logger and assigning it the defined handler
+        'django': { //this logger is called django.
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True, //the logger will send the log records up the heirarcy tree
+        },
+    },
+} 
+
+ONE more type of handler, which writes the output to the terminal:
+    'handlers': {
+        'console': { //called the console
+            'class': 'logging.StreamHandler',
+        },
+    },
+
+
+HTML FORMS
+
+The value of each radio button is the associated question choice’s ID. The name of each radio button is "choice". That means, when somebody selects one of the radio buttons and submits the form, it’ll send the POST data choice=# where # is the ID of the selected choice. This is the basic concept of HTML forms.
+
+So, if we have this:
+<input type="hidden" value="blah" name="name_of_var">
+
+This will send this:
+"name_of_var":"blah"
+
+so, in place of value, if we had say, radio button, we would have had id. 
+
+Now, when we process the POST request, django advises us to use HttpResponseRedirect. what we do is:
+
+
+take the data from the request's post, process it (database store, update counter etc), and then issue a redirect request with the status code 302 - which allows us to convert POST to GET legally
+
+""
+The update of RFC 2616 changes the definition to allow user agents to rewrite POST to GET using 302
+""
+__________
+
+Passing context to the template:
+
+def info(request):
+    data = {'a':1, 'b':5}
+    return render(request, 'home/detail.html', {'context':data})
+
+Here, we are passing the data dict to the template. To render it, we need to use the variable name "context" and not data.
+
+SO: 
+
+{% for key, values in context.items %} //NOTE, context and not data used here
+<ul>
+    <li>{{key}}, {{values}}</li>
+</ul>
+{% endfor %}
+
+__________
+
+
+IN the Vote model:
+
+class Vote(models.Model):
+    voted_by = models.ForeignKey(User, related_name='vote_voted_by')
+    won = models.ForeignKey(User, related_name='vote_won')
+    lost = models.ForeignKey(User, related_name='vote_lost')
+    time = models.DateTimeField()
+
+    def __str__(self):
+        return self.voted_by.first_name + " " + self.voted_by.last_name + " choose " + \
+        self.won.first_name + " " + self.won.last_name + " over " + \
+        self.lost.first_name + " " + self.lost.last_name + " on " + str(self.time)
+
+I have the following fields:
+
+Vote.objects.filter(ok=1)
+
+FieldError: Cannot resolve keyword 'ok' into field. Choices are: id, lost, lost_id, time, voted_by, voted_by_id, won, won_id
+
+Desc home_vote in mysql shows:
+
+mysql> desc home_vote;
++-------------+----------+------+-----+---------+----------------+
+| Field       | Type     | Null | Key | Default | Extra          |
++-------------+----------+------+-----+---------+----------------+
+| id          | int(11)  | NO   | PRI | NULL    | auto_increment |
+| time        | datetime | NO   |     | NULL    |                |
+| lost_id     | int(11)  | NO   | MUL | NULL    |                |
+| voted_by_id | int(11)  | NO   | MUL | NULL    |                |
+| won_id      | int(11)  | NO   | MUL | NULL    |                |
++-------------+----------+------+-----+---------+----------------+
+5 rows in set (0.00 sec)
+
+
+Also,
+chaging the __str__ method of Vote model to:
+    def __str__(self):
+        return self.voted_by_id.first_name + " " + self.voted_by.last_name + " choose " + \
+        self.won.first_name + " " + self.won.last_name + " over " + \
+        self.lost.first_name + " " + self.lost.last_name + " on " + str(self.time)
+
+gives: AttributeError: 'long' object has no attribute 'first_name'
+
+HENCE, conclusions:
+
+1. The mysql table simply stores the user_ids in a long format. It stores the user information in the auth_user table. there is a foreign key relation and all of that. BUT, its all just numbers and text.
+
+2. Django stores the actual user object reference. so, you can traverse it's attribute using dots. hence, this works: self.voted_by.first_name 
+this is because self.voted_by is an object of user class
+and self.voted_by_id is just a long which has the id of the user object the vote instance refers to
+
+HENCE, here, either works:
+
+def get_on_count(pk):
+    return Vote.objects.filter(won=pk).count() + Vote.objects.filter(lost=pk).count() 
+
+    as well as
+
+    return Vote.objects.filter(won_id=pk).count() + Vote.objects.filter(lost_id=pk).count()
+
+    BUT, IS THE SECOND ONE FASTER? 
+
+Recall how carwale works.
+they have the a RESTful API that returns the data which is rendered by the front end framwork correctly. This is a very common setup. eg: instagram.
+
+
+iOS is the "Frontend" of the application. Django is a backend "Server Side" Web Framework.
+
+For example, if there is an iphone application that shows you all the latest tutorial videos about baking (lets say you had a website bakingtutorials.com), you would make an iphone application in objective-c to run as the frontend. In your objective-c iphone code you would communicate with a "server" which runs Django/Python. THe Server Side (django) holds the video and other baking data in a database. The Frontend iOS application requests data from the django application. Client Side & Server Side communication. This is usually accomplished with a RESTful API - which in basic term, means the iphone application uses human readable URLs to grab data from django/the servers database. This data is sent to the frontend from the server where it is parsed by objective-c and formatted for the application
+
+
+
+|  8 | facebook | 10154447735692580 | 2016-04-15 08:34:05 | 2016-04-10 14:34:07 | {"first_name": "Darshan", "last_name": "Chaudhary", "verified": true, "name": "Darshan Chaudhary", "locale": "en_GB", "gender": "male", "email": "deathbullet@gmail.com", "link": "https://www.facebook.com/app_scoped_user_id/10154447735692580/", "timezone": 5.5, "updated_time": "2015-06-06T09:24:34+0000", "id": "10154447735692580"} 
+
+
+Now, if you read the tutorials again, you'll see that when the change is made to generic views, the variables that the earlier views used to take are not talked about anywhere in the generic view code. this is because
+The DetailView generic view expects the primary key value captured from the URL to be called "pk", so we’ve changed question_id to pk for the generic views.
+
+Suppose you are using a third party app that has a custom template tag defined. now, that template tag also takes in a value. you can pass it thus:
+without args: {% ratings song %}
+with args: {% ratings song 15 15  %}
+
+In the template any number of arguments, separated by spaces, may be passed to the template tag. Like in Python, the values for keyword arguments are set using the equal sign (“=”) and must be provided after the positional arguments. For example:
+
+{% my_tag 123 "abcd" book.title warning=message|lower profile=user.profile %}
+
+
+In DetailView, we are passed the model object under the hood (if we pass the "pk" to the view)
+
+class SongDetailView(generic.DetailView):
+    model = Song
+    template_name = 'music/songdetail.html'
+
+    url(r'^track/(?P<pk>[0-9]+)/$', views.SongDetailView.as_view(), name='track'),
+
+Since we are using pk as the name of the primary key, we will get the matching song instance. now, the model is:
+class Song(models.Model):
+    title = models.CharField(max_length=128)
+    category = models.ForeignKey(Category)
+    rating = models.IntegerField(default=0)
+
+    so, we can display it in the template as:
+
+    {{ song.title }}
+
+NOTE, it wont work if you do Song.title etc
+eg, for Category model, it will be category.title etc
+
+When using the class based views, we can access the args passed to the view from the url by:
+    url(r'^books/([\w-]+)/$', PublisherBookList.as_view()),
+
+    class PublisherBookList(ListView):
+
+    template_name = 'books/books_by_publisher.html'
+
+    def get_queryset(self):
+        self.publisher = get_object_or_404(Publisher, name=self.args[0])
+        return Book.objects.filter(publisher=self.publisher)
+
+Add things into the context, 
+def get_context_data(self, **kwargs):
+    # Call the base implementation first to get a context
+    context = super(PublisherBookList, self).get_context_data(**kwargs)
+    # Add in the publisher
+    context['publisher'] = self.publisher
+    return context
+
+In detail views, we pass the variable name as pk and that is used to look up the object using the django orm
+now, the object is retrieved using the get_object method
+
+class AuthorDetailView(DetailView):
+
+    queryset = Author.objects.all()
+
+    def get_object(self):
+        # Call the superclass
+        object = super(AuthorDetailView, self).get_object()
+        # Record the last accessed date
+        object.last_accessed = timezone.now()
+        object.save()
+        # Return the object
+        return object
+
+HTML FORMS:
+
+<form method="get" action="/search/">
+    <label for="id_q">Search:</label>
+               <input type="text" name="q" id="id_q"/>
+               <input type="submit" value="Submit"/>
+</form>
+
+Here, the text input is called "q", so, what we enter in it will go as:
+file:///search/?q=xyz
+as a get method because the method is defined as get in the form
+
+_________
+
+Two scoops of Django
+
+Use explicit relative imports and not implicit relative imports. 
+so:
+
+WRONG:
+
+from cone.models import WaffleCone
+
+This is wrong because if in the future, you needed to change the name of the cone app- you would need to change the name everywhere in all the files
+
+RIGHT:
+from .models import WaffleCone
+
+this is better because it decouples the name of the app from the import
+
+this is absolute import:
+
+from core.views import WaffleCone
+
+---> use underscores and not dashes in the url names and template body block names
+name your template tags: <app_name>_tags.py
+use same database for local and prod development
+
+**OQ: what do you mean when you say that SQLite is weakly typed and MySQL, PostgresSQL are strongly typed
+
+Project layout:
+
+repository root dir
+
+---> store the dir created by startproject here, along with the readme.rst, requirements.txt, docs dir, .gitignore and other high level files needed for deployment
+
+django project root
+
+this dir is created by the startproject. meida and static dir, site-wide templates dir, django apps, configuration root
+
+configuration root
+contains the base (MAIN) urlconf file(urls.py), settings module are present. it must be a valid python package === must have a __init__.py module
+
+
+Makefiles contains simple deployment tasks and macros. for complex deployments, use Fabric
+
+media is user generated static media assets eg photos uploaded by users. 
+static is css/js needed by the site etc
+
+STATICFILES_DIRS --> give the name of the static dir here (default is static)
+
+There are many stages for an app, have one settings file for each. so, replace settings.py with settings dir. in the dir, have these files:
+settings/
+    __init__.py
+    base.py
+    
+    local.py/dev.py --> when developing on your machine. debug mode, log changes, django-debug-toolbar etc are different
+
+    staging.py --> semi private version of the site hosted for managers and clients look at the site before it goes into prod
+
+    test.py --> settings to use when testing, in-memory database definations, log levels are different
+
+    production.py --> production settings
+
+    ci.py --> settings for the continous integration server
+
+    same with requirements file!
+
+
+Use the --settings command line option to use those settings.
+python manage.py runserver --settings=projectname.settings.local
+python manage.py shell --settings=projectname.settings.local
+
+the only place where you can/should do
+import * 
+is in the different settings files. (from local import *)
+generally,we dont do this because it pollutes the local namespace, but here, we want the local namespace to be overriden and we will override the settings we want to change
+
+keeping the secret keys out of version control --> use enviornment variables for that
+
+
+we can define the enviornment variables in the .bashrc, .bash_profile, or .profile
+append this to the end of your .bashrc file:
+
+export SOME_SECRET_KEY = jsfja_jajfjajfsacw9u3wjrqpfj939r39rjfpa
+
+you can access them using:
+python
+>>> import os
+>>> os.enviorn["SOME_SECRET_KEY"]
+
+Also, never hardcode your paths - this is because it not necessary for others to have the same dir structure as you, also, traversing paths is different in different OSes
+so, use the os module, or the Unipath python package
+
+___________
+""""
+indraben
+nishaben
+jayeshbhai
+""""
+written on May 19, 2016 at 18:03
+
+___________
+
+
+for diffenret requirements.txt we have:
+base.txt
+dev.txt will start with this:
+
+-r base.txt
+coverage==3.6
+...
+
+
+
+Model inheritance:
+There are many ways:
+1. No model inheritance
+if there are repetative items, keep them in all the models --> works for small overlaps between models both in terms of logic and fields
+
+2. abstract base classes
+declare the parent class as base class, inherit from it to create concrete classes
+
+3. multi table inheritance
+tables created for each model, an implied OneToOne relationship used to link parent and child
+this has a lot of overhead since each query on the child table requires joins on all parent tables.
+
+This is what you do when you create a non abstract parent and child class - like how we extended the User class, by adding another ProfileUser class and and using OneToOne field to link them
+
+There are two things here: we did not extend from the User class directly, as in, our ProfileUser class did not take in User as an argument, it was still model.Models. This is better, as we control the traversal of the joins
+
+Eg, to create a created_at and modified_at field, if you have to do it in a lot of places, do this:
+
+class TimeStampedModel(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+
+As this class is abstract, a table wont be created for this class when we instantiate the child class inheriting from this class. 
+
+class Flavor(TimeStampedModel):
+    title = models.CharField(max_length=200)
+
+This creates only one table in the database, thats exactly what we wanted. 
+If it werent abstract, the TimeStampedModel:
+    its table would be created when we create a table for Flavor
+    
+    all subclasses of TimeStampedModel (like Flavor) would have implicit foreign keys back to TimeStampedModel to handle created_at and modified_at timestamps.
+
+    Any reference to Flavor that affects TimeStampedModel impacts both the tables - think of the unnecessary overhead here
+
+
+Tips on writing good Django models:
+1. Stay Normalized
+We should start off normalized
+**OQ: what is database normalization?
+
+Denormalize only only only when necessary, i.e. when you need the speed boost and no other way is left unexplored, including caching
+
+In BooleanField, never use null or blank=True (and also null=True)
+Use NullBooleanField instead.
+
+Model managers
+When we use the django ORM, it uses an interface called the model manager to interact with the database. they act on all the instances of this model, (all the datapoints in this table) 
+
+eg:
+
+class PublishedManager(models.Manager):
+    use_for_related_fields = True
+    def published(self, **kwargs):
+        return self.filter(pub_date__lte=tiemzone.now(), **kwargs)
+
+
+class FlavorReview(models.Model):
+    review = models.CharField(max_length=255)
+    pub_date = models.DateTimeField()
+
+    objects = PublishedManager() //django defines a default value for the objects attribute --> the default model manager, but here we are giving our custom model manager.
+    this is why we have to do this:
+    FlavorReview.objects.count()
+    the count() is a method of the default model manager that django gives us. also, our custom model PublishedManager, inherits from the default model manager, so we have access to those methods as well
+
+FlavorReview.objects.count()
+35
+FlavorReview.objects.published().count()
+31
+
+Views
+There are two types of views. Function based views(FBV) and class based views(CBV). 
+never define your CBVs in the urls.py, you may be tempted to do so to create a quick CBV, but dont, because then, you wont be able to add any functionality to it, inherit it, etc
+
+The function of views is to get the context variables needed for the templates. if a small amount of logic is needed to accomplish that, you can do it in the views. However, avoid putting a lot of bussiness logic into views. Instead, add them to model methods, manager methods, general utility helper functions (eg: utils.py) and call the required code fragments from the views.
+
+""
+Views should handle presentation logic. Try to keep business logic in models when possible,
+or in forms if you must.
+""
+
+the red flag should be when you are writing duplicate bussiness code in your views.
+
+CBVs
+they can come from upto 8 parent-child chains - their inheritance is a complex mess. Knowing which method view to use or which method to customize can be very challenging at times.
+
+Mixins
+In programming, a mixin is a class that provides functionality to be inherited, but isn’t meant for
+instantiation on its own. In programming languages with multiple inheritance, mixins can be used
+to add enhanced functionality and behavior to classes.
+
+remember the ice cream analogy  ---> mixins are like chocochips, sprinkles etc. they add taste (functionlaity) to the icecream(class), make it better. But, they are designed for direct consumption(direct instantiation)
+
+if you are using multiple mixins, the method resolution order (MRO) is used to find the constructor calling sequence. in its simplistic form, it is left to right
+
+the base view classes provided by django go to right
+mixins should go to left
+also, the mixin should inherit from from Python's built-in "object" type
+
+Recall, we have a complex inheritance tree structure for the CBVs
+
+View ---> the base view, can be used for anything
+TemplateView ---> display a django html template
+FormView ---> display a form
+Generic date views ---> for display of objects that occur over a range of time
+
+When you need to perform custom logic on valid forms, use form_valid()
+for invalid forms, use form_invalid()
+
+you can define attributes in the class using the mixins and use them in the mixin:
+
+# flavors/views.py
+from django.contrib import messages
+from django.views.generic import CreateView, UpdateView, DetailView
+from braces.views import LoginRequiredMixin
+from .models import Flavor
+
+class FlavorActionMixin(object):
+
+    @property
+    def action(self):
+    msg = "{0} is missing action.".format(self.__class__)
+    raise NotImplementedError(msg)
+    
+    def form_valid(self, form):
+    
+    msg = "Flavor {0}!".format(self.action) //we are using the action attribute defined in the class here
+    messages.info(self.request, msg) //adding the message to the request
+    
+    return super(FlavorActionMixin, self).form_valid(form)
+
+class FlavorCreateView(LoginRequiredMixin, FlavorActionMixin, CreateView):
+    model = Flavor
+    action = "created" //msg that will be displayed: Flavor created!
+
+class FlavorUpdateView(LoginRequiredMixin, FlavorActionMixin, UpdateView):
+    model = Flavor
+    action = "updated" //msg that will be displayed: Flavor Updated!
+
+class FlavorDetailView(DetailView):
+    model = Flavor
+
+
+Note here, we used the UpdateView to handle the update functionality, and the cutom written FlavorActionMixin to handle the message functionality ---> it has one method. It overrides the form_valid method --> it adds the message and resumes the normal control flow
+
+Appreciate what we did, since we needed the message code twice, we put it in a seperate mixin and inherited from it - like you would put things in a function and call it
+
+it is fine for a search form to use a GET request as it doesnt change any data. it just retrieves it, so get is cool, POST is not needed
+
+The standard queryset supplied to the ListView is all the objects. override it by:
+class FlavorListView(ListView):
+    model = Flavor
+
+    def get_queryset():
+        qset = super(FlavorListView, self).get_queryset()
+        q = self.request.GET.get("q")
+        if q:
+            return qset.filter(title__icontains=q)
+        return qset
+
+The form can be:
+ <form action="{% url "flavor_list" %}" method="GET">
+    <input type="text" name="q" />
+    <button type="submit">search</button>
+</form>
+
+A ModelForm is the form that is generated by Django using the model
+eg:
+
+class FlavorUpdateView(UpdateView):
+    model = Flavor
+
+This will create the ModelForm
+Those ModelForms rely on the default eld validation rules of the Flavor model.
+
+
+Assume we have two models Flavors and Milkshake in two differnt apps.
+Suppose you wanted all the titles to begin with the word: "tasty". How will we use custom field validators?
+
+You can do this:
+
+1. 
+create a validate_input function in a validatory.py file in the core of the app (in the project dir, not the app dir) and assign it to the models.
+
+eg in: Flavors model defination:
+title = models.CharField(max_length=255, validators=[validate_tasty])
+
+2. 
+create a validate_input function in a validatory.py file in the core of the app (in the project dir, not the app dir) and create an abstract model for it.
+eg:
+class TastyTitleAbstractModel(models.Model):
+    title = models.CharField(max_length=255, validators=[validate_tasty])
+
+    class Meta:
+        abstract = True
+
+now, we will have our Flavor and Milkshake models inherit from this one
+
+from core.models import TastyTitleAbstractModel
+.
+class Flavor(TastyTitleAbstractModel):
+    slug = models.SlugField()
+    scoops_remaining = models.IntegerField(default=0)
+    def get_absolute_url(self):
+        return reverse("flavor_detail", kwargs={"slug": self.slug})
+
+Note, we dont overrite the title attribute here
+
+This is better because we can inherit from the TastyTitleAbstractModel whenever we want this title constraint to be true
+
+To use in forms:
+
+forms.py
+class FlavorForm(forms.ModelForm):
+    
+    def __init__(self, *args, **kwargs):
+        super(FlavorForm, self).__init__(*args, **kwargs)
+        self.fields['title'].validators.append(validate_tasty)
+
+    class Meta:
+        model = Flavor
+
+To use this form and not default one created by the CreateView, we explicitly override the form_class attribute
+
+    action = "created"
+    # Explicitly attach the FlavorForm class
+
+    form_class = FlavorForm
+
+
+Multi-field validation - validation after validation
+
+these are great scenarios for overriding the clean() and clean <field name>() methods
+with custom validation logic.
+
+we have the forms.ModelForm that needs the model attribute to be defined in the Meta class (class Meta). but forms.Form doesnt have that constraint
+
+Templates should be used to display the context variables. Nothing much, it shouldnt be used to do a lot of processing. Views should be used to collect the context variables and pass them to the templates. It too shouldnt get involved in too much processing. it should get the variables by calling utils.py helper functions, model methods, model manager methods. They should contain the chuck of the processing code, not the views.
+
+include the name of the block tag in the endblock. Never write just { % endblock % },
+include the whole { % endblock javascript % }.
+
+
+You can use generic object_list or modelname_list
+eg, for a model Topping:
+
+
+{# toppings/topping_list.html #}
+{# Using implicit names #}
+<ol>
+{% for object in object_list %}
+<li>{{ object }} </li>
+{% endfor %}
+</ol>
+
+    and
+
+{# Using explicit names #}
+<ol>
+{% for topping in topping_list %}
+<li>{{ topping }} </li>
+{% endfor %}
+</ol>
+
+    will both work
+
+Template Filters are just functions. period. they can accept one or two arguments, but they don’t give developers the ability to add behavior controls in Django templates.
+
+they are just a way to simple python code in templates. how they work is, they simply call a python funciton - eg - although we prefer to have our filters call functions imported from helper modules
+
+In fact, a quick scan of the source code of Django’s default lters at
+http://2scoops.co/slugify-source shows that the slugify() function simply calls the
+from django.utils.text.slugify function.
+
+When to Write Filters
+Filters are good for modifying the presentation of data, and they can be readily reused in REST APIs
+and other output formats. Being constrained to two arguments limits the functionality so it’s harder
+(but not impossible) to make them unbearably complex.
+
+Tags should be named:
+<app_name>_tags.py
+
+Tags and filters shouldn't create data, modify data etc. It should only manipulation of presentable data
+
+
+
+DJANGO - Rest framework
+
+install using pip install djangorestframework
+
+In the django models, we can add extra info in the Meta class
+eg:
+class Meta:
+    ordering = ('field1',)
+
+Steps in creating the web api:
+
+Create the model
+    This is the normal model we create in django, according to the data we have in our application
+
+Create the serializer
+    
+    The serializer converts model into a format that has all it's attributes as a dict accessible via the serialized_model.data attribute which is given to the jsonrenderer to output the json
+
+    To create the serialized object, we either give the dict or give the model object. but, if we have the dict, we can convert it directly into json using the JSONRenderer. So, dict option is used to create a serializer and then call the .save() method on it to get the model instance
+
+    JSONRenderer --> converts dict into json
+    JSONParser --> converts json into dict (actually, it converts json bytesteam into dict)
+
+    model --> serialized --> json
+
+    json --> serialized --> model
+
+    The serializer serializes the model into python native datatypes. This can then be converted into json using the JSONParser, into XML using XMLParser etc
+
+    So, we have the model data, it is an object of the class ModelName, we need to convert it into say, json, so we'll use the serializer
+
+    The serializer takes in the model attributes that will get serialized/deserialized (if we arent using the ModelSerializer class - if we use that, we have to specify the model attribute as well (this is much like the ModelForm and Form))
+
+    It also takes in 2 methods - create and update
+    which return a snippet instance
+
+
+    Hence, the process is:
+
+    Model object ----> Python native datatype ----> JSON
+                            (dict)
+
+            using the serializer            using the json parser 
+
+    snippet = Snippets.objects.get(pk=1)  > serialized_snippet = SnippetSerializer(snippet) > json = JSONRenderer().render(serialized_snippet.data)
+
+    Also, json back into Snippet model instance
+
+    converting the json into bytesteam.
+
+    bytesteam = BytesIO(json)
+    data = JSONParser().parse(bytesteam)
+    //data is a dict now
+
+    To get the  
+    serializer = SnippetSerializer(data=data) //this checks if the data submitted is same as what our model expects
+    serializer.is_valid()
+    serializer.validated_data
+    serializer.save() //this will give the snippet data
+
+    SO:
+
+    json ---> bytesteam ---> data ---> model
+
+        BytesIO        JSONParser     Serializers .save()
+
+        Summary:
+
+        Serialization: 
+            model --> serialized --> json
+
+        snippet = Snippets.objects.get(pk=1)
+        serialized_snippet = SnippetSerializer(snippet)
+        json = JSONRenderer().render(serialized_snippet.data)
+
+        Deserialization:
+            json --> serialized --> model
+
+        bytestream = BytesIO(json)
+        data_dict = JSONParser().parse(bytestream)
+        serializer = SnippetSerializer(data=data_dict)
+        serializer.is_valid()
+        # True
+        serializer.validated_data
+        # OrderedDict([('title', ''), ('code', 'print "hello, world"\n'), ('linenos', False), ('language', 'python'), ('style', 'friendly')])
+        serializer.save()
+        # <Snippet: Snippet object>
+
+
+        **IS the function of the serializer only that it makes all the attributes of the model accessible via the serialized_model.data attribute
+
+
+So, the views should be concerned with sending data requested as json
+we select the model instance we want to send, then serialze it, pass the serialzed.data to JSONRenderer and return that
+
+We have Request objects --> which extend HttpRequest
+and Response objects --> which extend TemplateResponse --> sends the type of data as asked by the client - it takes the data we were about to send and sends it in the format asked for
+
+
+
+Earlier, for the json returntype, we explicitly used the JSONResponse class to change the datatype in the header to json. also, we used the JSONRenderer to convert it to json. now, the Request class handles all that for us. it looks for the accept header and gets the corresponding format
+
+http http://127.0.0.1:8000/snippets/ Accept:application/json  # Request JSON
+http http://127.0.0.1:8000/snippets/ Accept:text/html         # Request HTML
+
+Also, when sending the data, we can send it using forms, json etc - we specify using the content-type header
+
+Earlier, we had:
+
+data of the model = JSONParser().parse(request)
+now, request.data 
+THIS is possible since Rest has overriten the default response object
+
+
+
+We'll use the APIView class when using class based views
+or @api_view decorator that handles the JSONResponse + some extra functionaliy for us
+
+Now, return Response(serializer.data, status=status.HTTP_200_OK)
+
+One of the big wins of using class based views is that it allows us to easily compose reusable bits of behaviour.
+So, we can use the mixins to update, create etc
+
+To show the ability of the user to create many snippets, the snippet model has to have a foreign key relationship with auth.user
+
+FORMS
+
+The forms for models can be created very easily using ModelForms, 
+in the category, page demo app (rango), see that the PageForm's code is this:
+
+class PageForm(forms.ModelForm):
+
+    class Meta:
+        model = Page
+        exclude = ('created_by',)
+
+Here, the exclude tag is given because we dont want the user to enter the category there, we want to assign it ourselves. we can say in the view:
+    
+            if form.is_valid():
+            page = form.save(commit=False)
+            page.user = request.user
+            page.save()
+            return index(request)
+to manually enter it
+
+Unicodes in Python
+    
+5 facts:
+    1.computers are build on bytes
+    everything is bytes - 1 and 0
+
+    so, to make sense of bytes, we decided to assign meaning to bytes
+    we took 95 graphic symbols and assigned them byte values. so, if you want to send "a"'s byte value and you'll know that it is an "a" as we agreed on the ascii values
+
+    ISO-8859-1/ISO-Latin added 96 more characters, windows added 27 modern
+
+    2.we need more than 256 symbols
+
+    we can try and map single bytes to characters like ascii etc
+    but there are more bytes than characters, so we can try to use two bytes
+
+    still, not enough
+    so we have unicode
+    110k symboles assigned, 1.1M possible characters possible
+
+    every unicode character is assigned to its integer, it is written as for example:
+    U+2119 --> this is ℙ --> print(u'\u2119')
+
+    We need to map these unicode chars to bytes somehow:
+        so, we have encodings (they are schemes which take chars and represent them as bytes unambigiously) eg: UTF-16, UTF-32 etc
+
+        UTF-8 --> this is the king of encodings
+                    variable length, ascii characters are still one byte
+
+        hence, ascii strings are valid utf-8 strings
+        no char needs more than 4 bytes
+
+
+        ENCODING - bytes to chars
+        DECODE - chars to bytes
+
+        python 2
+        there are two dstinct string datatypes
+        1 - for storing bytes  -  called str()
+        my_string = "hello world"
+        type(my_string)
+        <type 'str'>
+
+        my_unicode = u'\u2119' //recall, we need the u prefix to create unicode string
+        type(my_unicode)
+        <type 'unicode'>
+
+        to convert unicode in python 2, you have encode method - chars (AKA CODE POINTS) to bytes
+        and decode for bytes to chars
+
+        they methods take the argument which is the encoding that should be used
+
+        bytes are represented by \x --> which is the byte hexadecimal escape
+        eg: 
+
+        my_unicode = u"\u2119" //this is the unicode
+        >>> my_unicode 
+        'ℙ'
+        >>> my_unicode.encode('utf-8') //converting it to bytes using utf-8 encoding
+        b'\xe2\x84\x99' //these are the bytes, note, there are three bytes
+
+        //converting the bytes back to unicode using utf-8 
+        >>> my_unicode.encode('utf-8').decode('utf-8')
+        'ℙ'
+
+        codec --> the coder/decoder that converts the chars to bytes
+        ascii goes only from 0 to 127
+
+        >>> my_unicode.encode('utf-8').decode('ascii')
+        Traceback (most recent call last):
+          File "<stdin>", line 1, in <module>
+        UnicodeDecodeError: 'ascii' codec can't decode byte 0xe2 in position 0: ordinal not in range(128)
+
+        This works however : 
+        '\x31'.encode('ascii')
+        b'1'
+
+        IN PYTHON 2:
+        >>> sys.getdefaultencoding()
+        'ascii'
+
+        There is implicity encoding and decoding in python2
+        so, if you code is half ascii and half unicode, it wont be a problem as long as everything is ascii
+
+        str is just a group of bytes, nothing else
+
+        IN PYTHON 3:
+        >>> sys.getdefaultencoding()
+        'utf-8'
+
+        now, str --> sequence of chars (unicode)
+        and bytes --> sequence of bytes
+        i = '\u2119'  //string are unicode chars now
+        type(i) --> class 'str'
+        print(i)
+        'ℙ'
+
+        my_bytes = b'hello'
+        type(my_bytes --> class 'bytes'
+
+        py3 won't implicitly change b/w unicode and bytes
+        "hello" + b"world"
+        Error 
+
+        So, now, your python program that worked with ascii and failed with other characters, doesnt work with ascii also now.
+
+
+DJANGO insights continued
+
+**allauth**
+login using django-allauth is surprisingly simple. i needed to setup google+ login for project molly
+i did this:
+
+  took the settings from the sarahhagstorm article and inserted the settings as is
+  this did not work, i had to remove the content in the allauth.context processors
+  also, i had to add the site_id setting.
+  i took the working settings from vesta - the cloudhack project
+  i added this line in my urls: url(r'^accounts/', include('allauth.urls'))
+
+i went to google developers console, got the client ids by registering the project,
+i migrated, created a superuser, opened admin, created a new "social application"
+put the keys in it, logged out of the admin, went to : accounts/google/login and done, I could
+see the user info in "social accounts". also, before that, i got a 404 because my LOGIN_REDIRECT_URL
+wasn't defined and the default is accounts/profile
+i set LOGIN_REDIRECT_URL ='/', problem solved. done. 
+
+
+create a new project, make some models, and run dj migrate (without making migrations)
+this will migrate the admin, allauth etc, but no the models in your app.
+and then you can't do dj makemigrations <app_name> && dj migrate that wont work
+so, makemigrations first and then do migrate. 

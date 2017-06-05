@@ -1,0 +1,251 @@
+This file mostly has emacs and general shortcuts, django tips and other fun stuff
+
+1.
+when developing the new crm module:
+The same url online and locally:
+online - https://beta.appknox.com/hudson/admin_extras/users
+local - crm - http://0.0.0.0:8000/hudson/crm/users
+local - crm2 - http://0.0.0.0:8000/hudson/crm2/users (edited)
+
+
+2.
+Use login_required decorator with class based views
+`
+class NewGuideView(CreateView):
+
+   model = Guide
+   form_class = NewGuideForm
+   template_name = "guides/guide_new.html"
+   success_url = "/" # Just to keep things simple, redirect to root.
+
+   @method_decorator(login_required)
+   def dispatch(self, *args, **kwargs):
+       return super(NewGuideView, self).dispatch(*args, **kwargs)
+`
+
+3.resources for django class views 
+django class resource - https://ccbv.co.uk/projects/Django/1.5/django.views.generic.edit/CreateView/
+
+4.
+In django, when using the class based views, ALL the important things are stored in `self`. To quote the docs:
+
+> The key part to making this work is that when class-based views are called, various useful things are stored on self; as well as the request (self.request) this includes the positional (self.args) and name-based (self.kwargs) arguments captured according to the URLconf.
+
+What you have to do is, find the suitable method (eg, `get_context_data`) and then use the `self`
+
+
+
+5. In django, when using class based views, any arguments passed to the class are stored in `self.kwargs`, or `self.args` accordingly.
+
+6. array keys to move around
+to intercept any requests, enter the intercept mode with `i`, filter (to intercept all of them, use `.*`)
+to accept a request, use `a`, to accept all of the pending requests, use `A`
+to view the request in detail, use `ret`, `e` to edit it, `a` to allow it now
+from anywhere, `esc` or `q` to exit
+`d` to delete the request
+
+In already sent requests, use `ret` to view the request, `e` to edit it, `q` to stop editing and issue the request, `tab` to view the response or detail etc
+
+
+
+
+4. when you are opening a project for the first time, and you use helm to search for the file, using `c-h h f`, use `c-o` to cycle between the buffer categories - recent, open, current dir...
+
+
+5. indent or unindent a selected region of code using `c-c >` or `c-c <`
+
+6. to select a logical expression unit - eg, brackets, inverted commas etc - `c-m-spc`. after going to the first bracket, inverted comma etc (edited)
+
+7. when on a line, to move it to the next line, and insert a new line above the present one, do `c-m`
+
+8. when pushing to heroku, i wanted to push `3-heroku` branch and not my master(which is the default), so I did: `git push heroku 3-heroku master` (syntax - `git push remote local_branch_name remote_branch_name`)
+
+9. destroy heroku commands with `(molly) molly 3-heroku-> heroku apps:delete -a <app name>`
+10. select all in emacs - `c-x h`
+11. in django, App is foreign key to Following. From following to app - `following,objects.get(app=appid)`
+from app to following - `App.following_set.filter()` (edited)
+
+12. when you have a lot of windows open, use `shift-arrow keys` to navigate instead of `c-x o`
+
+13. when you have two buffers that you want to go back and forth between, without opening them in a separate frame, use `c-x b ret`, the last opened entry is at the top
+
+14. start irene
+
+15. . .nodeenv/irene/bin/activate
+then, start irene using ember serve from Projects/appknox/irene
+
+16. to auto indent selected region of code, c-m-\
+
+17. to create a new py3 virtual env,
+go to ~/ENV, do pyvenv scrapy
+then, . scrapy/bin/activate
+done
+also, for nodejs virtualenv, replace pyvenv with nodeenv, rest is the same
+
+18. when in emacs, do
+    c-x `
+   to go to errors in the file below the point. so, when writing pep8 code for scrapy, use this to go to the next error
+
+19. in emacs, to save the current buffer without the prompt, use c-x c-s
+    using c-x s will prompt
+
+20. say you have user, not you want to go from user to the apps he is following
+the relation is this: Following has a foreign key relation to User
+do this, User.objects.get(name="darshan").following_set.all()
+for going from users to project:
+User.objects.get(username="darshanime").owned_projects.all() (because project has this line:
+    owner = ForeignKey(User, related_name='owned_projects')
+
+21. to open a new terminal window, ctrl-alt-t
+to open a new terminal tab in the same window ctrl-shft-t
+
+22. to clear the screen on the terminal ctrl-l
+
+23. when typing a command, do ctrl-r for reverse interactive search
+
+24. this ones a biggie. to go to the next occurance of the text at point,
+do, m-n or m-p as required. so, say you are looking at a function, to see where it is
+called and its defination etc, do this - m-p or m-n
+
+25. to move a line or region anywhichway, do this:
+c-c arrow key
+
+26. when saving a file, if you want to view a diff of what changed, you can do c-x s
+when prompted, say s to save, d to show the diff
+
+27. installed direx, now, whenever you clone a new project or just want to explore its directory, do c-x c-j
+this will show the tree in an interactive manner
+
+28. to go to a function in the present file, do c-c c-j
+
+29. to go to any url in html for eg, do c-c ret
+
+30. sshing dumps
+
+ssh into droplet:
+    ssh -i do.key root@139.59.1.209
+
+login as postgres user:
+    sudo -i -u postgres
+        OR
+    sudo su - radar
+
+start postgres terminal:
+    psql
+    quit with \q
+
+you are logging into the postgres server using the account named postgres
+set its password by loggin in using 
+sudo -u postgres psql postgres //this logs in the server, and accesses the postgres database
+then: \password postgres //this sets the password for the postgres database
+enter it twice and you are done
+
+so, i deleted the existing mycroft database using drop database mycroft
+then, i created a new database again using:
+sudo -i -u postgres
+createdb -h localhost -p 5432 -U postgres mycroft
+                           port     user   name of the database
+                                who owns the
+                                database
+enter the password for the postgres user and done. 
+logout to go back
+
+copy a postgres database into another server:
+    
+    pg_dump the_db_name > the_backup.sql
+
+    Then copy the backup to your development server, restore with:
+
+    psql the_new_dev_db < the_backup.sql
+
+
+open the postgres terminal by connecting to a certain database:
+    psql -d database_name
+    eg: psql -d django
+
+if you are root(postgres), you can connect to it else, you'll need passwords etc
+
+create user in postgres
+    createuser --interactive
+
+    \list or \l: list all databases
+    \dt: list all tables in the current database
+
+You will never see tables in other databases, these tables aren't visible. You have to connect to the correct database to see its tables (and other objects).
+
+To switch databases:
+
+\connect database_name
+
+See the manual about psql.
+
+Download 720p videos on youtube-dl
+    youtube-dl -f '[height <=? 720]' https://www.youtube.com/watch?v=D6rmKiaSzwk
+
+copy some contents using xclip
+
+cat filename | xclip -sel clip
+cat filename | xclip -selection clipboard
+This makes xclip use the selection clipboard for selection, if you omit that, it copies to another clipboard and to paste from there, use middle mouse button
+
+
+create a python3 virtual env using
+    pyvenv <name>
+    and then <name>/bin/activate
+
+Also, install packages using pip3 install django --no-cache-dir etc
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+deploying to heroku
+
+we can deploy to heroku by being in the git project and then, doing heroku create
+this will add a remote to the heroku end point
+so, now you can do git push heroku master
+
+the tutorial is comprehensive, follow that!
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+deploying molly
+_______________
+
+to create the new user, i did this:
+sudo -u radar psql postgres
+\du (shows the list of users)
+
+postgres=# drop user molly;
+ERROR:  role "molly" cannot be dropped because some objects depend on it
+DETAIL:  owner of database test_molly
+owner of database molly
+postgres=# drop database molly;
+DROP DATABASE
+postgres=# drop user molly;
+ERROR:  role "molly" cannot be dropped because some objects depend on it
+DETAIL:  owner of database test_molly
+postgres=# drop database test_molly;
+DROP DATABASE
+postgres=# drop user molly;
+DROP ROLE
+
+and then ran this:
+echo "molly"
+createuser -P molly
+
+now, to migrate, django looks at the settings.py and the database credentials
+to log into the postgres server. so, we have to have that there
+use env vars:
+
+DATABASES = {
+    'default': {
+        'ENGINE': _env(
+            'DATABASE_ENGINE', 'django.db.backends.postgresql_psycopg2'),
+        'NAME': _env('DATABASE_NAME', 'mycroft'),
+        'USER': _env('DATABASE_USER', 'mycroft'),
+        'PASSWORD': _env('DATABASE_PASSWORD', 'mycroft'),
+        'HOST': _env('DATABASE_HOST', '127.0.0.1'),
+        'PORT': _env('DATABASE_PORT', 5432),
+    }
+}

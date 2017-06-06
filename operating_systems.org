@@ -3849,3 +3849,146 @@ UNIX has a combination of both. Users have capabilities (like root user has all 
 *** distributed systems
  - early model - multiple servers working together (aka clusters)
  - later, peer-to-peer
+
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-06-06 20:33:11
+[[file:assets/screenshot_2017-06-06_20-33-11.png]]
+
+
+The peer to peer model is more powerful, there are upto O(n^2) connections here. But there are problems as well. Like knowing what is the most up to date version of a file etc. This is clear in the centralized version. 
+
+Why use Distributed systems:
+ - Distributed system is cheaper (cheaper to buy many small computers than one big computer)
+ - easier to scale
+ - easier to collaborate b/w users (via network file systems for eg)
+ - provide a better level of anonymity 
+
+
+Promise:
+ - high availability
+ - better durability (multiple copies of data, replication etc)
+ - more security
+
+In reality, peer2peer systems have had less availability (due to some system somewhere being down and you cannot work due to that), less durability (because the meta data of some file wasn't shared properly and the system having the data is down), less security (more machines, more points of failure)
+
+Also, coordination in distributed systems is more difficult. (what is the latest copy of data?)
+
+You can also have machines that are somewhere in between. So, client-servers, with the "servers" made up of many coordinating machines etc
+
+Goals of a distributed system
+ - transparency - hide complexity and provide a simple interface
+   - location - don't care where the data is stored
+   - migration - move data without user having to worry about anything
+   - replication - don't care how many copies of data stored
+   - concurrency - don't care how many users there are
+   - parallelism
+   - fault tolerance
+
+To get all this, we need to have machines talk to each other, i.e. we need a good networking layer
+
+** networking definitions
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-06-06 22:24:27
+[[file:assets/screenshot_2017-06-06_22-24-27.png]]
+
+
+ - network - physical connection that allows two computers to communicate
+ - packet - unit of transfer (networks carry packets)
+ - protocol - agreement b/w 2 parties as to how to exchange these packets (eg: IP, TCP, UDP)
+ - frames - the lowest level transmission chunk
+
+*** Types of network
+
+**** Broadcast network
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-06-06 22:27:54
+[[file:assets/screenshot_2017-06-06_22-27-54.png]]
+
+ - shared communication medium
+   - inside the computer, this is called a bus
+   - all devices simultaneously connected to devices
+   - all messages are broadcast to everyone in the network
+   - originally ethernet was a broadcast network
+
+Problem with broadcast network is:
+ - conflict (2 machines talking at once)
+ - no privacy 
+
+Eg: cellular phones, GSM, EDGE, CDMA, 802.11 (wireless standard) - these are all standards that are broadcast networks
+
+That is why it is necessary to use secure protocols :top:
+
+
+How do the packets reach the intended destination? 
+(If you want to communicate with a particular machine on the network)
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-06-06 22:32:47
+[[file:assets/screenshot_2017-06-06_22-32-47.png]]
+
+
+We attach a header with the ID of the machine(the MAC address, which is a 48bit ID) it is intended for. 
+In ethernet, this is generally done at the hardware level(unless you have use the promiscuous mode in which the OS receives every packet coming on the wire)
+
+This :top: is a form of layering. 
+We need to do more layering to send our packet to Europe etc
+
+***** How to handle collision?
+
+ - Arbitration - act of negotiating the shared media
+   - Aloha network - this was an early network from Hawaii (70s) which used a checksum at the end of the message. If the message was received correctly, send back an ack. 
+   - an example of a checksum - take all the bytes, rotate every byte, XOR them together, get a byte. Check both the cheksums, the one you started with and the one at reception - if they don't match, you got a problem. 
+
+Sender waits for a while, if no ack, resend. This is done after some random wait, so that there is no collision feedback loop. 
+
+   - another problem is that, what if someone starts talking too, when the other fella is at near the end of their communication? Then the whole message would have to be re-transmitted 
+
+
+All this led to "CSMACD" - carrier sense, multiple access/collision detection 
+(this is used in ethernet :top:)
+
+"Carrier sense" - talk only if there is no one else talking
+"collision detect" - sender checks if packet trampled
+"backoff scheme" - choose randomized wait time which adapts according to collisions (if collisions increase, pick a little higher randomized wait time - 2x, 4x, 8x etc - exponential backoff) - we are sacrificing thruput for the ability to get messages thru
+
+**** Point to point network
+
+Why use broadcast (shared bus) networks? They have collisions etc
+Simple answer: they are cheaper that point2point networks
+
+Every wire is b/w 2 machines only
+But we need to introduce some mechanism by which we can make point2point connections connect many machines at once - eg, using switches, routers etc
+
+ - Hub - broadcast to everyone
+
+ - Switches - turns connections of point2point to connections of broadcast. It sends the packets to the machines they are intended for, doesn't broadcast
+(except initially, to get the mac address of everyone - ARP protocol?)
+
+ - Router - they connect 2 networks. They decide if the packets go to within the network or do they need to be sent over to another network (another switches). They look at the IP address and decide on the basis of that (check if the IP belongs to the same subnet or a different subnet)
+
+Switches only work on a subnet, routers can work above individual subnets, they connect subnets
+
+"Switches use mac addresses, routers use higher level protocols like IP"
+
+Advantages of point2point over broadcast 
+- higher bandwidth that broadcast networks (due to less/no collisions)
+- easy to add incremental capability
+- better fault tolerance, lower latency
+
+- more expensive
+
+Eg: switched ethernet (ethernet is broadcast, but when you use a switch with it, the broadcast part is not user because the switch sends to whoever needs the message only)
+
+Switchers have a processor in it, they need to forward the packets to the right machines
+
+How to handle overload? Queue the packets, if the queue is full, drop the packet. It is the responsibility of TCP to retransmit it (UDP won't care)
+
+Every computer connected to the internet doesn't have an IP address, they can be placed under an router for eg and then only the router will have an IP (all the machines under the router will use the internet from the router's IP address) - this is done using NAT - network address translation. Whole companies are behind NAT firewalls as a way of protecting things.
+
+We route on subnets

@@ -1,0 +1,1320 @@
+* Compilers
+Prof. Alex Aiken
+
+The compiler is divided into 5 phases:
+1. Lexical analysis
+   - Program text --> tokens
+   - whitespace is a token, new line is a token etc
+   - it also identifies the tokens (identifiers, keywords, etc)
+
+2. Parsing
+   - structure of the tokens
+   - create a tree of sorts
+   - very similar to how we subconsciously form a tree of an English sentence(connect the verb, noun etc)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-08-12 06:57:54
+[[file:assets/screenshot_2017-08-12_06-57-54.png]]
+
+3. Semantic Analysis
+   - Understanding meaning of the tree
+   - To resolve ambiguities, we define block structures, namespaces etc
+   - Compilers can only help catch basic inconsistencies, they cannot decipher what the program is suppose to do
+
+4. Optimization
+   - Try to make it run faster/use less resource(memory, power, space, network calls, database accesses) etc
+
+5. Code generation
+   - Translate the code into some other language (generally assembly code)
+
+
+** Lexical Analysis
+
+Convert code --> tokens (identifier, keywords, numbers)
+
+*** Identifiers
+ - strings of letters or digits, starting with a letter (eg: foo, bar)
+ - Integer - string of numbers (eg, 0, 001, 00)
+ - keywords - (fixed reserved set of words)
+ - whitespace - non empty sequence of spaces (includes newlines, tabs). 
+
+The LA then sends these tokens to the Parser.
+Example:
+
+Text --> LA --> tokens --> P
+Program string --> LA --> [<class, string>, <class, string>, ...] --> P
+
+eg: 
+foo=42 --> LA --> [<identifier, 'foo'>, <operator, '='>, <Integer, '42'>, ] --> P
+
+**** Punctuation 
+Generally the punctuation marks are token classes in themselves, eg: (, ), ; etc
+Sometime = is also a separate token class in itself
+
+**** Example of lexical analysis
+
+Note how the continuous whitespaces are all grouped together 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-08-12 08:12:24
+[[file:assets/screenshot_2017-08-12_08-12-24.png]]
+
+*** The LA does 2 things:
+1. Recognize substrings corresponding to tokens 
+   - called lexemes (eg: foo=42 -->  here, 'foo', '=', '42' are lexemes)
+
+2. For each lexemes, identify their token class
+   - <tokenclass, lexeme> --> this makes a complete token
+
+
+*** LA examples
+
+**** Fortran
+In Fortran, whitespace is insignificant 
+So, VAR1 is same as VA R1
+
+Consider:
+
+DO 5 I = 1,25 --> this is a loop, 5 is the label till which the loop body extends. 
+
+Contrast this with:
+
+DO 5 I = 1.25 --> this is a variable assignment, DO5I=1.25
+
+
+But to know what the lexeme 'DO' is, you need to look ahead and see if there is a comma or period later. 
+So, we need lookahead here. This makes LA complex. So, one of the goals of LA is binding the amount of lookahead required.
+
+Lookahead may be required to decide where one token ends and the next one begins
+eg:
+ - when you read lexeme 'else', after parsing 'e', should you take 'e' as a variable or gobble till else and take that as a keyword? Need lookahead
+ - Same with '==', we have '=', now need lookahead
+
+
+**** PL/1 - Programming Language 1
+PL/1 does not have reserved keywords
+so, this is valid:
+    IF ELSE THEN THEN = ELSE; ELSE ELSE = THEN
+
+Also, consider:
+
+   DECLARE(ARG1, ARG2, ..., ARGN)
+
+DECLARE could be an array reference and ARG1 could be the index to the array
+or it could be a keyword that initializes the ARG* for eg.
+
+We cannot know till we go ahead and see if there is an '=' at the end of the statement. 
+But since this could have unbounded elements, we have unbounded lookahead here
+
+**** C++
+
+C++ template syntax: Foo<Bar>
+C++ stream syntax: cin >> var;
+
+Conflict with nested templates: Foo<Bar<Baz>> 
+Here, the trailing >> should be interpreted as closing template tag, and not as stream operator
+
+*** Summary of LA's goals
+ - goal of Lexical Analysis is to:
+   - partition input string into lexemes
+   - identify the token of each lexeme
+ - left to right scan -> lookahead sometimes required
+
+How do we define what different token classes we have, and what strings are there in each token class
+
+*** Regular Languages 
+
+    "They are used to specify the lexical structure of programming languages"
+
+The "lexical structure" of programming languages are the token classes. We need to specify what set of strings fall in each token class
+We will use *regular languages* to do this.
+
+**** Definition
+We use regular expressions to define regular languages
+Each regular expression denotes a set
+
+ 1. Base Regular expressions
+    - single character 
+      - 'c' --> it denotes a regular language containing one string, 'c' -- {'c'}
+
+    - epsilon 
+      - \epsilon --> it denotes a RL containing the empty string "" -- {""}
+
+ 2. Compound regular expressions
+    - Union
+      - A + B --> union of RL A and B
+      - A + B = {a | a \in A} \cup { b | b \in B }
+    - Concatenation
+      - cross product operation (cartesian product)
+      - AB --> {ab | a \in A \wedge b \in B}
+      - Not having any symbol b/w letters implies concatenation
+
+    - Iteration
+      - A* --> A concatenated with itself A times
+      - A* = \cup A*A*A* .. (i times)
+      - A0 is A concatenated with itself 0 times, so that is the empty string \epsilon, so \epsilon is element of A*
+
+So, definition of regular expressions over \Sigma(this is our alphabet on which the language is built) are the smallest set of expressions including:
+
+     R = \epsilon
+       | 'c'      c \in \Sigma
+       | R + R
+       | RR
+       | R*
+
+*** examples:
+
+Let \Sigma = {0, 1}
+
+ - 1*
+   - This denotes the language '' + {1} + {1}{1} + {1}{1}{1} + {1}...{1} --> {'', 1, 11, 111, ..., 1..1}
+   - this is equal to all strings of 1s
+   - + denotes union (\cup)
+
+ - (1 + 0)1
+   - (1 + 0) means, the set {1, 0}, we are taking the union of 2 sets (viz. {1} and {0}). And since we have only one (1+0), we get to choose one. So, cartesian product gives: {1}{1}, {0}{1}
+   - So, we get, {11, 01} (recall concatenation is a cross product)
+
+ - 0* + 1*
+   - this gives: {} + {0} + {0}{0} + ...
+   - this gives: {'', 0, 00, ..., 0..0, 1, 11, ..., 1...1}
+   - or, 0, 00, 11, 111, etc
+
+ - (0 + 1)*
+   - {} + (0+1) + (0+1)(0+1) + ... (0+1)**i
+   - so, from each (0+1), we get to choose 0 or 1
+   - Thus, this language represents all strings of all combinations of 0s and 1s
+   - The regular expression that can form all the stings from the alphabet, is called \Sigma* (because our alphabet here consisted only of {0,1})
+
+Lots of ways to write each one. Example: 1* == 1* + 1 (adding 1 explicitly won't change things because 1 is already included in 1*)
+
+**** Summary
+Regular expressions specify regular languages 
+ - RE are used to define RL
+ - RE denotes a set of strings that forms our RL
+ - 5 constructs in RE
+   - Base cases
+     - empty strings (\epsilon)
+     - 1-character strings
+   - Compound expression
+     - union (+), concatenation, iteration
+     - union is the vanilla union of 2 sets
+     - concatenation is the cartesian product of 2 sets
+     - iteration is union of concatenation of set with itself
+
+
+*** Formal Languages
+We typically have several FLs in our compiler that we are manipulating.
+RE is one example of formal language.
+
+Def:
+    Let \Sigma be a set of characters (an alphabet). A language over \Sigma is a _*set* of strings_ of characters drawn from \Sigma
+
+In the case of Regular Languages, we used Regular Expressions to build this _set of strings_
+Other kinds of languages would have other ways of getting this set. But, generally, a formal language is just some set over the alphabet \Sigma. 
+
+**** Example:
+Alphabet = English characters (a-zA-Z)
+Language = English sentences (iff we define a rule saying what strings are valid sentences)
+So, English is a formal language (given we have this rule :top:)
+
+Alphabet=ASCII
+Language=C programs
+Here, we have a very well defined FL, all the C programs are from the ASCII charset
+
+
+We define a meaning function L that maps the RE to the sets of strings that it represents. 
+So:
+ - L(\epsilon) = {}
+ - L('c') = {'c'}
+ - L(A+B) = A \cup B
+ - L(AB) = {ab | a \in A \wedge b \in B}
+ - L(A*) = \cup A(i) where i from 0 to \infty
+
+
+We can now say:
+ - L(A+B) = L(A) \cup L(B)
+ - L(AB) = {ab | a \in L(A) \wedge b \in L(B)}
+ - L(A*) = \cup L(A(i)) where i from 0 to \infty
+
+This is it more cleaner. We need a set to take union, so we L(A) it for example
+It also allows us to consider notation as a separate issue. *We can vary the syntax while we keep the semantics the same.* 
+
+Example: consider 2 number systems. Roman(I, II, III) and Arabic(1, 2, 3). Now, both use different syntax, but the semantics is the same, they both refer to the abstract quantity of numbers
+
+ - 00* --> all the strings of 0 of length at least 1
+
+The function L is many to one
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-08-12 11:34:06
+[[file:assets/screenshot_2017-08-12_11-34-06.png]]
+
+This is useful in optimization. Since we know that 2 particular programs mean the same thing, we can replace one with the faster one.
+We don't want it one to many - this would mean one sentence could mean 2 things
+
+
+*** Lexical Specifications
+
+We will use RE to classify different aspects of programming languages
+
+**** Regular expression for if-else would be:
+ - 'i''f' + 'e''l''s''e' ... 
+Note the concatenation and the union
+We have a shorthand:
+ - 'if' + 'else' + 'then'
+
+**** integers
+ - digit = '0' + '1' + ... + '9'
+ - you can name REs as well. We are calling ours digit
+ - multiple digits - digit*
+ - :top: is all the strings of all possible combinations of integers but it also can be empty
+ - so, non empty --> digitdigit*
+ - this is a common pattern, if you want at least one A, you do AA*.
+   - since this is so common, we have a shorthand for this: A+ --> this implies at least one A
+ - so we have digit+
+
+
+**** strings of letters or digits
+ - letter = 'a' + 'b' + ... 'z' + 'A' + 'B' + ... + 'Z'
+ - shorthand: letter = [a-zA-Z]
+ - so, we need it to begin with a letter and then we can have letters _or_ digits
+ - so: letter(letter + digits)* (letter(letter \cup digits)*)
+
+**** whitespace
+ - non-empty sequence of blanks, newlines, tabs
+ - whitespace = ' ' + '\n' + '\t'
+ - so: whitespace+
+
+**** email ids
+ - email addresses form a formal language and more specifically, they for a regular language
+ - which is to say, they are built form sets of strings that are defined by regular expressions
+ - (anything for which you can write a regex, is a RL)
+ - so: letter+ \cup '@' \cup letter+ \cup '.' \cup letter+ \cup '.' \cup letter+
+
+
+**** example: PASCAL's lexical specification
+
+ - digit = '0' + '1' + '2' + '3' + ... '9'
+ - digits = digit+
+ - opt_fraction = ('.'digits) + \epsilon  // _the trailing \epsilon means that opt_fraction is optional_
+ - opt_exponent = ('E'('+' + '-' + \epsilon) digits) + \epsilon
+ - num = digits opt_fraction opt_exponent
+
+Since the '+ \epsilon' to make the strings represented by some RE is so common, we have a shorthand for this as well - '?'
+So, 
+ - opt_fraction --> ('.'digits) + \epsilon --> ('.'digits)?
+ - opt_exponent --> ('E'('+' + '-')? digits)?
+
+
+**** summary
+
+Regular expressions can describe many useful languages. Regular languages are a language specification. 
+Examples of RL - email addresses, file names, phone numbers
+Next time: 
+    _given string s and a rexp R, is s \in L(R)?_
+
+*** Use RE to define Lexical specification
+
+**** revision
+
+ - A^{+} --> at least one A --> AA*
+ - A | B --> A or B --> A + B --> A \cup B
+ - A? --> optional A --> A + \epsilon
+ - 'a' + 'b' + ... + 'z' --> range --> [a-z]
+ - excluded range --> complement of [a-z] --> [^a-z]
+
+How do we know if given s \in L(R), recall L(R) is the set of strings given by regular expression R
+Also, just the ability to say yes/no won't give us the lexemes that we need 
+
+**** regexp for the lexemes of each token class
+ - number = digit^{+}
+ - keyword = 'if' + 'else' + ...
+ - identifier = letter(letter+digit)*
+ - openpar = '('
+ - ...
+
+We create *R*, which is the union of all the regexps for all the tokens
+R = keyword + identifier + number + ...
+R = R_{1} + R_{2} + ... + R_{n}
+
+ 
+**** steps to lexically analyse the program
+1. Let input be x_{1}...x_{n}
+For 1 \le i \le n check:
+ x_{1}...x_{n} \in L(R) --> check if the 'prefix' is part of the master R
+
+2. If success, we know that 
+ x_{1}...x_{n} \in L(R_{j}) for some j
+
+3. Remove x_{1}...x_{n} from input and go to 1
+
+
+***** How do we get the 'prefix'? 
+What if:
+  x_{1}...x_{i} \in L(R)
+  x_{1}...x_{j}_{} \in L(R)
+
+And i \ne j
+eg: '=' and '=='
+
+Easy answer - take the longest one - aka *maximal munch*
+
+***** which token is used?
+What if more than 1 token matches
+we have:
+  x_{1}...x_{i} \in L(R) where R = R_{1} + R_{2} + ... + R_{n}
+
+If the prefix matches R_{i} and R_{j} and i \ne j then what?
+Example: 'if' \in L(keyword), 'if' \in L(identifier)
+valid keyword and valid identifier
+
+Easy answer - priority ordering. Choose the one listed first, so, keywords to be listed first in the lexical specification
+
+
+***** what if no rule matches?
+  x_{1}...x_{i} \notin L(R)
+
+We need a category(a RE) for error strings which is complement of master R
+ie all the strings not in the lexical spec of the language
+error = ^R
+*And we put it last* - we can even have it as catch all reg exp
+
+**** summary
+
+  - reg exps are concise notation for string patterns
+  - use in lexical analysis some minor extensions - like priority ordering, maximal munch, reg exp for error etc
+  - good algos known for this - require only single pass over input, few operations per character(table lookup)
+
+
+*** Finite Automata
+
+We use FA as the implementation mechanism for RE
+
+    regular expressions = specification
+    finite automate = implementation
+
+FA can specify RL just like RE
+
+A FA consists of:
+ - an input alphabet \Sigma
+ - a finite set of states S
+ - a start state n
+ - a set of accepting states F \sube S
+ - a set of transitions state \to state by reading some input
+
+
+**** working
+    s_{1} \to s_{2} after reading some input 'a'
+if the automata ends in an accepting state after accepting the input, it will accept the string and say, "yes, that input was in the language of this machine"
+
+If not in the final/accepting state, it rejects the input
+it also rejects if a machine gets state in a state without any transition from there
+
+**** alternative notation
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-08-12 14:25:02
+[[file:assets/screenshot_2017-08-12_14-25-02.png]]
+
+A state state is the one with an arrow pointing into it
+example:
+
+***** an FA that accepts only "1"
+\Sigma (alphabet) is {0, 1}
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-08-12 14:29:11
+[[file:assets/screenshot_2017-08-12_14-29-11.png]]
+      
+Note here,
+Initial state is state A, the input is read and the transition is made if available. If not, reject the input.
+Also, in the example "10", we reject because even though we are at the final state B, we aren't at the end of the input string and we don't have any transition for 0, so, reject.
+
+The set of strings that the automata accepts, become our language, just like with RE, they too accepted a set of strings
+
+***** a FA accepting any number of 1s followed by a single 0
+Since the string has to be followed by a 0, the last transition will on input 0
+\Sigma = {0, 1}
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-08-12 15:08:18
+[[file:assets/screenshot_2017-08-12_15-08-18.png]]
+
+| state | input |
+|-------+-------|
+| A     | .110  |
+| A     | 1.10  |
+| A     | 11.0  |
+| B     | 110   | --> since we are at the end of the input string, we accept this
+
+
+**** \epsilon-moves
+
+The machine changes state, but the input pointer stays in exactly the same place
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-08-12 15:12:38
+[[file:assets/screenshot_2017-08-12_15-12-37.png]]
+
+| State | input |
+|-------+-------|
+| A     | a.bc  |
+| B     | a.bc  |
+
+\epsilon is optional, the machine can make the move if it wishes
+
+ - deterministic finite automata (DFS)
+   - one transition per input per state
+   - no \epsilon-moves
+ - non deterministic finite automate (NFA)
+   - can have multiple transitions for one input in a given state
+   - can have \epsilon-moves
+   - NFA accept if _some_ choices lead to an accepting/terminal state
+
+If you have \epsilon moves, you get NFA, the first point can be simulated by \epsilon moves
+
+DFA takes only one path thru the state graph given the input
+NFA can choose different path even when we have same input
+
+**** example of NFA:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-08-12 15:19:26
+[[file:assets/screenshot_2017-08-12_15-19-26.png]]
+
+| Input | states    |
+|-------+-----------|
+|  1.00 | {A}       |
+|  10.0 | {A, B}    |
+|  100. | {A, B, C} | --> accept the input
+
+A NFA is in a set of states, not in just one state. 
+
+NFAs and DFAs recognize the same set of languages - the regular languages
+DFAs are faster to execute
+NFAs are in general smaller (exponentially smaller) -- space time tradeoff
+
+
+*** Regular expressions to NFAs
+
+**** overview
+ - we have lexical specification for our language
+ - we need to write down regular expressions for it
+ - translate RE to NFA
+ - translate NFA to DFA
+ - implement DFA as a "lookup table" with some code for traversing the tables
+
+
+**** RE -> NFA
+For each regular expression, we need to write an "equivalent NFA" - the NFA that accepts the same set of strings as RE
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-08-12 15:27:59
+[[file:assets/screenshot_2017-08-12_15-27-59.png]]
+
+:top: is an NFA for regular expression M
+ 
+***** for \epsilon
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-08-12 15:29:10
+[[file:assets/screenshot_2017-08-12_15-29-10.png]]
+
+***** for input 'a'
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-08-12 15:29:30
+[[file:assets/screenshot_2017-08-12_15-29-30.png]]
+
+There were the NFAs for the 2 simple regular expression.
+Now, writing NFAs for compound reg exps
+
+***** for AB
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-08-12 15:31:19
+[[file:assets/screenshot_2017-08-12_15-31-19.png]]
+
+Note here in AB, the final state status of A's NFA is revoked and we have to consume some thing from B as well to accept the string.
+It is like input string have components from "A and B"
+
+***** for A + B
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-08-12 15:33:36
+[[file:assets/screenshot_2017-08-12_15-33-36.png]]
+
+Here, we can have optional A and optional B, but one of them has to be there
+
+***** for A*
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-08-12 15:35:02
+[[file:assets/screenshot_2017-08-12_15-35-02.png]]
+
+Note how we accept no input, by a direct \epsilon to end state
+also we have a loop from A to starting state + \epsilon to start of A, so we accept A as many times as we want and them we take \epsilon to terminal state
+
+**** example
+
+Consider the RE - (1 + 0)*1
+this will accept any string of 1s and 0s (can be mixed) ending with a 1
+eg: 0101010101
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-08-12 15:40:00
+[[file:assets/screenshot_2017-08-12_15-40-00.png]]
+
+*** NFA to DFA
+
+**** \epsilon closure
+
+Consider this NFA:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-08-12 18:36:05
+[[file:assets/screenshot_2017-08-12_18-36-05.png]]
+
+
+\epsilon closure of a particular node is defined as all the nodes you can go there
+eg:
+\epsilon-closure(B) = {B, C, D}
+\epsilon-closure(G) = {G, H, I, A, B, C, D}
+
+An NFA can be in many stages at any given time
+how many? Total number of subsets from N nodes - 2^{N}-1
+this is but large but finite. So, we can convert an NFA into an DFA by simple unfurl the NFA
+
+
+| whatit?             | NFA                                    | DFA                                          |
+|---------------------+----------------------------------------+----------------------------------------------|
+| all possible states | S                                      | subsets of S                                 |
+| start state         | s \in S                                  | \epsilon-closure(s)                                 |
+| final state         | F \sube S                                  | { X \ X \cap F \ne \phi}                             |
+| transition function | a(X) = {y \ x \in X \wedge x \to y for input a} | X \to Y for input a  where Y = \epsilon-closure(a(X)) |
+
+
+Transition function of NFA:
+:top: 'a' is a part of the charset.
+a(X) - given a set of states X, give me all the states that you can reach on the input 'a' from X
+
+Final function of DFA:
+any subset of the set of final states in NFA
+
+**** example of NFA - DFA
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-08-12 19:08:14
+[[file:assets/screenshot_2017-08-12_19-08-14.png]]
+
+Here, the starting state of NFA  is A
+so, in DFA, is it \epsilon-closure(A) which is ABCDHI
+Now, we have 2 options 0/1 because the \Sigma of this FA is {0, 1}
+Take 0 first. From the purple border, taking a 0 gets us to the blue box
+Now, 1, taking a 1 from starting position takes us to red box  - which also has the terminal state J
+Now, taking a 0/1 from blue/red is easy.
+Neat!
+
+*** implementing FA
+
+A DFA can be implemented by a 2D table T
+
+We can have: a 2D matrix "master-table" which is MxN
+M - states
+N - input symbols
+so, master-table[A]['0'] - means what if you are on state A and consume a '0'
+
+**** example
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-08-12 19:14:30
+[[file:assets/screenshot_2017-08-12_19-14-30.png]]
+
+| :) | 0 | 1 |
+|----+---+---|
+| S  | T | U |
+| T  | T | U |
+| U  | T | U |
+
+Now, using this table in a program would be simple.
+We can use an adjacency list as well:
+
+| S | [T, U]           |
+| T | pointer to :top: |
+| U | pointer to :top: |
+
+
+We can get away with not converting to DFA and using NFA directly as well
+
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-08-12 19:30:06
+[[file:assets/screenshot_2017-08-12_19-30-06.png]]
+|   | 0 |   1 | \epsilon      |
+|---+---+-----+--------|
+| A |   |     | {B, H} |
+| B |   |     | {B, H} |
+| C |   | {E} |        |
+
+This is slower to execute as we have a set of states in each cell and we have to carry out \epsilon moves from all elements there
+
+Trade off involved:
+ - DFAs  - faster, less compact
+ - NFAs - slower, concise
+
+
+
+
+** Parsing
+
+*** Regular Languages
+ - the "weakest" formal languages widely used
+ - but they have many applications
+ - some languages aren't regular and can't be expressed by FA/RL
+   - consider this formal language: { (^{i})^{i} | i \ge 0} - the balanced parenthesis
+   - , (), (()), ((()))
+   - this will accept nested if-then-else etc
+
+What can they express?
+ - consider: (0+1)* + 1
+ - it will recognize strings with odd number of 1 - eg: 11111
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-08-12 21:00:39
+[[file:assets/screenshot_2017-08-12_21-00-39.png]]
+
+We don't have any way to get the number of 1s, we can only decipher if the string has odd number of 1s
+i.e. count % k. 
+
+**** what does the parser do?
+Input - sequence of tokens from lexer
+Output - parse tree of the program 
+
+Since RL/FA can't get nested structures right, the parser has to do it
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-08-13 07:43:25
+[[file:assets/screenshot_2017-08-13_07-43-25.png]]
+
+
+**** summary
+
+|--------+----------------------+-----------------------------|
+| phase  | input                | output                      |
+|--------+----------------------+-----------------------------|
+| lexer  | string of characters | string of tokens            |
+| parser | string of tokens     | parse tree(may be implicit) |
+|--------+----------------------+-----------------------------|
+ 
+*** Context free grammars
+ - Not all strings of tokens are programs (even if they fit in the RL/FA of the language, eg: if if if)
+ - parser must distinguish between the two
+ - We need
+   - a language for describing valid strings of tokens -- RL/FA
+   - a method for distinguishing valid from invalid string of tokens -- ??
+ - also, programming languages have recursive structure
+ - an expr is:
+   - if EXPR then EXPR else EXPR fi etc
+   - Context-free grammars are a natural notation for this recursive structure
+
+
+
+**** context free grammars
+It consists of:
+ - a set of terminals: T
+ - a set of non terminals: N
+ - a start symbol: s (s \in N)
+ - a set of productions:
+   - X \to Y_{1}...Y_{N} where:
+     - X \in N
+     - Y_{i} \in N \cup T \cup \epsilon
+
+
+
+**** example of cfg:
+CFG for String of balanced parenthesis:
+The productions would be:
+ - S \to (S)
+ - S \to \epsilon
+
+The non terminals: N = {S} - in caps
+The terminals: T = {(, )} - in lowercase
+
+Productions can be read as replacement rules. You can replace LHS with RHS
+ie whenever you see S, you can replace it with (S)
+
+Steps:
+ - begin with a string with only the start symbol S
+ - replace any non-terminal X in the string by the RHS of some production X \to Y_{1}...Y_{N}
+ - repeat till no non-terminals left
+ - X_{1}_{}...X_{i}XX_{i+1}...X_{N}  \to  X_{1}_{}...X_{i}Y_{1}...Y_{k}X_{i+1}...X_{N} given production rule: X \to Y_{1}...Y_{k}
+
+
+Starting from S, we can have a series of steps to get to \alpha_{n}:
+    S \to \alpha \to \alpha_{0} \to ... \to \alpha_{n}
+    we can also write this as: \alpha_{0} \to* \alpha_{n} (in \ge 0 steps)
+
+**** language of a CFG
+
+Let G be context free grammar with start symbol S. The language L(G) of G is:
+    {\alpha_{1}...\alpha_{n} | \forall \alpha_{i} \in T \wedge S \to* \alpha_{1}...\alpha_{n})
+
+That is, basically starting from S, replace all the symbols with their terminal counterparts using the production rules multiple times if you have to
+
+Terminals are called so because there is no production rule to replace them. All production rules lead to terminals. Terminals ought to be tokens of the language.
+
+**** cfg for cool
+
+EXPR \to if EXPR then EXPR else EXPR fi
+EXPR \to while EXPR loop EXPR POOL
+EXPR \to id
+.
+.
+.
+
+We can write this with this shorthand:
+
+EXPR \to if EXPR then EXPR else EXPR fi
+     \| while EXPR loop EXPR POOL
+     \| id
+.
+.
+.
+
+This means that these are valid cool statements:
+ - id
+   - a single variable name is a valid cool statement for eg (due to last PR)
+ - if id then id else id fi
+ - while id loop id pool
+ - if while id loop id pool then id else id 
+etc
+
+**** cfg for arithmetic expressions
+
+E \to E + E
+  \| E * E
+  \| (E)
+  \| id
+
+This language will accept:
+ - id
+ - id + id
+ - id + id * id
+ - id + (id + id)
+
+*So, we use RE/FA to accept valid tokens disregarding their arrangement or anything(eg if if if accepted). And we use CFG to accept certain combinations of tokens, disregarding the wrong ones(eg if if if rejected)*
+
+CFGs are great, but we still need:
+ - membership in a language is still "yes" or "no" in cfg but we still need parse tree of input
+ - must handle errors gracefully
+ - need an implementation of CFGs
+
+Many grammers generate the same language. Tools accept only some and not others even they are valid.
+
+*** Derivations
+
+A derivation is a sequence of productions
+
+S \to ... \to ... \to ... 
+
+It can be drawn as a tree:
+ - root is start symbol X
+ - for a production X \to Y_{1}...Y_{n} we add Y_{1}...Y_{n} as children to node X
+
+Example:
+ - taking our old grammar for arithmetic:
+   - E \to E + E | E * E | (E) | id
+   - string: id*id+id
+
+Here it is:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-08-13 08:50:04
+[[file:assets/screenshot_2017-08-13_08-50-04.png]]
+
+We begin with E and apply the productions till we reach all terminals
+*This is called a parse tree :top:* for that input string
+
+To see if the string is acceptable or not, start from a non-terminal and see if you can end up with that string after repeatedly applying production rules
+
+Parse trees:
+ - have terminals at the leaves, non-terminals in the interior
+ - in order traversal gives the original input string back
+ - we can have multiple valid parse trees for the same input string and same set of production rules
+
+The parse tree we have above is:
+ - left-most derivation
+   - at each step, replace the _left-most_ non terminal
+     - E
+     - E + E
+     - E*E + E
+     - id*E+E
+     - id*id+E
+     - id*id+id
+ - you can also have a _right-most_ derivation
+   - E
+   - E+E
+   - E+id
+   - E*E+id
+   - E*id+id
+   - id*id+id
+
+At each step, we replace only *one* non terminal.
+We get the exact same parse tree in both cases
+
+You can also choose non-terminals in random order and then you will still get same parse trees
+You can get different parse trees if you use different priority of production rules
+
+**** summary
+ - we don't need just the answer to question s \in L(G) - s is a string
+ - we need a parse tree for s
+ - a derivation(repeated application of PR) defines a parse tree
+   - *but one parse tree may have many derivations*
+ - left-most and right-most derivations are important in parser implementations
+
+
+*** Ambiguity
+
+ - taking our old grammar for arithmetic:
+   - E \to E + E | E * E | (E) | id
+   - string: id*id+id
+
+Here, we can have multiple parse trees based on weather we use E \to E + E or E \to E * E first 
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-08-13 09:05:53
+[[file:assets/screenshot_2017-08-13_09-05-53.png]]
+
+
+Also, each of these parse trees has many derivations 
+
+A grammar is ambiguous if it has more than one parse tree for some string s (more than one right-most or left-most derivation for some string). Ambiguity is bad, you leave it to the compiler to decide which tree to generate code for
+
+Ways to handle ambiguity:
+ - re-write the grammer
+   - E \to E' + E | E'
+   - E' \to id*E' | id | (E)*E' | (E)
+   - E controls the generation of +
+   - E' controls the generation of *
+   - this is basically enforcing precedence of * over + because starting at E, we have only one PR to choose E \to E' + E
+   - Consider E:
+     - E \to E' + E
+     - E \to E' + E' + E
+     - E \to E' + E' + E' + ... + E
+     - E \to E' + E' + E' + ... + E'
+     - so, E can generate a sequence of E' from E
+   - Consider E'
+     - E' \to id * E'
+     - E' \to id * id * E'
+     - E' \to id * id * id * ... * E'
+     - E' \to id * id * id * ... * id
+     - so, E' can generate a sequence of multiplications of 'id's - can be parenthesised as well
+   - so, all the plus-es(+s) must be generated before the *s
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-08-13 09:19:49
+
+[[file:assets/screenshot_2017-08-13_09-19-49.png]]
+
+
+
+**** if them else example
+Note here, else is optional
+
+E \to if E then E
+ \| if E then E else E
+ \| OTHER 
+
+The statement:
+    if E_{1} then if E_{2} then E_{3} else E_{4}
+is valid according to this grammar, but it has 2 parse trees:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-08-13 09:39:47
+[[file:assets/screenshot_2017-08-13_09-39-47.png]]
+
+We want the second one, we want to associate the elses to associate to the closes matching if
+ - alternatively, else matches the closest unmatched then
+ - so we have MIF - matched thens
+ - and UIF - some thens are unmatched
+ - and the grammar becomes:
+   - E \to MIF | UIF
+   - MIF \to if E then MIF else MIF | OTHER
+   - UIF \to if E then E | if E then MIF else UIF
+ - converting ambiguous to unambiguous grammar is difficult
+ - what we generally do is take some heuristic to choose from 2 parse trees based on *precedence and associativity declarations*
+ - example:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-08-13 10:06:18
+[[file:assets/screenshot_2017-08-13_10-06-18.png]]
+
+Here, we can define + to be left associative(it means, expand the left tree first), so we will get left parse tree
+
+
+
+ - another example:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-08-13 10:07:41
+[[file:assets/screenshot_2017-08-13_10-07-41.png]]
+
+
+Here, we can say:
+ - + is left associative
+ - * is left associative
+And the fact that + comes first, it means it has higher precedence than *
+
+So, we will get the right parse tree (+ before *)
+
+*** error handling
+The compilers need to detect errors and give helpful messages
+
+| error kind  | example       | detected by  |
+|-------------+---------------+--------------|
+| lexical     | 1$var_name    | lexer        |
+| syntax      | if if if      | parser       |
+| semantic    | int x; y=x(3) | type checker |
+| correctness | your code     | tester/user  |
+
+What does the compiler do on error detection:
+ 1. panic mode
+    - when an error is detected, discard tokens until one with a clear role is found and continue from there
+    - look for synchronizing tokens, typically the statement or expression terminators (eg, end of function etc)
+    - example: (1 + + 2) + 3
+    - the parser sees that the language doesn't accept 2 +s in a row and it needs to take some action
+    - it goes to panic mode, skip ahead to the next integer and then continue
+    - in bison(which is a parser/generator) there is a terminal _error_ to describe how much input to skip
+      - E \to int | E + E | (E) | error int | (error)
+ 2. error productions
+    - specify in the grammar itself the known common mistakes that developers make
+    - eg: writing 5x instead of 5*x
+    - add production E \to .. | EE | ..
+    - this complicates the grammar though (and promotes common mistakes)
+    - this is done in gcc for eg where it warns you that you are doing something not right but still accepts anyway
+ 3. automatic local or global correction
+    - find a correct "nearby" program - by minimizing edit distance, maybe with exhaustive search
+    - disadvantages:
+      - hard to implement
+      - slows down parsing of correct programs
+      - "nearby" is not necessarily "the intended" program
+      - an exmaple is: the PL/C compiler from Cornell 
+
+*** abstract syntax trees
+ - A parser traces the derivation of a sequence of tokens
+ - But the rest of the compiler needs a structural representation of the program
+ - Enter abstract syntax trees
+   - like parse trees but ignore some details
+   - aka AST
+
+
+- Consider the grammar:
+  - E \to int | (E) | E+E
+  - and the input string: 5 + (2+3)
+- after lexical analysis we have:
+  - int '+' '(' int '+' int ')'
+- during parser phase, we get:
+  - the parse tree
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-08-13 10:34:29
+[[file:assets/screenshot_2017-08-13_10-34-29.png]]
+
+The parse tree captures the nesting structure and gives a faithful representation of the program
+But it has too much information:
+ - parenthesis
+ - single successor nodes
+
+This would be much better:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-08-13 10:36:34
+[[file:assets/screenshot_2017-08-13_10-36-34.png]]
+
+This captures the nesting structure but also abstracts the concrete syntax (hence the name AST).
+This is easier to walk over and manipulate by algorithms in the compiler
+The AST is an important data structure in the compiler
+
+*** recursive descent parsing
+ - This is our first parsing algorithm.
+ - In RDP, the parse tree is constructed "top down, left to right"
+ - the terminals seen in the order they appear. Eg if we have t_{2}, t_{5}, t_{6}, t_{8}, t_{9} as the token stream, we get:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-08-13 10:40:15
+[[file:assets/screenshot_2017-08-13_10-40-15.png]]
+
+Read as, we get expression 1, it is "derived" according to some PR
+then, we get t_{2}, 3 (but not t_{9} yet)
+We see that 3 is not a terminal, expand it recursively 
+
+**** example:
+
+Consider the grammar:
+E \to T | T+E
+T \to int | int*T | (E)
+
+Token stream: ( int_{5} )
+
+We get:
+ - start with top-level non-terminal E
+   - *try the rules for E in order*
+   - if the productions fail, we backtrack and retry the next one
+
+| comment                   | input steam                             |
+|---------------------------+-----------------------------------------|
+| we have this input stream | .( int_{5} )                               |
+| we read ( and try E \to T   | E - T                                   |
+| we try T \to int            | fail                                    |
+| we try T \to int*T          | fail                                    |
+| we try T \to (E)            | accept as we have ( as the token stream |
+|                           | we have E - T - (E) and (. int_{5} )       |
+| we try E \to T              |                                         |
+| we try T \to int            | accepted, we advance ( int_{5} .)          |
+| we accept )               | we get our parse tree ( int_{5} ).      |
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-08-13 10:54:35
+[[file:assets/screenshot_2017-08-13_10-54-35.png]]
+
+*** recursive descent algorithm
+ - let TOKEN be the type of all the tokens (the Object class of Java)
+   - special tokens INT, OPEN, CLOSE, PLUS, TIMES
+ - the global variable /next/ points to the next input token - our . in the table :top:
+ - implementing this is simple, just follow the logical intuition
+ - we will have 2 classes of functions for each non-terminal, one to check if that particular production can match the input
+   - one to check if any production of that non-termial can match the input
+ - we have 2 productions:
+   - E \to T | T+E
+   -  T \to int | int*T | (E)
+
+#+begin_src c
+// this function takes a token and returns a boolean indicating a match or not
+// the match is checked for the token that is currently pointed to by global var next
+// also we increment the next pointer
+bool term(TOKEN tok) { return *next++==tok;}
+
+// checks for 1st production of E
+bool E1() { return T();}
+
+// checks for 2nd production of E
+// first T() will execute and it will increment the global var next
+// so will term('+') and return(E)
+bool E2() { return T() && term(PLUS) && return(E);}
+
+// check for all productions of E
+bool E() { 
+  // we preserve the next var if we need to backtrack
+  TOKEN *save = next;
+  // if E1 succeds, we don't evaluate E2 and we procced --> DFS
+  // if not, we restore the global val next to old value and try E2
+  return {(next=save, E1()) || (next=save, E2());}
+}
+
+
+// checks for 1st production of T
+bool T1() { return term(INT);}
+
+// checks for 2nd production of T
+bool T2() { return term(INT) && term(TIMES) && T();}
+
+// checks for 2nd production of T
+bool T3() { return term(OPEN) && E() && term(CLOSE);}
+
+// check for all productions of E
+bool T() { 
+  // we preserve the next var if we need to backtrack
+  TOKEN *save = next;
+  // if E1 succeds, we don't evaluate E2 and we procced --> DFS
+  // if not, we restore the global val next to old value and try E2
+  return {(next=save, T1()) || (next=save, T2()) || (next=save, T3());}
+}
+// checks for all productions of S
+bool S() {}
+#+end_src
+
+We begin by putting /next/ to start of input and invoking E()
+We successfully parse the input string if E() returns true and we(global bar /next/) are at the end of the input string
+
+*** left recursion
+This is the main problem with recursive descent parsing
+
+Consider:
+ - say we have only one PR
+   - S \to Sa
+#+begin_src c
+bool S1() { return S() && return term(a);}
+// here, we don't need to save the global var /next/ because there is only one PR
+// but we do it so that when we add a new PR, we don't break if we forget to add this
+bool S() {TOKEN *save = next; return S1();}
+#+end_src
+
+Here, we are stuck in an infinite loop
+The reason is:
+ - the grammar is left-recursive
+ - a left-recursive grammar has a non-terminal S such that
+   - S \to^{+} S\alpha  (the plus indicates that we have some (non zero) derivations)
+   - so with out S \to Sa we can get:
+     - S \to Sa \to Saa \to Saaa ...
+   - so, the rule is that after some non-zero derivations, you should not end up with same non-terminal as prefix again
+   - example this is left recursive as well:
+     - S \to A\alpha | \delta
+     - A \to S\beta
+       - \because S \to S\beta\alpha
+   - there is a general algorithm that solves this
+
+
+Consider this left-recursive grammar:
+ - S \to S\alpha | \beta
+   - S \to S\alpha
+   - S \to S\alpha\alpha
+   - S \to S\alpha\alpha\alpha
+   - ...
+   - S \to \beta\alpha\alpha\alpha... 
+ - S generates all strings with any number of \alpha-s with one \beta as the prefix
+ - It does this right to left - it produces the right of the string first and then in the very end, it produces the left
+   
+Can rewrite using right-recursion
+ - we can get *exactly* the same language using right-recursive
+ - S \to \beta S'
+ - S' \to \alpha S' | \epsilon
+ - this gives:
+   - S \to \beta S'
+   - S \to \beta\alpha S
+   - S \to \beta\alpha\alpha
+   - S \to \beta\alpha\alpha\alpha...\alpha S
+   - S \to \beta\alpha\alpha\alpha...\alpha invoking the \epsilon in the end
+
+
+**** summary
+ - recursive descent is:
+   - simple and general parsing strategy
+   - left-recursion must be eliminated first
+   - but we have a general algo to do this but in practice people do it by hand
+   - *this is strategy used in gcc*
+
+*** predictive parsing
+- like recursive-descent but parser can "predict" which production to use
+  - by looking at the next few tokens
+  - no backtracking required
+  - only works for a restricted set of grammars I.e. LL(k) grammars
+    - LL(k)
+      - L -> Left to Right scan (we always do this)
+      - L -> left most derivation (almost working on left most non terminal in the parse tree)
+      - k -> k tokens of look ahead (k is = 1 in practice)
+
+
+  - in recursive descent, at each step we have many choices of productions to use
+    - and we have to backtrack to undo the bad choices
+  - In LL(1)
+    - at each step, only one choice of production
+
+
+ - consider our fav grammar:
+   - E \to T | T+E
+   - T \to int | int*T | (E)
+ - The problem is with T, it has 2 productions that both begin with int. So, when you get an int, which one to choose?
+ - Same thing with E, both begin with T
+ - This cannot be used for LL(1) predictive parsing, we need to "left-factor" the grammar
+   - we need to eliminate the common prefixes of multiple productions for 1 non terminal
+
+ - example:
+   - look at E, both begin with T. We need to factor it out
+     - E \to T | T+E becomes
+       - E \to TX
+       - X \to + E | \epsilon
+   - this effectively delays the decision about which production rule to use so we don't have to backtrack
+   - look at T \to int | int*T | (E) now:
+     - T \to Y | Y*T | (E)
+     - Y \to *T | \epsilon
+
+   - so our fav grammar becomes:
+     - E \to TX
+     - X \to + E | \epsilon
+     - T \to (E) | int Y
+     - Y \to *T | \epsilon
+
+We can generate a LL(1) parsing table from this grammar:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-08-13 15:07:23
+[[file:assets/screenshot_2017-08-13_15-07-23.png]]
+
+Row headers is current left most non-terminal in the parse tree
+column header is the next token in the input stream
+the corresponding entry in the table is the rhs of the production to use
+example: when current non-terminal is E and the next input is int, use production E \to TX
+example: when current non-terminal is Y and the next input is +, use production Y \to \epsilon
+ - which means get rid of the Y
+The blank entries are error entries. If you have to go there, the input string is invalid
+
+Algorithm:
+ - for the leftmost non-terminal S and the next input token a, we choose [S,a] from the table
+ - also, we use a stack of records and not use recursive functions to trace out the parse tree
+   - it records the frontier of the parse tree and has:
+     - the non-terminals that have yet to be expanded
+     - terminals that have yet to be matched against the input
+     - top of stack = leftmost pending terminal or non-terminal
+ - reject the string on getting error. Accept if we reach end of stack and input string
+ - basically, keep applying production rules till you get a terminal and when you do, match it against the input string.
+   - it if does:
+     - advance the input pointer and repeat
+   - if it does not:
+     - error, reject the input string
+
+#+begin_src c
+// $ is the bottom of stack or, end of input
+Initialize stack = <S$> and next
+repeat 
+  case stack of
+
+// if the top of the stack is non-terminal
+// we check that the table at the correct index gives us the production rule
+// if it doesn't (if the entry is empty), raise error
+// we pop X and put it's production back in which is Y1...Yn
+    <X, rest>: if T[X, *next] = Y1...Yn
+                then stack \gets <Y1...Yn rest>;
+                else error();
+
+// if the top of the stack is a terminal
+// then we check that the next on the input string is a terminal
+// else error. If it is, we pop the item from stack and advance next pointer
+// we are putting just the <rest> back in stack, effectively popping t
+    <t, rest>: if t == *next++
+                 then stack \gets <rest>;
+                 else error();
+
+// repeat until stack is empty
+Until stack == <>
+#+end_src
+
+*** first sets
+ - we will learn how to construct LL(1) parsing tables
+ - given a non-terminal A and the production A \to \alpha and next input token t
+   - we will want to use the production A \to \alpha in 2 cases:
+     - if \alpha can derive t in the first position (\alpha \to^{*} t\beta) ( * is 0 or more moves)
+       - this because then, we know that if we replace A with \alpha, we will be able to derive \alpha to get to t for sure
+     - we can say t \in First(\alpha)
+     - the First(\alpha) is the set of terminals that \alpha can produce in the first position by derivation
+     - if A \to \alpha and \alpha \to^{*} \epsilon and  \to^{ *} 

@@ -8,6 +8,7 @@ I am sharing them in the hope that they would be useful you as well.
 Available notes:
 
   * [Operating Systems](./operating_systems.org)
+  * [Compilers](./compilers.org)
   * [Artificial Intelligence](./artificial_intelligence.org)
   * [Pro Python](./pro_python.org)
   * [C language](./C_language.org)

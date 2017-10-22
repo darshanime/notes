@@ -26,12 +26,13 @@ gcc rocks.c -o rocks
 :command: scanf("%19s", ex) -- scan 19 literals and put in ex
 
 the main() function is the starting point for any C program
-the stdio.h header has code that allows you to read and write data to/from the terminal
+*the stdio.h header has code that allows you to read and write data to/from the terminal*
 
 note: int main()
 int is the return type of main. 0 --> successful execution
 
 :OQ: "to check the exit status of a program, do echo $?" how does that work?
+ - $? Stores the return code of last run command on the shell
 
 :command: use atoi to convert text into a number
 
@@ -41,7 +42,7 @@ you can execute it using ./<name>
 # when running programs, we do ./<name>
 # that is because on unix style OS, programs are run only if we specify the dir where they live or if the dir is in the path
 
-:imp: to any array, C adds \0 as the last character(called the sentinel character). this is the NULL of C
+:star: to any array, C adds \0 as the last character(called the sentinel character). this is the NULL of C
 
 the index always starts at 0, this is because the index is an offset actually.
 so, if a[0] is at 0x0000, a[5] is at 0x0005
@@ -58,21 +59,23 @@ when we define strings using double quotes, they are called string literals. the
 if will run one statement by default if evaluated to true
 
 --> | and & will evaluate both operators, || and && are the short circuit operators, they will evaluate only one
+This is important when you have auto increment operators on each increment (like in compilers, the parsers have the this when creating the asts)
 
 eg: 6 && 4 --> 6 != 0, so True
-but 6 & 4 --> 6 is 110, 4 is 100. so, 6&4 is 100 (pairwise AND operation on the bits)
+but 6 & 4 --> 6 is 110, 4 is 100. so, 6&4 is 100 (pairwise AND operation on the bits) - which is not 0, so true
 
 similarly with | (pairwise OR operator)
 
-- a lot of if statements probably mean that a "switch" is in order. never run switch without break.
+- a lot of if statements probably mean that a "switch" should be used maybe. never run switch without break.
 
 
+:for loops:
 :command: while (i==1) { printf(i); }
 :command: do { // code } while (cond); --> this executes at least once
-
 :command: for (a = 1; a<10;a++) {//code}
 
 use break to come out of loops. it cannot come out of if statements.
+
 #+begin_src C
 #include <stdio.h>
 int main()
@@ -117,12 +120,13 @@ int main()
 | *b | has | 0x5 |     |
 | *b | now | has | 0x9 |
 
+Statically types languages allow b to point to only an int, that cannot change
 
 consider this:
 
 #+begin_src C
 #include <stdio.h>
-void len_str(char str[]) // we are taking an array of chars. so it lives in the stack of the function len_str. had we taken an char pointer, pointing to a string literal, it would have lived in the constants section
+void len_str(char str[]) // we are taking an array of chars. so it lives in the stack frame of the function len_str. had we taken an char pointer, pointing to a string literal, it would have lived in the constants section
 {
     printf("size is: %i", sizeof(str)); // shows the size of the pointer
     printf("\ncontents: %s", str); // prints the string. the compiler knows that the str points to the 1st element of a char, so, it prints it out
@@ -145,6 +149,7 @@ So, "str" is a pointer to the start of the array. since it is an array of type c
 also, sizeof(str) returns the size of the pointer in bytes. 8bytes --> since our machine is 64-bit system, each memory address is 64 bits long
 
 sizeof is an operator, not a function. an operator is compiled to a sequence of instructions by the compiler. if it were a function, the program counter would have to jump to the definition of the function and start executing it(also, storing the return address as the present address)
+operators are faster than functions
 
 when we do int *a=1 - the address of 1 is stored in "a"
 the pointer is just a variable(named "a"), storing 1's address. the address of the pointer itself can be found by &a
@@ -209,6 +214,8 @@ int main()
 *<var> --> give me the value at the memory address <var>. <var> needs to be a pointer
 &<var> --> give me the address of <var>. <var> may be a pointer
 
+If you just print the pointer, it prints the address of the pointer. If you want the contents, do *<name>, if you want the address of the pointer itself, do &<name>
+
 #+begin_src C
 #include <stdio.h>
 
@@ -220,7 +227,7 @@ int main()
     printf("\nvalue is %c", *ptr);
 
     printf("\nsizeof s %p", sizeof(s)); // print the size of the array, C will know that this "s" is an array and print it's full size
-    printf("\nsizeof ptr %p", sizeof(ptr)); // note ptr is an address of the 1st element of array "s", so 8
+    printf("\nsizeof ptr %p", sizeof(ptr)); // note ptr is an address of the 1st element of array "s", so 8bytes (64 bit machine)
     printf("\nsizeof ptr %p", sizeof(*ptr)); // note *ptr is the value of the thing that ptr points to, which is the 1st element of "s". size is 1
     return 0;
 }
@@ -235,9 +242,9 @@ int main()
 | sizeof | ptr |            0x8 |
 | sizeof | ptr |            0x1 |
 
-:imp: int *ptr = 2; printing ptr will print the address(because that is what is the value of ptr). printing *ptr will print 2, the value. printing &ptr will print the address of the ptr pointer variable
+:star: int *ptr = 2; printing ptr will print the address(because that is what is the value of ptr). printing *ptr will print 2, the value. printing &ptr will print the address of the ptr pointer variable
 
-:imp: char s[] = "hello";  s == &s; True --> because "s" is just the pointer to the 1st element. Now, normally, when we do &ptr, it would return the address of the pointer. but since "s" is an array, &s returns the address of the array which is just the 1st element of array. Therefore, s == &s is True. But if we had had, char *t = s, then t points to 1st element of s, so, printf(*t) prints "h". but &t is the address of the pointer variable t itself. so, &t != t. But, convince yourself that t==s, t==&s, *t==*s,
+:star: char s[] = "hello";  s == &s; True --> because "s" is just the pointer to the 1st element. Now, normally, when we do &ptr, it would return the address of the pointer. but since "s" is an array, &s returns the address of the array which is just the 1st element of array. Therefore, s == &s is True. But if we had had, char *t = s, then t points to 1st element of s, so, printf(*t) prints "h". but &t is the address of the pointer variable t itself. so, &t != t. But, convince yourself that t==s, t==&s, *t==*s,
 
 #+begin_src C
 #include <stdio.h>
@@ -246,7 +253,7 @@ int main()
 {
     char s[] = "Example is this maaan";
     char *t = s;
-    printf("\nvalue is %p", s);
+    printf("\nvalue is %p", s); // this would have printed the string but because of %p, it prints the address
     printf("\nvalue is %p", &s);
     printf("\nvalue is %p", t);
     printf("\nvalue is %p", &t);
@@ -266,6 +273,8 @@ int main()
 
 When we say char s[] = "there";, "s" is a variable that points to the 1st element of the array.
 the array lives in the memory, it consumes 6 blocks, so, "s" is simply the pointer to the 1st one. there is no block stored for "s" which stores the value of s(the address of the 1st element of array). But when we do char *t = s, there is a block stored in the memory for t (who's address can be found by &t) which has as it's value the address of the 1st element of array "s". So, we can make "t" point somewhere else too. But we can't make "s" point to somewhere else. now we know why s==&s - True
+
+s is just a label, which points to the first character ('h') of the array in memory. It is not a variable in the true sense, as in it has no memory allocated to it, it is just a label on the memory of 'h'
 
 Pointer decay - when we pass a pointer of an array, (when we pass "s" to a function), we loose the information of it's length. we just have the starting position and we will have to scan till we reach \0 to know the length of the pointer
 
@@ -294,13 +303,15 @@ int main()
 | Hello, | there |
 
 When we add 1 to the array pointer, it moves to the next element.
+So, printf(msg+1) would print "ello, there"
 
-:imp: int doses[]={1, 2, 3, 4}; doses[3] == *(doses+3) == *(3+doses) == 3[doses]
-:command: scanf("%39s", name); --> scanf is a function that takes in the pointer to which to store the data. you can either give it the array pointer or a pointer to a variable. so, name is --> char name[]; or you can also give it --> int a; scanf("%i", &a); recall &a is the address of a. scanf can cause buffer overflow if the user enters more than the specified limit
+
+:star: int doses[]={1, 2, 3, 4}; doses[3] == *(doses+3) == *(3+doses) == 3[doses]
+:command: scanf("%39s", name); --> scanf is a function that takes in the pointer to which to store the data. you can either give it the array pointer or a pointer to a variable. so, name is --> char name[]; or you can also give it --> int a; scanf("%i", &a); recall &a is the address of a. scanf can cause buffer overflow if the user enters more than the specified limit. So, scanf always needs an address
 
 :command: a better? alternative is fgets() which takes as arguments pointer to a buffer, max size of the string (/0 included), source of input eg: fgets(food, sizeof(food), stdin);
 
-:imp: array variables are pointers (to the first element of array). They are different from normal pointers in that name, &name are the same. That is to say that they aren't allocated seperate space on the stack, they are just a label attached to the address of the first element of the array. So, when you printf(name); it will print the array (till the \0 char), with other pointers, it would have printed the address
+:star: array variables are pointers (to the first element of array). They are different from normal pointers in that name, &name are the same. That is to say that they aren't allocated seperate space on the stack, *they are just a label attached to the address of the first element of the array*. So, when you printf(name); it will print the array (till the \0 char), with other pointers, it would have printed the address
 
 
 consider this:
@@ -315,12 +326,13 @@ int main()
 }
 #+end_src
 
-Error because string literals, and they can never be updated. you can if you create an array from a string literal like so: char cards[] = "JQK";
+Error because string literals are immutable, and they can never be updated. you can if you create an array from a string literal like so: char cards[] = "JQK";
 This is because the string literals live in "constants" section of the memory which is read-only
 
-#+ATTR_ORG: :width 200
-#+ATTR_ORG: :height 200
-[[~/Pictures/org-inline/head_first_c_1.png]]
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-08-21 08:04:01
+[[file:assets/screenshot_2017-08-21_08-04-01.png]]
 
 Note the "cards" variable lives in the stack.
 
@@ -330,7 +342,7 @@ to change it, make a copy: char cards[] = "JQK"; // here, cards is an array, act
 #+begin_src C
 #include <stdio.h>
 
-void change_str(char str[]) // void change_str(char *str) also works
+void change_str(char str[]) // void change_str(char *str) also works, because main has str defined as a char array and not a string literal
 {
     str[0] = 'a';
     printf(str);
@@ -391,14 +403,17 @@ We already know how to read and write files using C. the modes etc, we use in Py
 
 when we do scanf, it doesn't care where the data comes in from, so on the terminal, we can give it input from a file etc
 scanf always uses pointers, to put the data read from the input in
-eg: float longitude; scanf("%f", &longitude);
+eg: float longitude; scanf("%f", &longitude); -- here, it uses the stdin which is the default when no file descriptor is defined
 
 ** redirection
 
 the program always reads the input from stdin, gives output to stdout. we can "redirect" the stdin and stdout so that they use files etc
 #+ATTR_ORG: :width 400
 #+ATTR_ORG: :height 400
-[[~/Pictures/org-inline/head_first_c_3.png]]
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-08-21 08:09:57
+[[file:assets/screenshot_2017-08-21_08-09-57.png]]
 
 *** input
 - ./geo2json < gpsdata.csv
@@ -412,11 +427,14 @@ here, we are telling the OS to send the output to output.json
 - ./geo2json < gpsdata.csv > output.json 2> errors.txt
 
 when we use printf, it just calls fprintf under the hood. which has the syntax:
-fprintf(stdout, "txt")
-so, to send to stderr, we can do this:
-fprintf(stderr, "txt")
 
-and the redirect the stderr to some file (by default it is to the terminal)
+ fprintf(<file descriptor>, "some string") (eg: fprintf(stdout, "txt")
+
+hence, to send to stderr, we can do this:
+
+ fprintf(stderr, "txt")
+
+and the redirect the stderr to some file (by default it is to the terminal aka stdout)
 
 ** piping
 to solve a big problem, we should divide it into small problems and then make small tools to solve them, and connect the solutions from the small tools to solve the big problem.
@@ -435,17 +453,14 @@ To close it, fclose(in_file);
 giving args to main()
 ./categorize mermain mermain.csv elvis elvis.csv the_rest.csv
 
+
 So, the main becomes:
 int main(int argc, char *argv[])
 the argc is the count of the args. argv is an array of pointers, pointing to the args's memory location(the args are all strings ((string literals)))
 
-#+ATTR_ORG: :width 400
-#+ATTR_ORG: :height 400
-[[~/Pictures/org-inline/head_first_c_4.png]]
-
 command line args: getopt()
 each time you call it, it returns the next option it finds on the command line
-it is a part of the unistd.h header which is not a part of the std C library. It gives the program access to some of the POSIX libraries. POSIX was an attempt to create a common set of functions for use across all popular OSes. (a standardization effort to make portability easier)
+it is a part of the unistd.h header which is not a part of the std C library. It gives the program access to some of the POSIX libraries. POSIX was an attempt to create a common set of functions for use across all popular OSes. (a standardization effort to make portability easier, to have all OSes give one api to the software to interact with the OS)
 
 #+begin_src C
 #include <stdio.h>
@@ -556,24 +571,22 @@ Here are all the reserved keywords in C.
 
 That's it
 
-Example code:
-
-#+begin_src C
-#include <stdio.h>
-
-void encrypt(*message)
-{
-    while (*message)
-    {
-        *message = *message ^ 31; // ^ is for XORing, we are XORing each char(which is just a num), with 31
-        message += 1;
-    }
-}
-#+end_src
-
+(PCAL - preprocessing, compilation, assembling (dumb lookup), linking)
 The C raw source code --> preprocessing, which puts the header code into the source code file --> convert the code to an intermediate representation --> run optimization passes, remove dead code etc --> get assembly code --> generate the machine or *object* code
 
-The object code is generated for each source file. And then they are all linked together so that code from one file can call code from another file etc
+The object code is generated for each source file. And then *they are all linked together* so that code from one file can call code from another file etc
+
+** header files
+ - When the compiler comes across a function that isn't defined, it assumes that it returns an int
+   - this will cause problems if the function doesn't
+   - you can avoid this by a function declaration, eg: float my_func(float a_float);
+
+ - You can take all the stub function declarations and put it in a *header file*
+ - You have to include the header file in your code with #include "my_header.h"
+ - the angle brackets are for stdlib files and the compiler will look for those there (/usr/local/include etc)
+ - your header files have to be in the same dir as you .c files, or use #include "my_dir/my_header.h" - relative path
+ - *#include is a preprocessor instruction*
+
 
 ** sharing code
 say there is a function "shared_fn" that needs to be shared

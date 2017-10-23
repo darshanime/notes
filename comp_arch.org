@@ -1,0 +1,785 @@
+* Code: The Hidden Language of Computer Hardware and Software
+** Charles Petzold
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 13:18:21
+[[file:assets/screenshot_2017-10-22_13-18-21.png]]
+
+* Chapter 1-10 - Basics
+
+** Morse code
+2 best friends can communicate using torches, via the morse code. Morse code contains 2 "signals" (or 2 states) - short blink and a long blink.
+It is a variable length code, with the common characters having smaller codes, eg E is just a small blink.
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 13:21:10
+[[file:assets/screenshot_2017-10-22_13-21-10.png]]
+
+We can expand the above table into a parse tree so that it is easier to read and understand. 
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 13:22:21
+[[file:assets/screenshot_2017-10-22_13-22-20.png]]
+
+
+** Braille Code
+It is a 6bit code.
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 13:24:36
+[[file:assets/screenshot_2017-10-22_13-24-36.png]]
+
+So, 2^{6} is 64 unique codes. 
+There are many contractions as well in Braille, eg: "you and me" is written as:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 13:29:33
+[[file:assets/screenshot_2017-10-22_13-29-33.png]]
+
+There are some codes that alter the meanings of the codes that follow them - from letters to numbers and vice versa until the shift is undone. They are called /shift codes/
+In contrast, the /escape codes/ are the ones that change the meaning of only the next following character and not beyond that.
+
+** Seeing around corners
+
+If the houses aren't adjacent, we can use bulbs, with this setting:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 13:35:09
+[[file:assets/screenshot_2017-10-22_13-35-09.png]]
+
+Here, we can reduce the wire length if we use a common:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 13:36:13
+[[file:assets/screenshot_2017-10-22_13-36-13.png]]
+
+This is a *bidirectional telegraph system* 
+
+Now, there is some more optimization to be had, the Earth! It is a good conductor due to the virtue of it's size
+
+Recall,
+```
+ R =  \rho l
+      ~~~
+       A
+
+```
+So, we can use the Earth to conduct our electrons. 
+So, from:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 13:40:31
+[[file:assets/screenshot_2017-10-22_13-40-31.png]]
+
+You can get:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 13:40:45
+[[file:assets/screenshot_2017-10-22_13-40-45.png]]
+
+Which can be further simplified to:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 13:44:46
+[[file:assets/screenshot_2017-10-22_13-44-46.png]]
+
+The ground is 0 potential, so 0V. Hence, we get this model now:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 13:46:57
+[[file:assets/screenshot_2017-10-22_13-46-57.png]]
+
+This is not much different from a telegraph, 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 13:54:57
+[[file:assets/screenshot_2017-10-22_13-54-57.png]]
+
+Or, simpler:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 13:53:49
+[[file:assets/screenshot_2017-10-22_13-53-49.png]]
+Note, the V represents a battery connected to the ground on the other side. So, it's just a source of power
+
+So, when the key is pressed, due to the voltage, the iron is magnetized and it clanks against the iron top. 
+
+To carry longer distances, you would need a relay system. 
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 14:06:16
+[[file:assets/screenshot_2017-10-22_14-06-16.png]]
+
+The relay has it's own power source so it strengthens the signal and sends it onward.
+
+** UPC - Universal Product Code
+It is a binary code with 30 black bars (of 4 different widths) which are divided by gaps of various widths. 
+Eg: 
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 14:55:03
+[[file:assets/screenshot_2017-10-22_14-55-03.png]]
+
+The computer sees a narrow strip as a series of bits
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 14:56:06
+[[file:assets/screenshot_2017-10-22_14-56-06.png]]
+
+So, the entire series is simply 95bits. 
+The first 3 bits are always 101 - left hand guard pattern - this is for orientation
+
+This is followed by 6groups of 7 bits each (so, 42 bits in total) - each group is a digit from 0-9
+Then comes a 5bit center guard pattern - always 0101010101
+Then comes another 6groups of 7bits each
+Finally, a right hand guard pattern - 101
+
+So, we have 12 numeric digits in total encoded as 95 bits. 
+Now, the left side codes use 7bits for each digit. They don't use the traditional unsigned representation for digits, but a special encoding:
+
+| 0001101 | 0 |
+|---------+---|
+| 0011001 | 1 | 
+Etc.
+It always starts with 0 and ends with a 1. It Always has odd number of 0s - odd parity for 0 bit
+
+"A group of bits has even parity if it has an even number of 1 bits and odd parity if it has an odd number of 1 bits"
+
+The RHS is the exact opposite of it, and has even parity for 1 bit.
+| 1110010 | 0 |
+|---------+---|
+| 1100110 | 1 |
+
+
+** Logic and switches
+
+*** Commutative
+Addition and multiplication is commutative: 
+ \to A + B = B + A
+ \to A \ast B = B \ast A
+
+*** Associative
+Addition and multiplication is associative: 
+ \to A + (B + C) = (A + B) + C
+ \to A * (B * C) = (A * B) * C
+
+*** Distributive
+Addition and multiplication is distributive:
+ \to A * (B + C) = (A * B) + (A * C)
+
+George Bool invented a new algebra that didn't refer to numbers along, but rather /classes/
+Eg: F can be used to refer to a class of female cats.
+
+ \to + or \cup symbol means union of 2 classes
+ \to * or \cap means intersection of 2 classes ( FxT, or F.T or FT)
+
+Apart from all the above rules, in Boolean Algebra, + operator is distributive over x operator
+so:
+ \to W + (B x F) = (W + B) x (W + F)
+Also, BA has:
+ \to X + X = X
+ \to X^{2} = X
+ 
+We can use BA to solve Socrates' immortality problem
+ 1. All persons are mortal
+ 2. Socrates is a person
+ 3. Hence, Socrates is mortal
+
+Let's see:
+ - P = class of all persons
+ - S = class of Socrates
+ - M = class of mortals
+
+We have from 1 and 2
+ - P X M = P
+ - S X P = S
+
+Thus
+ - S X (P X M) = S
+ - (S X P) X M = S
+ - S X M = S
+
+hence, proved 3 is logically true.
+
+We can use BA to model some logical equations. Say we want "I want a male cat, neutered, either white or tan; or a female cat,
+neutered, any color but white; or I'll take any cat you have as long as it's black." 
+So, the equation for this will be:
+ (M x N x (W + T)) + (F x N x (1 – W)) + B
+
+*We can also look at * as an /AND/*
+*We can also look at + as an /OR/*
+
+And we can use circuits to model the AND/OR
+
+AND:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 16:09:29
+[[file:assets/screenshot_2017-10-22_16-09-29.png]]
+
+
+
+OR:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 16:09:54
+[[file:assets/screenshot_2017-10-22_16-09-54.png]]
+
+
+And so, our earlier equation can be modeled as:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 16:10:34
+[[file:assets/screenshot_2017-10-22_16-10-34.png]]
+
+We had: (M x N x (W + T)) + (F x N x (1 – W)) + B
+This equation has 6 variables - M, N, W, T, F, B
+Currently we have 8, we can reduct it to 7 with - (N x ((M x (W + T)) + (F x (1 – W)))) + B
+
+But we should need only 4 switches (bits) to encode all the possible cases.
+ - 1 for F/M
+ - 1 for N/U
+ - 2 for B, T, W, O
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 16:14:20
+[[file:assets/screenshot_2017-10-22_16-14-20.png]]
+
+Like switches, relays can be connected in a series and in parallel to perform simple tasks in logic.
+These combinations of relays are called logic gates (later transistors were used and not relays)
+Recall our relay:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 16:16:09
+[[file:assets/screenshot_2017-10-22_16-16-09.png]]
+
+
+Or simply,
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 16:16:39
+[[file:assets/screenshot_2017-10-22_16-16-39.png]]
+
+So, we can connect relays like so (note, this is not any logic gate, just a normal connection)
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 16:16:59
+[[file:assets/screenshot_2017-10-22_16-16-59.png]]
+
+Another way to connect the relay is:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 16:18:48
+[[file:assets/screenshot_2017-10-22_16-18-48.png]]
+This is called *double throw relay*
+The relay is on by default and when we pass the V via the input, the circuit is broken
+So, the relay's output is the opposite of what you give it:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 16:23:35
+[[file:assets/screenshot_2017-10-22_16-23-35.png]]
+
+This can be used to model out signals:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 16:24:06
+[[file:assets/screenshot_2017-10-22_16-24-06.png]]
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 16:19:37
+[[file:assets/screenshot_2017-10-22_16-19-37.png]]
+
+
+So, we have an AND gate as - 2 normal relays connected in series:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 16:20:28
+[[file:assets/screenshot_2017-10-22_16-20-28.png]]
+
+This is the AND gate represented as:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 16:20:49
+[[file:assets/screenshot_2017-10-22_16-20-49.png]]
+
+Next is OR gate - 2 normal relays connected in parallel
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 16:21:55
+[[file:assets/screenshot_2017-10-22_16-21-55.png]]
+
+Written as:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 16:22:19
+[[file:assets/screenshot_2017-10-22_16-22-19.png]]
+
+
+We can now model our simplified equation (N x ((M x (W + T)) + (F x (1 – W)))) + B as:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 16:26:29
+[[file:assets/screenshot_2017-10-22_16-26-29.png]]
+
+
+ - If you connect 2 double throw relays in series, you get NOR - both have to be 0 to get 1
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 16:29:22
+[[file:assets/screenshot_2017-10-22_16-29-22.png]]
+
+ - If you connect 2 double throw relays in parallel, you get NAND - if both 1 you get 0
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 16:31:28
+[[file:assets/screenshot_2017-10-22_16-31-28.png]]
+
+So, we have: 
+- AND
+  - 2 normal relays in series
+- OR
+  - 2 normal relays in parallel
+- NAND
+  - 2 double throw relays in parallel
+- NOR
+  - 2 double throw relays in series
+- NOT
+  - 1 double throw relay - inverts output
+- BUFFER
+  - 1 normal relay - strengths same output
+
+*** Demorgan's laws
+They help us to move from OR to AND and vice-versa this allowing us to simplifying Bool's equations (and circuits)
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 16:35:07
+[[file:assets/screenshot_2017-10-22_16-35-07.png]]
+
+** Adding machine
+Addition in bits can be represented as:
+
+*** sum bit:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 17:33:25
+[[file:assets/screenshot_2017-10-22_17-33-25.png]]
+
+This is exactly an XOR - exclusive or
+We can model it with 1 AND, 1 NAND, 1 OR
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 17:35:01
+[[file:assets/screenshot_2017-10-22_17-35-01.png]]
+
+Shorthand:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 17:35:21
+[[file:assets/screenshot_2017-10-22_17-35-21.png]]
+
+*** Carry bit:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 17:33:15
+[[file:assets/screenshot_2017-10-22_17-33-15.png]]
+This is exactly an AND
+
+
+Hence, a single bit addition can be represented as:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 17:36:04
+[[file:assets/screenshot_2017-10-22_17-36-04.png]]
+
+This can be encapsulated in a package:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 17:36:22
+[[file:assets/screenshot_2017-10-22_17-36-22.png]]
+
+Hence, in this HA, we can put in 2 bits and the sum comes out the other hand
+
+If we want to do a division that can have a carry bit to it, we need something more than a single HA
+
+We have: 
+A + B + carry_in
+We do A+B normally. We park the carry bit and add the sum bit to the carry_in
+From this, the sum bit is the sum bit of the total addition and the carry bit from this is added to the parked carry bit. 
+
+Thus, we get a full adder:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 17:43:39
+[[file:assets/screenshot_2017-10-22_17-43-39.png]]
+
+We can now wire up the lightbulbs on our control panel like so:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 17:44:26
+[[file:assets/screenshot_2017-10-22_17-44-26.png]]
+
+Note, :top: this is for the first added. Consecutively, we have an input for the carry in and the carry out will go to the CI of the next FA in the bank
+
+It looks like so: :arrow_down:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 18:05:30
+[[file:assets/screenshot_2017-10-22_18-05-30.png]]
+
+
+This is a 8bit adder. It takes in two 8bit numbers and gives an 9bit result. 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 18:06:35
+[[file:assets/screenshot_2017-10-22_18-06-35.png]]
+
+The bits A_{0}, B_{0}, S_{0} are the least significant bits. A_{7}, B_{7}, S_{}_{7} are the most significant bits
+
+We can daisy chain the 8bit HAs as well:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 18:08:28
+[[file:assets/screenshot_2017-10-22_18-08-28.png]]
+
+Here, we have the ability to add 16bit numbers. 
+Right now, the CI bit from the last FA is needed for the next computation. This is called *ripple carry*.
+Faster adders can use *look-ahead carry* which makes this faster
+
+This 8bit adder needs 144 relays.
+Here's how:
+ - each FA needs:
+   - 2 HAs and an OR gate
+     - each HA needs 1 AND and 1 XOR
+       - each XOR needs 1 AND, 1 NAND, 1 OR
+         - each AND, NAND, OR needs 2 relays each
+       - so, each HA needs 2 + 6 = 8 relays
+   - each FA needs 18 relays
+ - 8 FAs need \to 18*8 = 144 relays
+
+We can replace the first FA with a HA and we can reduce this to: 134 relays
+
+*** Subtraction
+ A - B is just addition of A and -B
+If we represent number using 2s complement, we need to convert the negative number to it's 2s complement and do the addition.
+
+**** Conversion from unsigned to 2s complement
+Since we have 8 bits, we can represent 255/2 = -128 to 127. 
+For the positive bits, it is the same as in unsigned. 
+But for negative numbers, steps:
+ - write the binary representation of the number in unsigned binary
+ - invert the bits and add 1
+ - the result is the 2s complement representation of that number 
+
+*why does this work :top:*
+what we want to do to get -A from A is, subtract A from 0 or 0 - A
+when we invert bits of A, it is logically equivalent to 11111..11 - A
+and then when we add 1, we what we end up is same as 1000..00 - A (1 followed by "A" number of 0s, or 2^{n} in unsigned binary)
+since we take the least significant |A| bits, we end up with the same computation as 0-A
+
+
+So, we have:
+253 - 176
+ - 11111101 (unsigned for 253), 10110000 (unsigned for 176)
+
+-176 \to 01001111 + 1 = 01010000
+Now, 01010000 + 11111101 = 0101001101 which is 77 (ignoring overflow, we get 1001101, the 9th bit is 1 here note)
+
+We can add subtraction to our machine:
+We need to invert bits and add a carry bit to one to do so (this will give us the 2s complement)
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 19:00:08
+[[file:assets/screenshot_2017-10-22_19-00-08.png]]
+
+
+We can put this in a box - One's complement and get this circuit:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 19:00:51
+[[file:assets/screenshot_2017-10-22_19-00-51.png]]
+
+
+
+Note here, when SUB signal is 1, we add the carry in bit to 1, invert our B input bits, so we get 2s complement of B
+And also, we signal the overflow/underflow. 
+That bulb will light up if SUB is 0 and other bit is 1 - so our sum was greater than 255
+Or, SUB is 1 and the other bit is 0 (WHY ?? :/)- so our result was negative - our machine can't represent negative numbers.
+
+*** The 2s complement
+It is amazing because it allows us to perform seamless addition and subtraction *given we do not have overflow/underflow*
+
+So, we have 2 ways to encode integers in binary numbers:
+10110110 can be either 182 in unsigned or it can be -74 in 2s complement
+
+** Feedback and Flipflops
+
+Consider our old relay wired like so:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 19:17:33
+[[file:assets/screenshot_2017-10-22_19-17-33.png]]
+
+This relay is an oscillator. I.E. The output of a NOT gate is also the input
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 22:06:37
+[[file:assets/screenshot_2017-10-22_22-06-37.png]]
+
+
+What is the speed of this oscillator?
+We'll have to find out. 
+Consider this circuit:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 22:18:02
+[[file:assets/screenshot_2017-10-22_22-18-02.png]]
+
+Originally, the current is flowing in the red marked wire only. 
+Pressing the lower switch has no effect because the NOR gate is 0 even if there is a single 1, and 1 only when both inputs are 0s.
+
+However, if we press the top switch, we get this:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 22:19:30
+[[file:assets/screenshot_2017-10-22_22-19-30.png]]
+
+Now, pressing the top switch has no effect. We can get back to the original state only by pressing the 2nd switch.
+
+Thus, the circuit is able to remember the last switch that was pressed in some sense. 
+The circuit has 2 stable states, when both the switches are off - the bulb is on/off
+
+:top: This is called an *R-S flip flop* - RS for reset-set
+
+A more common representation is:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 22:23:39
+[[file:assets/screenshot_2017-10-22_22-23-39.png]]
+
+ - when R is on(and S is off), Qbar is 1, Q is 0
+ - when S is on(and R is off), Q is 1, Qbar is 0
+
+The function table Is so:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 22:26:46
+[[file:assets/screenshot_2017-10-22_22-26-46.png]]
+
+Here, S/R 0/0 entry says Q/Qbar - this means that they remain what they were before S/R got to 0/0
+S/R 1/1 is not allowed as it won't give predictable state if both are 1/1
+
+The R-S flip-flop is an example of a circuit that remembers which of it's 2 inputs was a 1
+
+We can add a little circuitry around the RS flip flop for "Hold that bit"
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 22:29:44
+[[file:assets/screenshot_2017-10-22_22-29-44.png]]
+
+
+Here, when the HTB is 1, and S is 1, Q becomes 1 and Qbar becomes 0.
+Later, when HTB is 0 and S/R are anything, it makes no difference as S/R get only 0/0
+
+When HTB is 1 and R is 1, Qbar is 1 and Q is 0
+But we only want 1 input; we can get this by:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 22:32:02
+[[file:assets/screenshot_2017-10-22_22-32-02.png]]
+
+Now, when HTB is 1, the data signal's value is saved at Q. 
+This is called a *level-triggered D type flip flop*
+D is for data, level-triggered is means that the FF saves the value of the Data input when HTB is at a particular /level/ (1 here)
+
+Generally, HTB is called a *Clock*
+The circuit is also called *a level triggered D type latch* - it stores 1 bit of /memory/
+Logic table:
+
+|-------+------+---+------|
+| Clock | Data | Q | Qbar |
+|-------+------+---+------|
+|     1 |    1 | 1 |    0 |
+|     1 |    0 | 0 |    1 |
+|     0 |    X | Q | Qbar |
+|-------+------+---+------|
+
+We can chain these latches to store bits. If we want to add 3 bit numbers say, we can add the result of 2 numbers to a latch like this and add a third number to it
+
+We can chain 8 latches to get 8bit memory:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 22:52:15
+[[file:assets/screenshot_2017-10-22_22-52-14.png]]
+
+
+When the clock signal is 1, the 8bits of D_{0-7} are saved in Q_{0-7} and they remain the same while Clk remains 0
+Smaller representation:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 22:53:32
+[[file:assets/screenshot_2017-10-22_22-53-31.png]]
+
+We can use it in our earlier computer to get a new architecture:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 22:54:24
+[[file:assets/screenshot_2017-10-22_22-54-24.png]]
+
+This gives us the ability to add a series numbers.
+Note the new piece \to "2-to-1 Selector"
+It takes in an input and select 1 of the 2 possible inputs as the one that is selected and sent forward.
+
+2^{N}-to-N selector - it actually has 2^{N}_{} inputs and N inputs that help us select which one to send forth
+
+The 2-1 selector has a simple design, 
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 23:00:20
+[[file:assets/screenshot_2017-10-22_23-00-20.png]]
+
+| Select | A | B | Out |
+|--------+---+---+-----|
+| 1      | X | B | B   |
+| 0      | A | X | A   | 
+
+When Select is 1, Out is whatever is B
+When Select is 0, Out is whatever is A
+
+2-1 Selector has 8 of these with the same Select for all
+
+Currently, the CO signal is left out in the next series of calculations - we will see later how to solve this problem
+
+We can also modify our latch to add a clear signal that would just set Q to 0
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 23:05:11
+[[file:assets/screenshot_2017-10-22_23-05-11.png]]
+
+
+This will allow us to phase out the 2-1 selector and get this:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 23:20:29
+[[file:assets/screenshot_2017-10-22_23-20-29.png]]
+
+Earlier, our flip flop was level-triggered, that is the clock input must change it's level from 0-1 for the Data to be saved
+An alternative is "edge triggered flip flop" - this means the data is saved only when the clock makes a transition from 0 to 1
+
+This means, the data is saved at the instant the clock triggers 1, and not while it is 1 like earlier. How do we accomplish this?
+An "edge triggered D type flip flop" looks like this :arrow_down:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 23:18:49
+[[file:assets/screenshot_2017-10-22_23-18-49.png]]
+
+
+We have 2 stages of R-S flip flops. The forward stage is exactly like earlier, and the backward stage has a NOT clock signal controlling it, so when the clock is 0, the data is saved. However, when clock is 0, the forward stage has no effect. 
+Hence, when the clock changes from 0 to 1, the behind stage is saved in the forward stage and never otherwise. Pretty cool, eh?
+
+The logic table:
+
+| D | Clk | Q | Qbar |
+|---+-----+---+------|
+| 0 | \uparrow   | 0 |    1 |
+| 1 | \uparrow   | 1 |    0 |
+| X | o   | Q | Qbar | 
+
+The \uparrow means clock transitions from 0 to 1
+The flip flop can be represented as:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 23:53:12
+[[file:assets/screenshot_2017-10-22_23-53-12.png]]
+
+The angle bracket on Clk indicates that it is edge triggered
+
+Consider this now:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 23:54:38
+[[file:assets/screenshot_2017-10-22_23-54-38.png]]
+
+The logic table:
+ - Clk is 0, Q is 0 (say to start with), Qbar is 1, D is 1
+ - Clk goes to 1, D is 1, so Q is 1, Qbar is 0, D is 0
+ - Clk goes to 0, everything still same  - Q is 1
+ - Clk goes to 1, D is 0, so Q is 0, Qbar is 1, D is 1
+
+Hence, we can plot this:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-22 23:56:56
+[[file:assets/screenshot_2017-10-22_23-56-56.png]]
+Note there is a change in D/Qbar/Q when Clk makes the transition from 0 to 1
+The frequency of D/Qbar or even Q is half the frequency of Clk - this is know as a frequency divider
+
+We can go ahead an repeat this process:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-23 00:06:23
+[[file:assets/screenshot_2017-10-23_00-06-23.png]]
+
+This will give us:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-23 00:06:46
+[[file:assets/screenshot_2017-10-23_00-06-46.png]]
+
+Note here, we are looking at ClkBar so, the Qs /appear/ to change at negative transition (1 \to 0), but they are still the same
+
+Now, if we look at the bits represented by the Q (Clk, Q1, Q2, Q3) signals at any timeslice, we get the bits counting from 0000 to 1111
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-23 00:15:26
+[[file:assets/screenshot_2017-10-23_00-15-26.png]]
+
+At each positive transition, the outputs of the counter increase by 1
+We can put this in a box and we get this:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-23 00:15:37
+[[file:assets/screenshot_2017-10-23_00-15-37.png]]
+
+This is called a ripple counter because the output of 1 FF is the input of another.
+
+The Qs will go from all 0s to all 1s
+The time it takes, say 10 secs gives means that the Clk had to move 256 cycles to get all 1s, so freq = 25.6 Hz
+
+We can also add a Preset to the flipflop
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-23 00:19:41
+[[file:assets/screenshot_2017-10-23_00-19-41.png]]
+
+There is a lot of rearrangement from the earlier scheme, but it's just rearrangement. 
+When the Preset is 1, Q becomes 1, when the clear is 1, Q becomes 0. Both Preset and Clear shouldn't be 1 at the same time.
+When both are 0, the FF behaves like before
+This :top: is an "edge-triggered D-type flip flop with preset and clear". 
+
+This FF can be packaged like so:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-23 00:23:16
+[[file:assets/screenshot_2017-10-23_00-23-16.png]]
+
+
+

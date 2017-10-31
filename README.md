@@ -11,6 +11,7 @@ Available notes:
   * [Compilers](./compilers.org)
   * [Artificial Intelligence](./artificial_intelligence.org)
   * [Pro Python](./pro_python.org)
+  * [Computer Arch](./comp_arch.org)
   * [C language](./C_language.org)
   * [Emacs](./emacs.org)
   * [Algorithms](./algorithms.org)

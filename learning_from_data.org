@@ -658,7 +658,11 @@ So, discrete case:
 So, continuous case:
  - delta function at y=f(x), 0 elsewhere 
 
-The target function is noisy because we aren't able to model it completely. We are trying to model it with limited parameters (the features) and not taking into consideration all the factors that it depends on. Hence, the target function that we are trying to learn is noisy. The god send truth target function that is generating the data is not noisy. Our approximation, the one we are trying to learn, is.
+*Noisy target function?*
+ - The target function is noisy because we aren't able to model it completely. We are trying to model it with limited parameters (the features) and not taking into consideration all the factors that it depends on. Hence, the target function that we are trying to learn is noisy. The god send truth target function that is generating the data is not noisy. Our approximation, the one we are trying to learn, is.
+
+ - Or is it inherently noisy? The function that generated the data in the input space, that true function \fnof is noisy itself?
+
 
 Our updated learning diagram:
 
@@ -674,6 +678,9 @@ Note:
    - This is the probability of generating the dataset that we train on
    - We introduced this to accommodate Hoeffding's
    - it quantifies the relative importance of x - it is not what we are interested in
+   - this also dictates what region of the input space you get samples from. The probability distribution could be such that it never gives you points from particular regions of input space. Currently, our model will be agnostic of that, but in Bayesian learning, the confidence of the model will be lower in those regions where it hasn't seen examples from
+   - also, once you have P(x), you draw samples from it independently, i.e. i.i.d - independent identically distributed
+   - P(x) is not a problem if it has a long tail or if it is a delta function or whatever; as long as it is used in both training and testing. 
 
  - P(y|x) 
    - This is the probability the target function gives y for an input x
@@ -720,3 +727,247 @@ The theory will achieve this for us:
 #+DOWNLOADED: /tmp/screenshot.png @ 2017-11-01 20:24:10
 [[file:assets/screenshot_2017-11-01_20-24-10.png]]
 
+* Chapter 5 - Training versus Testing
+
+** Review
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-02 01:08:23
+[[file:assets/screenshot_2017-11-02_01-08-23.png]]
+
+E_{in} is averaged over N points
+E_{out} has a logical definition, the weighted error on a point, over all points.
+
+Also, last time, we were confused about the noisiness of the target function. It is that the target function inherently is noisy, it is not a function in a true mathematical sense. It has a probability distribution over outcome (y) based on the input
+so: *\fnof: y \to x + noise* or: *y \tilde P(y|x)*
+
+Earlier, when we considered y to be deterministic, we generated the sample by P(x)
+But now, y also comes from the PD, so we have the dataset generated from 2 PDs
+ P(x, y) = P(x)P(y|x)
+
+    E_{out}(h) is now E_{x,y}[e(h(x), y)]
+
+** From training to testing 
+Say you have a final exam. You get some practice problems. This is training for final exam. 
+If you directly do the final exam questions, you might not have learned. The end goal is low E_{out} which only happens if you study and learn the material.
+
+We have:
+ - Testing
+   - How well you do in the final exam (E_{in}) tracks how well you do in the while (E_{out})
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-02 01:22:00
+[[file:assets/screenshot_2017-11-02_01-22-00.png]]   
+
+
+ - Training
+   - How well you do in the practice does not track very well how you do in the wild
+   - There is a factor of M that comes in here
+   - M represents "how much you explore", how many cases are possible
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-02 01:23:13
+[[file:assets/screenshot_2017-11-02_01-23-13.png]]
+
+We need to replace M with a friendlier quantity, if we are able to do it, we are in business.
+
+Recall, M is cardinality of hypothesis set. Our learning algorithm is free to choose any hypothesis it wants from the set and so to invoke Hoeffding's inequality, we had to add Ps of all bad events
+i.e. we had:
+
+ P[B_{1} or ... or B_{M}] where B is the bad event: | E_{in}(h_{m}) - E_{out}(h_{m}) | > \epsilon
+
+By union bound:
+   P[B_{1} or ... or B_{M}] = P[B_{1}] + ... + P[B_{M}]
+
+We took disjoint events of all bad events, but in reality they are related and overlap a lot
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-02 01:34:00
+[[file:assets/screenshot_2017-11-02_01-34-00.png]]
+
+We can solve this exactly for the perceptron for eg, but it would be a nightmare.
+We want to extract from a given hypothesis set H, a number that would characterize this overlap and give us a good bound
+
+** Illustrative examples to show overlap
+
+ - Consider a perceptron
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-02 01:37:12
+[[file:assets/screenshot_2017-11-02_01-37-12.png]]
+
+:top: this perceptron has a significant E_{out}, the marked areas:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-02 01:38:00
+[[file:assets/screenshot_2017-11-02_01-38-00.png]]
+
+Also, we have E_{in}, 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-02 01:38:35
+[[file:assets/screenshot_2017-11-02_01-38-35.png]]
+
+Here, we apply Hoeffding's inequality and we know that E_{in} tracks E_{out} etc
+Now, consider another perceptron, slightly different:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-02 01:40:09
+[[file:assets/screenshot_2017-11-02_01-40-09.png]]
+
+The green line is another perceptron. In both the cases, E_{out} will be slightly different. Also, E_{in} will be different if there is any point that falls in the yellow region.
+
+So, | E_{in}(h_{1}) - E_{out}(h_{1}) | \approx | E_{in}(h_{2}) - E_{out}(h_{2}) |
+If one exceeds \epsilon, the other does as well. So, just counting the number of hypothesis is not optimal in that it does not give us a tight bound. We can improve it. 
+
+Instead of the whole input space, we can consider only a finite set of input points. And we can differentiate b/w the perceptrons if they classify the input points differently
+So, given a set of red and blue points, we can count *all* possible classifications of them. *This is a good proxy for the complexity of the hypothesis set.* If hypothesis set is powerful, it can classify the points in all possible ways. If it is not so powerful, it may not be able to achieve some classifications. The number of classifications that the hypothesis set can give is called *dichotomies*. 
+
+*Dichotomies* is a proxy for the number of hypothesis. It is based only on the input points and not on the general input space. They are "mini hypotheses"
+
+A hypothesis is a function h: X \to {-1, +1}
+which takes in the full input space and gives the classification
+
+A dichotomy is also a function h: {x_{1}, x_{2}, ..., x_{N}} \to {-1, +1} 
+which takes in only the input points and gives the classification
+(each x, say x_{1} is a vector of all input features for first data point) 
+
+Number of hypothesis |H| \to \infin
+Number of dichotomies |H(x_{1}, x_{2}, ..., x_{N})| \to 2^{N} if H is extremely expressive
+
+This is a candidate for replacing M. 
+We can also define "m", the growth function which gives us the most dichotomies on N points (given a hypothesis set)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-02 01:59:07
+[[file:assets/screenshot_2017-11-02_01-59-07.png]]
+
+The subscript H is because the growth function is defined for a given hypothesis set.
+
+We also know that 
+    m_{H}(N) \le 2^{N}
+
+Growth function for the perceptron:
+ - N = 3, i.e. m_{H}(3) = 8
+ - recall this is the maximum dichotomies possible
+
+ - N = 4, i.e. m_{H}(4) = 14
+ - this is because we cannot get this combination with our perceptron:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-02 02:03:29
+[[file:assets/screenshot_2017-11-02_02-03-29.png]]
+
+** Growth functions for simple cases
+
+*** Example 1: positive rays
+ - It is defined on the real line
+ - it has a point, everything on right is +1, on left is -1
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-02 02:06:36
+[[file:assets/screenshot_2017-11-02_02-06-36.png]]
+
+H is the set of h: R \to {-1, +1}
+So, for N points, we get: N dichotomies, so m_{H}(N) = N + 1
+(all blue, all red, N-1 sandwiched positions)
+
+*** Example 2: Positive intervals
+ - here, we have an interval
+ - everything within is +1, everything else is -1
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-02 02:07:58
+[[file:assets/screenshot_2017-11-02_02-07-58.png]]
+H is the set of h: R \to {-1, +1}
+So, for N points, we get: N dichotomies, so m_{H}(N) = N + 1
+The way we get a different dichotomy is by choosing 2 points on the number line:
+
+    m_{H}(N) = nC2
+We need to add 1 for the case that we select the same point, (blue region is null set)
+
+So, m_{H}(N) = nC2 + 1
+or, m_{H}(N) = N^{2}/2 + N/2 + 1
+
+More powerful than the last one!
+
+*** Example 3: convex sets
+ - we define a convex region as our +1 area
+ - a convex region is the region where a line segment connecting 2 points on the region lie entirely inside the region
+    H is the set of h: R \to {-1, +1}
+    h(x) = +1 is convex
+
+What is the growth function? 
+We can put our N points on the perimeter of a circle and thus we can get ANY classification from the 2^{N}
+eg:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-02 02:16:09
+[[file:assets/screenshot_2017-11-02_02-16-09.png]]
+
+So, the growth function is m_{H}(N) = 2^{N}
+Since the hypothesis set gets all the 2^{N} dichotomies, we say that the *shatters* the N points
+
+We have 3 growth function:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-02 02:19:01
+[[file:assets/screenshot_2017-11-02_02-19-01.png]]
+
+Note that the dichotomies also aren't very tight. Convex sets is a complex hypothesis set, but not the most complex, we still have 2^{N} growth function
+
+So, talking about replacing M with m_{H}(N)...
+We had:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-02 02:22:39
+[[file:assets/screenshot_2017-11-02_02-22-39.png]]
+
+We can replace M with m_{H}(N) if m_{H}(N) is a polynomial. This is because then we can increase N and get the RHS to be very small, so small that the bound makes sense. The only criterion is that m_{H}(N) should be a polynomial so that we can defeat it (we cannot defeat M right now, it is infinite)
+
+So, once we are able to prove that our hypothesis set's growth is polynomial, we will be able to learn using that hypothesis set. We may need a lot of data points, but we will be able to generalize to the entire input space given the finite (albeit large) input points
+
+** Key notion: Break point
+Defined as the k after which growth function, m_{H}(k) is less than 2^{k} --> m_{H}(k) < 2^{k}
+"If no data set of size k can be shattered by H, we call k a _break point_ for H"
+
+ - For perceptrons it is 4.
+
+So, break point for 
+ - positive rays:
+   - k = 2
+   - For 2 points, we cannot get this: "<red> <blue>"
+   - we can only get: "<red> <red>" or "<blue> <blue>"
+
+ - positive intervals
+   - using the formula m_{H}(k) < 2^{k} we have: k = 3
+   - we cannot get: <blue> <red> <blue>
+
+ - convex sets
+   - never fails, so, k = \infin
+
+So, we have this result:
+ - No break point \rArr m_{H}(N) = 2^{N}
+ - Any break point \rArr m_{H}(N) is polynomial in N
+
+So, to be able to learn with a given hypothesis set, we just need to prove that it has a break point
+
+Example: Given 3 points, and given that the break point is 2, we can have only 4 dichotomies
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-02 02:40:43
+[[file:assets/screenshot_2017-11-02_02-40-43.png]]
+
+Any addition (out of 2^{3} = 8) is not allowed because then it would classify 2 points completely (and that is not allowed, as break point is 2)

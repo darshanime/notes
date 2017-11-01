@@ -1,0 +1,722 @@
+* Learning from Data
+** Yaser Abu-Mostafa
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-10-31 21:30:29
+[[file:assets/screenshot_2017-10-31_21-30-29.png]]
+
+|-----+---------------------------|
+| Sno | Topics                    |
+|-----+---------------------------|
+|   1 | The Learning Problem      |
+|   2 | Is Learning Feasible?     |
+|   3 | The Linear Model I        |
+|   4 | Error and Noise           |
+|   5 | Training versus Testing   |
+|   6 | Theory of Generalization  |
+|   7 | The VC Dimension          |
+|   8 | Bias-Variance Tradeoff    |
+|   9 | The Linear Model II       |
+|  10 | Neural Networks           |
+|  11 | Overfitting               |
+|  12 | Regularization            |
+|  13 | Validation                |
+|  14 | Support Vector Machines   |
+|  15 | Kernel Methods            |
+|  16 | Radial Basis Functions    |
+|  17 | Three Learning Principles |
+|  18 | Epilogue                  |
+|-----+---------------------------|
+
+The storyline:
+ - What is learning? - 1-4
+ - Can we learn?  - 5-8
+ - How to do it? - 9-10
+ - How to do it well? - 11-16
+ - The philosophy - 17-18
+
+
+* Chapter 1: The Learning Problem
+
+** Example of machine learning
+Predicting how a viewer will rate a movie
+
+Netflix wanted to improve 10% for *1 million*
+
+3 components that ML can help with:
+ - a pattern exists
+   - if no pattern, ML cannot help
+ - we cannot pin it down mathematically
+ - we have data on it
+
+We can describe each viewer with a vector of features. We can also create a same vector for the movie. When we take their inner product, we get a measure of how likely the user is to like the movie.
+
+This approach is a problem because you have to get those vectors - watch the movie, interview the user etc
+
+ML will reverse engineer the process. It will start with the rating and them come up with vectors for the movies and users (starting from vectors for both)
+
+** Components of Learning
+
+Metaphor: Credit approval
+The banks have historical data about customers - age, gender, annual salary, etc
+
+Formalization: 
+ - *Input*: \Chi
+   - customer vector
+ - *Output*: y
+   - to extend or deny credit
+ - *Target function*: \fnof
+   - \fnof: \Chi \to y
+   - this function has a binary co-domain (y can only be 1 or 0)
+   - \fnof is the target function, that is what we have to find
+ - *Data*: (x_{1}, y_{1}), (x_{2}, y_{2}), ..., (x_{N}, y_{N})
+   - this is the historical data
+
+We use the "Data" to get an approximation of the "target function" called "hypothesis"
+ - *Hypothesis*: g: \Chi \to y
+
+So, we use the training examples to find the hypothesis which approximates the target function using the learning algorithm which selects our hypothesis (g) from the hypothesis set \Eta. The hypothesis set can be discreet or continuous, limited or infinite. In general, the hypothesis set is continuous and infinite (very infinite!) - but we will still be able to learn. 
+
+We will be able to with theory, put a number to the sophistication of the hypothesis set.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-01 00:04:14
+[[file:assets/screenshot_2017-11-01_00-04-14.png]]
+
+The red components are what we can choose
+
+Why do we need the hypothesis set? Why not let the learning algorithm select from universal set?
+ - this will help us formalize learning, we will see this later
+
+So, the components of learning are:
+ - The hypothesis set:
+   - \Eta \in {h}, g \in H
+ - The learning algorithm
+ - Together, they form the *learning model*
+
+
+** A simple model - the perceptron
+
+Input is: x \to {x_{1}, ..., x_{d}}
+
+Approve credit if: 
+
+    \Sigma w_{i}x_{i} > threshold, i \to 1 to d
+
+else deny
+
+This linear formula h \in H can be written as:
+
+    h(x) = sign ( \Sigma w_{i}x_{i} - threshold ), i \to 1 to d
+
+If h is +ve, we approve credit else we deny credit
+
+We see that h is a function of *w* and *threshold*
+
+If the data is linearly separable, we can learn a single line from a random line
+
+We can rename -threshold to w_{0} and call it *bias* - we added an artificial coordinate whose value is always 1
+Now, formula:
+
+    h(x) = sign ( \Sigma w_{i}x_{i} ), i \to 0 to d
+
+Vector form:
+
+    h(x) = sign (w^{T}x) 
+
+w is a column vector, or [w_{0}, ..., w_{d}]^{T} and vector x is [x_{0}, ..., x_{d}]
+
+
+The perceptron learning algorithm takes a misclassified point and updates the weights such that they behave better on that point
+i.e.
+    w \leftarrow w + y_{n}x_{n}
+
+Consider these 2 cases of a point being misclassified
+In first case, the inner product will be negative but y is positive.
+So, the update rule moves w towards x (it subtracts x from w) and their inner product is now positive, so prediction is positive
+
+In second case, the inner product is positive but y is negative
+So, the update rule moves w away from x (it adds x to w) and now the inner product is negative as well
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-01 00:18:52
+[[file:assets/screenshot_2017-11-01_00-18-52.png]]
+
+The problem with this approach is that we can wrong the other ones when we classify a particular point correctly
+*If you keep on repeating this process, and if the data is linearly separable, you can classify all points correctly with guarantee*
+
+(If it is not linearly separable, you can map it to a space where they are linearly separable)
+
+** Types of learning
+
+The basic premise of learning
+
+ "using a set of observations to uncover an underlying process"
+
+ - Supervised Learning
+ - Unsupervised learning
+   - we can get a high level of input data
+ - Reinforcement learning
+
+** Puzzle
+
+Consider this problem, you are given 6 training examples which are labeled with the correct output
+For the new one, what is the label?
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-01 00:48:36
+[[file:assets/screenshot_2017-11-01_00-48-36.png]]
+
+It is impossible to predict correctly - this is because the target function can be anything! 
+ - It can be -1
+   - if you take the function to be -1 if top left square is black
+ - It can be +1
+   - if you take the function to be +1 if pattern is symmetric
+ 
+We have this problem in machine learning also. But this does not mean that learning is impossible, this will be proved in next lecture
+
+* Chapter 2 - Is learning feasible?
+
+** Review
+ - Learning is used when
+   - there is a pattern, we cannot write mathematical formula for it, we have data
+ - Notation:
+   - we don't know the target function y = \fnof(x)
+   - we have the data set: (x_{1}, y_{1}), (x_{2}, y_{2}), ..., (x_{N}, y_{N})
+   - we have a learning algorithm that finds g from the hypothesis set such that g \approx x
+ - we were stuck at the puzzle, where the random function could be *anything*, how are we to learn?
+
+This lecture will address this question
+
+** Probability to the rescue
+
+Consider an experiment:
+A bin has red and green marbles.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-01 01:20:55
+[[file:assets/screenshot_2017-11-01_01-20-55.png]]
+
+We need to find the probability of picking a red marble, let's call it \mu
+
+    P[red] = \mu
+
+So, 
+    P[green] = 1 - \mu
+
+We pick N marbles independently (recall N is for # of data points)
+so, sample:
+    GRGGGGRRGG
+
+Let the fraction of R in sample: \nu 
+
+*Does \nu (sample frequency) say anything about \mu (the actual frequency in bin)?*
+The short answer is not on the face of it, but it does give us some bounds.
+
+\nu is likely to be close to \mu
+
+*** What does \nu say about \mu
+In a big sample, large N, \nu is close to \mu (within \epsilon)
+
+Formally:
+
+     P[|\nu - \mu| \gt \epsilon] \le 2e**{-2\epsilon^{2}N}
+
+This is *Hoeffding's inequality**
+This will give us the VC dimension
+
+*Hoeffding's inequality** in words:
+ - \mu = \nu probably approximately correct (PAC)  
+
+That is, the N required rises squared and exponentially with the bound
+
+This is the inequality you are looking for when you want to see how closely your sample represents the actual truth. That is, say, you are checking for nulls in a database attribute, how many samples should you take to be 90% confident of your estimation
+
+This formula is valid for N and \epsilon, and doesn't depend on \mu
+However, there is a tradeoff involved, less \epsilon, more N
+
+Also note:
+    \nu \approx \mu \rArr \mu \approx \nu
+
+** Connection to learning
+
+How is the bin related to learning?
+ - Bin:
+   - the unknown is a number \mu
+ - Leaning:
+   - the unknown is a function \fnof: X \to y
+
+We can think of the bin as the input space. Each marble is a point x \in X
+So, all the possible applicants for credit function are represented in the bin
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-01 01:42:13
+[[file:assets/screenshot_2017-11-01_01-42-13.png]]
+
+Now, let's say we have a hypothesis. For all the applicants that our hypothesis gets right, we can mark with a green marble in the bin.
+What we want is, the accuracy in the test dataset (\nu) allow us to say something about the actual accuracy in the entire input space (\mu)
+
+Reiterating:
+ - green if
+   - h(x) = f(x)
+ - red if:
+   - h(x) \ne f(x)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-01 01:46:25
+[[file:assets/screenshot_2017-11-01_01-46-25.png]]
+
+Here, we don't have all the points in the input space to check. We have only a sample of the data points. The sample that we have comes from a probability distribution; P on X, that gives us one point from X over another - the probability generates the dataset
+We are not restricting P on X, we don't even need to know what it is because our Hoeffding's inequality does not depend on probability distribution of N
+
+We aren't done yet, what we have discussed is, for _this_ h, \nu \approx \mu within some \epsilon
+
+However, this is just verification of h, not learning. Currently we chose some h and verified that it makes sense. We don't want to pick the h ourselves, we want the algorithm to do it for us - we need to choose h from H
+
+This is simple, we already have a probability distribution that gives us some data points from the input space(bin). We can test our h on each and choose the h that gives us the maximum right results from them and invoke Hoeffding's to get our bound. 
+
+Notation:
+ - both \mu and \nu depend on h
+ - \nu is "in sample", called E_{in}
+ - \mu is "out of sample", called E_{out}
+ - E_{in} and E_{out} are actually E_{in}(h) and E_{out}(h) (are functions of h) because they are a dependent on h
+
+Hoeffding's becomes
+
+     P[|E_{in}(h) - E_{out}(h)| \gt \epsilon] \le 2e**{-2\epsilon^{2}N}
+
+
+** A dilemma and a solution
+We still have a problem!
+
+We cannot just have multiple h and apply Hoeffding's to them. 
+Why? Consider this:
+
+Take a coin, flip it 5 times. 
+If we get 5 heads and we choose h which is always heads, it means \nu is 1, but it doesn't mean that \mu is also 1
+
+The probability of 10 heads in 10 tosses is:
+    1/2^{10}
+
+If we toss 1000 fair coins 10 times each, probability that _some_ coin will get 10 heads:
+    1 - P[no coin gets 10 heads]
+    1 - P[a particular coin doesn't get 10 heads]^{1000}
+    1 - [1 - P[a particular coin gets 10 heads]^{1000}
+    1 - [1 - 1/2^{10}]^{1000}
+    0.63%
+
+So, it is more likely that the 10 heads will occur than not. So, the 10 heads are no indication at all of the real probability of getting head. We cannot choose a h which will give 1 always and choose a sample which has all 1s and say we have a perfect system according to Hoeffding's. 
+Hoeffding's applies to each one individually, but in each case, there is a probability that we will be off by say half a percent that we are off in some aspect in the 1st case, and half a percent off in another aspect in the 2nd case. If these "off" probabilities are disjoint, we end up with a bad system.
+
+We need to find a way to deal with multiple h/bins.
+
+An easy solution:
+ - recall we had: P[|E_{in}(h) - E_{out}(h)| \gt \epsilon] \le 2e**{-2\epsilon^{2}N}
+ - we wanted to make a statement about E_{out }based on E_{in}
+
+What we want now is:
+ - P[|E_{in}(g) - E_{out}(g)| \gt \epsilon] \le ??
+   - so, we want to choose the best hypothesis g and want a bound for that choice
+   - *by plain logic (not using Hoeffding's or anything), since g \in H, we have:*
+   - P[|E_{in}(g) - E_{out}(g)| \gt \epsilon] \le  P[ |E_{in}(h_{1}) - E_{out}(h_{1})| \gt \epsilon + |E_{in}(h_{2}) - E_{out}(h_{2})| \gt \epsilon + ... + |E_{in}(h_{M}) - E_{out}(h_{M})| \gt \epsilon ]
+     - where M is the number of h \in H or the cardinality of H
+     - this is valid because g \in H, g is one of the h-s
+
+   - This is the union bound, which assumes no overlap, this is the worst case, it cannot get worse than this
+   - using Hoeffding's we get:
+   - P[|E_{in}(g) - E_{out}(g)| \gt \epsilon] \le \Sigma P[|E_{in}(m) - E_{out}(m)| \gt \epsilon], m \to 1 to M
+
+     - P[|E_{in}(g) - E_{out}(g)| \gt \epsilon] \le \Sigma 2e**{-2\epsilon^{2}N}, m \to 1 to M
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-01 02:38:03
+[[file:assets/screenshot_2017-11-01_02-38-03.png]]
+
+
+:top: is a powerful statement, it says, even when I pick the h that has the best sample, there is an bound that applies to E_{in} (or \mu) regarding how accurately my E_{in} (or \nu) tracks it
+
+But the problem is:
+     - P[|E_{in}(g) - E_{out}(g)| \gt \epsilon] \le 2Me**{-2\epsilon^{2}N}
+
+And M is the cardinality of H, which is \infin generally, so we get that P[something] < \infin etc
+So, the more sophisticated the model that you use, the looser will E_{in} track the E_{out}
+
+
+* Chapter 3 - The Linear Model I
+
+** Review
+- We ended with a problem, the loose tracking of E_{out}(g) by E_{in}(g)
+- Since g has to be one of h_{1}, ..., h_{M} we conclude that: (union bound)
+  - if | E_{in}(g) - E_{out}(g) | > \epsilon then:
+    - | E_{in}(1) - E_{out}(1) | > \epsilon or
+    - ...
+    - | E_{in}(M) - E_{out}(M) | > \epsilon or
+  - This gives us an added M factor
+
+We need to have a tighter bound on the tracking of E_{out}(g) by E_{in}(g). The union bound assumes no correlation b/w all events. It makes sense if the events are independent, and happen disjointly, like in the coin flipping scenario. We will get a smaller number if there is some correlation and they overlap.
+
+We have established the principle that thru learning, you can generalize, and we have established that. We will later established that even when the cardinality of H is infinite, we can still generalize - the theory of generalization.
+
+** The Input representation
+
+ - We'll work with the MNIST like dataset. 16x16 grey level pixels.
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-01 16:53:12
+[[file:assets/screenshot_2017-11-01_16-53-12.png]]
+
+This is the raw input. 16x16 - 256 pixels
+
+ - 'raw' input x = (x_{0}, x_{1}, ..., x_{256})
+
+Recall, we added the mandatory x_{0} to make the formula better
+
+Our parameters: (w_{0}, w_{1}, ..., w_{256}) - this is 256 dimensional space
+
+We can reduce the parameters, i.e. we can extract *features*:
+ - intensity and symmetry x = (x_{0}, x_{1}, x_{2}) 
+   - we have lost some information but we also lost some irrelevant info
+
+Plotting just 5 and 1:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-01 16:57:47
+[[file:assets/screenshot_2017-11-01_16-57-47.png]]
+
+** Linear Classification
+ - we'll generalize perceptron to linearly non separable case
+ - What does PLA do?
+   - it tries to iteratively correctly classify a single point with each iteration
+   - the data is not linearly separable, so it will not terminate
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-01 16:59:47
+[[file:assets/screenshot_2017-11-01_16-59-47.png]]
+
+   - we see that the error jumps around a lot
+   - also note that E_{out} is being tracked nicely by E_{in}
+
+Final perceptron boundary (after stopping at 1000 iterations):
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-01 17:01:54
+[[file:assets/screenshot_2017-11-01_17-01-54.png]]
+
+ - we can make a modification - "Pocket algorithm"
+   - Just make a few iterations and keep the h that had the lowest E_{in} so far.
+   - The errors now look like this:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-01 17:03:41
+[[file:assets/screenshot_2017-11-01_17-03-41.png]]
+
+
+We get this boundary:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-01 17:04:51
+[[file:assets/screenshot_2017-11-01_17-04-51.png]]
+
+
+** Linear Regression
+ - we'll generalize the target function from being a binary function (a classifier) to a real valued function
+
+Let's discuss the credit problem again
+
+Linear regression input:
+ - let's say we have *d* input features:
+   - annual salary, years in residence, years in job, current debt etc
+
+Linear regression output:
+    h(x) = \Sigma w_{i}x_{i} = w^{T}x
+ - summation over i \to 0 to d
+
+Linear regression dataset:
+ - (x_{1}, y_{1}), ..., (x_{N}, y_{N})
+ - y_{n} \in R, is the credit line for customer x_{n}
+
+Error:
+ - we can use the squared error: (h(x) - f(x))^{2}
+ - this squared error has good analytical properties - helps with differentiation etc
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-01 17:50:49
+[[file:assets/screenshot_2017-11-01_17-50-48.png]]
+
+When we plot linear regression, we never plot x_{0} because that is always 1.
+
+The "line" or "hyperplane" is 1 dimension short of what you are working with. Eg:, we have mandatory x_{0}, we also have one feature, and we have the output - 2 dimensions, and so 1D line
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-01 17:54:53
+[[file:assets/screenshot_2017-11-01_17-54-53.png]]
+
+The red is the in sample error E_{in}
+
+We had:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-01 17:50:49
+[[file:assets/screenshot_2017-11-01_17-50-48.png]]
+
+Which can be re-written in matrix form as:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-01 17:57:32
+[[file:assets/screenshot_2017-11-01_17-57-32.png]]
+
+Minimizing E_{in}:
+
+We have only *w* as the variable. 
+How we can find the minimum of the function E_{in}(w) is by taking it's derivative and equating it to 0 (a vector of 0s)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-01 18:00:54
+[[file:assets/screenshot_2017-11-01_18-00-54.png]]
+
+X-dagger is "pseudo-inverse" because X is not a square matrix, it is a very tall matrix and but X-dagger is still it's inverse, because if you multiple X-dagger with X, you'll get identity matrix.
+
+*actually d+1 and not d, because we also have constant w_{0} :arrow_down:
+
+X is Nxd, X^{T} is dxN
+So, X^{T}X is dxN * Nxd = dxd
+Inverse of dxd is simple (since num of features is generally less), so we have: 
+    (X^{T}X)^{-1}X^{T} = dxd * dxN = dxN \to X-dagger
+    X-dagger * y = dxN * Nx1 = dx1 \to our features
+
+*y is the target vector*
+*X is the input data matrix*
+
+This is "one step learning"
+
+You can use linear regression for classification, it doesn't matter if you set y to be \plusmn1, the algo will still learn. You just use sign(w^{T}x) as the output - similar to using 0 as the threshold
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-01 18:16:38
+[[file:assets/screenshot_2017-11-01_18-16-38.png]]
+
+Linear regression applied like so :top: is called *linear classification*
+There is a problem here: :top:
+
+The value for the red region is highly negative for the lower points. But their target value is just -1. So, the linear regression reports high error due to this and the boundary is pushed towards the center
+
+So, one can use Linear Regression to give a jumpstart to the perceptron - a good initial weights to start with. 
+
+** Nonlinear transformation
+ - Sometimes we need to transform data to make them linearly separable
+ - Sometimes we want to have non-linear features, like in the credit example, we don't want the time spent in one location to be linear, we want it to be something like: 0 for |x<1| and 1 for |x>5| etc
+
+ - Non linear transformations remain within the realm of linear models. 
+This is because the output is a function of the *weights*, not the features. So, we can do anything with the features, we are still in the linear realm.
+
+So, we can do this transformation:
+
+    (x_{1}, x_{2}) \to (x_{1}^{2}, x_{2}^{2})
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-01 18:27:35
+[[file:assets/screenshot_2017-11-01_18-27-34.png]]
+
+We can now use perceptron in the transformed space.
+We cannot use arbitrarily complex transformation, there is a catch about which we'll see later
+
+* Chapter 4 - Error and Noise
+** Review
+ - Linear models use the "signal" w^{T}x (which is vector form for \Sigma w_{i}x_{i})
+ - One step learning: w = (X^{T}X)^{-1}X^{T} \middot y
+ - Non linear transformation:
+   - w^{T}x is linear in w
+   - any transformation x \to z preserves _this_ linearity and so can be used
+
+** Nonlinear transformation (continued)
+We had \Phi transformation last time:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-01 18:36:09
+[[file:assets/screenshot_2017-11-01_18-36-09.png]]
+
+
+Note, \Phi is a non-linear transformation of input space, that is to say, straight and parallel lines drawn in input space won't remain straight and parallel in transformed space. So, each point in input space, may map to more than 1 point in the transformed space and vice versa (or it may not have a mapping)
+
+Note, we can transform from d-dimensional space to d`-dimensional space, there is no limit really
+
+We learn the weights in the transformed space, the targets remain in the original space.
+
+The learned hypothesis is still g,
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-01 19:00:41
+[[file:assets/screenshot_2017-11-01_19-00-41.png]]
+
+Note, \Phi(x) gives us z
+
+** Error measures
+
+They try to answer this:
+ - what does it mean for "h \approx \fnof"?
+ - Error measure: E(h, \fnof)
+ - If error is 0, h perfectly represents \fnof and we are golden.
+ - It is almost always "pointwise defination":
+   - e(h(x), \fnof(x))
+ - example: square error: e(h(x), \fnof(x)) = (h(x)-\fnof(x))^{2}
+ - another example: e(h(x), \fnof(x)) = || h(x) \ne \fnof(x) ||
+   - || h(x) \ne \fnof(x) || returns 1 if h \ne f else 0
+
+How do we go from the pointwise to overall?
+We take pointwise and average it to get to overall
+ - Thus, in-sample error:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-01 19:11:39
+[[file:assets/screenshot_2017-11-01_19-11-39.png]]
+
+ - Also, out of sample error:
+   - this is by logic, the definition of E_{out}
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-01 19:12:47
+[[file:assets/screenshot_2017-11-01_19-12-47.png]]
+
+It is the expectation of pointwise error *e* on data points *x*
+
+So, the learning diagram becomes:
+
+*** How to choose error measure
+It depends on the system.
+ - For some systems, false positive would be expensive. For other systems, false negatives would be expensive
+
+For classification, we can create a table:
+
+For supermarket:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-01 19:18:56
+[[file:assets/screenshot_2017-11-01_19-18-56.png]]
+
+False negative is expensive; if you are given a discount coupon and you go there and they say you can't use it, it is horrible
+It is okay if you weren't given it in the first place but you still trick them into giving the discount
+
+For CIA, false positives are disastrous, 
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-01 19:21:20
+[[file:assets/screenshot_2017-11-01_19-21-20.png]]
+
+
+Sometimes we don't have the idea error measure, so we use alternative error measures
+ - if the noise is gaussian, we can use squared error
+ - in binary, we can use cross entropy error measure (this is what we used in logistic regression, the Bernoulli thingy)
+
+Sometimes, we use friendly measures:
+ - squared error for linear regression is friendly because it has a closed-formed solution. The cross entropy error measure in classification turns out to be convex and so we can find the global minimum etc.
+
+** Noisy targets
+
+Very important, because the target function is not always a "function" in true mathematical sense, it is noisy.
+This is because the target function cannot capture ALL the information that plays a part in determining the outcome
+
+So, we use *target distribution*:
+
+ - Instead of y = \fnof(x) we get:
+   - P(y|x)
+
+Earlier, (x, y) was generated by a probability distribution (the dataset was generated by PD, say P)
+but now, y is non-deterministic and is generated by a PD too. So, (x, y) is generated by a joint PD:
+
+ - P(x, y) = P(x)P(y|x)
+
+ - we can model noisy target as:
+   - Noisy target = deterministic target "\fnof(x) = E(y|x)" + noise "y - f(x)"
+
+No loss of generality by assuming probability distribution over P over y, because even if the target function is indeed a function, we can model it as:
+ 
+    P(y|x) = 0 everywhere except for y = f(x)
+
+So, discrete case:
+ - Probability is 1 for y=f(x), 0 elsewhere
+So, continuous case:
+ - delta function at y=f(x), 0 elsewhere 
+
+The target function is noisy because we aren't able to model it completely. We are trying to model it with limited parameters (the features) and not taking into consideration all the factors that it depends on. Hence, the target function that we are trying to learn is noisy. The god send truth target function that is generating the data is not noisy. Our approximation, the one we are trying to learn, is.
+
+Our updated learning diagram:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-01 19:49:22
+[[file:assets/screenshot_2017-11-01_19-49-22.png]]
+
+Now, the target function is replaced by a distribution. And we also have an error measure lying between learning algorithm and final hypothesis. It is the prize we pay for not being perfect in our approximation of the target function. 
+
+Note:
+ - P(x)
+   - This is the probability of generating the dataset that we train on
+   - We introduced this to accommodate Hoeffding's
+   - it quantifies the relative importance of x - it is not what we are interested in
+
+ - P(y|x) 
+   - This is the probability the target function gives y for an input x
+   - This is because we cannot model the target function perfectly with out features
+     - *this is what we are trying to learn*
+
+Both these PDs together generate our dataset; P(x, y)
+So, we must always remember that P(x, y) is actually the mixture of concepts, of 2 PDs which are inherently different
+
+
+** Preamble to the theory
+
+What we know so far:
+ - we know that learning is feasible
+   - E_{out}(g) \approx E_{in}(g)
+ - However, this is not *really* learning. It is just validation that our "selected" hypothesis gives us a measure of how it will perform out of sample. This is just good *generalization*
+ - This guarantee that E_{in} is a good proxy for E_{out} is important for us to learn. It is a building block for learning.
+ - Real learning is actually:
+   - g \approx f
+     - i.e. E_{out}(g) \approx 0
+     - this measure how far are you from the target function
+
+*** The 2 questions of learning
+ - We need E_{out}(g) \approx 0 
+ - This is achieved thru:
+   - E_{out}(g) \approx E_{in}(g) and E_{in}(g) \approx 0
+   - It's like saying, I can do good on the sample dataset and I know that this is means that I will do good outside the sample too
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-01 20:17:38
+[[file:assets/screenshot_2017-11-01_20-17-38.png]]
+
+We know that answer to 1 is "Yes". But we were left with the *M* factor on right hand side that we have to deal with.
+The answer to 2 is what ML algorithms are suppose to do! They give us a good fit for sample data. 
+
+
+The theory will achieve this for us:
+ - characterize feasibility of learning for infinite M
+   - we will have a single parameter that tells us the sophistication of the hypothesis set
+ - characterize the tradeoff b/w model complexity and how well our E_{in}(g) tracks E_{out}(g)
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-01 20:24:10
+[[file:assets/screenshot_2017-11-01_20-24-10.png]]
+

@@ -117,7 +117,8 @@ We see that h is a function of *w* and *threshold*
 
 If the data is linearly separable, we can learn a single line from a random line
 
-We can rename -threshold to w_{0} and call it *bias* - we added an artificial coordinate whose value is always 1
+We can rename -threshold to w_{0} and call it *bias* - we added an artificial coordinate x_{0} whose value is always 1
+Note: w_{0} is not 1, it is a free parameter that we learn, x_{0} is 0
 Now, formula:
 
     h(x) = sign ( \Sigma w_{i}x_{i} ), i \to 0 to d
@@ -971,3 +972,179 @@ Example: Given 3 points, and given that the break point is 2, we can have only 4
 [[file:assets/screenshot_2017-11-02_02-40-43.png]]
 
 Any addition (out of 2^{3} = 8) is not allowed because then it would classify 2 points completely (and that is not allowed, as break point is 2)
+
+** Chapter 6 - Theory of Generalization
+
+The existence of a break point restricts the number of dichotomies drastically. 
+
+We have 2 things to do now:
+ - Prove that a growth function m_{H}(N) with a break point is polynomial
+ - Prove that we can replace m_{H}(N) with M
+
+Recall to show that m_{H}(N) is a polynomial, we need to show that m_{H}(N) is bound above with a polynomial in the general case
+It is actually! m_{H}(N) is bounded above by a polynomial of power N^{k-1} where k is the break point for the hypothesis set's
+ - examples:
+   - H is positive rays
+     - k is 2, so, m_{H}(N) should be bounded by polynomial of power 1. Which is true, since m_{H}(N) is N + 1
+   - H is positive intervals
+     - k is 3, so, m_{H}(N) should be bounded by N^{2}. Which is true, since m_{H}(N) is nC2
+   - H is 2D perceptrons
+     - k is 4, m_{H}(N) should be bounded by N^{3}. We did not know the m_{H}(N) for it, but we know that it is bounded above by N^{3}
+
+So, as long as there is a break point, we will be able to get a polynomial and thus learn.
+
+This result that you can replace m_{H}(N) with M is called the *Vapnik-Chervonenkis Inequality* is the most important theoretical result in machine learning. 
+
+* Chapter 7 - The VC dimension
+
+** Review
+ - We saw that m_{H}(N) is bounded above by a polynomial in k, where k is the break point for the hypothesis set
+ - Also, that we can replace M with m_{H}(N) and thus learn according to VC inequality 
+
+Thus, we can learn for any hypothesis set which has a break point.
+This lecture will give us the notion of the "VC dimension", which characterizes the complexity of the hypothesis set
+
+** The definition
+ - It is a quantity defined for a hypothesis set H, denoted by d_{vc}(H)
+ - It the is most points H can shatter
+ - it is the "largest" value for N, for which m_{H}(N) = 2^{N}
+ - it is k-1
+ - N \le d_{vc}(H) \rArr H can shatter N points
+ - N \gt d_{vc}(H) \rArr N is a break point for H (anything above d_{vc}(H) is a break point)
+ - in terms of break point k:
+   - for any hypothesis set with VC dimension d_{vc}(H), we have it's growth function a polynomial of degree d_{vc}(H)
+
+ - examples:
+   - H is positive rays
+     - d_{vc}(H) is 1
+   - H is 2D perceptrons
+     - k is 4, so d_{vc}(H) is 3
+   - H is convex sets
+     - k is \infin, so d_{vc}(H) is infinite as well
+     - this is the most pessimistic case, since we won't get the points in a neat circle. This is the upper bound for the hypothesis set
+     - so, we can still learn
+
+Reiterating, we have established that if d_{vc}(H) is finite (aka k exists), g \in H will generalize
+And it will generalize independently of learning algorithm, input distribution, independent of target function, for any hypothesis set 
+
+** VC dimension of perceptrons in any dimension
+ - for 2D, d_{vc}(H) was 3
+ - for 3D, d_{vc}(H) is 4
+ - in general, d_{vc}(H) = d + 1 where d is the dimension
+ - I.e., the perceptron in d dimensions can shatter d+1 points completely
+ - Also, d is the _number of paramteres_ in the model - (w_{0}, w_{1}, ..., w_{d})
+
+** Interpreting the VC dimension
+ - the #parameters are analog degrees of freedom
+ - the VC dimension makes them binary degrees of freedom - it is based on the #dichotomies possible, #ways of points you can shatter
+
+ - examples:
+   - H is positive rays
+     - d_{vc}(H) is 1, so 1 parameter, 1 degree of freedom - which is what we have!
+   - H is positive intervals
+     - d_{vc}(H) is 2, so 2 parameters, 2 degrees of freedom - which is what we have!
+
+Actually, it's not just parameters, it is degrees of freedom. 
+A parameter may not contribute to the degree of freedom, then it won't count.
+
+Consider a 1D perceptron,
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-03 00:10:42
+[[file:assets/screenshot_2017-11-03_00-10-42.png]]
+
+It is 2 parameters, 1 weight and 1 bias/threshold
+Now, we can take the output and feed it into another perceptron, ..., 3 times and that is the output. 
+Thus, we have this:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-03 00:17:41
+[[file:assets/screenshot_2017-11-03_00-17-41.png]]
+
+Here, we have 4*2 = 8 parameters, but we still have 2 degrees of freedom, so d_{vc}(H) is still 2
+You don't care about the internal structure, you ask yourself how many points can I shatter? k is it? Then my d_{vc}(H) is k-1. That's all.
+
+So, d_{vc}(H) measures the effective number of parameters
+
+
+ - Number of data points needed:
+   - we had this statement according to the VC inequality: 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-03 00:29:40
+[[file:assets/screenshot_2017-11-03_00-29-40.png]]
+
+Here, we can see that the RHS is just N^{d}e^{-N} where d is the d_{vc}(H) (vc dimension) and N is the number of samples needed
+Plotting LHS (probability) vs RHS:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-03 00:32:02
+[[file:assets/screenshot_2017-11-03_00-32-02.png]]
+
+We see that the polynomial is high initially (and the bound is absurd, like LHS > 10 etc) but then the exponential kills it and we get tighter and tighter bounds. 
+This is the reason if we use a linear regression model on large number of sample points, and we get some error on the sample points, we'll get the same error out of sample as well - with a high probability. This is the case of having RHS (\delta) as very small, I.e. Having a tight bound on the | E_{in} - E_{out} |, but the \epsilon may be large. That is to say, we are 99% sure that the in sample error will be within 60% of out of sample error - "very confident that it is a bad system" 
+
+Rule of hand:
+ - N \ge 10d_{vc}(H)
+ - You need 10 times the d_{vc}(H) number of examples
+
+** Generalization bounds
+ - We can rearrange things:
+ - We had this from the VC inequality:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-03 00:45:24
+[[file:assets/screenshot_2017-11-03_00-45-24.png]]
+
+From the RHS, we can get \epsilon in terms of \delta
+\delta is just how tight a bound do you want on the statement you make...
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-03 00:46:35
+[[file:assets/screenshot_2017-11-03_00-46-35.png]]
+
+So, we have: 
+ - \epsilon depends on N, \delta, m_{H} - growth function of hypothesis set - we call the RHS \Omega
+ - if m_{H} is large, d_{vc}(H) is large, the guarantee on generalization(\epsilon) is worse 
+ - if \delta is small, I.e. You want to be very sure of the statement you make, worse \epsilon
+ - if N is large, \epsilon becomes smaller
+ - eventually, the log is killed by linear N (just like polynomial is killed by exponential) 
+
+We can re-write as:
+
+With probability \ge 1 - \delta
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-03 00:52:00
+[[file:assets/screenshot_2017-11-03_00-52-00.png]]
+
+\Omega is a function of 
+ - N \to goes down with it
+   - the more examples, the tighter bound on generalization
+ - H \to goes up with it
+   - more complex H, higher the VC dimension d_{vc}(H) and so less generalization
+ - \delta \to goes up with smaller delta
+   - as you want to be more sure about the confidence in your statement, less generalization
+
+
+We can simplify further as:
+ - remove the modulus, because mostly E_{out} is smaller than E_{in}
+ - so, E_{out} - E_{in} \le \Omega
+   - E_{out} - E_{in} is called the *generalization error*
+ - moving E_{in} to RHS,
+   - E_{out} \le E_{in} + \Omega(N, H, \delta)
+   - So, the RHS bounds the E_{out}
+   - We have control on the RHS, E_{in} we are controlling and \Omega is dependent on H, N, \delta etc
+   - If we choose a more complex H, E_{in} goes down, but \Omega goes up.
+     - Hence, there is a tradeoff involved here
+
+This form will also give us the groundwork for regularization. 
+Earlier, we used just E_{in} as a proxy for E_{out}. It seems here, that we can use E_{in} + \Omega as the proxy and that may give us a better handle on E_{out}...
+

@@ -3812,7 +3812,681 @@ the trap instruction usually has an index as part of it that says call syscall f
 (eg, wait, read, write, lseek)
 POSIX is a standard which defines what a system call interface should look like so that applications can be made portable. i.e. it defines what the syscalls are called, what args they must accept, what they must return etc
 
-if the
+** Traps and Interrupts
+
+ - Traps are synchronous exceptions - they need to be attended to by the kernel immediately
+   - divide by 0, illegal instruction, bus error (bad address)
+   - segmentation fault (address out of range)
+   - page fault (for illusion of infinite-sized memory)
+
+ - Interrupts are Asynchronous exceptions
+   - eg: timers, disk ready, network etc
+
+Interrupts can be disabled, traps cannot because traps are when you hit a bad point in the instruction stream and cannot go further.
+
+On a system call, exception, or interrupt
+ - hardware enters kernel mode with interrupts disabled, saves pc, jumps to appropriate handler in kernel, (x86 also saves registers, changes stack etc)
+
+** Protection without Hardware
+ - Do we need hardware support for translation and dual-mode behavior?
+   - no: normally use hardware, but you can emulate anything in hardware in software as well
+ - protection via strong typing
+   - make the language very strongly typed so that it cannot do something crazy (not just static typing, strong typing)
+   - eg: Java, LISP
+ - protection via software fault isolation:
+   - language independent approach - have compiler generate object code that can't provably step out of bounds
+     - compiler puts in checks for every "dangerous" operation (loads, stores etc). Need special loader
+     - alternatively, compiler generates "proof" that code cannot do certain things (Proof carrying code)
+   - Or: use virtual machine to guarantee safe behaviour (loads and stores recompiled on fly to check bounds)
+   
+** Caching concept
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-11 05:32:43
+[[file:assets/screenshot_2017-12-11_05-32-43.png]]
+
+ - Cache:
+   - repository for copies that can be accessed more quickly that the original
+     - make frequent case fast and infrequent case less dominant
+
+ - Caching underlies many of the techniques that are used today to make computers fast:
+   - can cache: memory locations, address translations, pages, file blocks, file names, network routes etc
+
+ - Only good if:
+   - frequent case frequent enough
+   - infrequent case not too expensive
+
+ - important metric: Average access time:
+   - hit rate*hit time + miss rate*miss time
+
+The reason we need to cache is that processors are growing according to Moore's Law, but DRAM (and in general memory access) hasn't been keeping up (read this also in CS:APP)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-11 05:37:24
+[[file:assets/screenshot_2017-12-11_05-37-24.png]]
+The gap is growing 50%/year (at least till 2002)
+And this on top of the fact that our loads and stores need translations to get done - we start with the virtual segment id, look that up, take the virtual page number and find that in the page table, and put it in the address and then you go to cache, if you miss go to dram...
+
+So, to do a load/store, we need upto 3 dram access - need to cache translations - "translation lookaside buffer"
+
+Caching helps because of 2 kinds of Locality:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-11 05:43:17
+[[file:assets/screenshot_2017-12-11_05-43-17.png]]
+
+ - temporal locality (locality in time)
+   - keep recently accessed data items closer to processor
+ - spatial locality (locality in space)
+   - move contiguous blocks to the upper levels
+
+We can have multiple levels of cache, (L1, L2 etc)
+
+Caching helps:
+ - present as much memory as in the cheapest technology
+ - provide access at speed offered by the fastest technology
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-11 05:45:12
+[[file:assets/screenshot_2017-12-11_05-45-12.png]]
+
+
+** Sources of Cache misses:
+The 3 Cs + 1
+ - Compulsory (cold start, process migration, first reference) 
+   - first access to a block
+ - Capacity
+   - cache cannot contain all blocks access by the program, solution: increase cache size
+ - Conflict (collison)
+   - multiple memory locations mapped to the same cache location
+ - Coherence
+   - 2 processors are there, one reading, one writing. Once a write happens, it needs to be kicked out of the readers cache else it has an old value. 
+
+** How is a block found in a cache?
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-11 06:08:20
+[[file:assets/screenshot_2017-12-11_06-08-20.png]]
+
+Block offset - similar to page offset
+index - used to lookup things in the cache
+tag - used to see if in there of not
+
+Block is the minimum quanta of caching (like the page was the minimum quanta of paging)
+On TLB miss, page table must be traversed. If located Page Table Entry is invalid, cause page fault
+On context switch/change in page table, TLB entries must be invalidated somehow
+
+Example:
+
+*** Direct mapped 2^{N} byte cache
+ - the uppermost 32-N bits are always the cache tag
+ - the lowest M bits are the byte select, block size = 2^{M}
+
+Example: 1 KB direct mapped cache with 32 B blocks
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-11 06:17:54
+[[file:assets/screenshot_2017-12-11_06-17-54.png]]
+(note we have a cache query and a cache bank :top:)
+
+We have the *Cache Tag* - this is matched with the cache line we select according to *Cache Index* to see if we have a hit/miss - if the cache tag is different, we have a miss, else a hit
+
+Also, each cache line has 32 bytes, so we use the 4bit *Byte Select* to select the right byte.
+We also have a valid bit in the cache block - used to set it to 'invalid' when you first boot up system etc
+
+If it misses, we have to go to the next level of cache. Called Direct mapped cache, because the Cache Index picks out one cache line as a candidate and it matches or it doesn't. 
+
+
+*** N-way set associative
+N entries per cache index, N direct mapped caches operates in parallel
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-11 06:29:14
+[[file:assets/screenshot_2017-12-11_06-29-14.png]]
+
+The Cache index selects a "set" of N entries from the cache
+Here, :top: N is 2. The 2 entries are compared to input in parallel. If the Cache Tag matches, and the cache entries are valid, we select them and get the data according to Byte Select.
+
+*** Fully associative cache
+Every cache line is compared in parallel, use the one that matches
+Here, every address can go to only one place, so the changes of conflict misses is high, since if the cache tags are same, the entries will kick each other out
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-11 06:36:26
+[[file:assets/screenshot_2017-12-11_06-36-26.png]]
+
+** Where does a block get placed in a cache?
+Consider our 32-bit address space:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-11 06:39:20
+[[file:assets/screenshot_2017-12-11_06-39-20.png]]
+
+We need to look up block 12 in the caches. 
+
+We have 8 block caches (8 byte cache)
+
+If it is a direct mapped cache:
+ - block 12 can go into 12 % 8 - 4th entry
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-11 06:40:23
+[[file:assets/screenshot_2017-12-11_06-40-23.png]]
+If it is a set associative or fully associative cache:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-11 06:43:55
+[[file:assets/screenshot_2017-12-11_06-43-55.png]]
+
+
+* Lecture 14 - Caching and Demand Paging
+
+** Review
+Caching is to take principle of locality to present as much memory as in the cheapest technology at the access speed offered by the fastest technology
+
+Cache misses reasons:
+ - Compulsory
+ - Capacity
+ - Conflict (collision)
+ - Coherence (invalidation by other processes due to updating memory etc)
+ - Policy - due to non-optimal replacement policy
+
+** Which block to replace on miss?
+ - Direct Mapped
+   - only 1 possibility, replace that
+ - Set associative or fully associative
+   - Random
+   - LRU (least recently used)
+
+LRU is generally better due to temporal locality
+But if you have a choice b/w LRU and a larger cache, choose larger cache
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-11 07:52:57
+[[file:assets/screenshot_2017-12-11_07-52-57.png]]
+
+Here, a cache miss isn't the end of the world, we just have to go to DRAM which isn't deadly slow. We will be more careful with Paging though, there we have to go to the disk
+
+*** What happens on a write?
+ - Write through
+   - The information is written to both the block in the cache and to the block in the lower-level memory, all the way to DRAM
+   - We can discard cache whenever we want, because the memory is already updated. Hence, read misses (when we want some data in the cache, but it is not there, so it is put there by throwing out existing value) cannot lead to writes
+ - Write Back
+   - Just write to the cache, not the DRAM
+   - It is written to the main memory only when it is replaced
+   - This means we don't need to update DRAM on every update, that's the whole point of the cache. But this is more complex. Also, read miss may require writeback of dirty data.
+
+Modern processors do Write Thru for L1, L2, L3 etc (because it is fast) and Write Back further down
+Each processor has it's own L1/2/3 caches. So, if 1 processor does a write back, it has the latest value (which is not on the disk). To make the caches coherent across processors, we have something called Cache Coherence Protocol that tracks all reads and writes. 
+
+** Cache Performance
+
+Miss oriented approach to memory access
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-12 06:19:20
+[[file:assets/screenshot_2017-12-12_06-19-20.png]]
+
+CPUtime is time taken by CPU to execute the instruction
+IC is instruction count
+CPI is cycles per instruction
+MemAccess/Inst is memory accesses per instruction
+
+AMAT is average memory access time
+
+AMAT = HitRate * HitTime + MissRate * MissTime = HitTime + MissRate * MissPenalty (because if you miss, you pull it in and then hit it, so you always have a hit time)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-12 06:24:48
+[[file:assets/screenshot_2017-12-12_06-24-48.png]]
+
+You can have 2nd level caches etc
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-12 06:25:06
+[[file:assets/screenshot_2017-12-12_06-25-06.png]]
+
+*** Caching applied to address translation
+Translation takes upto 2-3 DRAM accesses, we need caching there
+We cache all our translations (virtual addresses and physical addresses)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-12 06:27:51
+[[file:assets/screenshot_2017-12-12_06-27-50.png]]
+
+So, the CPU has a virtual addresses, it looks it up in the TLB cache, present? We get the physical address
+Now, we to the Hardware cache and look that physical address up, present? Get the data, else access physical memory
+
+You cannot have a cache that takes in a virtual address and gives you the data, this is because we might have 2 processors both having different data on virtual address 0x0.
+
+If you miss, you write it to the cache (we write the page address to the cache recall, so that anytime that you want to access some offset in the same page, you don't have to hit the dram)
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-12 06:33:11
+[[file:assets/screenshot_2017-12-12_06-33-11.png]]
+
+Does page locality exist? You'd hope so!
+ - Instruction accesses spend a lot of time on the same page (since access sequential)
+ - Stack accesses have definite locality of reference (up, down, up, down etc)
+ - Data accesses have less page locality (but depends)
+
+We can have multiple level of TLBs, a hierarchy of them with varying speed/sizes. 
+
+*** What happens on a TLB miss?
+For Hardware traversed page tables:
+ - On TLB miss, the hardware in MMU traverses the page table (pointed to by the PageTablePtr) and finds the right address and fills it in the TLB if the PTE is valid - the processor doesn't even know it was a cache miss and the MMU had to traverse (it know, the stat is sent maybe, but it doesn't need to do extra work etc). If the PTE was invalid, the MMU causes Page Fault and the kernel takes over.
+
+It can do anything here, either add more page tables, swap out/in, core dump etc.
+
+Most chips provide hardware traversal. Modern OSes tend to have more TLB faults since they use translation for many things. 
+*TLB is always in hardware*
+
+*** What happens on a context switch?
+ - Need to do something since TLBs map virtual addresses to Physical addresses
+ - Also, if the kernel changes the page table layouts, need to invalidate old stuff
+ - Options?
+   - Invalidate TLB: simple but might be expensive
+   - Include ProcessId in TLB: so you can have 12 address 0x0s and it'll work
+
+
+** Mobile devices are the future
+Android is the traditional Linux kernel at the bottom
+The runtime basically gives you Java for the Apps to run
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-12 06:48:55
+[[file:assets/screenshot_2017-12-12_06-48-55.png]]
+
+
+** What TLB organization makes sense?
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-12 06:54:14
+[[file:assets/screenshot_2017-12-12_06-54-14.png]]
+
+CPU \to TLB (gives physical address) \to Cache (gives bytes at that physical address) \to Memory (need to go to memory if cache miss)
+
+This is better than having Cache before TLBs (because then you'll have to have ProcessId etc) and also you'll have to flush the cache on context switch which is more expensive than flushing the TLB
+
+TLB needs to be fast, but cannot have Direct Mapped because the cost of miss is very high - we have to walk to page table - causes thrashing - this suggests that the cost of conflict (miss penalty) is much higher than slightly increased cost of access (hit time)
+
+Thrashing is just a lot of conflicts in access
+
+How many entries does a TLB generally have?
+ - usually small, 128-512 entries
+ - Not very big, can support high associativity
+
+TLB usually organize as fully-associative cache
+Input is virtual address, output is physical address + other info (dirty, access bits etc)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-12 07:49:30
+[[file:assets/screenshot_2017-12-12_07-49-30.png]]
+
+If fully-associative is too slow, we can put a small (4-16 entry) direct mapped cache in front, called "TLB slice"
+
+*** Where do we do the TLB lookup? Before/in-parallel with cache lookup?
+R3000 was an old processor, with a pretty regular fetch, decode, execute, memory, writeback cycle
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-12 07:52:22
+[[file:assets/screenshot_2017-12-12_07-52-22.png]]
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-12 07:52:43
+[[file:assets/screenshot_2017-12-12_07-52-43.png]]
+
+In parallel is also possible
+Since the offset bits in a virtual address isn't translated, we just lookup cache with it while we get the page number from TLB
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-12 07:55:16
+[[file:assets/screenshot_2017-12-12_07-55-16.png]]
+
+"The problem with this size is if the Cache size of increased to 8KB, we need more bits than present, so we can shift to 2-way set associative cache and keep going"
+
+** Demand Paging
+Modern programs require a lot of physical memory - hard disk space. 
+Programs don't use all their physical memory all of the time (the 90/10 rule applies, programs spend 90% of their time in 10% of their code)
+Wasteful to require all of user's code to be in memory
+
+So, we can use main memory as cache for disk
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-12 08:01:52
+[[file:assets/screenshot_2017-12-12_08-01-52.png]]
+
+Again, the hope is to use speed of DRAM with the size of Disk
+
+We want an illusion of infinite memory
+The ones we access most frequently should be in memory and the others on disk
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-12 14:10:08
+[[file:assets/screenshot_2017-12-12_14-10-08.png]]
+
+
+We want a transparent level of indirection - if data not in memory, get it in memory (the OS does this), the user program doesn't notice anything, (it just maybe runs a little slowly)
+
+This is demand paging. On demand I go to access a page, if not in memory, someone (the OS) goes to disk and get it for me.
+
+*Demand paging is caching, it's just the idea of treating memory as cache for disk*. 
+ - Block size?
+   - 1 page
+ - Organization of this cache?
+   - Fully associative: arbitrary virtual \to physical mapping
+ - How do we find a page in the cache when we look for it?
+   - First check TLB, then page-traversal
+ - Page replacement policy?
+   - LRU/Random/what?
+ - What happens on a miss?
+   - Go to lower level (eg disk) to fill it (you don't need to go to disk in all cases, eg if a process forks another process and it writes somewhere, it gets a cache miss and then it copies from memory to memory, doesn't go to disk)
+ - On a write?
+   - Write back (it is faster), need dirty bit!
+
+Recall the PTE digram for x86
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-12 14:23:25
+[[file:assets/screenshot_2017-12-12_14-23-25.png]]
+
+Note the D bit, that is for dirty - it is needed for write back. So, if you want to chuck that item from cache, you check it's D bit, if dirty, write to disk first
+
+A is for Accessed - the page has been accessed recently
+We periodically set A bits off and it they get set on again, we know they are active pages. This is needed for our replacement policies
+
+The PTE helps us implement demand paging:
+ - valid \to page in memory, pte points at physical page
+ - not valid \to page not in memory, use info in pte to find it on disk when necessary
+
+If valid is off, you can use the other 31 bits to store any other info (like what disk block the page resides on disk etc)
+Also, now we know that if you have 32 bit machine, the address is 32 bits, but you don't get all 2^{32} addresses because we use bits for metainfo like dirty bit, accessed etc
+
+If user references page with invalid PTE?
+ - MMU traps to OS
+   - resulting trap is called "Page fault"
+ - What does the OS do on a page fault?
+   - choose an old page to replace
+   - if dirty, write to disk
+   - change the page table entry of old page to be invalid and flushes the TLB entry
+   - load new page in memory, update it's page table entry to be valid, we invalidate the tlb for that new page (that we just pulled in)
+   - so now, when someone accesses that page, the tlb traverses for the right PTE (that we just uploaded) and stores the right value
+
+This :top: is asynchronous, we get context swithced while the page is being loaded from disk, another processes are being run by OS
+
+* Lecture 15 - Page Allocation and Replacement
+
+** Review
+We started talking about demand paging. The PTE helps us implement demand paging, recall the D and A bits
+On referencing invalid PTE, the MMU traps to OS. The OS kicks a page out (which one to kick out?, does it need to be written back to disk?), get the new page table in memory. Invalidate the PTE for the old page, invalidate the tlb for that entry (so that the tlb cache is cleared now). We continue thread from original faulting location (from the load/store that failed)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-12 14:54:34
+[[file:assets/screenshot_2017-12-12_14-54-34.png]]
+
+There are 2 valid bits here:
+ - valid in TLB
+   - is the tlb pointing to the right PTE?
+ - valid in PTE
+   - is the PTE accessible, and loaded in memory
+
+If the software gets invalid TLB, hardware gets a TLB fault 
+ - traverse page table to find appropriate PTE.
+   - If PTE is valid, load PTE directly into TLB, continue
+   - If PTE is invalid, perform "page fault" :top: and get the PTE and TLB, continue
+
+Everything is transparent to the user process:
+ - it doesn't know about paging to/from disk
+ - it doesn't know about software tlb handling
+
+How does this all work with the pipeline etc
+
+Consider:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-12 16:20:42
+[[file:assets/screenshot_2017-12-12_16-20-42.png]]
+
+We are running, we get a TLB fault, we traverse the page tables and get the PTE. If the PTE is valid, load the new tlb and continue. Else, we call page fault sub-routine.
+
+We need to restart faulting instructions, cannot skip it because since we failed to load, the registers are missing the values and we need them there
+
+Also, the hardware must help us out by saving sufficient state so that we can restart
+ - Faulting instruction and partial state
+   - we need the faulting instruction because we need to where to restart from
+   - also, since we have pipelining, we may have partially executed some other instructions that might have side-effects and we cannot just restart from that fault instruction. 
+So, there are 2 PCs: PC and nPC - PC points at the fault instruction, nPC points somewhere ahead
+So, from the page fault we have 2PCs
+If we have a simple processor like MIPS, there is no branching, so just back up 1 instruction and re-execute
+
+We can also have a delayed exception:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-12 18:32:48
+[[file:assets/screenshot_2017-12-12_18-32-48.png]]
+
+We need to restart at the divide, not at the load because we want a to be *precise*
+
+** Precise Exceptions
+
+Precise \to a state of the machine preserved as if program executed till the offending instruction
+ - all previous instructions have been completed
+ - offending instructions and all following instructions appear as if they haven't started
+
+Modern techniques like out-of-order execution and branch prediction help implement precise interrupts. 
+
+Page fault - need to be precise, so that restarting is simple. Otherwise, the branching state has to be saved and restored by the OS which is a mess for it.
+
+The page fault action is a very intuitive and simple mechanism:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-12 18:48:18
+[[file:assets/screenshot_2017-12-12_18-48-18.png]]
+
+
+The cost of cache miss is going to disk, very expensive. By having 0.1% page faults, we end up slowing everything down by 40. 
+To get <10% slowdown, you can do only 1 page fault in 400K accesses
+Hence the replacement policy is very important
+
+*** What factors lead to page misses?
+ - Since paging is similar to caching, we know the answer - 3C+1
+ - Compulsory misses
+   - pages that have never been in memory before
+     - starting a new program
+     - context switch (if the process hadn't been running since a long time and has been swapped out)
+   - Page pre-fetches
+
+ - Capacity misses
+   - Not enough memory
+   - if multiple processes, adjust percentage of memory allocated to each one
+
+ - Conflict misses
+   - Conflict misses don't happen in paging, since it is a "fully-associative" cache
+
+ - Policy misses
+   - pages which were in memory but were kicked out by the replacement policy
+
+With the earlier Hardware cache, the replacement policy didn't matter very much (we used LRU but)
+Because if we don't have the right policy, we just have to go to DRAM and go to dram
+Also, in TLB, it was OK as you had to only traverse the page tables
+
+(Recall, virtual address \to tlb \to physical address (or traverse page table in mmu) \to hardware cache \to data at the physical address (or go to ram to get the data)
+
+But here in demand paging, if you don't have the right page, you have to go to disk, which is 1 million instructions. 
+
+** Page replacement policies
+(Note, we are talking about which page to keep in memory, demand paging === caching)
+*** Fifo
+Replace oldest policy, be fair so that all policies live in memory for equal amounts of time.
+Bad, because throws out heavily used pages instead of infrequently used pages
+
+*** MIN (minimum)
+Replace a page that won't be used for the longest time in the future. This is like an oracle (we need to predict the future)
+
+*** Random
+Pick random page for every replacement (worked well for hardware at least, tlbs as well?)
+Here, won't work because the process performance would be completely unpredictable
+
+*** LRU
+This seems like makes a good choice, because programs have locality. It makes a good approximation to MIN
+How to implement LRU? Use a list
+The head is the most recently used, the tail least recently used
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-13 06:22:30
+[[file:assets/screenshot_2017-12-13_06-22-30.png]]
+
+If you use a linked list, when the ordering changes, you'll have to change a lot of wiring
+If you use a priority queue, you'll have to use logN time for every load/store
+
+Hence, :top: is very expensive to build
+We can approximate LRU. We can divide the pages in new ones and old ones, and reuse the old ones
+We don't need all the information that LRU gives us, we just want an old page, not the old page. We don't care what page is 12th oldest for eg
+
+Suppose we have 3 page frames (cache size/memory size), 4 virtual pages and the following reference stream:
+
+ABCABDADBCB
+
+Fifo does this:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-13 06:33:42
+[[file:assets/screenshot_2017-12-13_06-33-42.png]]
+
+
+Min does this:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-13 06:35:27
+[[file:assets/screenshot_2017-12-13_06-35-27.png]]
+
+LRU would do the same decisions as MIN. It is a perfect approximation to MIN
+LRU would do badly when we loop over a set of data in a regular pattern, like ABCDABCDABCDABCD etc - every reference is a page fault
+MIN does much better though on that ABCDABCDABCDABCD :top:
+
+Adding memory should reduce page faults, that's a natural assumption to make.
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-13 06:39:29
+[[file:assets/screenshot_2017-12-13_06-39-29.png]]
+
+
+But FIFO doesn't follow this always - BeLady's anamoly
+
+*** Clock algorithm
+This algorithm is used to approximate LRU - we'll settle for an old page, not the oldest page
+
+Details:
+ - Hardware "use" bit in the PTE
+   - it is set on each reference
+   - if not set, means not referenced in a long time
+   - we regularly clear all the use bits
+   - On page fault:
+     - we advance the clock hand - this basically iterates thru the pages and if the use bit is 1, it clears it (sets it to 0) and moves on till it finds a use bit that isn't 1
+
+The clock algo runs every page fault. You create a linked list of all the pages, or even an array with an index that goes thru (we don't know the size of the array, right?)
+
+ - if the hand moves slowly \to that is good
+   - means we aren't page faulting very much
+ - if hand hand moving quickly - that is bad
+   - means lots of pages in use, we are maybe under memory pressure and we are paging a lot to disk
+
+*** Nth change algorithm
+
+We can keep a counter per page, if it's a 1, it is a recent page, don't touch it
+If 0, increment the counter. If the counter reaches N, remove it
+We basically give it N chances before we throw it out
+If N is very big: we get a better approximation to LRU at the cost of many loops over the array/linked-list
+If N is small, more efficient
+
+What about dirty pages:
+ - what we can do is, when we see a dirty page, we start writing it to disk and keep going(this happens asynchronously). If we keep come back to it later and it is still not in use, we can use it.
+
+Here, we are exploiting the fact that writing the page to disk doesn't require full CPU attention, but a lot of data movement
+
+What bits of a PTE entry are useful to us?
+ - Use
+   - set when the page is referenced, cleared by clock algorithm
+ - Modified
+   - set when the page is modified, cleared when page is written to disk
+ - valid
+   - ok for program to reference this page
+ - read-only
+   - ok for program to read page, but not modify
+
+We do not need the hardware-supported "modified" bit, we can emulate it using read-only bit
+ - In BSD Unix, all pages are marked as read-only. On write, trap to OS, OS sets software "modified" bit and marks the page as read-write. New pages coming in from disk are read-only
+
+We do not need the hardware-supported "use" bit, we can emulate it using invalid bit
+ - We can set all pages to invalid, On read/write, trap to OS, OS sets software "in-use" bit and marks the page as read only/read-write. New pages coming in from disk are read-only
+
+
+
+* Lecture 16 - Page Allocation and replacement (cont), I/O systems
+
+** Review
+We studied 
+ - FIFO
+   - bad because doesn't take into consideration recently used pages
+   - also, increasing cache size (ram) can lead to more page faults here
+ - MIN
+   - replace the page that won't be used for the longest time
+   - great, but can't know the future
+ - Random
+   - ok for tlbs/hardware (where penalty is go to dram), not here where penalty is go to disk
+ - LRU
+   - replace the page that hasn't been used for the longest time (this gives us "page that won't be used for the longest time" after applying the temporal locality assumption)
+   - good approximation to min
+   - ok, but too difficult to use
+ - Clock
+   - good approximation to LRU
+   - the hardware sets the "use" bit to 0, the software (OS) sets it to 1
+ - Nth chance algorithm
+   - this is a generalization of the clock algorithm
+   - we divide the pages into N+1 chunks
+   - OS keeps counter per page, #sweeps
+   - On page fault, OS checks use bit:
+     - 1 \to clear use and also clear counter (used in last sweep) \to active page
+     - 0 \to increment counter, if count = N, replace page \to inactive page
+   - This means that clock hand has to sweep by N times without page being used before page is replaced
+   - As N gets larger, you get closer and closer to LRU \to expensive
+   - Small N \to efficient
+   - Common approach:
+     - clean page, N = 1
+     - dirty page, use N=2, (and write back to disk when N=1)
+
+*** Second chance list algorithm
+
+VAX did not have the "use" bit. 
+
+
+** Page Allocation Policies
+
+** Working Set/Thrashing
 
 * Lecture 21 - Networking
 

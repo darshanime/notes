@@ -118,7 +118,7 @@ We see that h is a function of *w* and *threshold*
 If the data is linearly separable, we can learn a single line from a random line
 
 We can rename -threshold to w_{0} and call it *bias* - we added an artificial coordinate x_{0} whose value is always 1
-Note: w_{0} is not 1, it is a free parameter that we learn, x_{0} is 0
+Note: w_{0} is not 1, it is a free parameter that we learn, x_{0} is 1
 Now, formula:
 
     h(x) = sign ( \Sigma w_{i}x_{i} ), i \to 0 to d
@@ -136,10 +136,10 @@ i.e.
 
 Consider these 2 cases of a point being misclassified
 In first case, the inner product will be negative but y is positive.
-So, the update rule moves w towards x (it subtracts x from w) and their inner product is now positive, so prediction is positive
+So, the update rule moves w towards x (it adds x to w) and their inner product is now positive, so prediction is positive
 
 In second case, the inner product is positive but y is negative
-So, the update rule moves w away from x (it adds x to w) and now the inner product is negative as well
+So, the update rule moves w away from x (it adds -x to w) and now the inner product is negative as well
 
 #+ATTR_ORG: :width 400
 #+ATTR_ORG: :height 400
@@ -187,7 +187,7 @@ We have this problem in machine learning also. But this does not mean that learn
  - Notation:
    - we don't know the target function y = \fnof(x)
    - we have the data set: (x_{1}, y_{1}), (x_{2}, y_{2}), ..., (x_{N}, y_{N})
-   - we have a learning algorithm that finds g from the hypothesis set such that g \approx x
+   - we have a learning algorithm that finds g from the hypothesis set such that g \approx y
  - we were stuck at the puzzle, where the random function could be *anything*, how are we to learn?
 
 This lecture will address this question
@@ -310,7 +310,7 @@ If we toss 1000 fair coins 10 times each, probability that _some_ coin will get 
     1 - P[a particular coin doesn't get 10 heads]^{1000}
     1 - [1 - P[a particular coin gets 10 heads]^{1000}
     1 - [1 - 1/2^{10}]^{1000}
-    0.63%
+    0.63
 
 So, it is more likely that the 10 heads will occur than not. So, the 10 heads are no indication at all of the real probability of getting head. We cannot choose a h which will give 1 always and choose a sample which has all 1s and say we have a perfect system according to Hoeffding's. 
 Hoeffding's applies to each one individually, but in each case, there is a probability that we will be off by say half a percent that we are off in some aspect in the 1st case, and half a percent off in another aspect in the 2nd case. If these "off" probabilities are disjoint, we end up with a bad system.
@@ -359,6 +359,7 @@ So, the more sophisticated the model that you use, the looser will E_{in} track 
     - ...
     - | E_{in}(M) - E_{out}(M) | > \epsilon or
   - This gives us an added M factor
+  - This generally works for other things, because they are disjoint. Eg: on a roll dice, we get a 5 or we get a 4 = P[5] or P[4] = P[5] + P[4]
 
 We need to have a tighter bound on the tracking of E_{out}(g) by E_{in}(g). The union bound assumes no correlation b/w all events. It makes sense if the events are independent, and happen disjointly, like in the coin flipping scenario. We will get a smaller number if there is some correlation and they overlap.
 
@@ -382,7 +383,7 @@ Our parameters: (w_{0}, w_{1}, ..., w_{256}) - this is 256 dimensional space
 
 We can reduce the parameters, i.e. we can extract *features*:
  - intensity and symmetry x = (x_{0}, x_{1}, x_{2}) 
-   - we have lost some information but we also lost some irrelevant info
+   - we have lost some irrelevant info but we also lost some information
 
 Plotting just 5 and 1:
 
@@ -456,7 +457,7 @@ Error:
 #+DOWNLOADED: /tmp/screenshot.png @ 2017-11-01 17:50:49
 [[file:assets/screenshot_2017-11-01_17-50-48.png]]
 
-When we plot linear regression, we never plot x_{0} because that is always 1.
+*When we plot linear regression, we never plot x_{0} because that is always 1.*
 
 The "line" or "hyperplane" is 1 dimension short of what you are working with. Eg:, we have mandatory x_{0}, we also have one feature, and we have the output - 2 dimensions, and so 1D line
 #+ATTR_ORG: :width 400
@@ -491,7 +492,7 @@ How we can find the minimum of the function E_{in}(w) is by taking it's derivati
 
 X-dagger is "pseudo-inverse" because X is not a square matrix, it is a very tall matrix and but X-dagger is still it's inverse, because if you multiple X-dagger with X, you'll get identity matrix.
 
-*actually d+1 and not d, because we also have constant w_{0} :arrow_down:
+*actually d+1 and not d, because we also have constant x_{0} :arrow_down:
 
 X is Nxd, X^{T} is dxN
 So, X^{T}X is dxN * Nxd = dxd
@@ -523,7 +524,7 @@ So, one can use Linear Regression to give a jumpstart to the perceptron - a good
  - Sometimes we want to have non-linear features, like in the credit example, we don't want the time spent in one location to be linear, we want it to be something like: 0 for |x<1| and 1 for |x>5| etc
 
  - Non linear transformations remain within the realm of linear models. 
-This is because the output is a function of the *weights*, not the features. So, we can do anything with the features, we are still in the linear realm.
+This is because the variables of the function are the *weights*, not the features. So, we can do anything with the features, we are still in the linear realm.
 
 So, we can do this transformation:
 
@@ -625,7 +626,7 @@ For CIA, false positives are disastrous,
 [[file:assets/screenshot_2017-11-01_19-21-20.png]]
 
 
-Sometimes we don't have the idea error measure, so we use alternative error measures
+Sometimes we don't have the ideal error measure, so we use alternative error measures
  - if the noise is gaussian, we can use squared error
  - in binary, we can use cross entropy error measure (this is what we used in logistic regression, the Bernoulli thingy)
 
@@ -685,7 +686,7 @@ Note:
 
  - P(y|x) 
    - This is the probability the target function gives y for an input x
-   - This is because we cannot model the target function perfectly with out features
+   - This is because we the target function is inherently noisy
      - *this is what we are trying to learn*
 
 Both these PDs together generate our dataset; P(x, y)
@@ -755,7 +756,7 @@ If you directly do the final exam questions, you might not have learned. The end
 
 We have:
  - Testing
-   - How well you do in the final exam (E_{in}) tracks how well you do in the while (E_{out})
+   - How well you do in the final exam (E_{in}) tracks how well you do in the wild (E_{out})
 #+ATTR_ORG: :width 400
 #+ATTR_ORG: :height 400
 #+DOWNLOADED: /tmp/screenshot.png @ 2017-11-02 01:22:00
@@ -825,7 +826,7 @@ Now, consider another perceptron, slightly different:
 The green line is another perceptron. In both the cases, E_{out} will be slightly different. Also, E_{in} will be different if there is any point that falls in the yellow region.
 
 So, | E_{in}(h_{1}) - E_{out}(h_{1}) | \approx | E_{in}(h_{2}) - E_{out}(h_{2}) |
-If one exceeds \epsilon, the other does as well. So, just counting the number of hypothesis is not optimal in that it does not give us a tight bound. We can improve it. 
+If one exceeds \epsilon, the other does as well. But we do not consider this strong correlation between these, we consider them to be independent. So, just counting the number of hypothesis is not optimal in that it does not give us a tight bound. We can improve it. 
 
 Instead of the whole input space, we can consider only a finite set of input points. And we can differentiate b/w the perceptrons if they classify the input points differently
 So, given a set of red and blue points, we can count *all* possible classifications of them. *This is a good proxy for the complexity of the hypothesis set.* If hypothesis set is powerful, it can classify the points in all possible ways. If it is not so powerful, it may not be able to achieve some classifications. The number of classifications that the hypothesis set can give is called *dichotomies*. 
@@ -866,7 +867,7 @@ Growth function for the perceptron:
 #+DOWNLOADED: /tmp/screenshot.png @ 2017-11-02 02:03:29
 [[file:assets/screenshot_2017-11-02_02-03-29.png]]
 
-** Growth functions for simple cases
+** Growth functions for simple cases of H
 
 *** Example 1: positive rays
  - It is defined on the real line
@@ -894,7 +895,7 @@ So, for N points, we get: N dichotomies, so m_{H}(N) = N + 1
 The way we get a different dichotomy is by choosing 2 points on the number line:
 
     m_{H}(N) = nC2
-We need to add 1 for the case that we select the same point, (blue region is null set)
+We need to add 1 for the case that we can select the same point, (blue region is null set)
 
 So, m_{H}(N) = nC2 + 1
 or, m_{H}(N) = N^{2}/2 + N/2 + 1
@@ -961,7 +962,7 @@ So, break point for
 
 So, we have this result:
  - No break point \rArr m_{H}(N) = 2^{N}
- - Any break point \rArr m_{H}(N) is polynomial in N
+ - *Any break point* \rArr m_{H}(N) is polynomial in N
 
 So, to be able to learn with a given hypothesis set, we just need to prove that it has a break point
 
@@ -982,7 +983,7 @@ We have 2 things to do now:
  - Prove that we can replace m_{H}(N) with M
 
 Recall to show that m_{H}(N) is a polynomial, we need to show that m_{H}(N) is bound above with a polynomial in the general case
-It is actually! m_{H}(N) is bounded above by a polynomial of power N^{k-1} where k is the break point for the hypothesis set's
+It is actually! m_{H}(N) is bounded above by a polynomial of power N^{k-1} where k is the break point for the hypothesis set
  - examples:
    - H is positive rays
      - k is 2, so, m_{H}(N) should be bounded by polynomial of power 1. Which is true, since m_{H}(N) is N + 1
@@ -1036,7 +1037,7 @@ And it will generalize independently of learning algorithm, input distribution, 
 
 ** Interpreting the VC dimension
  - the #parameters are analog degrees of freedom
- - the VC dimension makes them binary degrees of freedom - it is based on the #dichotomies possible, #ways of points you can shatter
+ - the VC dimension makes them binary degrees of freedom - it is based on the #dichotomies possible, #of points you can shatter
 
  - examples:
    - H is positive rays
@@ -1054,7 +1055,7 @@ Consider a 1D perceptron,
 #+DOWNLOADED: /tmp/screenshot.png @ 2017-11-03 00:10:42
 [[file:assets/screenshot_2017-11-03_00-10-42.png]]
 
-It is 2 parameters, 1 weight and 1 bias/threshold
+It is 2 parameters(variables), 1 weight and 1 bias/threshold
 Now, we can take the output and feed it into another perceptron, ..., 3 times and that is the output. 
 Thus, we have this:
 
@@ -1067,7 +1068,6 @@ Here, we have 4*2 = 8 parameters, but we still have 2 degrees of freedom, so d_{
 You don't care about the internal structure, you ask yourself how many points can I shatter? k is it? Then my d_{vc}(H) is k-1. That's all.
 
 So, d_{vc}(H) measures the effective number of parameters
-
 
  - Number of data points needed:
    - we had this statement according to the VC inequality: 
@@ -1111,7 +1111,7 @@ From the RHS, we can get \epsilon in terms of \delta
 
 So, we have: 
  - \epsilon depends on N, \delta, m_{H} - growth function of hypothesis set - we call the RHS \Omega
- - if m_{H} is large, d_{vc}(H) is large, the guarantee on generalization(\epsilon) is worse 
+ - if m_{H} is large, d_{vc}(H) is large, the guarantee on generalization(\epsilon) is worse
  - if \delta is small, I.e. You want to be very sure of the statement you make, worse \epsilon
  - if N is large, \epsilon becomes smaller
  - eventually, the log is killed by linear N (just like polynomial is killed by exponential) 
@@ -1146,5 +1146,1967 @@ We can simplify further as:
      - Hence, there is a tradeoff involved here
 
 This form will also give us the groundwork for regularization. 
-Earlier, we used just E_{in} as a proxy for E_{out}. It seems here, that we can use E_{in} + \Omega as the proxy and that may give us a better handle on E_{out}...
+Earlier, we used just E_{in} as a proxy for E_{out}. It seems here, that we can use E_{in} + \Omega as the proxy and that may give us a better handle on E_{out}.
+
+It is not always possible to find the d_{vc}(H) dimension of the hypothesis set, eg neural nets. We can say it is bounded above by the #parameters, but it can be much much lower as we saw in the chained perceptrons. 
+
+* Chapter 8 - Bias Variance Tradeoff
+
+** Review
+ - We saw that d_{vc}(H) is just the max number of points a hypothesis set can shatter
+ - It is k-1, where k is the break point
+ - We have a rule of thumb: N \ge d_{vc}(H)
+ - Also, we rearranged the generalization bound to:
+   - E_{out} \le E_{in} + \Omega
+   - \Omega is a function of:
+     - \delta - what is the probability of error in the statement we make, I.e., what is the probability that E_{in} tracks E_{out} within \epsilon
+     - \epsilon - how loosely does E_{in} track E_{out}
+
+** Bias-Variance tradeoff
+ - It is a stand alone theory which gives us a different angle on generalization (as contrasted with VC analyses) 
+ - The tradeoff is b/w *approximation and generalization*
+   - Small E_{out} is what we want; good approximation of \fnof out of sample
+   - More complex H \to better chance of approximating \fnof - we have a lot of options
+   - Less complex H \to better chance of generalization \fnof - we have a hard time trying to get the right one from so many
+   - The hypothesis with only the target function in it!
+   - Ideal is H = {\fnof}
+
+ - The quantification of this tradeoff in VC dimension analysis is:
+   - E_{out} \le E_{in} + \Omega
+     - E_{in} is approximation, because we are trying to fit a target function to input dataset
+     - \Omega is generalization
+
+Bias-Variance provides an alternate way of looking at this same tradeoff
+ - It decomposes E_{out} is decomposed into:
+   - How well H can approximate \fnof - how flexible is your H
+   - How well we can zoom in on a good h \in H
+
+ - This applies to real valued targets. We'll use squared-error because it helps with derivation
+ - We start with E_{out}
+
+ - We keep D in the notation because the Es depend on the dataset. Earlier, in VC analysis also it was present, but we never wrote it because it wasn't used
+
+ - E_{out}(g^{(D)}) = E_{x}[(g^{(D)}(x) - \fnof(x))^{2}]
+ - Expected error over entire space :top:
+ - To remove dependency on a particular D, we take E_{D} on both sides
+ - E_{D}[E_{out}(g^{(D)})] = E_{D}[E_{x}[(g^{(D)}(x) - \fnof(x))^{2}]]
+ - we now manipulate this equation :top:
+
+
+ - Let's focus on just E_{x}[(g^{(D)}(x) - \fnof(x))^{2}]
+ - we define an "average" hypothesis - bar
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-27 21:16:03
+[[file:assets/screenshot_2017-11-27_21-16-03.png]]
+
+ - what is gbar?
+   - imagine you have many datasets, so gbar is the average of the hypothesis that you choose from them.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-27 21:19:17
+[[file:assets/screenshot_2017-11-27_21-19-17.png]]
+
+So, we have this derivation:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-27 21:37:30
+[[file:assets/screenshot_2017-11-27_21-37-30.png]]
+Adding and subtracting gbar :top:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-27 21:37:59
+[[file:assets/screenshot_2017-11-27_21-37-59.png]]
+
+We get this :top: on rearrangement. 
+
+Now, the second term is independent of D, so E_{D} of it is itself
+Also, in the 3rd term, the first half is gbar - gbar so that is 0 as well
+
+So,we get:
+
+ #+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-27 21:39:56
+[[file:assets/screenshot_2017-11-27_21-39-56.png]]
+
+This :top: :arrow_up: is a very important equation.
+The first term tells you how the hypothesis we got from our D differers from the best that you could get from that D.
+Gbar is the best we can get from D because it is the average so is "better"
+
+There are 2 hops; the hop from your hypothesis to the best you can get, and the second hop is from the best you can get to the actual target function
+The second term is how far is the best possible you can get from the target function itself?
+
+ - The 1st term is variance
+   - This is how much away you are from the best h in you H. You cannot get gbar because you don't have all the possible datasets, you have only the one you got
+ - The 2nd term is bias
+   - Because your hypothesis set may be biased away from the target function because your best is so much away from the target function
+
+
+Thus, recall we started with:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-27 21:48:21
+[[file:assets/screenshot_2017-11-27_21-48-21.png]]
+
+So, we get:
+E_{D}[E_{out}(g^{(D)})] = E_{x}[bias(x) + bar(x)] = bias + var
+
+So, we have broken down the out of sample error into it's bias and variance components. So, if we have an E_{out} of 0.3, we can say that 0.05 is because of bias and 0.25 is because of variance
+
+*** The tradeoff
+We have:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-27 21:51:28
+[[file:assets/screenshot_2017-11-27_21-51-28.png]]
+
+Pictorial representation:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-27 21:52:44
+[[file:assets/screenshot_2017-11-27_21-52-44.png]]
+
+If we have a H with only 1 function, we have no variance and we always choose that. But it may not be the best, our g ( = gbar) will be biased away from the target function
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-27 21:53:27
+[[file:assets/screenshot_2017-11-27_21-53-27.png]]
+
+If we have a very complicated H, we won't be able to choose the best - the target function because we have a lot of variance. We get a different D each time to learn etc. And depending on that D, we might not choose \fnof.
+The centroid of the red region is gbar. It would be quite close to \fnof. (The difference b/w them would be the bias, which is close to 0 here)
+
+If H goes up, bias goes down, variance goes up
+
+** Let's take an example
+ - Let's take our target function to be a sine curve.
+ - \fnof(x) = sin(\pi x), \fnof:[-1, 1] \to \real
+ - Our dataset is only 2 datapoints.
+ - We have 2 hypothesis sets, H_{0} and H_{1}
+ - H_{0} is the constant model - h(x) = b
+ - H_{1} is the linear model - h(x) = ax + b
+ - Which one is better?
+   - Better for what?
+
+*** Approximation
+The linear line is better. Since we know the target function, a line is a better fit than a constant. (we are using mean squared error)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-27 22:03:35
+[[file:assets/screenshot_2017-11-27_22-03-35.png]]
+
+The errors are in yellow:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-27 22:04:05
+[[file:assets/screenshot_2017-11-27_22-04-05.png]]
+
+E_{out} in this case is 0.2
+
+For H_{0}, we have the constant only. 
+So, the hypothesis will be g(x) = 0
+and the error will be huge:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-27 22:05:36
+[[file:assets/screenshot_2017-11-27_22-05-36.png]]
+
+E_{out} in this case is 0.5
+
+So, the linear model wins. We can do better with a 3rd order polynomial, even better with a 17th etc.
+This is because we have no question of zooming in, we have all the information
+
+*** Learning
+We get 2 examples now. We don't know the target function, we just have independently picked examples. 
+So, we have:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-28 08:35:20
+[[file:assets/screenshot_2017-11-28_08-35-20.png]]
+
+
+So, H_{0} and H_{1} will be:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-28 08:36:33
+[[file:assets/screenshot_2017-11-28_08-36-33.png]]
+
+We can compute the error (the yellow regions) etc, but it depends on which 2 points we get, on our dataset. This is why we had the bias-variance tradeoff. 
+Now, we can do a bias-variance decomposition on these two hypothesis sets.
+
+So, we do a simulation in which we take 2 points on random from the target function and fit our constant hypothesis to them
+We get this:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-28 08:40:47
+[[file:assets/screenshot_2017-11-28_08-40-47.png]]
+
+The gray lines are all the various g-s we choose depending on the input dataset D
+We can take the average of it, to get g-bar
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-28 08:41:34
+[[file:assets/screenshot_2017-11-28_08-41-34.png]]
+
+G-bar is just what we had in the Approximating case. It shows us that the average hypothesis is inherently better because it "cancels out the variance". 
+The output of our learning process is one of the gray lines, not g-bar. The gray shaded region is the variance around g-bar - the std dev around g-bar.
+
+The error b/w the green line and the target function will give you the bias. The gray region will be the variance
+
+If we have the H_{1}, the straight line, we get this (on the same dataset as in case H_{0}):
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-28 08:47:39
+[[file:assets/screenshot_2017-11-28_08-47-39.png]]
+
+Note we have a lot of variance. 
+
+On average we get:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-28 08:48:45
+[[file:assets/screenshot_2017-11-28_08-48-45.png]]
+
+The variance depends on x, the gray region is the std dev. When you want one number to define it, we take the expected value of the width^{2} of the gray region. So, we have better approximation but very bad (high) variance. So, given only 2 points, we are better off with a constant. 
+
+So, if asked what is better at approximating a sine curve, a line or a constant? - A line of course!
+But, if asked what is better at approximating 2 points coming from some unknown curve? - A constant is better
+
+Let's quantify this:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-28 09:31:39
+[[file:assets/screenshot_2017-11-28_09-31-39.png]]
+
+Here, the bias is exactly what we had for the approximating case. The variance is 0.25
+
+Whereas for H_{1}, 
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-28 09:32:31
+[[file:assets/screenshot_2017-11-28_09-32-31.png]]
+
+The bias is 0.21. This is slightly higher than in the approximating case where it was 0.20. This is to be expected because here, we get only 2 points at a time and not the whole sine curve. The variance is huge. 
+
+So, H_{0} is better we see. 
+
+In any ML scenario, we are matching the model complexity to the data resources, not the target complexity; we don't know what the target function is. 
+
+*** ML idea
+Let's say you have 100 datapoints. Is there any utility in taking 10 points at random and trying to learn a hypothesis? Doing this for many random samplings of 10 points and then averaging the hypothesis would give us something close to gbar. This is a way of dealing with variance, no?
+
+
+** Learning curves
+
+Plot of E_{out} and E_{in} as a function of N
+Data set D of size N. 
+Expected out-of-sample - E_{D}[E_{out}(g^{(D)})]
+ - it depends on the dataset. If you want it to be agnostic of any particular dataset, we "integrate" D out and get expected value wrt D
+
+Expected in-sample error: E_{D}[E_{in}(g^{(D)})]
+ - This is how you fit them
+
+How do these vary with N?
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-28 09:42:51
+[[file:assets/screenshot_2017-11-28_09-42-51.png]]
+
+This is for the simple model.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-28 12:47:32
+[[file:assets/screenshot_2017-11-28_12-47-32.png]]
+
+The same thing for the complex model as well, just the graph is shifted towards right. 
+The x-axis where the E_{in} is zero corresponds to the VC dimension. Till there, the hypothesis set fits everything perfectly, all the points are shattered. 
+
+*** VC analysis vs bias-variance
+In VC analysis, we had E_{out} which comprised of in-sample error and generalization error (\Omega)
+So, the figure looks like this:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-28 12:51:50
+[[file:assets/screenshot_2017-11-28_12-51-50.png]]
+One thing is that in the VC analysis, the generalization error isn't this much, it is much much higher. It just follows this shape. The bound is not that tight.
+
+
+If we plot the same thing for the BV analysis, we get:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-28 12:52:51
+[[file:assets/screenshot_2017-11-28_12-52-51.png]]
+
+Here, the bias is the error in g-bar, that is the best you can do. As N goes up, the variance decreases, and we get closer and closer to g-bar.
+
+** Linear regression case
+
+Let's say we have a noisy target y = w^{*T}x + noise
+D is {(x_{1}, y_{1}), (x_{2}_{}, y_{2}), ..., (x_{N}_{}, y_{N})}
+The input points in D are picked independently.
+
+Learning solution: 
+    X = (X^{T}X)^{-1}X^{T}y
+
+In sample error: Xw - y 
+:top: this is just y-hat - y
+
+Out-of-sample error - same input points + new noise
+Xw - y'
+
+
+On analysis we get is:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-28 17:03:37
+[[file:assets/screenshot_2017-11-28_17-03-37.png]]
+
+\sigma^{2} is the variance of the noise, and that is the best you can do, which is true, since you can't capture the noise
+Also, till d+1, you can shatter N points. As we get more N, the variance cancels out but the bias persists and we get lower and lower E_{out}
+
+Best approximation error = \sigma^{2}
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-28 17:09:52
+[[file:assets/screenshot_2017-11-28_17-09-52.png]]
+
+Here, we see that we have an exact formula for Expected generalization error and we see that d_{VC} \prop N
+
+* Chapter 9 - The Linear Model II
+
+** Review
+ - We took the expected value of the E_{out} wrt the identity of dataset D, size fixed at N to get rid of variation due to datasets. And we got a clean decomposition of E_{out} into bias + variance terms. 
+ - Bias is how far is your best hypothesis in your hypothesis set away from \fnof
+ - Variance is how far close to the best hypothesis are you.
+ - g^{(D)}(x) \to gbar(x) \to \fnof(x)
+ - N \prop d_{VC}
+
+** Non linear transforms
+
+*** Summary from earlier
+We used non-linear transforms earlier, when we applied (x_{1}, x_{2}) \to (z_{1}, z_{2}, ..., z_{d})
+so, z = \Phi(x)
+Example: z = (1, x_{1}, x_{2}, x_{1}^{2},  x_{2}^{2}, x_{1}x_{2}) - this is the quadratic transformation
+Our final hypothesis g(x) will always live in X space. 
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-28 17:35:19
+[[file:assets/screenshot_2017-11-28_17-35-19.png]]
+
+We take the first in classification, 2nd in regression
+
+*** Price we pay
+In terms of generalization :top:
+
+Earlier, in X space, we had *w* free parameters. But in transformed space, we have w-tilde free parameters. So, the d_{VC} dimension increases and so we pay the price for generalization. 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 08:28:29
+[[file:assets/screenshot_2017-11-29_08-28-29.png]]
+
+
+However, we can do this to reduce the parameters:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 08:27:23
+[[file:assets/screenshot_2017-11-29_08-27-23.png]]
+
+Here, we are reducing the parameters to just 1. This won't work because we looked at the data and did the "learning" ourselves. We decided that we need a circle and don't need the cross terms etc. We have to pay the price in terms of d_{VC} for what we start with (in our mind here), which is the full quadratic form. 
+
+Looking at the data before choosing the model is hazardous to your E_{out}. You explore a very high hypothesis space but account for very little in your analysis. This is *data snopping*. 
+
+This is why you cannot arbitrarily go to very high dimensions during transformations, because the d_{VC} gets high and generalization suffers. 
+
+
+** Logistic regression
+
+We have seen so far:
+ - Linear perceptron
+ - Linear regression 
+
+Now we will see Logistic regression.
+
+*** The model
+This will be our third linear model. Being linear means that we compute the signal as being a linear combination of the weights.
+And then we use the signal to do classification, estimation etc
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 09:36:10
+[[file:assets/screenshot_2017-11-29_09-36-10.png]]
+
+The perceptron is this:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 09:36:48
+[[file:assets/screenshot_2017-11-29_09-36-48.png]]
+
+The staircase step pattern is there because we it is a step function. We look at the sign and return +1/-1
+
+All the linear models differ in what they do to the signal. Perceptron looks at the sign :top:
+
+
+Regression uses s as is. We can say we apply the identity function.
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 09:40:19
+[[file:assets/screenshot_2017-11-29_09-40-19.png]]
+
+
+Logistic regression squashes it to be b/w 0 and 1 by applying a nonlinearity to it (*logistic function \theta*).
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 09:41:22
+[[file:assets/screenshot_2017-11-29_09-41-22.png]]
+
+This is somewhat b/w perceptron and linear regression
+
+
+The *logistic function \theta* looks like this:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 09:42:46
+[[file:assets/screenshot_2017-11-29_09-42-46.png]]
+
+This is a soft threshold. 
+There are many formulas that give us this, we will use:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 09:43:18
+[[file:assets/screenshot_2017-11-29_09-43-18.png]]
+
+So, we have: h(x) = \theta(s), s = w^{T}x. The signal s, can be thought of as a "risk score"
+
+Since during training, we have a binary label on the datapoints in D, we don't have a probability, we get:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 10:15:14
+[[file:assets/screenshot_2017-11-29_10-15-14.png]]
+Since the target function itself is noisy, it gives y +1 or -1 with a certain underlying probability that we are trying to learn. 
+
+*** Error measure
+We can either do a cost-benefit analysis and come up with a very plausible error measure. Or we can use something that is friendly to the optimizer.
+
+For each (x, y), y is generated by probability \fnof(x)
+We can have a plausible error measure based on *likelihood*:
+
+We will grade different hypothesis according to the likelihood that they generated the data. This gives us a way of grading the different hypotheses. 
+
+Let's assume that the datapoints in D were generated by h. (ie h = \fnof).
+This is the reverse of what we were doing earlier. 
+Earlier, we extracted the most probable hypothesis given the data. That was clean. Now we are asking what is the probability of the data given the hypothesis. There are some data snooping concerns. The Bayesian's get around this by starting with a prior and then using likelihood to get a posterior. 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 10:28:44
+[[file:assets/screenshot_2017-11-29_10-28-44.png]]
+
+What we need to do is, we need to compute the LHS in :top:
+Then we select the h which has the greatest LHS
+
+So, we do this:
+We replace h(x) in that formula :top: with:
+
+h(x) = \theta(w^{T}x)
+
+Also, we see:
+
+\Theta(-s) = 1 - \theta(s)
+
+So, we get:
+
+P(y | x) = \theta(y \middot w^{T}x)
+
+This is for one point, for all the points in the dataset, we get the likelihood:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 10:49:54
+[[file:assets/screenshot_2017-11-29_10-49-54.png]]
+
+So, since we find the *w* that maximizes the likelihood of getting this dataset, we learn something about the underlying probability distribution that generated this dataset. 
+
+How do we maximize the likelihood?
+
+We have:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 11:42:07
+[[file:assets/screenshot_2017-11-29_11-42-07.png]]
+recall, we are maximizing wrt *w* 
+
+Instead, we can maximize log-likelihood
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 11:42:47
+[[file:assets/screenshot_2017-11-29_11-42-47.png]]
+
+We can also do this: :arrow_down:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 11:43:18
+[[file:assets/screenshot_2017-11-29_11-43-18.png]]
+
+Also, we can do this:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 11:43:47
+[[file:assets/screenshot_2017-11-29_11-43-47.png]]
+
+We can substitute \theta and get this simplification:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 11:44:43
+[[file:assets/screenshot_2017-11-29_11-44-43.png]]
+
+So, we can call the terms inside the \Sigma as the e - pointwise error
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 11:45:37
+[[file:assets/screenshot_2017-11-29_11-45-37.png]]
+
+The exponent, -y_{n}w^{T}x_{n} is nice because if the risk score is high and y_{n} is negative, we get a total -(-)(+) which is negative so, high error etc. 
+
+This is called the *cross-entropy* error.  (b/w h and \fnof)
+
+*** Learning algorithm
+Since we know the error measure, we can minimize it
+
+We had in linear regression:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 11:49:58
+[[file:assets/screenshot_2017-11-29_11-49-58.png]]
+
+We had a closed-form solution in linear regression, the pseudo-inverse, the one step learning. 
+
+We cannot find a closed form solution for the logistic regression case. We need an iterative solution - *gradient descent*
+*We have a convex error surface in logistic regression, so we can optimize it perfectly.*
+We won't have this :top: when we have neural networks etc.
+
+We have:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 11:58:17
+[[file:assets/screenshot_2017-11-29_11-58-17.png]]
+
+We need the direction, v-hat. Earlier, we just said that the direction of steepest fall is the gradient of that surface at that points. An alternative approach to the same idea is:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 11:59:37
+[[file:assets/screenshot_2017-11-29_11-59-37.png]]
+
+We can replace w(1) with the formula
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 12:00:13
+[[file:assets/screenshot_2017-11-29_12-00-13.png]]
+
+Using Taylor series expansion of the first term, we get:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 12:00:48
+[[file:assets/screenshot_2017-11-29_12-00-48.png]]
+
+If the surface was linear, we wouldn't have the O(\eta^{2}) term, the first order approximation would have been exact. 
+
+We just need the direction of v-hat now such that it is as negative as possible.
+So, we have:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 12:02:37
+[[file:assets/screenshot_2017-11-29_12-02-37.png]]
+
+Size of \eta?
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 12:03:27
+[[file:assets/screenshot_2017-11-29_12-03-27.png]]
+
+\eta should increase with slope.
+So, if we can do this:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 12:05:33
+[[file:assets/screenshot_2017-11-29_12-05-33.png]]
+
+
+So, we moved from a fixed step size to a fixed learning rate. We can manipulate that as well, with momentum etc. 
+
+*** Summary
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 12:06:30
+[[file:assets/screenshot_2017-11-29_12-06-30.png]]
+
+
+
+We have seen 3 linear models now:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 12:09:11
+[[file:assets/screenshot_2017-11-29_12-09-11.png]]
+
+
+* Chapter 10 - Neural Networks
+
+In logistic regression we have a convex error surface, so we could use gradient descent and minimize the error. This is not the case with Neural Networks.
+
+** Stochastic gradient descent
+We had GD, which minimizes the in sample error 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 13:31:24
+[[file:assets/screenshot_2017-11-29_13-31-24.png]]
+
+We need to evaluate the hypothesis at every point in D, so this is expensive. 
+Each step is one epoch (epoch is when you have considered the full dataset at once)
+
+This was "batch GD" :top:
+
+We can also have stochastic GD. 
+Pick 1 example (x_{n}, y_{n}) at a time. Apply GD to e(h(x_{n}), y_{n})
+
+This works because the "average" direction in which we move is:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 13:35:56
+[[file:assets/screenshot_2017-11-29_13-35-56.png]]
+:top: is equal to 
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 13:37:33
+[[file:assets/screenshot_2017-11-29_13-37-33.png]]
+
+So, at every step, we are moving in this direction(this is the expected direction) + noise
+This is randomized GD, aka stochastic GD
+
+*** Benefits of SGD
+ - cheaper computation
+   - with the same expected movement
+ - randomization
+   - so you don't get stuck in local minima always
+ - simple
+   - simplest possible optimization to GD
+ - Rule of thumb: \eta = 0.1 works
+
+
+*** SGD in action
+In the Netflix competition, we had user vectors u_{ik} for user i, and movie vectors v_{jk} for movie j
+We also had a rating r_{ij} for user i and movie k
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 13:48:26
+[[file:assets/screenshot_2017-11-29_13-48-26.png]]
+
+We can define an error measure as:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 13:48:47
+[[file:assets/screenshot_2017-11-29_13-48-47.png]]
+
+So, we have 2k parameters, and we can use SGD to move in this 2k dimensional space. We nudge them little by little to go towards the rating. 
+
+** Neural Network Model
+The building blocks are perceptrons. Neural networks are combination of them
+The case where the perceptrons failed was the 4 points arranged funnily. 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 13:51:57
+[[file:assets/screenshot_2017-11-29_13-51-57.png]]
+
+But this can be solved by 2 perceptrons 
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 13:52:12
+[[file:assets/screenshot_2017-11-29_13-52-12.png]]
+
+We can combine them using OR/AND gates which are manifested by the weights on them
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 13:53:11
+[[file:assets/screenshot_2017-11-29_13-53-11.png]]
+
+Note the step function just takes the sign to give +1/-1
+
+Now, once we have OR and AND, we can create layers of these to get more complex function approximaters or logic gates etc
+
+We can get XOR with:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 13:57:18
+[[file:assets/screenshot_2017-11-29_13-57-18.png]]
+
+So, we have: the 2 perceptrons (doing AND, and NAND) and then we are ORing them
+
+So, the full multilayer perceptron that implemented the function that we wanted(where the single perceptron failed) is:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 14:01:30
+[[file:assets/screenshot_2017-11-29_14-01-30.png]]
+
+3 layers, feedforward architecture. 
+
+Now, you can get whatever surface you want to approximate:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 14:03:06
+[[file:assets/screenshot_2017-11-29_14-03-06.png]]
+
+2 red flags: generalization and optimization
+For Generalization, we know exactly what we are dealing with, and we can reason rationally about it
+For optimization, what we can do is we can have soft thresholds thru out, and then give the answer after hard thresholding it. Soft thresholds are better because they are twice differential and we can use gradient descent readily. 
+
+*** The neural network
+We have this:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 16:28:08
+[[file:assets/screenshot_2017-11-29_16-28-08.png]]
+
+\Theta is any non-linearity that you want. We can use logistic function, but it goes from -1 to +1
+Each of these guys can be different as well. 
+
+The input layer has x
+The hidden layers 1 \le l \le L
+output layer l = L
+
+The non-linearity \theta can be: tanh (hyperbolic tangent)
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 16:37:24
+[[file:assets/screenshot_2017-11-29_16-37-24.png]]
+
+This function behaves linearly near low signal score, otherwise as a hard threshold.
+
+The parameters of the neural network, the weights have elaborate indices.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 16:40:40
+[[file:assets/screenshot_2017-11-29_16-40-40.png]]
+
+d^{(l)} is the dimension of the layer l
+inputs start with index 0 because each neuron has the mandatory input x_{0} = 1
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 16:43:50
+[[file:assets/screenshot_2017-11-29_16-43-50.png]]
+
+So, :top: the value in the next layer is just the signal (computed from the weights+values of previous layer) and passed thru the nonlinear function \theta. 
+
+So, we start applying this from the input layer all the way to the output layer to get x_{1}^{(L)}
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 16:47:30
+[[file:assets/screenshot_2017-11-29_16-47-29.png]]
+
+*** Applying SGD
+All the weights are w = {w_{ij}^{(l)}}, they determine h(x)
+Error on example (x_{n}, y_{n}) is:
+e(h(x_{n}), y_{n}) = fn of e(w)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 16:52:04
+[[file:assets/screenshot_2017-11-29_16-52-04.png]]
+
+We need the gradient of the e(h(x_{n}), y_{n})
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 16:51:55
+[[file:assets/screenshot_2017-11-29_16-51-55.png]]
+
+*** How do we compute this?
+To find de(w)/dw_{ij}^{(l)} - we can do it by chain rule. The problem is that we have to do it for each one of them, we need a faster way of computing it. 
+
+We can use backpropagation algo to get the entire gradient in 1 shot
+
+** Backpropagation algorithm 
+
+We can write using chain rule:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 17:09:54
+[[file:assets/screenshot_2017-11-29_17-09-54.png]]
+
+The 2nd term is simple. The 1st term needs thought, let's call it \delta_{j}^{(l)}
+So, e' is a product of the two terms, which are basically the x of the previous layer and the \delta of the next layer. This is an attractive property.
+
+We get \delta at the output layer and then use that to compute the inner layer etc. 
+
+This is just a normal application of chain rules.
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 17:17:39
+[[file:assets/screenshot_2017-11-29_17-17-39.png]]
+
+The hidden layers are performing nonlinear transformation. But the transformations are learned, and we are already charging the generalization for that. The VC dimension is \approx #weights
+
+* Chapter 11 - Overfitting
+
+** Review
+ - We can combine perceptrons to get more complex boundaries
+ - The optimization is difficult, so we introduced neural networks that softened thresholds of the perceptrons.
+ - We used chain rule to get derivative of error wrt weights and so we can use SGD to minimize the error.
+
+** What is Overfitting?
+Let's say we have a simple target function. We generate 5 data points with random noise in them.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 17:33:53
+[[file:assets/screenshot_2017-11-29_17-33-53.png]]
+
+Overfitting is when you go father than you should have. If you try to fit the above \fnof with a 4th order polynomial, we will overfit.
+
+When training a neural network, if you plot E_{in} and E_{out} at each step and you get something like so:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 17:38:31
+[[file:assets/screenshot_2017-11-29_17-38-31.png]]
+
+Overfitting is when E_{in} goes down and at the same time, E_{out} is going up.
+So, we should stop at that moment and report that. This is called *early stopping*
+
+
+Overfitting is "fitting the data more than warranted"
+The culprit is when we are fitting the noise. 
+
+** Case-study to investigate effects of fitting noise on overfitting
+Let's have a 10th order target function. We generate 15 datapoints + noise
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 17:50:28
+[[file:assets/screenshot_2017-11-29_17-50-28.png]]
+
+We also have target function which is a a 50th order polynomial. We also generate 15 noiseless datapoints lying on the curve. 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 17:51:53
+[[file:assets/screenshot_2017-11-29_17-51-53.png]]
+
+We will have 2 models for each target
+ - 2nd order polynomial
+ - 10th order polynomial
+
+For noisy low-order target
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 18:14:46
+[[file:assets/screenshot_2017-11-29_18-14-46.png]]
+
+This is a blatant case of overfitting
+
+For noiseless high-order target
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 18:17:14
+[[file:assets/screenshot_2017-11-29_18-17-14.png]]
+
+So, here too, it is overfitting. Even when we are fitting a 10th order polynomial to a 50th order target function
+
+The reason is that the second case also has "noise", not the traditional noise, but noise. We need to match the hypothesis complexity to the data resources and not the target function complexity. 
+
+*** A detailed experiment
+Impact of noise level and target complexity
+
+y = f(x) + \epsilon(x)
+
+\epsilon(x) has \sigma^{2} std dev, or "energy"
+
+f(x) is a normalized Qth order polynomial so that the noise has effect - we'll use Lagrange polynomials. 
+So, the things affecting overfitting are:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 18:29:08
+[[file:assets/screenshot_2017-11-29_18-29-08.png]]
+
+We would like to understand the dependency b/w these on overfitting
+
+We fit the polynomials using our 2 hypothesis - H_{2} which is a 2nd order polynomial
+and H_{10} which is a 10th order polynomial. And we'll compare the out-of-sample errors. Overfit measure: E_{out}(g_{10}) - E_{out}(g_{2})
+So, a positive value means the more complex guy is doing worse, so overfitting. Negative means that the large model is doing better, no overfitting
+
+When we run this for 10s of millions of examples, we get this:
+ - Impact of \sigma^{2}
+ - N vs. \sigma^{2}
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 18:34:23
+[[file:assets/screenshot_2017-11-29_18-34-23.png]]
+
+(Red is overfitting)
+So, more \sigma, I.e. More noise, we need more N to beat overfitting.
+
+For all the simulations :top:, the target complexity is fixed at 20th order polynomial
+
+This was okayish, no surprises. What about the other case where we were getting overfitting without noise?
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 18:36:38
+[[file:assets/screenshot_2017-11-29_18-36-38.png]]
+
+Here we fix the level of noise, to 0.1, but we are changing the target function complexity
+We note somewhat the same pattern. Overfitting happens with higher complexity of \fnof(not as pronounced as earlier, but there. This is because we can readily capture the pattern in this "noise", whereas in the other case we are trying to learn random noise, which takes a lot of N) but with more N, we can beat it.
+Also, it does not start until the power of polynomial reaches 10, this is because we are trying to fit a 2nd order polynomial to it. So, the target polynomial needs to be sufficiently complex for us to not be able to capture it.
+Thus from all this, there appears to be another factor apart from conventional noise that affects overfitting.
+
+** The role of noise
+The first case, with \sigma^{2} energy is called "stochastic noise"
+The second case is noise which isn't random, it is deterministic but we just cannot capture it and it looks like noise to me.
+We'll call it "deterministic noise"
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 18:42:28
+[[file:assets/screenshot_2017-11-29_18-42-28.png]]
+
+** Deterministic noise
+The part of \fnof that H cannot capture \to f(x) \minus h^{*}(x) 
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 20:45:30
+[[file:assets/screenshot_2017-11-29_20-45-30.png]]
+
+Main differences with stochastic noise:
+ - depends on H
+ - fixed for a given x (difference b/w f(x) and h(x) at that point)
+
+They behave exactly the same as long as learning is concerned. 
+
+So, if we have only 10 points and the hypothesis is very complex, it will try to fit in the noise - either stochastic or deterministic - and you overfit
+
+Earlier, when we did the Bias-Variance decomposition, we got the bias term and the variance term. Adding noise to the mix and repeating the analysis, we get:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 21:27:39
+[[file:assets/screenshot_2017-11-29_21-27-39.png]]
+The 3rd term is the stochastic noise. The second term, the bias, is the deterministic noise. 
+The noise terms increase the variance (the 1st term)
+
+** Dealing with overfitting
+Two cures:
+ - Regularization - putting the brakes
+ - Validation - checking the bottom line - learning to not look at E_{in} when deciding when to stop but getting an estimate for E_{out}
+
+This will allow us to use the 4th order polynomial but improve dramatically:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-29 21:36:36
+[[file:assets/screenshot_2017-11-29_21-36-36.png]]
+
+* Chapter 12 - Regularization
+
+** Review:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 09:38:46
+[[file:assets/screenshot_2017-11-30_09-38-46.png]]
+
+The 1st cure to overfitting is Regularization, 2nd is validation
+
+** Regularization - informal
+Regularization has a mathematical basis - you want to approximate functions, which is an ill-posed problem because there are many functions that approx it, so you have smoothness constraints
+
+It also has heuristic basis. 
+
+Earlier, we studied how a linear model fails on fitting a sine curve with only 2 points. 
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 12:22:09
+[[file:assets/screenshot_2017-11-30_12-22-09.png]]
+
+We can apply regularization here and restrict offsets and too deep slopes. This will mean we sacrifice a little on the fit of the datapoints. 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 12:23:39
+[[file:assets/screenshot_2017-11-30_12-23-39.png]]
+
+This shows that the variance is reduced. 
+
+Quantifying it:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 12:32:42
+[[file:assets/screenshot_2017-11-30_12-32-42.png]]
+
+So, with regularization, the total score is better than in the constant model.
+There is a small increase in the bias, the g-bar is different as well. This is because we are handicapping the flexibility of the hypothesis and so we don't get the same g-bar as earlier. The slight increase in bias can be considered a side-effect of the treatment.
+
+The g-bar is the best hypothesis in H. This is what you'll get if you get infinitely many datasets of 2 datapoints each and you average all the various hypothesises you form. 
+
+Regularization allows you to choose a model "in-between" the constant and linear model - a sort of a restricted linear model
+
+What regularization did we apply? 
+
+** Regularization - formal
+
+Let's define a hypothesis set:
+H_{Q} = polynomials of order Q
+
+The non-linear transformation that produces this polynomial: z
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 12:43:05
+[[file:assets/screenshot_2017-11-30_12-43-05.png]]
+
+You take the input x, and combine and evaluate these polynomials. This is the nonlinear transformation. This means, we are converting each feature into higher powers till power Q.
+
+*The hypothesis set is simply all possible Legendre polynomials till power Q*
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 12:45:26
+[[file:assets/screenshot_2017-11-30_12-45-26.png]]
+
+We can use linear regression to get the solution
+This is simple, we know the drill:
+
+1. We apply the transformation on the input points
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 12:47:50
+[[file:assets/screenshot_2017-11-30_12-47-50.png]]
+
+2. We write E_{in}(w), in vector form
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 12:48:51
+[[file:assets/screenshot_2017-11-30_12-48-51.png]]
+
+3. We know the formula
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 12:51:08
+[[file:assets/screenshot_2017-11-30_12-51-08.png]]
+
+What if we constrain the weights?
+ - we can consider H_{2} as a constrained version of H_{10}
+   - But this is hard constraint, with w_{q} = 0 for q \gt 2
+
+A softer constraint would be:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 12:52:22
+[[file:assets/screenshot_2017-11-30_12-52-22.png]]
+
+Here, we are decreasing the possbile hypotheses, so the d_{VC} reduces and our chances of generalization improve.
+So, the optimization problem changes to:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 12:53:43
+[[file:assets/screenshot_2017-11-30_12-53-43.png]]
+
+Pictorially, we have our old error surface:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 12:56:28
+[[file:assets/screenshot_2017-11-30_12-56-28.png]]
+
+The lowest error lies at the center of this ellipse. This is what is reported by linear regression without regularization. 
+With the constraint, we have:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 12:57:29
+[[file:assets/screenshot_2017-11-30_12-57-29.png]]
+
+So, we have to now pick a point that is as close to w_{lin} as possible and still respects the constraint. So, it will lie on the circle.
+Also, if C is too large, we will have something like this:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 12:58:59
+[[file:assets/screenshot_2017-11-30_12-58-59.png]]
+
+Here, the solution will be w_{lin}, as the regularization was too liberal. 
+
+Now, consider a non-optimal point:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 13:01:44
+[[file:assets/screenshot_2017-11-30_13-01-44.png]]
+
+Here, the gradient of E_{in} will be orthogonal to the ellipse. Also, the normal to the circle will be w vector (origin to point w will be orthogonal to circumference of circle)
+Thus, we can write:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 13:03:35
+[[file:assets/screenshot_2017-11-30_13-03-35.png]]
+
+We can put proportionality constant as:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 13:04:39
+[[file:assets/screenshot_2017-11-30_13-04-39.png]]
+
+So, *the last equation looks like the minimization of:*
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 13:05:11
+[[file:assets/screenshot_2017-11-30_13-05-11.png]]
+
+So, we moved from constraint satisfication optimization to normal optimization. 
+\lambda is dependent on C (among other steps), it is inversely proportional to \lambda
+
+\lambda \prop -C
+
+Augmented error
+We are now minimizing the augmented error - that is, error with the regularization term attached to it
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 13:08:58
+[[file:assets/screenshot_2017-11-30_13-08-58.png]]
+These :top: two optimizations are fundamentally the same. 
+
+The bottom formulation lends itself to VC analysis, as we are restricting our hypothesis set explicitly, we have a lower d_{VC} and better chances at generalization.
+
+The solution is simple:
+
+We have:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 13:11:42
+[[file:assets/screenshot_2017-11-30_13-11-42.png]]
+
+So, we get gradient:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 13:11:59
+[[file:assets/screenshot_2017-11-30_13-11-59.png]]
+
+So, this is the solution with regularization.
+
+Applying regularization on the previous problem:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 13:15:58
+[[file:assets/screenshot_2017-11-30_13-15-58.png]]
+
+We see regularization increased bias, reduces variance
+We went from overfitting to underfitting
+
+There is a optimal value:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 13:31:25
+[[file:assets/screenshot_2017-11-30_13-31-25.png]]
+
+** Weight decay
+This regularization we studied, w^{T}w \le C is called weight decay. 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 13:18:36
+[[file:assets/screenshot_2017-11-30_13-18-36.png]]
+
+Why is this called weight decay?
+
+We had in GD:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 13:19:36
+[[file:assets/screenshot_2017-11-30_13-19-36.png]]
+
+But now, we have gradient due to w^{T}w also
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 13:20:26
+[[file:assets/screenshot_2017-11-30_13-20-26.png]]
+
+We see that \lambda is playing the role of decaying the weight at each step. 
+This applies in neural networks as well, just the w^{T}w is the sum of all the weights in the network
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 13:22:45
+[[file:assets/screenshot_2017-11-30_13-22-45.png]]
+
+Apart from constraining the total weights, we can also decide some weights are more important that others. 
+We can use the importance factor  - \gamma_{q}
+So, if \gamma_{q} is low, that weight need not be reduced. If it is big, emphasis on reducing that weight.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 13:28:39
+[[file:assets/screenshot_2017-11-30_13-28-39.png]]
+
+Example: 
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 13:25:37
+[[file:assets/screenshot_2017-11-30_13-25-37.png]]
+
+The algorithm will try to find a lower order fit
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 13:26:02
+[[file:assets/screenshot_2017-11-30_13-26-02.png]]
+
+*In neural networks, we give different layers different \gamma's*
+
+One famous family of regularizers is Tikhonov regularizer
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 13:28:16
+[[file:assets/screenshot_2017-11-30_13-28-16.png]]
+
+In the above form:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 13:28:56
+[[file:assets/screenshot_2017-11-30_13-28-56.png]]
+
+We apply the regularization only to the diagonal terms, I.e. w_{1}^{2}, w_{2}_{}^{2}, etc
+In the Tikhonov regularizer, when you write it in the matrix form, you can write off diagonal terms as well and get all sorts of regularization effects - weight decay, low order fit, high order fit etc
+
+
+Practical rules:
+ - stochastic noise is high frequency
+ - deterministic noise is also nonsmooth
+ - Constrain learning towards smoother hypotheses (because the noise is not smooth, so we harm the noise by going smooth)
+
+This works because it will stop the hypothesis from trying to fit the high frequency noise (stochastic or deterministic)
+Generally, small weights correspond to smoother hypothesis. 
+
+The holy grail of machine learning is finding E_{in} which is a great proxy for E_{out}. If we get that, we can minimize E_{in} and go home. But there is this slack, this bound etc. E_{aug} is better at being a proxy for E_{out} compared to E_{in}.
+
+** Choosing a regularizer
+In neural networks, you can do this :arrow_down: to eliminate small weights and leave the large ones alone.
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 14:41:25
+[[file:assets/screenshot_2017-11-30_14-41-25.png]]
+
+So, this means that we will be near the logical part (+/-1) of tanh and not the linear part. This is good because the neural network can implement OR/AND gate and thus combine to get approximate any function
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 14:43:57
+[[file:assets/screenshot_2017-11-30_14-43-57.png]]
+
+Early stopping is also a regularization. Optimal \lambda needs validation.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 14:46:44
+[[file:assets/screenshot_2017-11-30_14-46-44.png]]
+
+When there is no noise, we don't need \lambda
+We need more \lambda when there was more noise
+
+This is for stochastic noise :top:
+
+We get the exact same thing for deterministic noise
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 14:47:44
+[[file:assets/screenshot_2017-11-30_14-47-44.png]]
+
+This should seal the correspondence in your mind that as far as overfitting and it's cures are concerned, both the noises behave exactly the same way. 
+
+* Chapter 13 - Validation
+
+** Review
+We got the E_{aug} to minimize now:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 14:50:16
+[[file:assets/screenshot_2017-11-30_14-50-16.png]]
+
+The general form of regularization was:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 14:50:30
+[[file:assets/screenshot_2017-11-30_14-50-30.png]]
+
+The choice of \lambda is retrieved using validation
+
+** The validation set
+
+*** Validation verses regularization
+We have, 
+E_{out}(h) = E_{in}(h) + overfit penalty
+
+Both regularization and validation deal with this "overfit penalty" :top:
+
+Regularization is a way of getting a handle on overfit penalty; estimate it and try to minimize E_{aug}
+Validation tries to estimate E_{out} directly
+
+*** Analyzing the E_{out} estimate
+On out-of-sample points (x,y), we have e(h(x), y) as:
+ - squared error = (h(x)-y)^{2}
+ - binary error = || h(x) \ne y ||
+
+If we take the expected value of this error wrt x, we get E_{out}
+E_{out}(h)= E_{x}[e(h(x), y)]
+
+There is a lot of variance because we have only 1 point here
+var[e(h(x), y)] = \sigma^{2}
+
+To reduce variance, we move from a single point to a validation set
+*Num of points in validation set = K*
+
+The error on validation set is: 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 15:31:10
+[[file:assets/screenshot_2017-11-30_15-31-10.png]]
+
+These folks :top: weren't used in training. Also, they are more than 1, so we hope this is a good estimate for E_{out}
+
+So, E_{out}(h) = E[E_{val}(h)]
+which is:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 15:32:41
+[[file:assets/screenshot_2017-11-30_15-32-41.png]]
+
+The variance on the E_{val}(h) is: 
+using the same analysis as earlier, the cross terms go to zero, the covariance terms go to zero since the terms were chosen independently, we get:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 15:37:53
+[[file:assets/screenshot_2017-11-30_15-37-53.png]]
+
+So, we get:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 15:38:08
+[[file:assets/screenshot_2017-11-30_15-38-08.png]]
+
+Since K is taken out of N, we cannot increase it indefinitely. 
+
+One idea: K is put back into N
+
+Divide D into 2 parts, N-K to train and K to validate
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 16:58:27
+[[file:assets/screenshot_2017-11-30_16-58-27.png]]
+
+Train on N-K to get g^{-}, use that hypothesis, train on the full N and report it back. We don't have an estimate on E_{out} now but we know it will be better than E_{val} due to the behavior of the learning curves
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 15:46:03
+[[file:assets/screenshot_2017-11-30_15-46-03.png]]
+
+This is good because we get to train on the whole set. But bad because the validation error we are reporting is the error on a different hypothesis than the one we finally use. So, our error estimate is bad.
+
+Rule of thumb: K = 20% of N, N/5
+
+*** Why 'validation'
+When we use validation error for early stopping, we introduce a optimistic bias in our model for estimation of E_{out}. This is because there is a certain variance in E_{val} and we ignore E_{val} when it is high, but we take it when it is low.
+
+** Model selection
+
+The main purpose of validation set is to help with model selection. 
+We have M models to choose from. 
+
+We will use D_{train} to train and we'll get g_{m}^{\minus} for each model
+We'll evaluate each using D_{val}. Pick the best.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 17:26:38
+[[file:assets/screenshot_2017-11-30_17-26-38.png]]
+When you pick the best :top:, there's a optimistic bias
+
+The output is g_{m}^{*} which is the best model trained on the complete D
+
+E_{val}(g_{m*}^{\minus}) is a biased estimate of E_{out}(g_{m*}^{\minus})
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 17:30:15
+[[file:assets/screenshot_2017-11-30_17-30-15.png]]
+
+The bias diminishes with growing K
+ - The curves are going up because we have fewer datapoints left for train
+ - the 2 curves are getting closer together because the E_{val} estimate of E_{out} is getting better and better
+
+We can quantify the optimistic bias. If you think about it, selecting the best hypothesis from the M options (by selecting the model with the lowest E_{val}) is just regular training. D_{val} is used for "training" on the finalists model. 
+
+H_{val} = {g_{}_{1}^{\minus}, g_{2}_{}^{\minus}, ..., g_{}_{M}^{\minus}}
+
+Using Hoeffding and VC!
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 17:56:32
+[[file:assets/screenshot_2017-11-30_17-56-32.png]]
+
+So, we have an added term of ln M. 
+Hence, if we use validation to select from 20 parameters using 100 points, the bias is more than if we are selecting 2 parameters(only by a log factor, but still)
+
+Data contamination:
+We have E_{in}, E_{test}, E_{val}
+
+If we use the data to make choices, we are contaminating it and reducing it's ability to estimate real performance.
+
+Test set: Completely contaminated
+Validation set: Somewhat contaminated
+Test set: Totally clean
+
+** Cross validation
+
+We have the following chain of reasoning. 
+
+E_{out}(g) \to this is what we want to estimate. g is our g^{\minus} hypothesis trained on the full N datapoints
+E_{out}(g^{\minus}) \to this is our proxy for E_{out}(g), obtained by training on N-K
+E_{val}(g^{\minus}) \to this is our estimate of E_{out}(g^{\minus}) obtained by training only on N-K(the lowest E_{val} of all M models), this one has a optimistic bias in it
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 18:10:27
+[[file:assets/screenshot_2017-11-30_18-10-27.png]]
+
+We want small K so that g^{\minus} is fairly close to g. 
+We want large K so that E_{val}(g^{\minus}) is a good proxy for E_{out}(g^{\minus}) (due to reduced variance)
+
+*** Leave one out
+We will use N-1 points for training. This means g^{\minus} will be very close to g. But E_{val}(g^{\minus}) is not a good estimate for E_{out}(g^{\minus}) due to insane variation.
+So, let's see
+
+We have D - nth point
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 20:47:51
+[[file:assets/screenshot_2017-11-30_20-47-51.png]]
+
+So, final hypothesis learned from D_{n} is g_{n}^{\minus}
+We have:
+e_{n} = E_{val}(g_{n}^{\minus}) = e(g_{n}^{\minus}(x_{n}), y_{n})
+So, RHS is a bad estimate for E_{val}
+
+If we do this for all the points once, we get N estimates of E_{val}, the average of them is perfect, the variance is reduced - we'll call it E_{CV}.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 20:52:35
+[[file:assets/screenshot_2017-11-30_20-52-35.png]]
+
+So, we have the best of both worlds, large K and small K
+
+Demonstration:
+Let's use CV to choose between a linear and constant model for this dataset
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 20:57:22
+[[file:assets/screenshot_2017-11-30_20-57-22.png]]
+
+We get E_{CV}:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 20:57:43
+[[file:assets/screenshot_2017-11-30_20-57-43.png]]
+
+Same for constant model:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 20:58:04
+[[file:assets/screenshot_2017-11-30_20-58-04.png]]
+
+It turns out E_{CV} for constant model is lower, we'll choose that. That would be the right choice, the datapoints were indeed generated by a constant target function with noise. Using E_{CV} will give you the right answer on average. 
+
+Another example:
+We can use CV to find out what order of polynomial to use for digit classification
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 21:00:51
+[[file:assets/screenshot_2017-11-30_21-00-51.png]]
+
+We'll use 500 points for training and the rest for testing. 
+The nonlinear transformation will be polynomials for upto 5th order polynomial
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 21:02:01
+[[file:assets/screenshot_2017-11-30_21-02-01.png]]
+
+We'll have 500 training session, each with 499 points. 
+We'll get this curve:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 21:02:51
+[[file:assets/screenshot_2017-11-30_21-02-51.png]]
+
+We note how E_{CV} is a good proxy for E_{out}
+CV tells us to stop at 5-7, we can stop at 6. Here's the plot:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 21:04:36
+[[file:assets/screenshot_2017-11-30_21-04-36.png]]
+
+The CV result is smooth, good E_{out}
+
+There is a problem with "Leave one out". The problem is that you'll have N training sessions(with N-1 points each time). So, we generally leave K out.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 21:07:21
+[[file:assets/screenshot_2017-11-30_21-07-21.png]]
+
+This works nice if N is big. The number of training sessions reduces and we don't take a very huge hit on num of points (N-K is good if N is big)
+
+Rule of thumb: 10-fold Cross validation works nicely in practice.
+
+* Chapter 14 - Support Vector Machines
+
+** Review
+The whole lecture in a slide:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 21:12:26
+[[file:assets/screenshot_2017-11-30_21-12-26.png]]
+
+SVM - Classification King
+
+** Maximizing the margin
+For linearly separable data, we can have different separating lines. The ones with the largest margin are the best.
+
+We can see that the margin successively increases and so does the separating line (even when E_{in} and E_{out} and all are the same) because we can accept noise better
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 22:08:54
+[[file:assets/screenshot_2017-11-30_22-08-54.png]]
+
+Can we solve for *w* that maximizes the margin?
+Recall the dichotomies, the growth function?
+We recall that the perceptron can shatter 3 points completely. 
+So, we have 8 dichotomies:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 22:12:51
+[[file:assets/screenshot_2017-11-30_22-12-51.png]]
+
+Each dichotomy's max margin:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-11-30 22:13:43
+[[file:assets/screenshot_2017-11-30_22-13-43.png]]
+
+If we accept dichotomies with a mandatory minimum margin, we reject some dichotomies, so the growth function decreases, d_{VC} decreases, we have better generalization chances. This is just like regularization. 
+
+*** Finding *w* with large margin
+Let x_{n} be the nearest data point to the line/plane/hyperplane: w^{T}x=0 (this is the separating surface)
+The distance b/w the separating plane and the nearest point is the margin
+
+2 preliminary technicalities:
+ - normalize *w*
+   - we'll want the min distance to be 1, so we scale distances down accordingly. So, |w^{T}x_{n}| = 1
+ - We'll put out w_{0}, the bias term. So, the vector *w* is not only [w_{1}, ..., w_{d}]
+ - So, the equation of the plane becomes: w^{T}x+b = 0
+
+Now, we can compute the distance between the nearest point x_{n} and the plane w^{T}x+b = 0 where |w^{T}x_{n} + b| = 1
+So, we have:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 17:12:35
+[[file:assets/screenshot_2017-12-01_17-12-35.png]]
+
+Vector w is \perp to the plane in the X space (eg: in y=x, vector [1, -1] is \perp to the line)
+Proof:
+Take 2 points on the plane x' and x''
+Since they line on the plane, we have:
+
+w^{T}x' + b = 0
+w^{T}x'' + b = 0
+
+So, we have the difference:
+w^{T}(x'-x'') = 0
+
+This :top: means that w vector is \perp to (x'-x'') vector
+Since x'-x'' lies on the plane, w is \perp to the plane
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 17:15:47
+[[file:assets/screenshot_2017-12-01_17-15-47.png]]
+
+Now the distance b/w x_{n} and plane is:
+ - Take any point x on the plane
+ - Projection of x_{n} - x on w is the required distance of x_{n} from plane
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 17:18:09
+[[file:assets/screenshot_2017-12-01_17-18-09.png]]
+
+
+
+So, w\middot(x_{n}-x) divided by mag of w
+Also, w\middot(x_{n}-x) is just: w^{T}(x_{n}-x)
+We take the abs value, so:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 17:20:26
+[[file:assets/screenshot_2017-12-01_17-20-26.png]]
+
+Or:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 17:20:46
+[[file:assets/screenshot_2017-12-01_17-20-46.png]]
+
+We can add and subtract b to get:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 17:21:02
+[[file:assets/screenshot_2017-12-01_17-21-02.png]]
+
+The 2nd group of terms is 0 since x lies on plane. The 1st group was scaled to be 1
+So, we have distance/margin as:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 17:21:34
+[[file:assets/screenshot_2017-12-01_17-21-34.png]]
+
+
+Hence, the resulting optimization problem:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 17:23:06
+[[file:assets/screenshot_2017-12-01_17-23-06.png]]
+
+We are maximizing the margin, subject to the scaling of w such that it makes the nearest point be at a distance of 1
+
+:top: this problem is hard to solve, we can reduce it to it's equivalent form by noting that 
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 17:27:26
+[[file:assets/screenshot_2017-12-01_17-27-26.png]]
+
+Also, instead of maximizing 1\|w|, we maximize:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 17:28:02
+[[file:assets/screenshot_2017-12-01_17-28-02.png]]
+
+So, the problem becomes:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 17:29:36
+[[file:assets/screenshot_2017-12-01_17-29-36.png]]
+
+** The Solution
+We'll use quadratic programming to solve this
+
+This is related to the optimization problem we had earlier with Regularization:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 17:34:07
+[[file:assets/screenshot_2017-12-01_17-34-07.png]]
+
+
+We'll formulate the Lagrange:
+by putting the constraint into the objective (by getting the -1 on LHS and adding \alpha for the slack):
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 17:46:23
+[[file:assets/screenshot_2017-12-01_17-46-23.png]]
+
+We are minimizing this :top: wrt w, b and maximizing wrt \alpha_{n} \ge 0
+We take gradient of Lagrangian wrt w and b and equate to 0:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 17:48:02
+[[file:assets/screenshot_2017-12-01_17-48-02.png]]
+
+So, we get: 
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 17:48:21
+[[file:assets/screenshot_2017-12-01_17-48-21.png]]
+
+Substituting this back into the original Lagrangian:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 17:48:59
+[[file:assets/screenshot_2017-12-01_17-48-59.png]]
+we get:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 17:49:50
+[[file:assets/screenshot_2017-12-01_17-49-50.png]]
+
+So, we have:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 17:50:12
+[[file:assets/screenshot_2017-12-01_17-50-12.png]]
+
+Which is the same as:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 17:50:28
+[[file:assets/screenshot_2017-12-01_17-50-28.png]]
+
+Expanding the formula to see what matrices are passed to QP:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 17:51:17
+[[file:assets/screenshot_2017-12-01_17-51-17.png]]
+
+Along with the conditions:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 17:51:35
+[[file:assets/screenshot_2017-12-01_17-51-35.png]]
+
+This is to be passed to the QP package and it gives us the \alpha-s back
+We get a convex function that the quadratic programming optimizes.
+
+So, we have our \alpha-s. \alpha = [\alpha_{1}_{}, ..., \alpha_{N}]
+We can get w by:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 17:52:48
+[[file:assets/screenshot_2017-12-01_17-52-48.png]]
+
+The \alpha vector has mostly 0, this is because in the interior points, the slack is 0
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 17:54:49
+[[file:assets/screenshot_2017-12-01_17-54-49.png]]
+
+This is similar to the case in regularization where the C was so large that we actually could get to w_{lin} and \lambda was 0 there. For the cases where we actually had to compromise, we had a positive \lambda, so is the case here with our \alpha-s.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 17:55:41
+[[file:assets/screenshot_2017-12-01_17-55-41.png]]
+
+Those points where \alpha_{n} \gt 0, are the support points, x_{n} is the support vector.
+They are the circled ones in the diagram:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 17:59:45
+[[file:assets/screenshot_2017-12-01_17-59-45.png]]
+
+The support vectors achieve the margin
+for them:
+y_{n}(w^{T}x_{n} + b) = 1
+
+Also, since \alpha-s for non support vectors are 0, we can do:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 18:01:52
+[[file:assets/screenshot_2017-12-01_18-01-52.png]]
+
+Since w-s are the parameters of the model, less w means lower d_{VC}, better generalization. So, getting the best separator using SVMs has a generalization dividend as well.
+Also, b is simple to get:
+apply "y_{n}(w^{T}x_{n} + b) = 1" for any support vector.
+
+** Nonlinear transforms
+Currently, we are talking only about linearly separable case, where all the points are strictly linearly separable. 
+If they aren't linearly separable, we can apply a non-linear transformation and get them to be linearly separable in that higher dimension space.
+
+Recall, we had:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 17:49:50
+[[file:assets/screenshot_2017-12-01_17-49-50.png]]
+
+Here, we are passing x^{T}x to the LP. x^{T}x is just inner product of 2 D dimensional vectors, where D is the dimensionality of the x space. So, if we apply a nonlinear transformation to 1 million dimensional space, we'll have to do a inner product of 2 one million vectors, but the optimization problem won't be any difficult.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 18:11:11
+[[file:assets/screenshot_2017-12-01_18-11-11.png]]
+
+The w-s will belong to the z space. 
+The SVs live in the Z space. In the X space, the Z-space hyperplane with the largest margin looks like this say, with the "pre-images" of support vectors highlighted (*Support Vectors are defined in the Z-space*):
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 18:15:27
+[[file:assets/screenshot_2017-12-01_18-15-27.png]]
+*The margins are in the Z space*
+
+Here, we have only 4 support vectors, so, the *w* is only defined by 4 parameters in the Z space. This after going to a million dimensional space! So, good generalization.
+
+Generalization result:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 18:18:26
+[[file:assets/screenshot_2017-12-01_18-18-26.png]]
+
+Actually, we need to run several runs and get the expected values:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 18:19:18
+[[file:assets/screenshot_2017-12-01_18-19-18.png]]
+
+So, SVMs are awesome because you get to go to high dimensions without paying for the computation of doing so and without pay in terms of generalization.
+
+Kernel methods take this one step further, you won't need to pay for getting the inner product as well. This will enable you to go to infinite dimensional spaces. 
+
+* Chapter 15 - Kernel Methods
+
+** Review
+SVMs are classifiers with maximum margin. They allow us to go to higher dimensional spaces without paying for generalization and complexity. 
+
+This means, we get a complex final hypothesis (g) but our hypothesis set is "simple"
+
+** The kernel trick
+The only thing we need from the Z space is the inner-dot-product. If we get that somehow, we can use the Z-space
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 19:26:00
+[[file:assets/screenshot_2017-12-01_19-26-00.png]]
+We need z in one more place as well..., Our final hypothesis
+We have:
+g(x) = sign(w^{T}z + b)
+
+But we know w is:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 19:29:31
+[[file:assets/screenshot_2017-12-01_19-29-31.png]]
+
+So, this reduces to inner product as well.
+
+What about the b?
+That is solvable by taking any SV and using this equation:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 19:30:34
+[[file:assets/screenshot_2017-12-01_19-30-34.png]]
+
+So, here as well, we need just the inner product. 
+
+This raises a very interesting possibility. If we can get the inner product of z, we can go to that space -- even if we do not know what the z space is -- even if z space is infinite dimensional.
+
+The inner product that we are taking about, z^{T}z, let's assume it is given to us by a function
+We have, for any 2 points in X space:
+    x and x' \in X
+
+We have:
+    z^{T}z = K(x, x')
+
+Where K is kernel. The kernel will correspond to some Z space.
+
+Example:
+
+Let's have a 2nd order transformation \phi
+So, z vector:
+z = \phi(x) = [1, x_{1}, x_{2}, x_{1}^{2}, x_{2}^{2}, x_{1}x_{2}]
+
+Hence, K will be:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 19:36:16
+[[file:assets/screenshot_2017-12-01_19-36-16.png]]
+
+The trick: *is it possible to compute this kernel (evaluate K) without transforming x and x'?*
+
+Let's consider K to be (1 + x^{T}x')^{2}
+This is a function of x, x' and it gives us a inner product in *some* Z space (we don't yet know which)
+
+K(x, x') = (1 + x^{T}x')^{2} = (1 + x_{1}_{}x_{2}^{'} + x_{2}x^{'}_{2})^{2}
+
+Squaring, we get:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-01 19:40:33
+[[file:assets/screenshot_2017-12-01_19-40-33.png]]
+
+This looks like an 2nd order non-linear transformation inner product if we didn't have the 2s. 
+It actually is still a 2nd order non-linear transformation but x vector is not transformed to (1, x_{1}^{2}, x_{2}^{2}, x_{1}x_{2}) but to:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-02 09:20:50
+[[file:assets/screenshot_2017-12-02_09-20-50.png]]
+
+Hence, K(x, x') = (1 + x^{T}x')^{2} does compute a inner product in 2nd order without converting to those coordinates first
+If we replace the power 2 with power 100, we get the inner product in 100D. This without having to go there. 
+
+This is the *polynomial kernel*
+
+
+
+
+** Soft-margin SVM
+
 

@@ -10,6 +10,7 @@ Available notes:
   * [Operating Systems](./operating_systems.org)
   * [Compilers](./compilers.org)
   * [Artificial Intelligence](./artificial_intelligence.org)
+  * [Machine Learning (Learning from data)](./learning_from_data.org)
   * [Pro Python](./pro_python.org)
   * [Computer Arch](./comp_arch.org)
   * [C language](./C_language.org)

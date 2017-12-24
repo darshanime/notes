@@ -4333,6 +4333,7 @@ Also, in TLB, it was OK as you had to only traverse the page tables
 
 (Recall, virtual address \to tlb \to physical address (or traverse page table in mmu) \to hardware cache \to data at the physical address (or go to ram to get the data)
 
+Demand Paging is about which pages to keep in ram, and which to push to disk \to it behaves like a cache for the disk
 But here in demand paging, if you don't have the right page, you have to go to disk, which is 1 million instructions. 
 
 ** Page replacement policies
@@ -4481,12 +4482,280 @@ We studied
 
 *** Second chance list algorithm
 
-VAX did not have the "use" bit. 
+VAX did not have the "use" bit. So we had the 2nd chance list algorithm
 
+We have 2 sets, greed and yellow
+The green side is marked RW and managed FIFO
+Yellow is marked invalid and LRU
+
+When there is a page fault, one of the pages from the yellow side moves on to the green side at the bottom and the oldest green one goes to the tip of the yellow side.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-19 05:25:20
+[[file:assets/screenshot_2017-12-19_05-25-20.png]]
+
+So, the LRU approximation is from the fact that when we have to page out a page to the disk, we try to put out oldest page. Otherwise we shuffle them among the 2 sides
+
+If green is large, \to FIFO
+If yellow is large, \to LRU
+
+So, the tradeoff is efficiency of access (green is better, page faults on yellow) and closer to LRU
+
+When a page is marked invalid, there are 2 reasons; it is memory and invalid or it is in disk and invalid
+
+The software has to keep track of which case it is - the hardware cache looks up if it has the entry (yes? In memory) or else the MMU traverses the ram (found? In memory) if not, the OS goes to disk (on disk)
+
+The yellow is the "second chance list". It is managed as strictly LRU - which means we retain *all* the information about the ordering, that is, who is 15th most accessed etc
+
+*** Clock algorithm with Free list
+The problem with the Clock Algorithm was that on every page fault, we have to walk thru the clock. We might take a long time to find a valid page. So, we can have a "free list" (list of pages that are free to be used) so that we can take one from there
+The free list represents the pages that are on their way to becoming free to be used. 
+When the page is kicked out to bottom of free list, if the page is dirty, we start writing it to disk so that till it reaches the tip of the list, it will be clean and ready to use again
+
+The clock hand advances when we don't have enough free pages(so, the clock algorithm runs as a background task, to fill the free pages). The free pages list represents the pages that will be pushed to disk and the new pages will come to the bottom of the list. 
+The bottom of the list is for the folks just written to the free list (aka death list) and the pages are moved to disk from the top
+
+If the page is used while in the free list, it is returned to the active set (for the clock to cycle over)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-19 05:57:46
+[[file:assets/screenshot_2017-12-19_05-57-46.png]]
+
+The advantage is faster for page fault (we always have a page ready to be replaced on fault) - we don't have to search for it.
+This is like VAX's second chance algorithm
+
+*** Core Maps
+They map the physical pages with their virtual counterpart
+This is required because when we do demand paging, we need to swap something out, we need to know what page table it is in, so that we can invalidate the cache - difficult to do in case of shared pages (same physical page, shared in multiple virtual pages)
+
+** Monitors template
+
+#+begin_src c
+lock
+while (need to wait) { // check and/or update state variables. Wait if necessary
+    condvar.wait();
+}
+unlock
+
+Do something so no need to wait
+
+lock
+
+condvar.signal(); // check and/or update state variables
+
+unlock
+#+end_src
 
 ** Page Allocation Policies
+Till now, we didn't differentiate between processes. 
+How do we allocate memory among different processes, same fraction?
+Which process gets how much memory?
+
+Each process needs a minimum number of pages 
+- not the size of the code (there might be code we don't use so it need not be put into memory)
+- not the size of the stack (we might be only using the top area of the stack)
+
+We cant to make sure that the all the processes loaded in memory can make forward process when they run
+So, we need only 1 instruction to be in memory for each process - 6 bytes for the instruction - 2 pages
+We also keep 2 pages to handle /from/ and 2 for /to/
+
+*** Possible replacement scopes
+ - global replacement - process select replacement frame from set of all frames (cross process allowed)
+ - local replacement - process selects only from its own set of allocated frames
+
+Global is adaptive, but can also be abused
+
+How much to allocate?
+ - *equal allocation* (fixed scheme)
+   - bad idea, not all processes are created equal
+ - *proportional allocation* (fixed scheme)
+   - allocation according to the size of process
+   - computation as follows:
+     - s_{i}: size of process p_{i} and S is \Sigma s_{i}
+     - m : total number of frames
+     - a_{i} : allocation for p_{i} is s_{i} \middot m / S
+
+s_{i,} the size of process, is what? How do we define it?
+
+ - *priority allocation*
+   - proportional scheme using priorities rather than size
+   - same problems as above :top:, this can be manipulated
+
+We can use Machine Learning to train a model on this, which can get the correct "size" or "priority" heuristic for us
+
+So, we want an adaptive scheme
+
+*** Capacity misses
+Can we change the number of pages/application so that we get lower capacity misses?
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-19 06:53:18
+[[file:assets/screenshot_2017-12-19_06-53-18.png]]
+
+We can use page fault rate as our metric and use that as the heuristic to know how many pages to allocate
+ - if actual rate of page faults too low, processes loses frames
+ - if actual rate of page faults too high, processes gains frames
+
+If we don't have enough memory to keep everyone in their nice page fault range, we do nothing but keep paging - this leads to thrashing!
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-19 06:57:15
+[[file:assets/screenshot_2017-12-19_06-57-15.png]]
+
+If we add more processes, the CPU utilization rises and then suddenly falls.
+It rises because when we add more processes, we have better overlapping I/O and compute and we get a high CPU utilization
+But if we add too many processes, they spend their entire time paging, and nothing gets done aka *thrashing* (note: the CPU is not involved in I/O)
+
+Thrashing = process is busy swapping pages in and out
+ - page faults per unit time are a good heuristic to detect thrashing
+
+To solve thrashing, we can swap some processes, or increase our ram etc
+
+We know that any program's memory access patterns have temporal and spatial locality
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-19 07:06:12
+[[file:assets/screenshot_2017-12-19_07-06-12.png]]
+X axis the execution time, y axis is memory address
 
 ** Working Set/Thrashing
+
+The set of addresses that were accessed during a delta time period: without which the process might have page faulted - working set
+So, Working Set defines minimum number of pages needed for process to behave well
+
+Not enough memory, means we should probably keep the swap the process out and not waste time with the disk.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-19 07:08:52
+[[file:assets/screenshot_2017-12-19_07-08-52.png]]
+
+
+Working-Set model
+
+This is the set of pages that the program accessed in the given time delta. 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-19 07:12:08
+[[file:assets/screenshot_2017-12-19_07-12-08.png]]
+
+Programs have phases, where they access certain page numbers
+\Delta = Working set window \to fixed number of page references
+ - if \Delta is too small, will not encompass entire locality
+ - if \Delta is too large, will encompass several localities
+ - if \Delta is \infin, will encompass entire program
+
+Total working set = sum of individual WSs
+If have enough ram to support it, we won't thrash, else we will and we'll have to suspend processes 
+
+*** Compulsory misses
+How do we minimize these? (answer is always, pre-fetch)
+ - clustering
+   - on a page fault, bring in multiple pages around the faulting page
+   - since efficiency of disk reads increases with sequential reads, makes sense to read several sequential pages
+
+ - working set tracking
+   - use algorithm to try and track working set of application
+   - when swapping process back in, swap in working set
+
+
+
+** Summary
+ - Replacement policies
+   - FIFO
+   - MIN - replace page that will be used farthest in future
+   - LRU - replace page that was used farthest in past
+   - Clock algorithm (approximation to LRU)
+     - arrange all pages in circular list
+     - sweep through them, marking as not "in use"
+     - in page not "in use" for one pass, then can replace
+   - Nth change clock algorithm (another approximation to LRU)
+     - give pages multiple passes of clock hand before replacing
+   - Second chance list algorithm (another approximation to LRU)
+     - divide pages in 2 groups, one which is truly LRU (yello) and one is fifo (green)
+   - Working Set
+     - set of pages touched by a process recently
+   - Thrashing
+     - a process is busy swapping pages in and out
+     - a process will thrash if working set doesn't fit in memory
+     - need to swap out a process
+
+
+** I/O
+I/O devices make computers awesome. There are thousands of devices, all slightly different. We have to standardize the API to access them. 
+Another thing is that devices are unpredictable/unreliable etc. But the I/o systems try to handle that themselves, eg: disks have error correction codes, networks retransmit etc. 
+The speeds can also vary a lot, by orders of magnitude
+
+Some operational parameters:
+ - Byte/Block
+   - some devices provide single byte at a time (eg: keyboard)
+   - others provide whole blocks (eg: disks, networks etc)
+ - Sequential/Random
+   - some devices must be accessed sequentially (eg: tape)
+   - others can be accessed randomly (eg: disk, cd etc)
+ - Polling/interrupts
+   - how do you access them?
+
+Modern I/O systems are many things attached to a computer
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-19 07:49:08
+[[file:assets/screenshot_2017-12-19_07-49-08.png]]
+
+This is somewhat old :top:
+
+
+Another challenge is that the devices have hugely varying transfer rates (speeds)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-19 07:50:46
+[[file:assets/screenshot_2017-12-19_07-50-46.png]]
+
+We want to treat each nicely
+
+Goal of I/o subsystem:
+ - Provide uniform interfaces
+ - when you do FILE fd = fopen("/dev/something", "rw") and write something to that file descriptor (can be a file/device etc), you shouldn't have to worry about what the device is
+ - This standard interface is provided by a device driver
+
+
+
+*** Standard interfaces to devices
+ - Block devices (eg: disk drives, tape drives, DVD-ROM)
+   - possible for us: access blocks of data
+   - commands include open(), read(), write(), seek()
+   - we can access them via raw I/O or file system access
+   - memory mapped file access possible
+ - character devices (eg: keyboards, mice, serial ports, some usb devices)
+   - single characters at a time
+   - command include get(), put()
+   - libraries layered on top allow line editing (libs give you getline, parsing etc)
+ - Network devices (ethernet, wireless, bluetooth)
+   - they have the socket interface
+   - a socket is an "endpoint", you connect 2 together and you can flow data b/w them
+   - the socket interface separates network protocol from network operation, includes the select() functionality
+   - usage: fifos, streams, queues, mailboxes etc
+
+
+How does user deal with timing?
+ - blocking interface - "wait"
+   - when request data (eg on read() system call), put process to sleep until data is ready
+   - when write data (eg on write() system call), put process to sleep until device ready for data)
+   - this is a blocking interface (they block your function call till the write/read is done)
+ - non blocking interface - "dont wait"
+   - returns really quickly from read/write and gives you the bytes that were successfully transferred
+   - may return nothing, write may write nothing
+ - asynchronous interface - "tell me later"
+   - when request data, take pointer to user's buffer, return immediately, later kernel fills buffer and notifies user ("here they are")
+   - when send data, take pointer to user's buffer, return immediately, later kernel takes data and notifies user ("send it!")
+     
 
 * Lecture 21 - Networking
 

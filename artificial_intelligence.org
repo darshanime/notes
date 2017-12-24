@@ -1305,3 +1305,1637 @@ But, enforcing n-consistency is same as solving the problem!
 So, this is one way of solving the problem. you enforce 1-consistency (1C), then 2C, this may break 1C, fix it, then 3C, this may break 2C and 1C etc ... all the way to nC
 
 # k=3 is called path consistency 
+
+* Lecture 8 - Markov Decision Processes I
+
+This is when we are unsure about the outcomes of our actions. The action is in our control, the outcome isn't
+
+The problem is, the robot is in a maze. 
+80% of the time, the action you take results in you going in the right direction, 10% clockwise, 10% counter clockwise
+There are rewards here, and you have to gather the rewards. There is a living reward (+ve/-ve) at each time step and a big reward in the end (+ve/-ve).
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 05:56:53
+[[file:assets/screenshot_2017-12-22_05-56-53.png]]
+
+How do you make decisions here? If this was deterministic, it would have been a simple application of A* or some other graph search algorithm. 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 05:57:37
+[[file:assets/screenshot_2017-12-22_05-57-37.png]]
+
+But here, it is not deterministic:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 05:57:54
+[[file:assets/screenshot_2017-12-22_05-57-54.png]]
+
+This kind of problem, is called a *Markov Decision Process*
+
+** Markov Decision Process
+It is a lot like a search problem, it's got a set of states s \in S and a successor function but it is not deterministic unlike search problem
+
+An MDP is defined by:
+ - a set of states s \in S
+ - a set of actions a \in A
+ - a transition function T(s, a, s')
+   - this is the probability that "a" from "s" leads to "s'" i.e. P(s'|s,a)
+   - called *dynamics*
+ - a reward function R(s, a, s')
+   - (sort of like a cost function)
+ - a start state
+ - a terminal state
+
+
+MDPs are non-deterministic search problems
+ - we can solve them using expectimax search
+   - you can follow the path with maximum expected utility
+ - we'll have a new tool soon
+
+
+*** Who is Markov
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 06:11:56
+[[file:assets/screenshot_2017-12-22_06-11-56.png]]
+
+"Markov" means given the present state, the future and past are independent.
+For MDPs, it means action outcomes depend only on the current state
+
+P(S_{t+1} = s' | S_{t} = s_{t}, A_{t} = a_{t}, S_{t-1} = s_{t-1}, A_{t-1} = a_{t-1}, ..., S_{0} = s_{0}, A_{0} = a_{0}) = P(S_{t+1} = s' | S_{t} = s_{t}, A_{t} = a_{t})
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 06:11:25
+[[file:assets/screenshot_2017-12-22_06-11-25.png]]
+
+This is like search, where the successor function depends on current state, not history
+
+** Policies
+In deterministic single agent search problems, we wanted an optimal plan, or sequence of actions, from start to goal
+Here, we need a policy, which tells us what to do at each state. (once we have the optimal policy, we get the reflex agent, which doesn't have to think)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 06:14:25
+[[file:assets/screenshot_2017-12-22_06-14-25.png]]
+
+:top: is the optimal policy when R(s, a, s') = -0.03 for all non-terminals
+
+Expectimax doesn't compute the policy explicitly, it calculates what to do at each step
+An optimal policy is the one that would maximize the agent's reward function, \pi^{*}: S \to A
+ 
+The optimal policy depends on the R
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 06:19:01
+[[file:assets/screenshot_2017-12-22_06-19-00.png]]
+
+:top: living reward very small
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 06:19:32
+[[file:assets/screenshot_2017-12-22_06-19-32.png]]
+:top: living reward is large enough to not allow us to try not risking the pit
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 06:20:28
+[[file:assets/screenshot_2017-12-22_06-20-28.png]]
+
+** Example: Racing
+- the car wants to travel far, quickly
+- 3 states
+  - cool, warm, overhead
+- 2 actions
+  - slow, fast
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 06:22:33
+[[file:assets/screenshot_2017-12-22_06-22-33.png]]
+
+The rewards:
+ - +1 for slow
+ - +2 for fast
+ - -10 for overheated
+
+This :top: is the state transition diagram, it shows the states, the actions, the transition functions, the rewards
+
+We can use expectimax here:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 06:24:48
+[[file:assets/screenshot_2017-12-22_06-24-48.png]]
+
+But the tree is huge, (infinite) and there is a lot of repetition of structure here, so expectimax might not be the optimal way to calculate this
+
+We can write the generic search tree:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 06:26:25
+[[file:assets/screenshot_2017-12-22_06-26-25.png]]
+
+When we are in a state (s), and we take an action (a), we end up in a q-state (where we have committed to a particular action but haven't computed one yet), and we finally we land in some (s') *according to the transition function*
+
+So, we have:
+- the transition: (s, a, s')
+- T(s, a, s') = P(s' | a, s)
+- and the reward: R(s, a, s')
+
+The differences between this and expectimax tree is that the rewards are not at the bottom, but smeared thru out the tree. And also that the probabilities are given to us by the Transition function
+
+Since we get the rewards step by step, we have to decide the utility of all possible sequences we can take and choose the best one
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 06:33:31
+[[file:assets/screenshot_2017-12-22_06-33-31.png]]
+
+We have to choose between: 
+ - more or less (5 vs 2, choose 5)
+ - now or later (now is better)
+
+Rewards are discounted, at each time step by \gamma
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 06:35:00
+[[file:assets/screenshot_2017-12-22_06-35-00.png]]
+
+How do we discount?
+ - we do this by changing the reward function at time step +1 by \gamma
+ - we do this because it makes sense to have rewards sooner than later
+ - also, it helps our algorithms converge nicely
+
+
+The preferences are "Stationary preferences" iff:
+ - initially, the optimal policy was [a_{1}, a_{2}, ...] over [b_{1}, b_{2}, ...] and
+ - after adding a new action r before both, the preference is still the same: [r, a_{1}, a_{2}, ...] over [r, b_{1}, b_{2}, ...]
+
+*Under the SP assumption, we can only have utilities that discount the rewards at each timestep.*
+
+Sometimes the preferences won't be stationary, so this won't apply there
+
+** Infinite utilities?
+ - what if the game lasts forever? Do we get infinite rewards? How do we choose between policies then?
+ - solutions:
+   - finite horizon (similar to depth-limited search)
+     - terminate after T time steps
+     - *gives nonstationary policies* (\pi depends on time left)
+   - Discounting: use 0 \lt \gamma \lt 1
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 06:48:07
+[[file:assets/screenshot_2017-12-22_06-48-07.png]]
+
+   - absorbing state:
+     - guarantee that for every policy, a terminal state will eventually be reached (I.e. The probability of reaching the safe states reduces with T)
+
+So, we have defined MDPs which have:
+ - set of states s
+ - start state s_{0}
+ - set of actions A
+ - transitions T(s, a, s') = P(s' | s, a)
+ - rewards R(s, a, s') (and discount \gamma)
+
+And we compute the policy (mapping from states to actions) using the utility (sum of discounted rewards)
+
+** Solving MDPs
+
+ - Value (utility) of state s
+   - V^{*}(s) is the expected utility of starting in s and acting optimally
+ - Value of q-state
+   - Q^{ * }(s, a) is the expected utility of starting out having taken action "a" from state "s" and thereafter acting optimally
+ - The optimal policy
+   - \pi^{*}(s) is the optimal action from state s
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 06:57:11
+[[file:assets/screenshot_2017-12-22_06-57-11.png]]
+
+
+These look like this:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 06:58:40
+[[file:assets/screenshot_2017-12-22_06-58-40.png]]
+
+The living reward is -0.1 and the \gamma is 0.99
+The values in the grids are the values of those states V^{*}(s)
+The arrows are the optimal policies from that state \pi^{ *}
+
+We also have the q values:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 07:01:22
+[[file:assets/screenshot_2017-12-22_07-01-22.png]]
+
+The q values show what is the expected utility of choosing a particular action from each state.
+The value of the state V^{*} is simply the max of all q-values
+
+How do we compute these things?
+
+*** Values of States
+
+ - Fundamental operation: compute the expectimax value of a state
+
+Well, the optimal action from a state s is to choose action with the max expected value of the q-state that that action will lead to. This optimal action will give us the expectimax value of the state
+
+What is the value from the q-state?
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 07:11:49
+[[file:assets/screenshot_2017-12-22_07-11-49.png]]
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 07:12:06
+[[file:assets/screenshot_2017-12-22_07-12-06.png]]
+
+Let's look at each one by one:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 07:12:22
+[[file:assets/screenshot_2017-12-22_07-12-22.png]]
+
+The value of a state s is the maximum of the values of all the q-states you can choose from. This is deterministic, you can choose what q-state you want to be in, so you choose the best.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 07:13:28
+[[file:assets/screenshot_2017-12-22_07-13-28.png]]
+
+The value of a q-state is the weighted average (of the rewards you get on going to that state) over all the possible states you can end in + discounted rewards from that state
+
+We can inline Q^{*} and write the 2 equations in one:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 07:19:16
+[[file:assets/screenshot_2017-12-22_07-19-16.png]]
+:top: is called the bellman equation
+
+*** Time limited values
+
+The racing search tree is repetitive:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 07:20:53
+[[file:assets/screenshot_2017-12-22_07-20-53.png]]
+
+So, expectimax wastes a lot of time doing the same repetitive calculations. Also, the tree is infinite so expectimax has that going against it as well
+
+To solve it, we can do a depth-limited computation, going on till the change is small (due to discounting by \gamma) - "they go out of the agent's horizon, in a soft way"
+
+Key idea: time limited values
+
+Define V_{k}(s) to be the optimal value of s if the game ends in k more steps
+This is exactly what depth-k expectimax would give if we start from s. 
+The rewards come when the change nodes resolve, that is, at the marked places:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 07:26:25
+[[file:assets/screenshot_2017-12-22_07-26-25.png]]
+
+This :top: is V_{2}
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 07:26:50
+[[file:assets/screenshot_2017-12-22_07-26-50.png]]
+
+
+What do these values look like?
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 07:27:40
+[[file:assets/screenshot_2017-12-22_07-27-40.png]]
+
+No steps left, no rewards possible
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 07:28:40
+[[file:assets/screenshot_2017-12-22_07-28-40.png]]
+
+:top: is V_{2}
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 07:28:56
+[[file:assets/screenshot_2017-12-22_07-28-56.png]]
+
+:top: is V_{5}
+
+When does this converge? Depends on the specific probabilities involved, the discounts etc
+
+How to compute them?
+
+Looking at the graph again:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 07:31:19
+[[file:assets/screenshot_2017-12-22_07-31-19.png]]
+
+All the bottom layer has is lots and lots of copies of the 3 states. Since no timesteps are available from there, they all have value of 0.
+Same idea for V_{1}, V_{2} etc
+
+We can exploit this to compute the values in an efficient way - building this computation from the bottom up, and building it all the way to the top to get the same computation that expectimax would have done
+
+This is called *value iteration*
+
+*** Value iteration
+
+Start with V_{0}(s) = 0; no time steps left means expected reward of 0
+Now, we go up one layer and to get V for a node in that layer, we do a small expectimax over all possible actions and take the max one. We can do this fast because we already have the Vs for the layer below. We do this for all nodes in our layer and then go up another layer
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 07:49:35
+[[file:assets/screenshot_2017-12-22_07-49-35.png]]
+
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 07:49:01
+[[file:assets/screenshot_2017-12-22_07-49-01.png]]
+
+Repeat until convergence. 
+Complexity of each iteration: O(S^{2}A) - we need to do this update for each state S (each node in the layer), and for each state, we go over all actions A, and for each action, we add the transition reward and discounted future rewards for all the states we can end up in from that action
+
+It is good because it doesn't grow with the number of iterations, unlike expectimax
+Bad because it has to touch every state, unlike expectimax
+So, it's a tradeoff over how many states you have, how connected they are and how deeply you want to go in the tree
+
+*This will converge to unique optimal values*, the approximations get better and better with depth, also, the policy may converge long before the values converge
+
+**** Example: Value iteration
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 07:56:54
+[[file:assets/screenshot_2017-12-22_07-56-54.png]]
+
+Remember our racing cars top:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 07:57:17
+[[file:assets/screenshot_2017-12-22_07-57-17.png]]
+V_{0} is easy
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 08:03:00
+[[file:assets/screenshot_2017-12-22_08-03-00.png]]
+
+V_{1} is easy as well
+
+For V_{2}, we run expectimax for each state from there
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-22 08:07:04
+[[file:assets/screenshot_2017-12-22_08-07-04.png]]
+
+Simple to calculate here as well :top: 
+
+*** Convergence
+ - if the tree has maximum depth M, them V_{M} holds the actual untruncated values (the actual expectimax values)
+ - if discount is less than 1
+
+Since we saw that the policies converge faster than the values, we'll see in next lecture if we can exploit search over policy space and not value space. 
+
+* Lecture 9 - Markov Decision Processes II
+
+We had the grid world, where the movement of our bot was noisy. The results were non deterministic, and we had rewards - living reward and terminal reward. The goal of the agent was to maximize the rewards. Also, rewards get discounted at each time step by \gamma
+
+When ever you see MDP, you think "non-deterministic search problem"
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 15:41:11
+[[file:assets/screenshot_2017-12-23_15-41-11.png]]
+
+From s, you take action a, and you land in s' with probability P(s'|s,a) or T(s,a,s') and you get the reward R(s,a,s') if you get there
+
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 15:42:26
+[[file:assets/screenshot_2017-12-23_15-42-26.png]]
+
+We have policy, utilities, values, q-values :top:
+Value is the average outcome over optimal action (since the actions are non-deterministic)
+
+Q-Value is just what you would get if you ran the expectimax computation. 
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 15:45:17
+[[file:assets/screenshot_2017-12-23_15-45-17.png]]
+You get Values from \Delta S, you get Q from chance node
+
+We have the optimal value for a state, V^{*}(s)
+(the star always means optimal)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 15:47:23
+[[file:assets/screenshot_2017-12-23_15-47-22.png]]
+
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 15:47:29
+[[file:assets/screenshot_2017-12-23_15-47-29.png]]
+
+Optimal policy: \pi^{*}(s) - optimal action from state s
+
+A lot of what we do with MDPs is, take problem specification and obtain the optimal policy
+
+Example values of V:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 15:50:45
+[[file:assets/screenshot_2017-12-23_15-50-45.png]]
+
+
+The arrows are the optimal policy
+
+The Q-values look like so:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 15:51:51
+[[file:assets/screenshot_2017-12-23_15-51-51.png]]
+
+The -0.6 q-value on the square to left of -1 square means that if from that square if you choose left action, and then act optimally, you get -0.6 reward. It is not -1 because there are chances that you might not go left, but slip and go north or south etc.
+
+But, for the square to the bottom of -1, the north action's Q-valu is -0.65, (less than -0.6), this is because we cannot go slip and go left from there, so that saving chance is not present and so the risk is higher
+
+Rewards are for the time step, the values are cumulative over all timesteps, till the game ends (if it ends)
+
+** The Bellman Equations
+
+They specify nicely how to be optimal:
+ - take correct first action
+ - keep being optimal
+
+This gives rise to a system of equations.
+
+We need to write some notion of "optimal utility" via expectimax. 
+
+The optimal utility from V:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 16:05:42
+[[file:assets/screenshot_2017-12-23_16-05-42.png]]
+
+:top: just select the the q-state that has the max utility (we can do this since our actions are deterministic and in our control)
+
+The optimal utility from Q:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 16:06:35
+[[file:assets/screenshot_2017-12-23_16-06-34.png]]
+
+:top: the optimal utility from Q-state is just the instantaneous reward we get on getting there and the discounted future reward from there onwards, weighted by the probability of getting there
+
+We can write Q inline
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 16:10:42
+[[file:assets/screenshot_2017-12-23_16-10-42.png]]
+
+This is a system of equations :top: called "Bellman equations". How to solve them?
+
+** Value iteration
+
+It just takes the bellman equations and turns them into a method of computing them via a recurrence relation
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 16:12:54
+[[file:assets/screenshot_2017-12-23_16-12-54.png]]
+
+We have the base case of V_{0}, which is the value we start with (we use the optimal values for k timesteps)
+
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 16:14:29
+[[file:assets/screenshot_2017-12-23_16-14-29.png]]
+
+This becomes a recurrence relation :top:
+
+Expectimax was also another way of solving the bellman system of equations. and they have tradeoffs
+
+** Policy methods
+
+We need methods to find optimal policy, algorithms that work on policies and not on the values (because they converge faster)
+
+*** Policy evaluation
+
+If we have a policy, what the values are?
+
+Earlier, we have all the actions we had to consider:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 16:26:12
+[[file:assets/screenshot_2017-12-23_16-26-12.png]]
+
+Now we once we have the policy, we don't have to consider all the actions, that is decided for us (we still have to consider all states from q-state because we don't know where we'll land). So, the branching at the max node is removed
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 16:27:24
+[[file:assets/screenshot_2017-12-23_16-27-24.png]]
+
+Of course, the value at the root (s) may not be optimal (if policy is not optimal)
+
+We can compute the optimal value of a state under the given policy \pi, defined as V^{\pi}(s)
+
+V^{\pi}(s) = expected total discounted rewards starting in s and following \pi
+
+We just remove the max we have from earlier since the action is fixed:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 16:30:35
+[[file:assets/screenshot_2017-12-23_16-30-35.png]]
+
+We need policy evaluation because we'll have algorithms that look at a policy, see if it is bad and find ways to improve it
+**** Example:
+Consider these 2 policies:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 16:35:12
+[[file:assets/screenshot_2017-12-23_16-35-12.png]]
+
+They'll have the values:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 16:35:25
+[[file:assets/screenshot_2017-12-23_16-35-25.png]]
+
+How do we get these values? 
+ - Idea 1
+Use Bellman equations and make them updates, (*just like Value iteration*)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 16:37:56
+[[file:assets/screenshot_2017-12-23_16-37-56.png]]
+
+We start with a base case and build our way up towards k timesteps, in a dynamic programming like fashion. This methods makes sense only if the number of states is small - O(S^{2})
+
+(In value iteration was S^{2}A, since we had to iterate thru all actions, here we don't since the actions are fixed for us)
+
+ - Idea 2
+
+Without the maxes, Bellman Equations are just a linear system of equations - we can solve using any linear system solver.
+
+*** Policy extraction
+Earlier, we had the policy and we tried to figure out how good it was by computing the values
+Now we do the opposite, we get the optimal values, how do we extract the policy?
+
+Eg: we get this:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 16:43:20
+[[file:assets/screenshot_2017-12-23_16-43-20.png]]
+
+How do we get the arrows?
+
+We just choose the q-state with max value.
+But we don't have q-states, so we need to do mini-expectimax of one step:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 16:46:24
+[[file:assets/screenshot_2017-12-23_16-46-24.png]]
+
+Here, :top: arg max means select the action a that yields the maximum (achieves the maximum)
+We have to do a unroll one step look-ahead of expectimax :top:
+
+If we have the q-values, it is simple:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 16:49:06
+[[file:assets/screenshot_2017-12-23_16-49-06.png]]
+
+
+We just select the action that has the max q-value. 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 16:49:59
+[[file:assets/screenshot_2017-12-23_16-49-59.png]]
+Here, we don't have to do the unroll, it is already done for us
+
+Important lesson: much easy to select actions from q-values that values
+
+*** Policy iteration
+
+It combines the idea of evaluation of policy with the idea of improving the policy on the basis of those values
+
+There are problems with Value iteration:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 16:53:54
+[[file:assets/screenshot_2017-12-23_16-53-54.png]]
+ - VI just mimics the bellman equations
+ - it is slow, in each iteration,
+   - it looks at each state (V), and in each state
+     - it looks at each action (q-state), and in each action,
+       - it looks at each outcome (immediate reward + discounted rewards)
+ - running complexity: O(S^{2}A)
+
+Also, the max at each state rarely changes - so if you have 100 actions, if 99 were bad in last iteration, they'll be bad this iteration too, but we check them anyway.
+
+The policy converges much before the values.
+
+We use policy iteration!
+
+It has 2 steps:
+ - Policy evaluation
+   - calculate utilities for some fixed policy (not optimal ((yet)) ) until convergence
+ - policy improvement
+   - update policy using one-step look-ahead with resulting converged (but not optimal) utilities as future values
+ - repeat until policy converges
+
+It is a optimal algorithm and it can converge much faster under some conditions (when the max action doesn't change much)
+
+Equations:
+
+ - Evaluation:
+   - for fixed current policy \pi, find values with policy evaluation
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 17:16:45
+[[file:assets/screenshot_2017-12-23_17-16-45.png]]
+
+This is fast since we don't have the max
+
+ - Improvement:
+   - for fixed values, get a better policy using policy extraction
+   - one step look ahead
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 17:22:12
+[[file:assets/screenshot_2017-12-23_17-22-12.png]]
+The improvement step is still slow, it needs to look at all actions
+But that is okay, since we do a evaluation steps much more than the improvement state
+
+**** Comparison
+ - Both value iteration and policy iteration do the same thing (both compute optimal values)
+ - In value iteration
+   - every iteration updates both the values (and implicitly) the policy
+   - we don't track the policy but taking the max over actions implicitly recomputes it
+
+ - in policy iteration:
+   - we do several passes that update utilities with fixed policy
+   - after policy is evaluated, a new policy is chosen
+   - the new policy is better (or we are done)
+
+They both take MDP and give optimal values and policies as output
+
+We have a lot of algorithm now:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 17:28:53
+[[file:assets/screenshot_2017-12-23_17-28-53.png]]
+
+They are all variations of Bellman updates, all turned into one-step lookahead.
+They differ only in whether we plug in fixed policy or max over actions
+
+** Double Bandits
+How does the MDPs connect to reinforcement learning?
+
+Imagine we have 2 slot machines: This is an MDP :arrow_down:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 17:34:49
+[[file:assets/screenshot_2017-12-23_17-34-49.png]]
+
+If we play the blue one, we always get $1
+The red bandit wins $2 75% of the time, 0 25% of the times
+
+Imagine there are only 100 time steps.
+We can compute the expected values offline:
+
+Blue: 100
+Red: 150
+
+We got this using our knowledge of the game, we did not play
+
+Now, let's play. We can play 10 rounds, we win 12$ say. Here, we actually played.
+
+Now, let's assume we don't have the probabilities that we had last time:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 17:38:55
+[[file:assets/screenshot_2017-12-23_17-38-55.png]]
+
+Optimal policy? We don't know
+Here, we need to play to learn
+
+Let's play. 
+Red: 0, 0, 0, 2, 0, 2, 0, 0, 0, 0
+Blue: 1, 1, 1, 1, 1, ...
+
+Here the setting is different. There is still an MDP but you don't know it's parameters.
+You have to do some discovery. You have to learn!
+ - what we did was reinforcement learning
+ - there was an MDP but we couldn't solve it with just computation
+ - we needed to figure it out
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 17:41:56
+[[file:assets/screenshot_2017-12-23_17-41-56.png]]
+
+We have to balance exploration and exploitation.
+Regret is the difference in the rewards that you would have got if you had perfect information vs what you got (due to discovery/exploitation of suboptimal action etc)
+
+* Lecture 10 - Reinforcement Learning
+
+The agent has actions available to it, it chooses an action
+The environment gives back a reward, and it gets back a "percept", the agent sees what happens (it give back a state)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 18:12:29
+[[file:assets/screenshot_2017-12-23_18-12-29.png]]
+Basic idea:
+ - receive feedback in form of rewards
+ - agent's utility is defined by the reward function
+ - must learn to act so as to maximize expected rewards
+ - all learning is based on observed samples of outcomes (not everything that might have happened)
+
+Training is trying new variations, seeing what works
+
+
+** Reinforcement learning
+
+We still assume MDPs, but we do not know the transition function T(s, a, s') or R(s, a, s'). We still want to learn the best policy to act optimally \pi^{*}(s)
+
+So, we need to try things out - not all of which work optimally.
+Imagine something like our previous car example, just that we don't know what fast and slow do, or what rewards you get. 
+
+Critical difference now vs last unit (where we just learned to solve fully known MDPs, offline, by using vanilla math (double bandit), or using value iteration or policy iteration) is that now we have to perform the (maybe suboptimal) things to know that it is bad
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 20:41:18
+[[file:assets/screenshot_2017-12-23_20-41-18.png]]
+
+*** Model based learning
+So, how do we learn how to act when we don't know the T or R?
+
+We can still use VI or expectimax. That is what model based learning does, it reduces the reinforcement learning problem to a known MDP by assuming some values for T and R and taking them to be correct
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 20:43:39
+[[file:assets/screenshot_2017-12-23_20-43-39.png]]
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 20:44:46
+[[file:assets/screenshot_2017-12-23_20-44-46.png]]
+
+How do we decide to take some action s?
+Whenever we are on state s and have decided on some action a (somehow), we discover some states s' outcomes
+We count them, normalize them, we get probabilities - this is the estimate of the T for that s and a pair (state and action pair)
+In addition, we also discover the reward associated by s and a when we experience that transition
+
+Example: Model based learning
+
+Let's say we have some policy \pi
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 20:48:54
+[[file:assets/screenshot_2017-12-23_20-48-54.png]]
+
+We follow this for some turns and we get this:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 20:49:10
+[[file:assets/screenshot_2017-12-23_20-49-10.png]]
+
+
+We can get probabilities for each transition from these simulations:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 20:54:56
+[[file:assets/screenshot_2017-12-23_20-54-56.png]]
+
+
+Now we have a MDP (it may be wrong) but we can solve it.
+
+**** Example: Expected Age
+
+Goal: compute expected age of a group of people
+If you know the probability distribution, it is easy
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 20:56:51
+[[file:assets/screenshot_2017-12-23_20-56-51.png]]
+
+This is exactly what is happening in the MDP, at the chance node. We know the probability distribution (the transition function T) and we just some over.
+But here, we since don't know the distribution, we collect the samples. The more samples I have, the more accurate my prediction of the actual probability - the *Hoeffding's inequality!*
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 21:02:42
+[[file:assets/screenshot_2017-12-23_21-02-42.png]]
+
+This is one way :top:, we can also do this:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 21:03:23
+[[file:assets/screenshot_2017-12-23_21-03-23.png]]
+
+This :top: works because the samples appear with the right frequencies. 
+
+This is the difference b/w model based and model free
+In model based, we learn the probability distribution and reduce it to the case of MDP
+In model free, we take the samples as they come and average them together.
+
+Algos for model free are much simpler.
+
+*** Model free learning
+
+Here, we don't construct the model of the transition function. We just take actions and everytime we take an action, we compare what we thought was happening to what did happen. Whenever something is better or worse that we expected, we update our hypothesis. 
+So, in model free learning, we track the values of interest themselves, not the transition functions or rewards
+
+**** Passive RL
+The agent doesn't perform the activities, but someone does and the agent gets to observe that someone and learn from it
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 21:17:54
+[[file:assets/screenshot_2017-12-23_21-17-54.png]]
+
+The agent is monitoring, not controlling
+In Passive RL, we won't try to find out how to act optimally. But essentially learn the state values (just like policy evaluation)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 21:20:13
+[[file:assets/screenshot_2017-12-23_21-20-13.png]]
+
+The learner is along for the ride, no choice about what actions to take, just execute the policy and learn from experience. This is not offline planning we are actually taking the actions in the world (just passively, without active control over them)
+
+***** Direct evaluation
+
+Goal: Compute values for each state under \pi (not the transition function or the rewards)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 21:39:50
+[[file:assets/screenshot_2017-12-23_21-39-50.png]]
+
+Example: Direct evaluation
+(note here we take the cumulative reward from each state, just like when we would compute the V from a particular state with fixed policy \pi using policy evaluation)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 21:50:59
+[[file:assets/screenshot_2017-12-23_21-50-59.png]]
+
+We were in B twice, each time we received 8, so \to 8
+We were in D many times, we received 10, 10, 10, so \to 10
+We were in A once, -10, so \to -10
+We were in E twice, 8, -12, so \to -2
+
+Here, when we execute over and over and over, the variance will die out and we'll understand that some of the states are good and some of them are bad and so this approach will work out in the end.
+
+From E, you get to C. From E you get -2, from C you get +4. How can E be bad, but the state it leads to everytime, is good?
+Similarly, look at B, B is always good, but it leads to C which is mediocre
+
+So, we have thrown out a lot of information about the interconnected-ness of the states
+
+What's good about direct evaluation?
+ - it's easy to understand
+ - doesn't require any knowledge of T, R
+ - it eventually computes the correct average values, using just sample transitions
+
+What's bad about it?
+ - it wastes information about state connections (we are learning each state independently)
+ - each state must be learned separately
+ - so, it takes long to learn (and a lot of samples as well)
+
+To fix the problems :top:, *why not use policy evaluation*?
+We weren't doing that till now, we were just dumb computing the probabilities
+
+We had this in policy evaluation:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 22:04:00
+[[file:assets/screenshot_2017-12-23_22-04-00.png]]
+
+"If you have values for a state, replace them with one step look ahead (which here is just the weighted average of immediate reward plus future values)"
+
+We cannot do this but :top:, because we don't have T and R (not even estimates, because we are using model free approach)
+
+But we have a proxy for them in model free as well - our estimates from experience
+
+Idea: Take samples of outcomes s' (by doing the action)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 22:11:21
+[[file:assets/screenshot_2017-12-23_22-11-21.png]]
+
+We have this :top:, but when we actually take the action, it becomes:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 22:11:48
+[[file:assets/screenshot_2017-12-23_22-11-48.png]]
+
+And the equation is:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 22:11:56
+[[file:assets/screenshot_2017-12-23_22-11-56.png]]
+
+We have an estimate of what the score is going to be from s. The reward we know, because we just got it and discounted future value is somewhere in the table that I am maintaining (and it's wrong probably, but that's okay)
+
+We do this multiple times and we get this:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 22:13:10
+[[file:assets/screenshot_2017-12-23_22-13-10.png]]
+
+When we have a lot of samples from this same state s and action a - we saw various actions s' - each had a reward
+We can say this now about the state s:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 22:13:52
+[[file:assets/screenshot_2017-12-23_22-13-52.png]]
+
+We can say that on average we get this value :top:
+How do you get back to s and take the second sample? You cannot keep executing the same action from the same state
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 22:16:01
+[[file:assets/screenshot_2017-12-23_22-16-01.png]]
+
+We need to be somehow be satisfied with that one sample we get.
+
+
+***** Temporal Difference Learning
+Big idea: learn from every experience
+ - update V(s) each time we experience a transition (s, a, s', r) (use the one data point, one sample we get from :top: and go with it)
+ - this is called "Temporal Difference Learning" because we compare our current estimate of a value with what we actually see - we have a running average
+ - the hope is that likely outcomes s' will contribute updates more often
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-23 22:19:29
+[[file:assets/screenshot_2017-12-23_22-19-29.png]]
+
+:top: we still have just one datapoint, we still don't worry about how to choose actions, that comes later. We are still moving our hypothesis of values towards what we see happen - we'll use some kind of running average
+
+We have some estimate V^{\pi}(s)
+
+We take some action according to what \pi tells us and we land in s' and get some reward: 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 06:23:17
+[[file:assets/screenshot_2017-12-24_06-23-17.png]]
+:top: is our single sample datapoint
+
+We add that to our estimate running estimate V^{\pi}(s)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 06:23:41
+[[file:assets/screenshot_2017-12-24_06-23-41.png]]
+
+Rearranging:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 06:24:52
+[[file:assets/screenshot_2017-12-24_06-24-52.png]]
+
+Take your value of the original estimate and add to it what you thought would happen vs what actually happened (that's the error, so we adjust our estimate to incorporate this new information)
+
+Larger \alpha learns faster, smaller \alpha does a better job of balancing across experiences
+
+Example of TDL: we start with all V estimates as 0, as we have no idea what will happen
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 06:28:22
+[[file:assets/screenshot_2017-12-24_06-28-22.png]]
+
+If you go north, no updates - since you expected to get 0, you get 0 (since living reward is 0)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 06:29:19
+[[file:assets/screenshot_2017-12-24_06-29-19.png]]
+
+
+Till here nothing happens:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 06:30:27
+[[file:assets/screenshot_2017-12-24_06-30-27.png]]
+
+But when you exit, you get +1, so you adjust your V(s) to 0.5 (we learn that the \alpha is 0.5)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 06:31:06
+[[file:assets/screenshot_2017-12-24_06-31-06.png]]
+
+You play again, when you are in the square to the left of 0.5:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 06:31:32
+[[file:assets/screenshot_2017-12-24_06-31-32.png]]
+
+You think you'll get 0, but you get 0.5 (if you get there successfully) and so the V for it updates 0.25)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 06:32:27
+[[file:assets/screenshot_2017-12-24_06-32-27.png]]
+
+As you exit the last square, it increases to 0.75 etc
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 06:33:03
+[[file:assets/screenshot_2017-12-24_06-33-03.png]]
+
+This is TDL - we are adjusting our hypothesis to what is actually happening.
+
+And this is how knowledge propagates.
+Now, consider this case where we are at the blue dot:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 06:40:54
+[[file:assets/screenshot_2017-12-24_06-40-54.png]]
+
+We are here for the first time. But as soon as we go north, the value of that square will get very high, even when we hadn't been there ever before - this is the difference that temporal difference learning makes
+
+(In the earlier scheme of things, direct evaluation, we would have had to count the experiences from that square independently without any regard to the experiences of the 0.98 square or 1.00 square)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 06:43:05
+[[file:assets/screenshot_2017-12-24_06-43-05.png]]
+ 
+
+Now if you do this many times, you learn everything there is to learn about the MDP
+
+*How do we choose actions?* - we'll learn that later
+
+***** Exponential Moving average
+
+The running interpolation update is:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 06:44:28
+[[file:assets/screenshot_2017-12-24_06-44-28.png]]
+
+This makes recent samples more important.
+The form of this :top: is:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 06:45:16
+[[file:assets/screenshot_2017-12-24_06-45-16.png]]
+
+So, we can see that recent examples have more weight. If \alpha is 1, the new examples have all the weight
+
+We don't average evenly because the estimate of the future state is better in the recent states so we want to listen to them more. (the rewards stay the same)
+
+If we decrease the learning rate (\alpha), we can converge
+
+***** Problems with TD value learning
+- this is a model free way of doing things
+- we mimic Bellman updates with running sample averages (bellman equations are smeared across space and time here)
+- But we cannot use this thing to choose actions
+
+This is because to do action selection, we either need to do one step expectimax - which we cannot do because we don't have T and R
+Or we need Q values (and then action selection is simple - pick the action with largest q-value)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 06:52:46
+[[file:assets/screenshot_2017-12-24_06-52-46.png]]
+
+This makes action selection model free as well.
+
+**** Active RL
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 06:55:52
+[[file:assets/screenshot_2017-12-24_06-55-52.png]]
+
+- Full reinforcement learning (we don't want to just learn values, we want optimal policy (like value iteration did)
+  - we still don't know T or R
+  - But we want to select actions
+
+Here, learner makes choices. We are faced with the fundamental tradeoff: exploration vs exploitation
+This is NOT offline planning, you take actions and find out what happens (this leads to regret)
+
+We eventually want to learn optimal thing (policy)
+
+***** Q-value iteration
+What were the algorithms we already have for computing optimal values:
+ - Value Iteration
+   - start with V_{0}(s)=0
+   - given V_{k}, use it to compute k+1 (the layer above it) values for all states
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 07:07:34
+[[file:assets/screenshot_2017-12-24_07-07-34.png]]
+We stuck a layer of expectimax (one layer of optimality) on top of our old (incorrect approximations) - so this is correct
+
+This cannot be done with samples, because of the max - we can use samples to only compute estimates of averages, not max-es
+
+So, it makes sense to learn q-values. Write down a version of value iteration that works with Q-values
+ - start with Q_{0}(s, a) = 0
+ - given Q_{k}, calculate depth k+1 (that is, the layer above) q-values for all q-states
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 07:13:34
+[[file:assets/screenshot_2017-12-24_07-13-34.png]]
+
+Read the equation carefully, :top:, we just moved the recurrence half a level down
+We got rid of the max now and we replaced the value of the next layer with max over Q_{k} (since we don't have the values now). But we have a new max over Q_{k} (Q of the layer below us, that is okay since we already know all the q-values for that layer)
+
+Everytime we are in a state s, take some action a, when we do this, we learn about how good (s, a) is
+
+So, the sample we get is: (s, a, s', r)
+
+We maintain a table that looks like this:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 07:18:03
+[[file:assets/screenshot_2017-12-24_07-18-03.png]]
+
+We update our estimate of Q values like we did with V in TDL :top: :top:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 07:19:06
+[[file:assets/screenshot_2017-12-24_07-19-06.png]]
+
+:top: knowledge of new sample - we don't need to weight by T because the action is resolved and we have the s' state that we landed in. Also, we don't know T
+
+We incorporate this new estimate into a running average:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 07:20:40
+[[file:assets/screenshot_2017-12-24_07-20-40.png]]
+
+
+"We learned Values using bellman + TDL (we used bellman equations to get the value of that sample and we used TDL to incorporate that sample into our running average), that worked, but we could not choose actions using that - because to choose actions, we needed to compute max over all the Q-values (or we needed to know T and R). So we decided to apply learn q-values themselves (using TDL) and now our action is just max q-value"
+
+****** Example:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 07:24:00
+[[file:assets/screenshot_2017-12-24_07-24-00.png]]
+
+:top: start with all 0s
+
+Nothing happens in the first iteration, we just receive the exit award on exiting
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 07:24:54
+[[file:assets/screenshot_2017-12-24_07-24-54.png]]
+
+(We received 10, the learning rate was 0.5)
+
+Now, consider this:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 07:25:25
+[[file:assets/screenshot_2017-12-24_07-25-25.png]]
+
+Here, we'll learn that when we take action RIGHT, we get 5, so the q-value for that particular action will get updated to 2.5
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 07:26:21
+[[file:assets/screenshot_2017-12-24_07-26-21.png]]
+
+If we go east several times:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 07:26:47
+[[file:assets/screenshot_2017-12-24_07-26-47.png]]
+
+If we jump off a cliff, we learn about that particular action:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 07:27:12
+[[file:assets/screenshot_2017-12-24_07-27-12.png]]
+
+This doesn't take away (or diminish) what we learned about the q-value of the RIGHT action from that square
+Also, this presence of low score doesn't reduce the q-values of "right" action on the previous squares since they take the max over the q-values in the next square for their estimates (they believe that the agent will act optimally)
+
+
+****** Q-learning properties
+
+Amazing result: Q-learning converges to optimal policy - even when you don't follow it (like in the previous example, we jumped off the cliff, we did not act optimally, but the assumption in the formula was that we will and we learned)
+
+This is called "off-policy learning"
+
+Also, you have to explore enough, and make the learning rate small enough eventually
+
+Next time we'll see how to select actions and what to do when the state space is so large you cannot keep a large table around
+
+* Lecture 11 - Reinforcement Learning II
+
+We imagine that the real world is a Markov decision process. 
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 07:37:14
+[[file:assets/screenshot_2017-12-24_07-37-14.png]]
+
+We don't know T or R, so must try things out
+Big idea: compute all averages over T using sample outcomes (since we do not have T, this is our best bet at being able to figure out the MDP in spite of that)
+
+We know this so far:
+Bellman equations are the equations that relate value of one state, with the value after one action
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 07:53:38
+[[file:assets/screenshot_2017-12-24_07-53-38.png]]
+
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 07:53:54
+[[file:assets/screenshot_2017-12-24_07-53-54.png]]
+
+Everything is just Bellman equations (which is actually just expectimax) written in various ways
+
+Value learning with TDL helped us evaluate fixed policy \pi - but we could not choose actions, so we shifted to q-learning
+
+** Model Free (temporal difference) Learning
+
+Experience the world thru episodes: (s, a, r, s', a', r', s'', a'', r'', s''', ...)
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 08:02:14
+[[file:assets/screenshot_2017-12-24_08-02-14.png]]
+
+
+Update estimates each transition (s, a, r, s')
+Over time, updates will mimic Bellman updates
+
+** Q-learning
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 08:03:45
+[[file:assets/screenshot_2017-12-24_08-03-45.png]]
+
+But we can't compute this update without knowing T, R.
+
+- we get a sample: (s, a, r, s')
+
+On the basis of this sample, we can conclude about the state (s, a):
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 08:06:58
+[[file:assets/screenshot_2017-12-24_08-06-58.png]]
+
+We incorporate this knowledge into our running average
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 08:07:30
+[[file:assets/screenshot_2017-12-24_08-07-30.png]]
+
+*** Q-learning properties
+- Q-learning converges to optimal policy - even if you're acting sub-optimally
+- this is called "off policy learning"
+- you have to explore enough and decrease learning rate wisely
+
+
+*** Exploration vs Exploitation
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 08:11:07
+[[file:assets/screenshot_2017-12-24_08-11-07.png]]
+
+How to explore?
+ - simplest: random actions (\epsilon-greedy)
+   - every time step, flip a coin
+   - with small probability \epsilon, act randomly
+   - with large probability, 1-\epsilon, act optimally
+
+ - problem with random actions:
+   - eventually we explore the space, but we keep thrashing around once the learning is done
+   - one solution: lower \epsilon over time
+   - another solution: exploration functions
+
+
+ - exploration functions
+   - explore areas whose badness is not (yet) established, eventually stop exploring (random doesn't stop this)
+   - "in the face of uncertainty, have optimism"
+
+One way:
+   - takes a value estimate u and a visit count n, and returns an optimistic utility, eg: \fnof(u, n) = u + k/n
+We added the bonus to utility which decreases with visits
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 08:21:32
+[[file:assets/screenshot_2017-12-24_08-21-32.png]]
+
+This propagates the "bonus" back to states that lead to unknown states as well
+
+*** Regret
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 08:23:10
+[[file:assets/screenshot_2017-12-24_08-23-10.png]]
+
+Even if you learn the optimal policy, you still make mistakes along the way - 
+Regret is a measure of your total mistakes cost
+ - the difference between you expected rewards including when you were suboptimal and optimal expected rewards
+
+Minimizing regret goes beyond learning to be optimal - it requires optimally learning to be optimal - making only the minimum mandatory mistakes that were required to become optimal
+
+Example: random exploration has higher regret compare to exploration functions
+
+** P1 Mini-Contest
+Finding the shortest path to gobble up all dots:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 08:33:09
+[[file:assets/screenshot_2017-12-24_08-33-09.png]]
+
+
+3rd place: William Mok
+ - started out optimizing A* with caching
+ - *tried all possible ways to finishing the maze going for the closest dot first rather than all possible paths* - this restriction makes things simple
+ - skipped paths if algorithm knew it would not be a solution
+
+2nd place:
+ - described optimal solutions to subproblems
+ - linked subproblem to subproblem
+ - solves optimally when less that 20 dots left (this is what chess does, when the game is complex, do reasonably (optimally in the sub graph, cut section of the graph - which is suboptimal in the large picture) and near the end game, act optimally)
+
+1st place:
+ - based off of cut points, split the graph into N smaller graphs, solve each independently
+ - in order to solve subgraph, apply many optimizations, (remove food at cutpoint, remove food in tunnels, run fixpoint iteration of A* etc)
+ - finally, adjoin paths from each of the subgraphs in order to get full graph solution. Essentially TSP problem
+
+
+
+** Approximate Q-Learning
+Too many states to keep all in memory
+When we learn that ghost is scary thru one experience, we should transfer that to similar states
+We want to be able to generalize across states because there are so many of them
+
+- Basic Q-learning keeps a table of all q-values
+  - in realistic situations, we cannot possibly learn about every single state
+    - too many states to visit them all in training
+    - too many states to hold the q-tables in memory
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 08:43:43
+[[file:assets/screenshot_2017-12-24_08-43-43.png]]
+
+
+We want to generalize:
+ - learn about small number of training states from experience
+ - generalize that experience to new, similar situations
+ - this is a fundamental idea in Machine learning and we'll see it here as well
+
+*** Example: Pacman
+If we know that the first state is bad, we know nothing that the 2nd is bad. Heck, we don't know that the 3rd is bad as well, because it's missing a dot and so the state is different
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 08:46:51
+[[file:assets/screenshot_2017-12-24_08-46-51.png]]
+
+
+*** Feature based representations
+Solution: describe a state using a vector of features (properties)
+ - features are functions from states to real numbers (often 0/1) that capture important properties of the state
+ - example features:
+   - distance to closest ghost
+   - distance to closest dot
+   - number of ghosts
+   - is pacman in a tunnel
+   - etc
+
+We can also describe a q-state (s, a) with features (eg: actions moves agent closer to food)
+
+*** Linear Value functions
+
+Using a feature representation, we can write q function (or value function) for any state using a few weights
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 08:57:28
+[[file:assets/screenshot_2017-12-24_08-57-28.png]]
+
+Advantage: our experience is summed up in a few powerful numbers
+Disadvantage: states may share features but actually be very different in value - so we have to come up with great features
+
+*** Approximate Q-learning
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 09:06:12
+[[file:assets/screenshot_2017-12-24_09-06-12.png]]
+
+The Q value is a linear function of the features now weighted by their weights
+
+Q-learning with linear Q-functions:
+ - transition: (s, a, r, s')
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 09:09:21
+[[file:assets/screenshot_2017-12-24_09-09-21.png]]
+
+The difference, (the error term) is the difference between what you thought you would get from that state (Q(s,a)) and what you actually get (the first term on RHS)
+
+How do we incorporate this?
+In the old scheme of things:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 09:10:42
+[[file:assets/screenshot_2017-12-24_09-10-42.png]]
+So, we had our Q value around, we nudged it in the direction of the difference
+
+But now we don't have the Q-values around (since they are so large etc), so we have to update the weights 
+The reason is, our q-value wasn't high/low enough for what we actually got, so we want to change the weights so that it becomes closer to the actual q-value now
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 09:12:36
+[[file:assets/screenshot_2017-12-24_09-12-36.png]]
+
+We increase all the weights weighted by the features
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 09:15:03
+[[file:assets/screenshot_2017-12-24_09-15-03.png]]
+
+
+This is the parametric option :top:
+We are encapsulating our knowledge by a set of parameters, the weight vector
+
+Another option is that your knowledge is encapsulated in your experiences, you stay closer to the data - this is the non-parametric method.
+As you get more data, non-parametric is better, but takes longer to learn - general tradeoff b/w parametric and non-parametric methods
+
+*** Example: Q-pacman with approximate q-learning (feature based q-learning)
+
+Let's start with this simple hypothesis
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 09:20:42
+[[file:assets/screenshot_2017-12-24_09-20-42.png]]
+
+
+Imagine our start state was s (left hand side board)
+the weights are arbitrary, (or learned with a few iterations)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 09:24:16
+[[file:assets/screenshot_2017-12-24_09-24-16.png]]
+
+Our estimate of the Q-value from that place forward is +1
+But when we went there, we got eaten by the ghost and we get -500 reward, and the Q value for future steps is 0 since the game ended
+
+So, we update the weights and get a new hypothesis. (\alpha is the learning rate)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 09:25:25
+[[file:assets/screenshot_2017-12-24_09-25-25.png]]
+
+We get this hypothesis :top: after the update. Note how earlier we really liked the dots and disliked the ghosts a little bit. Now, we like the dots lesser and dislike the ghosts much more (compare to previous hypothesis)
+
+We learn really quickly. This works nicely for similar states.
+
+
+*** Q-learning and least squares
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 09:28:15
+[[file:assets/screenshot_2017-12-24_09-28-15.png]]
+
+
+We saw this in linear regression
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 09:29:36
+[[file:assets/screenshot_2017-12-24_09-29-36.png]]
+
+To figure out the weights, we minimized the mean squared error
+
+Our updates in q-learning look like so:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 09:33:25
+[[file:assets/screenshot_2017-12-24_09-33-25.png]]
+
+
+*** Policy search
+- problem with q-learning (even approximate q-learning)
+  - we are trying to optimize the q-value of the states, by adjusting the weights. It tries to get the magnitudes right, but not the ordering of the q-values
+  - often feature based policies that work well (win games, maximize utilities) aren't the ones that approximate V/Q best
+  - this distinction between modeling and prediction again later in the course
+
+Solution: learn *policies* that maximize rewards, not the values that predict them
+
+Policy search: start with an ok solution (eg: q-learning) then fine-tune by hill climbing on feature weights
+
+Simplest policy search:
+ - start with an initial linear value function or q-function
+ - nudge each feature weight up and down and see if your policy is better than before
+
+Problems:
+ - how do we tell the policy got better?
+ - need to run many sample episodes
+   - if they are a lot of features, this can be impractical
+
+Better methods exploit lookahead structure, sample wisely, change  multiple parameters
+
+
+*** Conclusion
+
+We completed the first part, search and planning
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 09:47:25
+[[file:assets/screenshot_2017-12-24_09-47-25.png]]

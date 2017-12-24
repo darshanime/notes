@@ -1,0 +1,108 @@
+* Inverse filtering for hidden markov models
+
+Consider a weather markov chain, 
+it is sunny or rainy (2 states, X = {x_{}_{sunny}, x_{rainy}}) and there is a transition matrix which gives us the conditional probability table of X_{t}|X_{t-1}:
+
+So, if we know that 
+P(x_{sunny, 1}) = known
+P(x_{sunny, t}) = \Sigma P(x_{sunny, t}|x_{t-1})P(x_{t-1}) summation over x_{t-1} where x \in X
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-20 07:20:04
+[[file:assets/screenshot_2017-12-20_07-20-04.png]]
+
+Now, in a HMM, we have observations as well, so that we can keep our belief upto date
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-20 07:25:33
+[[file:assets/screenshot_2017-12-20_07-25-33.png]]
+
+X is the state (rainy? Sunny?), E is the evidence variable, (did the prof carry umbrella?). The evidence E depends only on the state of X
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-20 07:27:02
+[[file:assets/screenshot_2017-12-20_07-27-02.png]]
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-20 07:27:13
+[[file:assets/screenshot_2017-12-20_07-27-13.png]]
+Transitions: defines how the state at t depends on states in the past (this is independent of the evidence, the evidence is just observation, not influencing the transitions)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-20 07:30:06
+[[file:assets/screenshot_2017-12-20_07-30-06.png]]
+
+
+Emissions: what is the probability of seeing the evidence for each underlying state (so, if there is rain, the umbrella is present with probability 0.9 for eg)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-20 07:29:53
+[[file:assets/screenshot_2017-12-20_07-29-53.png]]
+
+And we have B - the belief (the posterior) - which represents what we know about the state of the system
+So, we have:
+    B_{t}(X) = P_{t}(X_{t}|e_{1}, ...., e_{t})
+
+We start with B_{1}(X) in an initial setting, usually uniform
+
+If the state space (|X|) is too large, it will be difficult to make inference from the belief (posterior) distribution
+So, we can do approximate inference:
+ - track samples of X, not all values
+ - samples are called particles
+ - more the samples, more the probability of the state being that
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-21 06:57:25
+[[file:assets/screenshot_2017-12-21_06-57-25.png]]
+
+So, here :top: instead of having 9 numbers, (we have 9 possible states here) (9 numbers representing the probability of being there, inferred from the posterior), we can have 10 particles and the probability of being in a particular state \prop #particles there are in that square
+
+We start with particles uniformly placed, and then we move them. When we observe evidence, the samples get weights, and then we resample according to the samples weight in their state
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-21 07:05:01
+[[file:assets/screenshot_2017-12-21_07-05-01.png]]
+
+The paper aims to take a HMM, and looking at the sequence of it's state posteriors, give us the :
+- corresponding sequence of observations
+- observation likelihoods probabilities (the matrix which gives us the accuracy of the sensors)
+
+We have:
+ - X \to the state vector
+ - y_{k} \to the evidence vector (what we observed)
+ - P \to the transition probability matrix for X, P_{ij} is the P of going from i to j
+ - \pi_{0} \to posterior (at time 0 here)
+ - B \to the matrix representing how accurate the sensors are (what we want to find out)
+
+We'll get X, B from \pi
+
+The update equation is simple:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-21 07:10:00
+[[file:assets/screenshot_2017-12-21_07-10-00.png]]
+
+We'll assume we know P
+
+3 problems we'll solve:
+ - Inverse filtering with unknown observations
+   - we have P, B, sequence of posteriors
+     - we'll reconstruct observed evidence (observations)
+
+ - Inverse filtering with unknown sensor
+   - we have P, sequence of posteriors, sequence of observations
+     - we'll reconstruct B (how accurate are the sensors?)
+
+ - Inverse filtering with unknown sensor and unknown observations
+   - we have P, sequence of posteriors (noisy posteriors okay)
+     - we'll reconstruct B (how accurate are the sensors?) And sequence of observations
+
+
+

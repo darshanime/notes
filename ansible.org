@@ -1,0 +1,390 @@
+Crash course in Ansible
+http://people.redhat.com/mlessard/qc/presentations/Mai2016/AnsibleWorkshopWA.pdf
+
+* Introduction to ansible
+
+"Ansible" is a fictional machine capable of superluminal communication (faster than light communication)
+
+Use cases:
+- provisioning
+- configuration management
+- application deployments
+- rolling upgrades - CD
+- security and compliance
+- orchestration
+
+Ansible has a powerful and simple declarative language. (You just specify what you want, not it should be done)
+
+Key components:
+- Modules (Tools)
+  - bits of code copied to the target system
+  - executed to satisfy the task declaration
+  - customizable
+  - examples:
+    - cloud modules, database modules, files, monitoring, network, notification modules
+  - commonly used modules:
+    - apt/yum, copy, file, git etc
+- Tasks
+- Inventory
+  - contains the information about hosts in ini format
+
+- Plays
+- Playbook
+
+
+* Ansible Commands
+We can run commands using one of the several modules and giving it the required arguments and specifying the hosts file
+
+- each command needs to have an inventory specified with -i <hosts file>
+- ansible all -i ./hosts -m command -a "uptime"
+- this :top: uses the command module, gives it argument "uptime" and runs it in all hosts mentioned in the hosts file
+- the hosts file has: 
+
+[lh]
+localhost ansible_connection=local
+
+
+We can install HTTPD package:
+ansible all -i ./hosts -m apt -a "name=httpd state=present"
+
+We can start/stop HTTPD service:
+ansible all -i ./hosts -m service -a "name=httpd enabled=yes start=started"
+
+We can test ansible connections to all the hosts using ping
+ansible all -i ./hosts -m command -a "ping"
+
+Or :top: we can use the ping module!
+ansible all -i ./hosts -m ping
+
+* Ansible playbooks
+
+#+begin_src yaml
+- name: This is a play # this is the name of the play
+  hosts: web-servers # we select hosts here
+  remote_user: ec2-user # the arguments for the playbook
+  become: yes # the arguments for the playbook, do you want to be superuser?
+  gather_facts: no # the arguments for the playbook
+  vars: # here we define the variables to be used in the tasks later
+    state: present
+  tasks: # here we define the tasks using modules, giving them args (possibly from the vars)
+    - name: Install Apache
+      yum: name=httpd state={{ state }}
+
+#+end_src
+
+Here, in the tasks, we used the yum module and passed it args like we did in the commands :top:
+
+We can run the playbook like so:
+
+    ansible-playbook play.yml -i hosts
+
+Perform a "dry run"
+    ansible-playbook play.yml -i hosts --check
+
+** Loops
+Loops are possible in the playbooks - the playbooks are a DSL!
+
+#+begin_src yaml
+tasks:
+  - name: Install Apache and PHP
+    yum: name={{item}} state={{state}}
+    with_items:
+      - httpd
+      - php
+
+#+end_src
+
+Many types of loops:
+ - with_nested
+ - with_dict
+ - with_fileglob
+ - with_together
+ - with_sequence
+ - until
+ - with_random_choice
+ - with_first_found
+ - with_indexed_items
+ - with_lines
+
+** Handlers
+We have handlers that run a task if it has "changed" status
+
+#+begin_src yaml
+tasks:
+ - yum: name={{item}} state=installed
+   with_items:
+    - httpd
+    - memcached
+   notify: Restart Apache
+
+handlers:
+ - name: Restart Apache
+   service: name=httpd state=restarted
+#+end_src
+
+** Tags
+
+#+begin_src yaml
+
+tasks:
+  - name: Install Apache and PHP
+    yum: name={{item}} state={{state}}
+    with_items:
+      - httpd
+      - php
+    tags:
+     - configuration
+#+end_src
+
+Tags are used to specify where to run the playbook
+
+    ansible-playbook example.yml --tags "frontend-prod"
+    ansible-playbook example.yml --skip-tags "frontend-prod"
+
+We have special tags like "tagged", "untagged", "all"
+
+
+** Results
+
+We can register task outputs as well (for debugging etc)
+
+#+begin_src yaml
+
+- shell: httpd -v | grep version | awk '{print $3}' | cut -f2 -d'/'
+  register: result
+
+- debug: var=result
+
+#+end_src
+
+** Conditional tasks
+Run these when some condition is satisfied
+
+#+begin_src yaml
+tasks:
+  - name: Install Apache and PHP
+    yum: name={{item}} state={{state}}
+    with_items:
+      - httpd
+      - php
+    tags:
+     - configuration
+    when: ansible_os_family == "RedHat"
+
+#+end_src
+
+** Errors
+
+By default, ansible stops on errors
+We can add ignore_error parameter to skip potential errors
+
+#+begin_src yaml
+  tasks:
+    - name: Install Apache and PHP
+      yum: name={{item}} state={{state}}
+      with_items:
+        - httpd
+        - php
+      ignore_errors: yes
+
+
+    # we can define the condition on which to declare the failure
+    - name: this command prints FAILED when it fails
+      command: /usr/bin/example-command -x -y -z
+      resiter: command_result
+      faield_when: "'FAILED' in command_result.stderr"
+
+    # managing errors using blocks
+  tasks:
+   - block:
+   - debug: msg='i execute normally'
+   - command: /bin/false
+   - debug: msg='i never execute, cause ERROR!'
+   rescue:
+   - debug: msg='I caught an error'
+   - command: /bin/false
+   - debug: msg='I also never execute :-('
+   always:
+   - debug: msg="this always executes"
+
+#+end_src
+
+** Example playbook
+
+
+#+begin_src yaml
+  - name: All server setup
+    hosts: all
+    become: yes # we'll need to be root
+    vars:
+      selinux: permissive
+    
+    tasks:
+      - name: Change SELinux to permissive mode
+        selinux:
+          policy: targeted
+          state: "{{ selinux }}"
+
+      - name: Copy motd file
+        copy: 
+         content: "Welcome to my server!" dest=/etc/motd
+
+  - name: Web server setup
+    hosts: web-server
+    become: yes # we'll need to be root
+
+    tasks:
+      - name: Install HTTPD
+        yum: name=httpd start=present
+        notify: Restart Apache
+
+      - name: Start and enable httpd
+        service: name=httpd restarted=restarted
+        when: just_installed_httpd
+
+
+      - name: Copy hello world
+        copy: 
+         content: "Hello World!"
+         dest: /var/www/html
+
+      - name: Set sshd.conf to not allow root login
+        lineinfile:
+         path: /etc/ssh/sshd_config
+         regexp: "^PermitRootLogin "
+         insertafter: "^PermitRootLogin" line="no"
+         notify: RestartSSH
+
+  handlers:
+    - name: Restart Apache
+      service: name=httpd state=restarted enabled=yes
+    - name: RestartSSH
+      service: name=sshd state=restarted enabled=yes
+#+end_src
+
+Now, we can run this and pass the vars:  ansible-playbook -i ../hosts lab2.yml -e "selinux=permissive"
+
+* Ansible variables
+The precedence of variables:
+1. Extra vars
+2. Task vars (only for the task)
+3. Block vars
+4. Role and include vars
+5. Play vars_files
+6. Play vars_prompt
+7. Play vars
+8. Set_facts
+etc
+
+** Special variables
+Ansible has some special variables as well:
+ - hostvars
+ - group_names
+   - is a list (array) of all the groups the current host is in
+ - groups
+   - is a list of all the groups and hosts in the inventory
+
+
+We use *debug* to view the content
+
+#+begin_src yaml
+- name: debug
+ hosts: all
+
+ tasks:
+ - name: Show hostvars[inventory_hostname]
+   debug: var=hostvars[inventory_hostname]
+
+#+end_src
+
+
+** Templates
+
+Templates allow us to create dynamic configuration files using variables
+
+    - template: src=/mytemplates/foo.j2 dest=/etc/file.conf owner=bin group=wheel mode=0644
+
+Jinja2 is just like Django templating system
+
+#+begin_src html
+{{ variable }}
+{% for server in groups.webservers %}
+ {{ server }}
+{% endfor %}
+
+We have variables
+
+{% set my_var='this-is-a-test' %}
+{{ my_var | replace('-', '_') }}
+
+#+end_src
+
+
+In YAML, template variable must be quoted
+
+#+begin_src yaml
+vars:
+ var1: {{ foo }} <<< ERROR!
+ var2: “{{ bar }}”
+ var3: Echoing {{ foo }} here is fine
+
+#+end_src
+
+* Ansible roles
+
+Roles are a redistributable and reusable collection of:
+ - tasks
+ - files
+ - scripts
+ - templates
+ - variables
+
+Roles are used to setup and configure services
+ - install packages
+ - copying files
+ - starting daemons
+
+Example: Apache, MySQL, Nagios etc
+
+
+Directory structure:
+roles
+ - myapp
+   - defaults
+   - files
+   - handlers
+   - meta
+   - tasks
+   - templates
+   - vars
+
+Create folder structure for the role using
+ansible-galaxy init <role name>
+
+
+#+begin_src yaml
+- hosts: webservers
+ roles:
+ - common
+ - webservers
+ - { role: myapp, dir: '/opt/a', port: 5000 }
+ - { role: foo, when: "ansible_os_family == 'RedHat'" }
+#+end_src
+
+
+#+begin_src yaml
+- hosts: webservers
+ serial: 1
+ pre_tasks:
+ - command:lb_rm.sh {{ inventory_hostname }}
+ delegate_to: lb
+ - command: mon_rm.sh {{ inventory_hostname }}
+ delegate_to: nagios
+ roles:
+ - myapp
+ post_tasks:
+ - command: mon_add.sh {{ inventory_hostname }}
+ delegate_to: nagios
+ - command: lb_add.sh {{ inventory_hostname }}
+ delegate_to: lb
+#+end_src

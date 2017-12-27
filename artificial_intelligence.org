@@ -2911,12 +2911,12 @@ Our updates in q-learning look like so:
 
 *** Policy search
 - problem with q-learning (even approximate q-learning)
-  - we are trying to optimize the q-value of the states, by adjusting the weights. It tries to get the magnitudes right, but not the ordering of the q-values
+  - we are trying to optimize the q-value of the states, by adjusting the weights. It tries to get the magnitudes right, but not the ordering of the q-values. If our q-values were perfect, we'd get the ordering as well, but we aren't perfect and so we don't have the actual ordering.
   - often feature based policies that work well (win games, maximize utilities) aren't the ones that approximate V/Q best
   - this distinction between modeling and prediction again later in the course
 
 Solution: learn *policies* that maximize rewards, not the values that predict them
-
+ 
 Policy search: start with an ok solution (eg: q-learning) then fine-tune by hill climbing on feature weights
 
 Simplest policy search:
@@ -2939,3 +2939,1015 @@ We completed the first part, search and planning
 #+ATTR_ORG: :height 400
 #+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 09:47:25
 [[file:assets/screenshot_2017-12-24_09-47-25.png]]
+
+* Lecture 12 - Probability
+
+This section we'll study *Probabilistic reasoning*
+
+Probability is really important:
+ - diagnosis - from observations, obtain a posterior distribution over disease causing it
+ - speech recognition
+ - tracking objects
+ - robot mapping
+ - genetics
+ - error correcting codes
+
+Later, in Part 3, we'll study *Machine Learning*
+
+** Probability concepts
+ - random variables
+ - joint and marginal distributions
+ - conditional distribution
+ - product rule, chain rule, Bayes' rule
+ - inference
+ - independence
+
+** Ghostbusters demo
+We have a grid, with a ghost somewhere. We have sensors we can use to check various grid. 
+If the ghost is near, we get red, else orange, yellow, red etc
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 14:57:59
+[[file:assets/screenshot_2017-12-24_14-57-59.png]]
+
+If we bust at the grid with the arrow, we'll get a HIT and win the game
+
+The sensors gives us:
+ - on the ghost: red
+ - 1 or 2 away: orange
+ - 3 or 4 away: yellow
+ - 5+ away: green
+
+Example of the conditional distribution for when distance = 3:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 14:59:15
+[[file:assets/screenshot_2017-12-24_14-59-15.png]]
+
+Similarly, we'll have such conditional distributions over all distances 
+
+** Uncertainty
+
+General situation that we have:
+- observed variables (evidence) - the sensors in last example
+  - the agent knows certain things about the state of the world (eg: sensor readings)
+- unobserved variables
+  - these are the variables the agent needs to reason about (with the aid of the evidence variables) - eg: where is the ghost
+- model
+  - agent knows something about how the known variables relate to the unknown variables
+
+Probabilistic reasoning gives us a framework for managing our beliefs and knowledge
+
+
+** Random Variables
+They are a bit like variables we had in CSPs
+
+Examples:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 15:05:14
+[[file:assets/screenshot_2017-12-24_15-05-14.png]]
+
+RV here (like in CSPs) have domains
+ - R is {true, false} aka {+r, -r}
+ - T in {hot, cold}
+ - D in [0, \infin]
+   - D is driving time. This :top: is a continuous random variable, we won't study that here, but similar ideas
+   - the math is similar, the ideas is same. Eg: we deal with integrals and not summations
+ - L (possible locations) in {(0,0), (1, 2), ...}
+
+
+** Probability Distributions
+
+Associate a probability with each value
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 15:08:11
+[[file:assets/screenshot_2017-12-24_15-08-11.png]]
+
+Bad idea to give anything 0 probability :top:
+
+Unobserved random variables have distributions :top: like we saw
+
+Shorthand notation:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 15:10:06
+[[file:assets/screenshot_2017-12-24_15-10-06.png]]
+
+P(hot) is okay because only the random variable T has hot in it's domain
+
+** Joint Distributions
+
+ - We care about JDs because we want to infer things about RVs we haven't observed based on the RVs we have observed
+
+Consider T and W
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 15:14:49
+[[file:assets/screenshot_2017-12-24_15-14-49.png]]
+
+All the individual entries have to be positive and the sum of the entries in the distribution (in the table, or if continuous, the entire continuous distribution) has to be 1
+
+If we have n variables of domain size d, we need to have d^{n} entries in the table. This gets intractable very fast if we have large sets of RVs.
+
+A probabilistic model is just a joint distribution over a set of random variables. Going forward, we'll build models where there won't be so much interactivity in the RVs - there are only indirect interactions b/w most RVs
+
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 15:21:46
+[[file:assets/screenshot_2017-12-24_15-21-46.png]]
+
+
+Just like in CSPs, we were able to work with a small set of constraints b/w variables
+
+In CSPs, we had True/False values that dictated weather the variable was allowed to have that instantiation or not whereas here, we have probabilities specifying how likely is a particular outcome
+
+Usually, we are interest in Events which are a set of outcomes
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 15:28:30
+[[file:assets/screenshot_2017-12-24_15-28-30.png]]
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 15:28:56
+[[file:assets/screenshot_2017-12-24_15-28-56.png]]
+
+Example:
+ - P(hot AND sunny) = 0.4
+ - P(hot) = 0.4 + 0.1 = 0.5
+ - P(hot OR sunny) = 0.4 + 0.1 + 0.2 = 0.7
+
+Usually, the events we care about are partial assignments, like P(hot)
+
+** Marginal Distributions
+
+MDs sub-tables of the original joint distribution that contains a subset of the RVs.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 15:31:30
+[[file:assets/screenshot_2017-12-24_15-31-30.png]]
+
+We can build 2 MDs here, one over T and one over W
+
+Building one over T
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 15:32:01
+[[file:assets/screenshot_2017-12-24_15-32-01.png]]
+
+From the JD, we sum out all other variables, so we sum out W here and get a marginal distribution over T
+
+MDs mean we marginalize the original distribution to be consider only a subset of the original variables and we build the table for that subset of RVs
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 15:35:17
+[[file:assets/screenshot_2017-12-24_15-35-17.png]]
+
+If we had 3 RVs, we can build a MD over X_{1} and X_{2} etc
+
+Another example:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 15:37:11
+[[file:assets/screenshot_2017-12-24_15-37-11.png]]
+
+** Conditional Probabilities
+
+Probability over something given something else
+A simple relation between joint and conditional probabilities
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 15:41:49
+[[file:assets/screenshot_2017-12-24_15-41-49.png]]
+
+
+Example:
+
+Given the JD:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 15:44:03
+[[file:assets/screenshot_2017-12-24_15-44-02.png]]
+
+We can find P(W=s|T=c) using the formula here directly
+0.2/0.5 = 0.4
+
+We did not need to use it here, but in general we use the Bayes' rule here:
+
+P(s|c) = P(s, c) / P(c)
+P(s|c) = P(c|s)P(s) / P(c)
+
+Probability of getting sunny given cold is probability of getting sunny and cold upon probability of getting cold
+
+Example:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 15:53:18
+[[file:assets/screenshot_2017-12-24_15-53-18.png]]
+
+Note in the second question, since we already know P(x|y) and the domain of X is +x, -x only, we can write P(-x|y) = 1-P(x|y)
+
+** Conditional Distributions
+
+We can go from a joint distribution to conditional distributions.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 16:11:00
+[[file:assets/screenshot_2017-12-24_16-11-00.png]]
+
+Conditional distributions are conditional probabilities over all the instantiations of the marginzalized variable
+
+Each distributions (each table) sum to 1
+
+** Normalization Trick
+
+A way to go from joint distribution to conditional distribution in a very structured mechanical way
+
+Till now, we did:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 16:14:13
+[[file:assets/screenshot_2017-12-24_16-14-13.png]]
+
+We note that the denominator is all the entries with T = c in both cases. The numerator is consistent with the row (from the table) we are computing
+
+So, alternative way:
+Select the entries in the table consistent with the evidence, which here was T=c to get:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 16:17:29
+[[file:assets/screenshot_2017-12-24_16-17-29.png]]
+
+And now, we need to have the consistent ones at the top and their sum at the bottom to get the CD
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 16:19:17
+[[file:assets/screenshot_2017-12-24_16-19-17.png]]
+
+If we can somehow recover the JD, we have the full model for that set of RVs, you can infer anything you want
+
+Example:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 16:22:25
+[[file:assets/screenshot_2017-12-24_16-22-25.png]]
+
+The phrase "to normalize" means that we bring the sum to 1
+Normalization is multiplying all entries by a constant factor Z so that the sum of all the entries is 1
+Z = 1/(sum of all entries)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 16:24:27
+[[file:assets/screenshot_2017-12-24_16-24-27.png]]
+
+** Probabilistic Inference
+
+Compute a desired probability from other known probabilities (eg: conditional from joint)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 16:32:42
+[[file:assets/screenshot_2017-12-24_16-32-42.png]]
+
+** Inference by enumeration
+We can split our random variables from the full joint distribution into 3 disjoint groups
+
+General Case:
+ - Evidence variables
+   - E_{1}, ..., E_{k} = e_{1}, ..., e_{k}
+   - we have observed, we know their values
+ - Query variables
+   - Q
+   - these are the guys we want to know something about
+ - Hidden variables
+   - H_{1}, ..., H_{r}
+   - appear in the JD, but don't appear on query
+
+We want P(Q | e_{1}, ..., e_{k})
+
+Generic procedure to get the answer to the query:
+ 1. Select the entries consistent with the evidence
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 16:37:08
+[[file:assets/screenshot_2017-12-24_16-37-08.png]]
+ 2. Sum out hidden variables
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 16:37:14
+[[file:assets/screenshot_2017-12-24_16-37-14.png]]
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 16:39:25
+[[file:assets/screenshot_2017-12-24_16-39-25.png]]
+
+This will be something like:
+P(a, c) = \Sigma P(a, c, b) over b 
+where b is the hidden variable 
+
+ 3. Normalize
+We get joint distribution from step 2. Now, all we have to do get the conditional distribution (select the consistent entries (again) and normalize)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 16:42:35
+[[file:assets/screenshot_2017-12-24_16-42-35.png]]
+
+*** Example of Inference by enumeration
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 16:43:39
+[[file:assets/screenshot_2017-12-24_16-43-39.png]]
+
+1. P(W)
+We need the marginal distribution over W
+W can be sun or rain
+W=sun is: 0.3+0.1+0.1+0.15 = 0.65
+W=rain is 0.05+0.05+0.05+0.2 = 0.35
+
+Query variable is W, hidden variables are T and S
+
+2. P(W|winter)
+
+We get:
+W=sun|winter = 0.1+0.15 = 0.25
+W=rain|winter = 0.05+0.20 = 0.25
+So after normalization, 0.5, 0.5
+
+Query variable is W, hidden variable is T, evidence variable is S
+
+3. P(W|winter, hot)
+W=sun|winter, hot = 0.10
+W=cold|winter, hot = 0.20
+So after normalization, 1/3 and 2/3
+
+Query variable is W, query variables are T and S
+
+* Lecture 13 - Markov Models
+
+Couple more things about probability before we dive into Markov Models
+
+** Product Rule
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 19:06:16
+[[file:assets/screenshot_2017-12-24_19-06-16.png]]
+
+This rule allows us to go from _a marginal and a conditional_ and get the full _joint distribution_
+
+We can recover the JD from Marginal and conditional - if we get the JD, we know everything there is to know about those RVs
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 19:08:31
+[[file:assets/screenshot_2017-12-24_19-08-31.png]]
+
+** The Chain Rule
+We can extend this to more than 2 RVs
+We can always write any joint distribution as an incremental product of conditional distribution
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 19:10:09
+[[file:assets/screenshot_2017-12-24_19-10-08.png]]
+
+:top: the ordering of x-s doesn't matter. So, we have n! Ways of getting the JD
+
+** Bayes Rule
+We will often be given the distribution, not as the full JD, but the CD or something else etc and we want to be able to somehow slice and dice that representation to get the representation we want
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 19:14:42
+[[file:assets/screenshot_2017-12-24_19-14-42.png]]
+
+It is helpful if we have the thing on the right and we are interested in the thing on the left
+
+This can happen due to:
+ - often one conditional is tricky but the other is simple
+ - this formulation lets us build one conditional from its reverse
+ - this comes up in machine translation, speech recognition etc
+
+** Inference with Bayes' rule
+
+Example of diagnostic probability from casual probability:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 19:16:53
+[[file:assets/screenshot_2017-12-24_19-16-53.png]]
+
+Example:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 19:17:26
+[[file:assets/screenshot_2017-12-24_19-17-26.png]]
+
+We want to find out:
+P(+m|+s) 
+This is equal to P(+s|+m)P(+m)/ P(+s)
+
+Here, P(+s|+m) is called the prior
+
+Typically, the thing at the bottom is not given explicitly, but there is all information present to compute it.
+
+Eg: to compute marginal over s (P(s)), 
+we can take the marginal over m and the conditional for s given m, so you can construct the joint distribution and from that get the marginal for just s
+
+Eg: P(+m, +s) = P(+s|+m)P(+m)
+which is one entry in the JD, which is 0.8*0.0001 = 0.00008
+similarly other entries in the table
+
+Applying the bayes rule: 
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 19:25:31
+[[file:assets/screenshot_2017-12-24_19-25-31.png]]
+
+P(+m|+s) = probability of getting +m and +s divided by probability of getting +s
+
+Plugging the values, we get 0.007944
+
+So, how do we make decisions based on this? :top:
+We write down the utility of living with undiagnosed meningitis vs the utility of visiting the doctor etc and you look at expected utility and take a decision that maximizes your utility
+
+Another Example:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 19:29:55
+[[file:assets/screenshot_2017-12-24_19-29-55.png]]
+
+P(W|dry) is a conditional distribution, so a table with 2 entries, one for W=sun and another for W=rain
+
+P(sun|dry), hmm, we can use our learning from earlier:
+taking out the 2 relevant entries for dry, we have
+sun, dry = 0.9
+
+NO! We cannot do that because the table given to us is a conditional distribution, not a joint distribution
+
+We can either make it a joint distribution and then compute the probabilities or use Bayes' rule
+
+We'll invoke Bayes' rule twice to get it
+P(sun|dry) = P(dry|sun)P(sun)/P(dry) = 0.9*0.8/(0.9*0.8+0.3*0.2)
+P(rain|dry) = P(dry|rain)P(rain)/P(dry) = 0.3*0.2/(0.9*0.8+0.3*0.2)
+
+(We get P(dry) = \Sigma P(dry, W) over W)
+
+We could also have gotten the 2nd one with 1-res of 1st one
+Since sun, rain are the only entries in the domain of W
+
+This is primitive way of slicing and dicing distributions, we'll see much more complicated ways later
+
+** Ghostbusters Revisited
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 19:48:22
+[[file:assets/screenshot_2017-12-24_19-48-22.png]]
+
+Here, like earlier we have to find the ghost. We'll sense using our noisy sensor to get a color measurement. 
+
+The numbers represent out prior distributions about the location of the ghost
+
+On the first sense:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 19:51:07
+[[file:assets/screenshot_2017-12-24_19-51-07.png]]
+
+So our prior gets updated according to the Bayes' rule
+
+After some more observations:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 19:55:26
+[[file:assets/screenshot_2017-12-24_19-55-25.png]]
+
+We have really narrowed it down now and we can burst
+What we haven't looked at yet is, what is the right place to sense, to take the next measurement in - so that we get the maximum information
+
+How did we implement this? :top:
+Let's say we have 2 distributions
+- Prior distribution over ghost location P(G)
+- let's say this is uniform initially
+- Sensor reading model: P(C|G)
+  - given: we know what our sensors do
+  - C = color measured, G = location of ghost
+
+We can calculate the posterior distribution P(G|c) over ghost locations given an observed color c using Bayes' rule
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 20:08:39
+[[file:assets/screenshot_2017-12-24_20-08-39.png]]
+The proportionality means that there is a difference of only a normalizing factor
+
+The g means that you should sum over random variable G - which represents all the locations the ghost can be in (all the possible values of RV G - You get this by integrating the posterior and dividing the prob by it)
+
+** Independence
+This is a property of distributions.
+
+2 variables are independent in a joint distribution if:
+P(X, Y) = P(X)P(Y) \forall x, y P(x, y) = P(x)P(y)
+
+Short hand to say that X and Y are independent: X \perp\perp Y
+
+This means that the JD can be represented in a simple way - we just need 2 marginal distributions to encode all the information in the JD
+
+We can use independence as a modeling assumption
+ - this helps split up the JD (keeping it's size under control)
+ - Independence is like the disconnected subproblems in CSPs (when tasmania was independent from Australia and things broke down)
+
+*** Example of Independence
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 20:23:44
+[[file:assets/screenshot_2017-12-24_20-23-44.png]]
+
+We need to build the marginals first:
+P(T) =  0.5 for hot, 0.5 for cold
+P(W) = 0.6 for sun, 0.4 for rain
+
+Now, P(hot, sun) = 0.4
+Also, P(hot)*P(sun) = 0.5*0.6 = 0.3
+So, not independence
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-24 20:29:04
+[[file:assets/screenshot_2017-12-24_20-29-04.png]]
+
+Every entry in the new table should be identical to every entry in the first table
+
+If you have N RVs, the JDs will have N^{D} entries where D is the domain of the RVs
+If all of them are independent, you will only have D*N entries in your JD
+
+Your JD will be fully specified by using the N tables
+Example for N independent coins: :arrow_down:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 13:22:12
+[[file:assets/screenshot_2017-12-25_13-22-12.png]]
+
+
+
+** Conditional Independence
+Since independence is a very strong assumption to make in most situations, we will use conditional independence. 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 13:24:48
+[[file:assets/screenshot_2017-12-25_13-24-48.png]]
+
+Consider 3 RVs - toothache, cavity, catch
+
+If I have a cavity, the probability that the probe catches in it doesn't depend on weather I have a toothache or not - the probe doesn't have that information in it
+So, we can write the conditional independence as:
+
+P(+catch | +cavity, +toothache) = P(+catch | +cavity) 
+
+\to we have: catch \perp\perp toothache | cavity
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 13:27:15
+[[file:assets/screenshot_2017-12-25_13-27-15.png]]
+
+Similarly, we have:
+
+P(+catch | -cavity, +toothache) = P(+catch | -cavity)
+
+Similarly, we will have the same equations for each value of each RV - 8 combinations 
+
+So, we can write it as:
+P(Catch | Toothache, Cavity) = P(Catch | Cavity)
+
+Using capital letter means that we are representing the RVs here, not a particular instantiation of the RV. So :top: encodes 8 equations
+
+One more thing:
+When we have 2 independent RVs
+P(X, Y) = P(X)P(Y)
+We can also write:
+P(X, Y|A) = P(X|A)P(Y|A) \to carry the conditional A on each term of both sides
+
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 13:32:25
+[[file:assets/screenshot_2017-12-25_13-32-25.png]]
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 13:35:16
+[[file:assets/screenshot_2017-12-25_13-35-16.png]]
+
+*** Example: Conditional Independence - I
+We have 3 things in the domain:
+ - traffic
+ - umbrella
+ - raining
+
+Reasonable conditional independence assumption in this scenario: :top:
+traffic \perp\perp umbrella | raining
+:top: also implies umbrella \perp\perp traffic | raining
+
+So, this is like, if we have rain, T and U are independent
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 13:42:33
+[[file:assets/screenshot_2017-12-25_13-42-33.png]]
+
+*** Example: Conditional Independence - II
+We have 3 things in the domain:
+ - fire
+ - smoke
+ - alarm
+
+Reasonable conditional independence assumption in this scenario: :top:
+Since the chain of reasoning is this: 
+
+Fire causes Smoke causes Alarm
+So, if Smoke is given, Fire and Alarm become independent
+alarm \perp\perp fire | smoke
+
+If you have a sensor and you consider it independent of some event, you cannot use that sensor to take readings for that event. So, conditional independence is a better (and softer) assumption in such cases
+
+We now have covered probability basics, and can move on now
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 13:47:41
+[[file:assets/screenshot_2017-12-25_13-47-41.png]]
+
+** Markov Models
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 13:47:04
+[[file:assets/screenshot_2017-12-25_13-47-04.png]]
+
+
+They allow us to specify a JD over a very large number of RVs, in a very compact form (and not having to specify the whole distribution) - and still do computations on it
+
+- Allows us reason over time and space
+  - speech recognition
+  - robot localization
+  - user attention
+  - medical monitoring
+
+They allow us to introduce time and space into our models - a lot like in MDPs
+
+
+Let's say we a markov model - what that means is that we have a sequence of random variables
+
+Connected like so:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 14:12:11
+[[file:assets/screenshot_2017-12-25_14-12-11.png]]
+
+Here, P(X_{1}) \perp\perp P(X_{3})| X_{2} etc
+
+We start with, P(X_{1}) and : P(X_{t}|X_{t-1})
+
+This is called the transition probabilities (we had them in MDPs as well) aka dynamics
+They describe how states evolve over time
+
+Stationary assumption: transition assumption probabilities same at all times
+This is exactly just like a MDP transition model, but no choice of action
+
+*** Joint Distribution of a Markov Model
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 14:17:51
+[[file:assets/screenshot_2017-12-25_14-17-51.png]]
+
+Note how simplified the JD has become due to the conditional independence restriction
+
+Questions to be resolved:
+ - does this indeed define a joint distribution?
+   - that is to say, do all the entries sum to 1
+
+Let's look at the chain rule again
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 14:25:40
+[[file:assets/screenshot_2017-12-25_14-25-40.png]]
+
+There are n! Ways to expand the chain rule, we picked this ordering explicitly because that will help us exploit the conditional independence assumption
+
+Assuming that:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 14:26:39
+[[file:assets/screenshot_2017-12-25_14-26-39.png]]
+
+So, we get:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 14:27:19
+[[file:assets/screenshot_2017-12-25_14-27-19.png]]
+
+So, we have the full JD using lesser entries. 
+
+More generally:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 14:29:40
+[[file:assets/screenshot_2017-12-25_14-29-40.png]]
+
+So, for all RVs, it is independent wrt everyone except the one that came just before it
+
+So, we have: 2 entries of P(X_{1}), and 2 entries for each of P(X_{t}|X_{t-1}), T-1 of those, so, a total of: 2T entries entries to define the full JD of T RVs
+
+If we make the stationary assumption that distribution of X_{t} is independent of t, we will have just 2 values in the JD. At that point, we'll be in the business of describing how the distribution changes with time
+
+Also, consider an arbitrary assumptions: 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 14:36:47
+[[file:assets/screenshot_2017-12-25_14-36-47.png]]
+
+Is it true that X_{1} \perp\perp X_{3} , X_{4}| X_{2}?
+
+This will be true iff:
+P(X_{1} | X_{3} , X_{4}, X_{2}) = P(X_{1} | X_{2})
+or
+P(X_{1} ,X_{3} , X_{4 }| X_{2}) = P(X_{1} | X_{2})P(X_{3} , X_{4 }| X_{2})
+
+Which turns out to be *True*
+So, we can make all sorts of arbitrary assumptions now
+
+*** Markov Models Recap
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 14:44:55
+[[file:assets/screenshot_2017-12-25_14-44-55.png]]
+
+So, we have a lot of conditional assumptions due to restriction ourselves us markov models.
+
+We have one additional explicit assumptions: P(X_{t}|X_{t-1}) is the same for all t
+What this means is that the transition model is the same at all times
+
+
+*** Example Markov Chain: Weather
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 15:18:11
+[[file:assets/screenshot_2017-12-25_15-18-11.png]]
+
+
+We have states, X = {rain, sun}
+Initial distribution: 1.0 sun
+Conditional Probability Table P(X_{t}|X_{t-1})
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 15:19:00
+[[file:assets/screenshot_2017-12-25_15-19-00.png]]
+
+We can represent it as: 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 15:19:14
+[[file:assets/screenshot_2017-12-25_15-19-14.png]]
+
+We can answer questions like, what is the distribution after one step etc
+
+The general method: :arrow_down:
+
+P(X_{2}=sun) = \Sigma (X_{2}, X) over X where X is X_{1} here
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 15:21:10
+[[file:assets/screenshot_2017-12-25_15-21-10.png]]
+
+0.9*1.0 + 0.3*0.0 = 0.9
+
+*** Mini Forward Algorithm
+
+Question: What's P(X) on some date t?
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 15:25:32
+[[file:assets/screenshot_2017-12-25_15-25-32.png]]
+
+
+In the formula :top:, P(x_{t}|x_{t-1}) is given in the CPT and P(x_{t-1}) we get from previous iteration of the recursion
+
+**** Example run of mini-forward algorithm
+
+Consider the same problem as earlier :top:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 15:28:04
+[[file:assets/screenshot_2017-12-25_15-28-04.png]]
+
+So, regardless of the initial distribution, if we run mini-forward algorithm long enough, it will converge to a stationary distribution. Almost each Markov models will have a stationary distribution
+
+This distribution is called P_{\infin}
+It satisfies:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 15:30:07
+[[file:assets/screenshot_2017-12-25_15-30-07.png]]
+
+We can solve this equation in 2 ways - either by simulating via the forward passes or by considering a linear update equations and solve for the stationary point
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 15:33:48
+[[file:assets/screenshot_2017-12-25_15-33-48.png]]
+
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 15:30:22
+[[file:assets/screenshot_2017-12-25_15-30-22.png]]
+
+ 
+This is used in Page rank algorithm
+
+The RV is which page the user is on. The state(domain) is all the web pages
+The initial distribution is uniform over pages, the transitions are:
+- with probability c, uniform jump to a random page
+- with probability 1-c, follow random outlink
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 15:41:17
+[[file:assets/screenshot_2017-12-25_15-41-17.png]]
+
+Stationary distribution:
+- Google 1.0 returned the set of pages containing all the keyword in decreasing ranks from the stationary distribution
+- this is robust to link spamming etc
+
+
+
+* Lecture 14 - Hidden Markov Models and Particle Filtering
+
+We model what happens when the world changes and you observe only a part of it
+
+Consider the pacman can eat ghosts, but they are invisible. 
+But you get noisy readings about the location of the ghosts
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 15:44:56
+[[file:assets/screenshot_2017-12-25_15-44-56.png]]
+
+You can try to move closer to it and try to eat it.
+
+Is it possible to take these readings and combine this with your model of the world, I.e. How the ghosts move, where the maze walls are etc and figure out where they are
+
+We'll get to this by end of class
+
+Markov Models are just a type of Bayers' net
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 15:49:39
+[[file:assets/screenshot_2017-12-25_15-49-39.png]]
+
+Each node is identically distributed, (stationarity) - there is just one Probability distribution that we are manipulating. How we go from one to the next is dependent on the Transition probability, present in the CPT - that transition probability is constant. Transition probability aka dynamics.
+
+This is exactly similar to the Transition model in MDP, the difference being in MDP, there was an "a" in the transition model as well, which represented the action that you take - here you don't take actions, you are just watching
+
+*** Conditional Independence
+
+Past and future states independent of the present
+Each time step only depends on the previous - this is called the 1st order markov property
+This is just a simplified Bayes' net. We can use everything that we learned in a bayers' net here
+
+And then we talked about the weather markov chain
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 16:25:48
+[[file:assets/screenshot_2017-12-25_16-25-48.png]]
+
+
+We did the question
+P(X_{2}=sun) = \Sigma P(X_{2}=sun, X_{1}) = (X_{2}=sun, X_{1}=sun) + (X_{2}=sun, X_{1}=rain)
+
+To move the timesteps, we have the mini-forward algorithm which was a recursive algorithm that takes the previous value and the probability of being there (entries from the CPT for that variable value/state)
+
+We also saw that whatever be the initial distribution, we always converge to a static distribution after applying the forward algorithm many timesteps
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 16:34:03
+[[file:assets/screenshot_2017-12-25_16-34-03.png]]
+
+(0.75 and 0.25 are due to the transition probabilities (the transition matrix) that we started with)
+
+So, we can say that <0.75, 0.25> is the principle eigenvector of the transition matrix (because on applying the matrix transformation, this vector remains where it was) - eigenvalue 1
+
+**** Ghostbusters
+We saw that we start with a uniform distribution over the location of the ghost and we take measurements to update it. So we end up with something like this:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 16:39:18
+[[file:assets/screenshot_2017-12-25_16-39-18.png]]
+
+
+(How do we update those values by incorporating the new noisy evidence? :top:)
+
+Now when we let time pass, the ghost moves. 
+*The ghost is following a markov chain - it moves according to a transition matrix*
+Currently, the transition matrix dictates Brownian motion, so after some time steps we have:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 16:42:27
+[[file:assets/screenshot_2017-12-25_16-42-27.png]]
+
+(The probability distributions are obtained from another markov model that's hidden??)
+
+"If we have a model that the ghost goes towards the center usually, we don't get a stationary distribution" - why? :/
+
+** Hidden Markov Models
+
+Markov models - it says I know how the world changes, but sooner or later, I am not very confident because the uncertainties add up
+
+Hidden Markov Models - it says I know 2 things. How world changes in a time step, and at every time step I also get a reading of some kind of evidence that helps me sharpen my belief of what's happening
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 16:58:31
+[[file:assets/screenshot_2017-12-25_16-58-31.png]]
+
+The reason we have Hidden Markov Models is that in Markov Models, we aren't very sure about our beliefs after some time. 
+In HMMs, we get some evidence variable to update our beliefs at each time step
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 16:58:18
+[[file:assets/screenshot_2017-12-25_16-58-18.png]]
+
+
+The hidden variable is like earlier, *where are we exactly?*
+The evidence depends only on the state at that time
+
+*** Example: Weather HMM
+
+An HMM is defined by:
+ - Initial Distribution (X_{1})
+ - Transitions P(X|X_{-1})
+ - Emissions P(E|X)
+   - how noisy are the sensors
+
+Here, we have just 1 random variable - rain or not
+We have the transition matrix (aka dynamics) of the RV - rain today if rain was there yesterday = 0.7
+no rain today if rain yesterday = 0.3
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 16:59:47
+[[file:assets/screenshot_2017-12-25_16-59-47.png]]
+
+Note here the emission model is:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2017-12-25 17:02:30
+[[file:assets/screenshot_2017-12-25_17-02-30.png]]
+
+This says, given rain=true, probability of seeing umbrella is 0.9
+and given rain=false, probability of seeing umbrella is 0.2
+

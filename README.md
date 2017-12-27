@@ -13,6 +13,7 @@ Available notes:
   * [Machine Learning (Learning from data)](./learning_from_data.org)
   * [Pro Python](./pro_python.org)
   * [Computer Arch](./comp_arch.org)
+  * [Ansible](./ansible.org)
   * [C language](./C_language.org)
   * [Emacs](./emacs.org)
   * [Algorithms](./algorithms.org)

@@ -8,6 +8,7 @@ I am sharing them in the hope that they would be useful you as well.
 Available notes:
 
   * [Operating Systems](./operating_systems.org)
+  * [Golang](./golang.org)
   * [Compilers](./compilers.org)
   * [Artificial Intelligence](./artificial_intelligence.org)
   * [Machine Learning (Learning from data)](./learning_from_data.org)
@@ -16,6 +17,7 @@ Available notes:
   * [Ansible](./ansible.org)
   * [C language](./C_language.org)
   * [Emacs](./emacs.org)
+  * [Databases](./databases.org)
   * [Algorithms](./algorithms.org)
   * [Datastructures](./datastructures.org)
   * [Twisted](./twisted.org)

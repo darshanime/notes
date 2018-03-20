@@ -1,0 +1,630 @@
+* Fundamentals of Database Systems
+ - Prof Arnab Bhattacharya, IIT Kanpur
+
+** Introduction to Databases
+
+Database is used to store interconnected data
+A DBMS is a system to manage databases
+Particularly: 
+ - store data
+ - visualize data
+ - access (query) data
+ - update (manipulate) data
+
+You can get all the above :top: with a normal file system as well
+Advantages of DBMS over file systems:
+ 1. Redundancy/Inconsistency is reduced
+    - in a filesystem, we store data in multiple places
+    - also, since we have multiple versions, we may have inconsistent versions
+
+ 2. Data isolation
+    - Data is stored in an internal format (which the user does not have to worry about) and the user gets an API to interact with it
+    - This may not be true with file systems where you get incompatible versions of xlsx etc
+
+ 3. Data integrity
+    - You cannot enforce constraints on the data (like the CGPA has to be b/w 1 and 10 for eg)
+
+ 4. Atomicity of operations
+    - Databases ensure that a block of updates are done in whole
+
+ 5. Concurrency
+    - Multiple transactions can be done concurrently
+
+ 6. Security
+    - Data security can be made secure in DBMS
+    - We can have various access levels in the database
+
+** Relational Data models
+
+A relation is defined as:
+ n-ary tuple (a_{1}, a_{2}, ..., a_{n}) where a_{i} \in D_{i} (each a_{i} comes from a domain D_{i})
+
+A relation is a cross product from (elements of) the sets of D_{i}
+Example:
+
+a_{1}: name = {A, B, C}
+a_{2}: street = {1st, 2nd}
+a_{3}: city = {Kolkata, Delhi}
+
+So, we can have relations:
+r = {(A, 1st, Kolkata), (A, 2nd, Delhi), (B, 2nd, Kolkata), }
+
+It is not necessary that every combination of the domains is part of the relation
+Eg, here, :top:, (B, 1st, Kolkata) is not a part of the relation
+
+
+Also, remember that *Relations are unordered*
+The relations are depicted as a table
+
+| name | stree | city    |
+|------+-------+---------|
+| A    | 1st   | Kolkata |
+| A    | 2nd   | Delhi   |
+| B    | 2nd   | Kolkata |
+
+
+*** Attribute
+Attribute comes from a domain and it has a name
+Example: 
+Street (which is the name), (domain was 1st, 2nd, NULL)
+
+NULL is a special value which is a part of every domain - used to depict absence of information
+
+Attributes are generally atomic (cannot be broken down further)
+
+*** Relation Schema (description of the relation)
+The sets we defined earlier define a relation schema
+
+Eg: Address schema - it says the address schema has 3 attributes (name, street, city)
+
+*If we have a schema R, a particular relation r(R) is denoted to be from this schema*
+
+*A relation instance is one instantiation of this relation (eg: (A, 1st, Kolkata))*
+
+*Tuple is one row, one instantiation of the relation (r(R))*
+
+So, tuple corresponds to a row, attribute corresponds to a column
+
+So, we have defined: relation, schema, instance, tuple
+
+Database: collection of interconnected relations
+It must handle all the problems the file system cannot handle
+
+*** Key
+Consider a relation schema R
+A subset K is called a "superkey" of R (a special key of R) iff values of the values of K are enough to determine all the values of attributes in R
+So, if in a particular tuple, if you know that key, you can get to know all the other attributes in that tuple
+
+So, a superkey identifies a unique tuple
+In fact, a super key should be able to distinguish a tuple for all possible relations (not just the ones that exist right now)
+
+Eg of superkey - roll no etc
+
+Any super-set of a superkey is a superkey as well, so if K is a superkey, (K, X) is also a super key (where X is a attribute)
+
+ - Candidate key = minimal superkey (no extra terms)
+   - A particular relation may have multiple candidate keys
+ - Primary key = One of the candidate keys is designated by the database designer as a primary key
+ - The rest become secondary keys
+
+Every relation has to have a candidate key - in the worst case, you can take all the attribute of the relation (the entire tuple) and call it as a candidate key - (given you do not allow duplicates)
+
+If there are 2 relations r_{1} (with primary key as pk_{1}) and r_{2} (with primary key pk_{2}) which are connected, 
+If a relation has a primary key, in the other relation, it becomes a foreign key
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-01-15 16:44:27
+[[file:assets/screenshot_2018-01-15_16-44-27.png]]
+
+Here, f_{2} is the foreign key for r_{2}
+
+Here, r_{2} :top: is called the referencing relation and r_{1} is called referenced relation
+
+** Relational Algebra - Basic Operations
+
+Relational Algebra is a procedural language - used to define database queries
+
+6 basic operators
+ - select: \sigma
+ - project: \pi
+ - union: \cup
+ - set difference: -
+ - cartesian product - x
+ - rename operator
+
+RA is what forms the basis of SQL - it defines the theory of SQL
+
+Apart from the 6 operators :top:, RA also uses propositional calculus.
+They are connected by 3 basic operators: 
+ - And: ^
+ - Or: v
+ - not: \not
+
+Syntax: <attribute> <comparator> <attribute/constant>
+
+The comparators are the standard:
+ - =
+ - \ne
+ - <
+ - \le
+ - >
+ - \ge
+
+This defines the entire RA
+
+In more details the basic operators:
+*** Select
+
+\sigma_{P}(r) = {t | t \in r and P(t) }
+Here, P is the predicate on which the select is done, r is the relation instance
+Here, we select all tuples t which are in r and satisfy the predicate
+
+This does not change the schema of r
+
+Example: consider relation r
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-01-15 17:00:11
+[[file:assets/screenshot_2018-01-15_17-00-11.png]]
+
+
+Now, we have this select operator:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-01-15 17:00:38
+[[file:assets/screenshot_2018-01-15_17-00-38.png]]
+*** Project 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-01-15 17:04:17
+[[file:assets/screenshot_2018-01-15_17-04-17.png]]
+
+Here, we are selecting projections A_{1} to A_{k} from the relation r
+Duplicates are removed
+Example:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-01-15 17:04:51
+[[file:assets/screenshot_2018-01-15_17-04-51.png]]
+
+We have projection: \pi_{A, C}(r)
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-01-15 17:05:43
+[[file:assets/screenshot_2018-01-15_17-05-43.png]]
+*** Union
+Consider 2 relations, r and s
+
+r \cup s = { t | t \in r OR t \in s}
+
+r and s need to have the same attributes
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-01-15 17:07:17
+[[file:assets/screenshot_2018-01-15_17-07-17.png]]
+
+Note: We remove duplicates
+*** Set difference
+Just like set difference
+
+r - s = { t | t \in r AND t \notin s}
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-01-15 17:10:21
+[[file:assets/screenshot_2018-01-15_17-10-21.png]]
+
+*** Cartesian Product
+
+r x s = {tq | t \in r and q \in s}
+
+Here, the schema is changed. If r and s are disjoint, we just need to add new attributes
+Else, we need to be more careful
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-01-15 17:13:55
+[[file:assets/screenshot_2018-01-15_17-13-55.png]]
+
+*** Rename
+It just renames the attribute
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-01-15 17:15:02
+[[file:assets/screenshot_2018-01-15_17-15-02.png]]
+
+The schema has changed, but not the meaning
+
+*** Summary
+
+| Operator          | Schema Changed?               |
+|-------------------+-------------------------------|
+| select            | NO                            |
+| project           | YES                           |
+| Union             | NO                            |
+| Difference        | NO                            |
+| Cartesian product | YES                           |
+| Rename            | YES (meaning does not change) |
+|-------------------+-------------------------------|
+
+Next we will look at composing the operators
+
+** Relational Algebra - Composition of Operators
+
+We can apply compositions of operations
+eg:
+
+\sigma_{A=C}(rxs)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-01-15 19:16:56
+[[file:assets/screenshot_2018-01-15_19-16-56.png]]
+
+
+*** Example: Banking
+
+We have the relations:
+ - branch (_bname_, bcity)
+ - customer (_cname_, city)
+ - account (_ano_, *bname*, bal)
+ - loan (_lno_, *bname*, amt)
+ - depositor (*_cname_*, *_ano_*)
+ - borrower (*_cname_*, *_lno_*)
+
+Here, _attr_ is a primary key and *attr* is a foreign key
+
+We can solve certain types of queries now:
+
+**** Find all loans of rupees 100 or more
+\Pi_{loan}(\sigma_{loan>100}(loan))
+
+We select and then we use project to get just the required attribute out
+
+**** Find names of all customers having a loan at "ABC" branch
+
+Since the customer table does not have information about loan, we need to look at loan table and filter out "ABC" bname and then look at borrower table and get the cname
+
+\Pi_{lno}(\sigma_{bname="ABC"}(loan))
+
+Now, we take this lno and get the cname from borrower table
+
+Or, we can take a cartesian product and get it:
+
+\sigma_{b.lno=l.lno}(borrower x loan)
+
+The b.lno = l.lno condition will give us all valid tuples (won't give us spurious tuples)
+We need to put a condition for bname now and select
+
+\Pi_{cname}(\sigma_{bname="ABC"}(\sigma_{b.lno=l.lno}(borrower x loan)))
+
+If we had wanted the additional condition that they shouldn't have an account, we would have had to take a set difference with depositor.
+
+** Relational Algebra - Additional Operators
+
+They are:
+ 1. Set intersection
+ 2. Join
+ 3. Division
+ 4. Assignment
+
+They simplify the queries but do not add any new power to RA
+(They can be written using the basic operators from earlier)
+
+*** Set intersection
+
+r \cap s = {t | t \in r and t \in s}
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-01-16 06:06:43
+[[file:assets/screenshot_2018-01-16_06-06-43.png]]
+
+We can write r \cap s as r - (r - s)
+
+Think of it in terms of Venn diagram
+r - s is the part of r without s, i.e. pure r
+Now, subtracting this from the whole r gives us only the shared part with s - r \cap s
+
+*** Join
+
+Denoted by: r \infin_{\theta} s = \sigma_{\theta}(r X s)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-01-16 06:10:26
+[[file:assets/screenshot_2018-01-16_06-10-26.png]]
+
+Joins have many types:
+
+**** Equality Join
+
+\Theta contains equality: eg
+
+r \infin_{\theta} s = \sigma_{A=B}(r X s)
+
+
+**** Natural Join
+This is what people mostly refer to when they talk about joins
+It has it's own symbol - *
+
+r * s = r \infin_{r.A = s.A} s
+
+Both r and s have to have a common attribute (both in it's name and it's semantic meaning)
+
+*Equality join does not change the schema (any join does not change schema from that of r X s) - except natural join*
+
+In that, the common attribute (A here :top:) has only 1 copy
+
+Examples
+
+If r has schema (A, B) and s has schema (A, C) then r*s (the natural join) has schema (A, B, C)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-01-16 06:16:02
+[[file:assets/screenshot_2018-01-16_06-16-02.png]]
+
+
+*** Division
+
+r \div s = {t | t \in \pi_{r-s}(r) and \forall u \in s (tu \in r)}
+
+Assume, r has R schema and s has S schema
+For division to apply, we must have the condition that schema S is a subset of schema R (S \sub R)
+
+Also, schema of r \div s is R-S
+
+\div chooses tuples from R-S such that cartesian product of these with s(S) are all in r(R)
+
+This is what the second part says, \forall u \in s (tu \in r)
+"tu" is the cartesian product, which should be in r
+
+The first part just specifies the schema
+
+Example:
+
+r = (A, B, C, D)
+s = (C, D)
+
+Here, note that S \sub of R
+So, r \div s has schema (A, B)
+
+Assuming r and s as:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-01-16 06:24:39
+[[file:assets/screenshot_2018-01-16_06-24-39.png]]
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-01-16 06:24:44
+[[file:assets/screenshot_2018-01-16_06-24-44.png]]
+
+We have:
+
+r \div s
+| A | B |
+|---+---|
+| 1 | 5 |
+| 2 | 6 |
+| 3 | 6 |
+
+We don't select (3, 5) in the result because when we take cartesian product with s, we get (3, 5, 2, 7) which isn't there in r
+
+How is this useful? We'll see later.
+The intuition is that this lets you distill out the information of "s" from "r" and make the representation lean
+
+*** Assignment
+
+s \leftarrow E(r)
+
+This is similar to rename operator \rho
+What we do is we temporarily assign something to "s"
+
+Example:
+Our earlier query now becomes:
+s \leftarrow borrower \infin loan
+q \leftarrow \sigma_{bname = "ABC"}(s)
+
+*** Example: Banking
+
+We continue from our banking example earlier :top: with this schema
+
+We have the relations:
+ - branch (_bname_, bcity)
+ - customer (_cname_, city)
+ - account (_ano_, *bname*, bal)
+ - loan (_lno_, *bname*, amt)
+ - depositor (*_cname_*, *_ano_*)
+ - borrower (*_cname_*, *_lno_*)
+
+Here, _attr_ is a primary key and *attr* is a foreign key
+
+**** Find names of all customers having both a loan and an account
+
+\Pi_{cname}(borrower) \cap \Pi_{cname}(depositor)
+
+Note the projection must be done before the intersection must be done (since the schema of borrower and depositor is different)
+
+**** Find all customers that have an account in every branch of city "DEF"
+
+Here, the operative word is "every", which is best solved by the division operator
+
+\Pi_{cname, bname}(depositor \infin account)
+
+:top: is a natural join b/w depository and account based on their common attribute ano
+So, we effectively get the full list of names of folks with their bname
+Now, we can divide this with \Pi_{bname}(\sigma_{bcity="DEF"}(branch)) which selects all the branches in the city DEF
+
+When we take a \div, we end up with only those customers which have an account in *every* branch on RHS (every branch of city "DEF")
+
+** Extended Relational Algebra
+
+Here, we increase power over basic RA
+We have 3 operators:
+
+ 1. Generalized projection
+ 2. Aggregation
+ 3. Outer join
+
+
+*** Generalized Projection
+
+It takes the normal projection operator \Pi and it allows arithmetic operations on those projections (on the projected columns)
+
+\Pi_{F1, ..., Fk}(E)
+
+Where F1 to Fk are functions
+
+Example:
+
+Consider r:
+| A | B | C |
+|---+---+---|
+| 1 | 1 | 5 |
+| 1 | 2 | 5 |
+| 2 | 3 | 5 |
+| 2 | 4 | 8 | 
+
+Now, we have: \Pi_{2B-A, C }(r) as:
+
+| 2B-A | C |
+|------+---|
+| 1    | 5 |
+| 3    | 5 |
+| 4    | 5 |
+| 6    | 8 | 
+
+*** Aggregation
+
+We can use certain aggregation functions like AVG, MIN, MAX, SUM, COUNT etc on groups of tuples (entire relation or a subset of it)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-01-16 06:48:09
+[[file:assets/screenshot_2018-01-16_06-48-09.png]]
+
+So, we take E, (which is a relation or it's subset)
+And we group it based on G_{1}, ..., G_{k} (t_{1}t_{2} are in the sample group if they agree of all G_{1} - G_{k})
+Finally, we apply the functions F_{1} to F_{n}
+
+Example:
+
+Consider r:
+| A | B | C |
+|---+---+---|
+| 1 | 1 | 5 |
+| 1 | 2 | 5 |
+| 2 | 3 | 5 |
+| 2 | 4 | 8 | 
+
+We have: G_{sum(c)}(r) as:
+| sum(c) |
+|--------|
+|     23 |
+
+Since we don't have any grouping, everything falls under same group
+
+We can also have:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-01-16 06:52:32
+[[file:assets/screenshot_2018-01-16_06-52-32.png]]
+
+*** Outer join
+Extension of the normal join to retain more information
+How? We first do the join, and then adds tuples to the result
+(we will have to utilize "null" values here)
+
+**** Left outer join
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-01-16 06:55:34
+[[file:assets/screenshot_2018-01-16_06-55-34.png]]
+
+It retains every tuple from left relation (r here) even if it does not obey the join condition \theta
+
+Example:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-01-16 06:56:13
+[[file:assets/screenshot_2018-01-16_06-56-13.png]]
+
+This is the natural join.
+But, since this is a left join, we also have remaining values from A
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-01-16 06:57:19
+[[file:assets/screenshot_2018-01-16_06-57-19.png]]
+
+Note the use of "null" here
+
+**** Right outer join
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-01-16 06:58:44
+[[file:assets/screenshot_2018-01-16_06-58-44.png]]
+Same thing, except we include all values from right relation (s here)
+
+From the above example, we have:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-01-16 06:59:00
+[[file:assets/screenshot_2018-01-16_06-59-00.png]]
+
+**** Full outer join
+This is a combination of both left and right outer joins
+It captures all relations from both left and right relations
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-01-16 06:59:41
+[[file:assets/screenshot_2018-01-16_06-59-41.png]]
+
+From the above example, we have:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-01-16 06:59:57
+[[file:assets/screenshot_2018-01-16_06-59-57.png]]
+
+
+Now, to avoid confusion, the normal join (the natural join) is called *inner join*
+And outer join is called \to left join/right join/full join
+
+When only *join* used, it refers to *natural outer join*
+
+- Aggregate operators ignore null
+- Arithmetic expression may need to evaluate null (eg: 5 = null etc)
+  - 5 = null \to null
+  - 5 > null \to null
+  - null = null \to True
+
+null gives us "Three-Valued logic" - True, False and Unknown
+(we used only binary logic till now, ie True/False)
+
+Logic table:
+
+OR:
+ - u OR t = t
+ - u OR f = u
+ - u OR u = u
+AND
+ - u AND t = u
+ - u AND f = f
+ - u AND u = t
+NOT
+ - NOT u = u
+
+Select operator treats unknown as false
+
+** 

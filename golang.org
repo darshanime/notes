@@ -1,0 +1,2577 @@
+* A tour of Go - Russ Cox
+
+Go is a fast, fun and productive open source language built by Google.
+
+# Notes from https://www.youtube.com/watch?v=ytEkHepK08c
+#+begin_src go
+package main
+
+import "fmt"
+
+func main() {
+  fmt.Printf("Hello, world!")
+}
+#+end_src
+
+Here, :top: the program is in the package named "main"
+We import the package named "fmt" via it's path
+Finally, we declare a function named "main"
+
+All go programs start in package "main" and the function "main"
+
+** Interfaces
+
+A type implements a interface by defining the required methods. 
+So, printf we saw earlier can be used like so:
+
+  fmt.Printf("Hello, %s", "world")
+
+The function Printf takes an argument that need not be a string. Printf defines that %s can be used to define any value that has a method named "String" with no arguments that returns a string
+
+So:
+
+#+begin_src go
+
+package main
+
+import "fmt"
+type World struct{}
+
+func (w *World) String() string {
+  return "world"
+}
+
+fmt.Printf("Hello, %s", new(World))
+#+end_src
+
+How does this work?
+Package fmt defines an interface called Stringer.
+The interface says that any value that has a "String" method without any arguments, would cause %s to call that method to obtain the value to print on the screen.
+
+
+The name suffix "er" is a convention - used when you have simple interfaces with one method, you get the interface name by taking the method name and adding an "er"
+
+Eg: reader, marshaler etc
+
+Another example:
+
+#+begin_src go
+
+type Office int
+const (
+    Boston Office = iota
+    NewYork
+)
+
+func (o Office) String() string {
+    return "Google, " + officePlace[o]
+}
+
+func main() {
+    fmt.Printf("Hello, %s", Boston)
+}
+
+#+end_src
+
+Here, Office is of type int. We define new constants called Boston, NewYork with values 0, 1 etc
+We also have an array officePlace which has the office names. Something like: ["Boston", "New York", ]
+
+We can print weekdays like so:
+
+#+begin_src go
+
+package main
+import (
+    "fmt"
+    "time"
+)
+
+func main() {
+    day := time.Now().Weekday()
+    fmt.Printf("Hello, %s (%d)", day, day)
+}
+// Hello, Saturday (6)
+#+end_src
+
+Here, day is an instance (?) Of Weekday which implements the "String" method
+
+
+The actual code for Weekday:
+
+#+begin_src go
+
+package time
+type Weekday int
+
+const (
+    Sunday Weekday = iota
+    Monday
+    Tuesday
+    Wednesday
+    Thursday
+    Friday
+    Saturday
+)
+
+var days = [...]string {
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+}
+
+func (d Weekday) String() string { return days[d] }
+
+#+end_src
+
+So, we have constants "Sunday" (which translates to 0) etc
+
+Another example: time.Duration
+
+See how nice it to write these constants since Duration has a String method
+
+#+begin_src go
+package time
+type Duration int64
+
+const (
+    Nanosecond Duration = 1
+    Microsecond = 1000 * Nanosecond
+    Milisecond = 1000*Milisecond
+)
+
+// let's see it in action
+package main
+
+func main() {
+    start = time.Now()
+    fetch("http://google.com")
+    fmt.Println(time.Since(start))
+}
+#+end_src
+
+Here, since time.Since returns Duration which implements the String method, we can print it. Also, the String method of Duration has logic in it to return the unit of time as ms, ns, s, m, h (whatever is appropriate)
+
+Note, these types (Office, Weekday, Duration etc) don't include the "implements" declarations - nowhere they say that they implement the fmt.Stringer interface - they just do it - they might not even know it exists!
+
+This also have the advantage that you can notice patterns and then write interfaces to describe them without having to go back in the package and annotate their types (like in Java, you have to include the "implements" keyword)
+
+This is how many of the interfaces in the Go standard libarary - eg: io.Writer
+This interface, we can say from the convention is the interface with only one method - the Write method
+
+#+begin_src go
+// here, we declare the interface
+type Writer interface {
+    Write(p []byte) (n int, err error)
+}
+
+// example usage
+fmt.Fprintf(os.Stdout, "Hello World!")
+
+// You can also do this
+h := crc32.NewIEEE()
+fmt.Fprintf(h, "Hello World")
+fmt.Printf(h.Sum32())
+#+end_src
+
+Here, the return value of crc32.NewIEEE() implements Write method and hence, we can write to it using Fprintf method
+
+We can also implement writers that write writers
+Example: io.MultiWriter
+
+#+begin_src go
+package io
+
+// MultiWriter creates a writer that duplicates its writes to all the provided writers, similar to Unix tee command
+// here, the function name is MultiWriter, it takes many "writers" (0 or more) which are of type Writer and it returns a single Writer
+func MultiWriter(writers ...Writer) Writer {
+    return &multiWriter{writers}
+}
+
+type multiWriter struct {
+    writers []Writer
+}
+
+// now, we have to implement MultiWriter's Write method so that it loops over the many writers in it's list and calls their individual Write method
+func (t *multiWriter) Write(p []byte) (n int, err error) {
+    for _, w := range t.writers {
+        n, err = w.Write(p)
+        if err != nil {
+            return 
+        }
+        if n != len(p) {
+            err = ErrShortWrite
+            return 
+        }
+    }
+    return len(p), nil
+}
+
+// example usage
+h := crc32.NewIEEE()
+w := io.MultiWriter(h, os.Stdout)
+fmt.Fprintf(w, "Hello World!")
+#+end_src
+
+One more example of Writer.
+
+We have package hex which provides a function Dumper - if you call Dumper with a Writer w, it returns a hex dump of all written data to w. The format of the dump matches the output of `hexdump -C` on the command line
+
+    func Dumper(w io.Writer) io.WriteCloser {
+
+The function Dumper returns WriteCloser which writes output in hex to w. We also need the Closer method to indicate all data has been written
+
+#+begin_src go
+package main
+
+import (
+    "encoding/hex"
+    "fmt"
+    "os"
+)
+
+func main() {
+    h := hex.Dumper(os.Stdout)
+    // here, we queue a h.Close call to run when main returns
+    defer h.Close()
+    fmt.Printf(h, "Hello World")
+}
+// <prints the hex dump>
+#+end_src
+
+We also have a Reader interface.
+Folks who implement it - os.File, bufio.Reader, net.Conn, compress/gzip, crypto/tls, bytes.Buffer etc
+
+We can also use "%v" to print "values" without implementing String explicitly
+#+begin_src go
+type Lang struct {
+    Name string
+    Year int
+    URL string
+}
+
+func main() {
+    lang := Lang{"Go", 2009, "http://golang.org"}
+    fmt.Printf("%v", lang)
+}
+// {"Go", 2009, "http://golang.org"}
+
+
+// note the braces to indicate the struct
+#+end_src
+
+How did this work? We did not implement the String method for the Lang struct type.
+This takes to our second topic - Reflection
+
+** Reflection
+Go has support for reflection on types and values
+
+Reflection means the go runtime gives you any type's basic information and basic operations on those types available at runtime
+
+Look at this example:
+
+#+begin_src go
+func main() {
+    fmt.Print("Hello", 42, "\n")
+    // Print is just like Printf but without the format string. It just uses %v for printing each argument
+
+// Hello 42
+}
+
+#+end_src
+
+Here, "Print", how does it know that the first argument is a string and has to be printed as such and that the second argument is an int and has to be converted to string and printed - using Reflection!
+
+
+We can write our own implementation of Print called myPrint
+
+#+begin_src go
+func main() {
+    fmt.myPrint("Hello", 42, "\n")
+}
+
+func myPrint(args ...interfaces{}) {
+    for _, arg := range args {
+        switch v := reflect.ValueOf(arg); v.Kind() {
+            case reflect.String:
+                os.Stdout.WriteString(v.String())
+            case reflect.Int:
+                os.Stdout.WriteString(strconv.FormatInt(v.Int(), 10))
+        }
+    }
+}
+#+end_src
+
+Here, we simply use reflect.ValueOf to get the type information and then do use the appropriate way to print the value of that variable
+
+# use %v to get value, %+v to get more verbose value, %#v to get golang syntax
+
+All this uses reflection.
+We can use reflection to print valid json as well: json.Marshal function
+
+#+begin_src go
+type Lang struct {
+    Name string
+    Year int
+    URL string
+}
+
+func main() {
+    lang := Lang{"Go", 2009, "http://golang.org"}
+    data, err := json.Marshal(lang)
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Printf("%s", data)
+}
+#+end_src
+
+json.Marshal is essentially Printf, but it prints json notation and uses reflection to get the correct json encoding
+
+Similarly, we also have xml.MarshalIndent
+
+This makes the standard library code very nice - and so your programs can also be designed like that
+
+We can also do JSON to Struct
+
+#+begin_src go
+func main() {
+    input, err := os.Open("/tmp/foo.json")
+    if err != nil {
+        log.Fatal(err)
+    }
+    io.Copy(os.Stdout, input)
+}
+// io.Copy takes an io.Writer and an io.Reader and copies the bytes. It is like memcopy, but for io
+#+end_src
+
+So, we basically have "cat" right now
+We can convert this to struct as well
+
+#+begin_src go
+func main() {
+    input, err := os.Open("/tmp/foo.json")
+    if err != nil {
+        log.Fatal(err)
+    }
+    dec := json.NewDecoder(input)
+    for {
+        var lang Lang
+        err := dec.Decode(&lang) // this asks the decoder to parse the json and put it in the format of the Lang struct
+        if err != nil {
+            if err == io.EOF {
+                break
+            }
+            log.Fatal(err)
+        }
+        fmt.Printf("%v", lang)
+}
+
+#+end_src
+
+Here, we get ourselves a new json decoder (which takes in json and outputs the format we want) which loops over each line and decodes it as Lang struct
+
+We can also go from json to struct to XML
+
+#+begin_src go
+
+func main() {
+    input, err = os.Open('/tmp/lang.json')
+    if err != nil {
+        log.Fatal(err)
+    }
+    dec := json.NewDecoder(input)
+    for {
+        var lang Lang,
+        err := dec.Decode(&lang)
+        if err != nil {
+            if err == io.EOF {
+                break
+            }
+            log.Fatal(err)
+        }
+    }
+    // now from Lang, we can go to XML
+    xml_data, err := xml.MarshalIndent(lang, "", " ")
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Printf("%s", data)
+}
+
+#+end_src
+
+In golang, you can pass functions as arguments to another functions
+
+Another example:
+
+#+begin_src go
+
+func main() {
+    start := time.Now()
+    do(func(lang Lang) { //here, the "do" function is something that we defined and which times the time it takes to load the page and the bytes loaded
+        count(lang.Name, lang.URL)
+   })
+   fmt.Printf("%.2fs total\n", time.Since(start).Seconds())
+}
+
+// the count function
+func count(name, url string) {
+    start := time.Now()
+    r, err := http.Get(url)
+    if err != nil {
+        fmt.Printf("%s: %s", name, err)
+        return
+    }
+    n, _ := io.Copy(ioutil.Discard, r.Body) //we copy the body of the response to ioutil.Discard which is /dev/null of writers. But it returns the number of bytes copied, so we get it
+    r.Body.Close()
+    fmt.Printf("%s %d [%.2fs]\n", name, n, time.Since(start).Seconds())
+}
+
+// results:
+// Python 19190 [0.52s]
+// Ruby 19190 [2.22s]
+// Scala 19190 [2.49s]
+// Go 19190 [0.49s]
+// 5.50s total
+
+#+end_src
+
+Here, we get a very high total time because we are synchronous (each individual page took 2s but total time is 5s)
+
+We can do it in parallel, using concurrency
+
+** Concurrent
+
+Parallelism - running multiple things simultaneously
+Concurrency - way to deal with multiple things simultaneously
+
+Concurrency is the coordination of parallel computations
+
+Go has goroutines to let you run multiple computations run simultaneously
+And goroutines create parallelism
+Go also provides channels to let you coordinate these parallel computations by explicit communication
+
+To introduce parallelism, you need to add the word go before the "count" function call
+
+#+begin_src go
+
+func main() {
+    start := time.Now()
+    do(func(lang Lang) { //here, the "do" function is something that we defined and which times the time it takes to load the page and the bytes loaded
+        go count(lang.Name, lang.URL) // now the call runs in it's own go routine
+   })
+   time.Sleep(10*time.Second)
+   fmt.Printf("%.2fs total\n", time.Since(start).Seconds())
+}
+#+end_src
+
+Here, we don't know when the goroutines finish - we need to coordinate that - using channels
+#+begin_src go
+
+func main() {
+    start := time.Now()
+    c := make(chan string)
+    n := 0 // we initialize the counter to 0
+    do(func(lang Lang) {
+        n++ // we increment the counter here for each language
+        go count(lang.Name, lang.URL, c)
+   })
+
+   for i := 0; i < n; i++ { // we count upto the counter n to retreive that many messages
+      fmt.Print(<-c)
+   } // after this loop is done, we know that all the goroutines have completed
+
+   fmt.Printf("%.2fs total\n", time.Since(start).Seconds())
+
+}
+
+func count(name, url string, c chan<- string) {
+    start := time.Now()
+    r, err := http.Get(url)
+    if err != nil {
+        c <- fmt.Sprintf("%s: %s", name, err)
+        return
+    }
+    n, _ := io.Copy(ioutil.Discard, r.Body) //we copy the body of the response to ioutil.Discard which is /dev/null of writers. But it returns the number of bytes copied, so we get it
+    r.Body.Close()
+    c <- fmt.Sprintf("%s %d [%.2fs]\n", name, n, time.Since(start).Seconds())
+}
+
+// results:
+// Python 19190 [0.52s]
+// Ruby 19190 [2.22s]
+// Scala 19190 [2.49s]
+// Go 19190 [0.49s]
+// 2.49s total
+
+#+end_src
+
+Here, we use channels in the count func
+Here, c is a parameter is a channel of type string
+The left arrow means that the only allowed operation is sending to the channel
+We also have Sprintf which returns a string, and we send it to the channel
+
+If we want to give up after 1s and not continue the fetch, we can do use time.After function that takes in a Duration and gives a channel. It also promises that after the Duration has elapsed, it will send the current time to that channel.
+
+So:
+#+begin_src go
+
+func main() {
+    start := time.Now()
+    c := make(chan string)
+    n := 0 // we initialize the counter to 0
+    do(func(lang Lang) {
+        n++ // we increment the counter here for each language
+        go count(lang.Name, lang.URL, c)
+   })
+
+   for i := 0; i < n; i++ { // we count upto the counter n to retreive that many messages
+      select { // select is like the switch statement but the cases are communication operators
+          case result := <-c: // the first case is that we might receive the result from the channel c, in that case we print it
+              fmt.Print(result)
+          case <- timeout: // the second case is that we might receive the current time from channel timeout, in that case we print Timed out
+              fmt.Print("Timed out\n")
+              return // we return from main which will exit the program
+      }
+   }// each time we run the select statement, it blocks until one of the cases can proceed and then it runs that case
+
+   fmt.Printf("%.2fs total\n", time.Since(start).Seconds())
+}
+
+func count(name, url string, c chan<- string) {
+    start := time.Now()
+    r, err := http.Get(url)
+    if err != nil {
+        c <- fmt.Sprintf("%s: %s", name, err)
+        return
+    }
+    n, _ := io.Copy(ioutil.Discard, r.Body) //we copy the body of the response to ioutil.Discard which is /dev/null of writers. But it returns the number of bytes copied, so we get it
+    r.Body.Close()
+    c <- fmt.Sprintf("%s %d [%.2fs]\n", name, n, time.Since(start).Seconds())
+}
+
+// results:
+// Python 19190 [0.52s]
+// Ruby 19190 [2.22s]
+// Scala 19190 [2.49s]
+// Go 19190 [0.49s]
+// 2.49s total
+
+#+end_src
+
+Note how there are no conditional variables, no select loops, no epolls, no kqueues, no callback functions, no semaphores, and no mutexes.
+They exist in the run time but the abstractions that go provides means that you can focus on the job at hand and not these low level details
+
+The Go project:
+ - Go 1 released in March 2012
+ - 2 separate compilers, coordinated with language spec
+   - 1st implementation is called GCcompilers
+     - derived from the Plan 9 compiler toolchain
+   - 2nd implementation is basically a frontend for the GCC compiler
+     - called GCC Go
+
+ - Runs on FreeBSD, Linux, NetBSD, OpenBSD, OS X, Plan 9, Windows
+
+
+* A tour of Go - Official Tutorial
+
+** Basics
+
+#+begin_src go
+package main
+import (
+    "fmt"
+    "time"
+)
+
+func main () {
+    fmt.Println("Hello World")
+    fmt.Println("The time is: ", time.Now())
+}
+
+
+#+end_src
+
+*** Packages, variables, functions
+
+Every go program is a part of a package
+Programs start running in the main package, from the main method
+
+#+begin_src go
+package main
+
+import (
+	"fmt"
+	"math/rand"
+	"time"
+)
+
+func main() {
+	rand.Seed(1122)
+	fmt.Println("My favorite number is", rand.Intn(100))
+}
+#+end_src
+
+ - A name is exported if it begins with a capital letter
+ - eg: Pizza is exported, pizza is not
+ - When importing a package, only the exported names can be accessed from outside
+
+
+
+**** Functions
+
+A function can take 0 or more arguments
+
+#+begin_src go
+func <fn_name>(<arg 1> <type of arg 1>, ..., <arg n> <type of arg n>) <return type> {
+ // function body
+}
+
+// eg:
+
+func add(x int, y int) int { // since x and y share the same type, we can write this as: func add(x, y int) int {
+    return x + y
+}
+
+func main() {
+  fmt.Println(add(2, 3))
+}
+#+end_src
+
+Functions can return more than 1 value
+
+#+begin_src go
+func add(str1, str2 string) (string, string) {
+    return (str2, str1)
+}
+
+func main() {
+  a, b := swap("hello", "world")
+  fmt.Println(a, b)
+}
+#+end_src
+
+Return values can be named - at the function declaration step
+
+#+begin_src go
+func split(sum int) (x, y int) {
+  x = sum * 4 / 9
+  y = sum - x
+  return // this is a naked return - it will return x and y as they have been named in the function declaration line
+}
+
+#+end_src
+
+Var is used to declare a list of variables - like function argument lists - the type is last
+A variable can be at the package or at the function level
+
+    var a, b, c int
+
+You can also initialize during declaration
+
+    var a, b int = 1, 2
+
+If the initialization is present, we can skip type
+    var a, b = 1, "str1"
+ 
+You can also use := to declare variables - this is a shorthand for using var and type
+
+*:= <- this cannot be used outside a function, there we have to use var*
+
+**** Types
+
+Go's basic types are:
+
+ - bool
+ - string
+ - int, int8, int16, int32, int64
+ - uint, uint8, uint16, uint32, uint64, uintptr
+ - byte // alias for uint8
+ - rune // alias for int32, represents a Unicode code point
+ - float32, float64
+ - complex64, complex128
+
+int/uint is 32 bit on a 32 bit system, 64 bit on a 64 bit system
+
+You can factor var declarations into a block (just like with import)
+
+#+begin_src go
+package main
+
+import (
+	"fmt"
+	"math/cmplx"
+)
+
+var (
+	ToBe   bool       = false
+	MaxInt uint64     = 1<<64 - 1
+	z      complex128 = cmplx.Sqrt(-5 + 12i)
+)
+
+func main() {
+	fmt.Printf("Type: %T Value: %v\n", ToBe, ToBe) // T is for type, %v uses refelection to get type at runtime
+	fmt.Printf("Type: %T Value: %v\n", MaxInt, MaxInt)
+	fmt.Printf("Type: %T Value: %v\n", z, z)
+// Output
+// Type: bool Value: false
+// Type: uint64 Value: 18446744073709551615
+// Type: complex128 Value: (2+3i)
+}
+#+end_src
+
+Variables declared without an explicit initial value are given their _zero value_
+ - 0 for numeric type
+ - false for boolean type
+ - "" for strings
+
+
+Type conversions
+ - `T(v)` converts value v to type T
+
+#+begin_src go
+var a int = 2
+var b float64 = float64(a)
+var c uint = uint(b)
+
+// or equivalently 
+a := 42
+b := float64(a)
+c := uint(b)
+#+end_src
+
+Go is strongly typed - this means each variable has a predefined type and it cannot refer to something else. 
+So, to make b refer to an int, the int needs to be type casted to float64 or else it won't work
+
+Type inference
+When declaring a variable without specifying an explicit type (either := or var = syntax), the variable's type is inferred from the value on the rhs
+
+#+begin_src go
+var i int
+j := i
+
+i := 42           // int
+f := 3.142        // float64
+g := 0.867 + 0.5i // complex128
+#+end_src
+
+Constants are declared like variables, with the `const` keyword
+They cannot use the := syntax
+
+#+begin_src go
+
+package main
+
+import "fmt"
+
+const Pi = 3.14
+
+func main() {
+	const World = "世界"
+	fmt.Println("Hello", World)
+	fmt.Println("Happy", Pi, "Day")
+
+	const Truth = true
+	fmt.Println("Go rules?", Truth)
+}
+#+end_src
+
+Numeric constants
+ - they are high precision values
+ - an untyped constant takes the type needed by its context
+
+#+begin_src go
+package main
+
+import "fmt"
+
+const (
+	// Create a huge number by shifting a 1 bit left 100 places.
+	// In other words, the binary number that is 1 followed by 100 zeroes.
+	Big = 1 << 100
+	// Shift it right again 99 places, so we end up with 1<<1, or 2.
+	Small = Big >> 99
+)
+
+func needInt(x int) int { return x*10 + 1 }
+func needFloat(x float64) float64 {
+	return x * 0.1
+}
+
+func main() {
+	fmt.Println(needInt(Small))
+	fmt.Println(needFloat(Small))
+	fmt.Println(needFloat(Big))
+}
+// output
+// 21
+// 0.2
+// 1.2676506002282295e+29
+#+end_src
+
+Here, we see that they are printed so as to display their values correctly - this is due to their following the Stringer interface - their string method has logic with switch/case statements displaying the correct format
+
+*** Flow control statements: for, if , else, switch, defer
+
+Go has only 1 looping construct - the `for` loop
+It has the usual 3 components:
+ - init statement - executed before the first iteration
+   - the variables declared here will be only visible in the scope of the `for` statement
+   - this is optional
+ - condition expression - evaluated before every iteration
+ - post statement - executed at the end of every iteration
+   - this is optional
+
+No () needed around for, but for the for code block, {} mandatory
+
+#+begin_src go
+package main
+
+func main() {
+  for a := 0; a < 10; a ++ {
+    fmt.Printf(a)
+  }
+
+  for ; sum < 1000; { // if you make both the init and post statement optional, you can drop the semicolons to get the C's while
+    sum += sum
+  }
+
+  for sum < 1000 { // this is equivalent to :top:
+    sum += sum
+  }
+}
+#+end_src
+
+*C's while is spelled for in Go.*
+
+Omitting the conditional expression as well gives you an infinite loop
+    for {
+      // code
+    }
+
+
+If statements are like the `for` statements - no () on if statement, {} mandatory for code block
+
+#+begin_src go
+package main
+
+import (
+	"fmt"
+	"math"
+)
+
+func sqrt(x float64) string {
+	if x < 0 { // see ma, no braces!
+		return sqrt(-x) + "i"
+	}
+	return fmt.Sprint(math.Sqrt(x))
+}
+
+#+end_src
+
+You can also include a tiny "declaration" statement with an if - just like the init in "for" - the variable declared here will only be accessible in the if block - and also inside any of the `else` blocks
+
+#+begin_src go
+package main
+
+import (
+	"fmt"
+	"math"
+)
+
+func pow(x, y, lim int) int {
+  if v := math.pow(x, y); v < lim {
+    return v
+  }
+  return lim
+}
+
+func main() {
+	fmt.Println(
+		pow(3, 2, 10),
+		pow(3, 3, 20),
+	)
+}
+
+
+#+end_src
+
+Switch
+A `switch` statement is a shorter way to write a sequence of `if-else`
+It runs the first case whose conditional expression evaluates to true
+
+Go's switch runs only the selected cases, not all cases that follow - so no break needed at end of every case's code expression
+Also, the cases need not be constants, and the values involved need not be integers
+
+#+begin_src go
+
+package main
+
+import (
+  "fmt"
+  "time"
+)
+
+func main() {
+  today = time.Now().Weekday()
+  switch time.Saturday { // here, we are looking for time.Saturday -> it gives us a time.Weekday
+    case today + 0:
+      fmt.Println("Today")
+    case today + 1:
+      fmt.Println("Tomorrow")
+    default today + 1:
+      fmt.Println("Too far away")
+  }
+}
+#+end_src
+
+We can also use switch without any condition. This is same as `switch true` -> it will execute the *first block* that evaluate to true
+This is a clean way to write long-if-then-else chains
+
+#+begin_src go
+
+package main
+
+import (
+  "fmt"
+  "time"
+)
+
+func main() {
+  t = time.Now()
+  switch {
+    case t.Hour() < 12:
+      fmt.Println("Good morning")
+    case t.Hour() < 17:
+      fmt.Println("Good afternoon")
+    default:
+      fmt.Println("Good evening")
+  }
+}
+#+end_src
+
+
+Defer
+A `defer` statement defers the execution of a function until the surrounding function returns
+The deferred call's arguments are evaluated immediately, but the function itself is not executed until the surrounding function returns
+
+#+begin_src go
+package main
+
+import "fmt"
+
+func main() {
+	defer fmt.Println("world")
+
+	fmt.Println("hello")
+}
+#+end_src
+
+We can have multiple defer calls, they are put pushed onto the stack - so they execute LIFO
+
+#+begin_src go
+func main() {
+    for a:=0;a<10;a++ {
+      defer fmt.Println(a)
+    }
+	fmt.Println("end")
+}
+// output
+// end
+// 9
+// 8
+// 7
+// 6
+// 5
+// 4
+// 3
+// 2
+// 1
+#+end_src
+
+
+*** More types: structs, slices, maps
+
+**** Pointers
+Go has pointers.
+A pointer holds the memory address of a value (a value can be an integer, data structure, anything)
+
+`*T` is a pointer to a `T` value
+It's zero value is `nil` - the value it gets after declaration, before initialization
+
+    var p *int
+
+To get the pointer to a certain value, use `&T`
+
+    a := 42
+    p = &a
+
+The `*` operator denotes the pointer's underlying value
+
+    fmt.Println(*p) // we get the value pointed to by the pointer p. *<some pointer> gives the value pointed to by the pointer
+                    // this is also called dereferencing or indirecting
+    *p = 21 // here we set the value of the memory location pointed to by the pointer to 21
+
+#+begin_src go
+package main
+
+import "fmt"
+
+func main() {
+	i, j := 42, 2701
+
+	p := &i         // point to i
+	fmt.Println(*p) // read i through the pointer
+	*p = 21         // set i through the pointer
+	fmt.Println(i)  // see the new value of i
+
+	p = &j         // point to j
+	*p = *p / 37   // divide j through the pointer
+	fmt.Println(j) // see the new value of j
+	// output
+	// 42
+	// 21
+	// 2701/37 = 73
+}
+#+end_src
+
+**** Struct
+A struct is a collection of fields
+
+#+begin_src go
+package main
+
+import "fmt"
+
+// note the syntax: type <variable name> <variable type>
+type Vertex struct {
+	X int
+	Y int
+}
+
+func main() {
+    v := Vertex{1, 2}
+	fmt.Println(v)
+	fmt.Println(v.X) // You can access the struct fields using the dot notation
+    v.X = 5
+	fmt.Println(v)
+}
+// {1 2}
+// 1
+// {5 2}
+#+end_src
+
+**** Pointers to structs
+
+We can have pointers to structs as well. In the example above, 
+
+#+begin_src go
+package main
+
+import "fmt"
+
+// note the syntax: type <variable name> <variable type>
+type Vertex struct {
+	X int
+	Y int
+}
+
+func main() {
+    v := Vertex{1, 2}
+    ptr_v := &v
+    fmt.Println(*ptr_v) // you can print it using
+    fmt.Println((*ptr_v).X) // you can access the attributes like so
+    fmt.Println(ptr_v.X) // this is also allowed to make it simple to access - recall C has ptr_v->X
+}
+#+end_src
+
+**** Struct literals
+
+You can allocate a new struct value by listing the values of its fields
+
+#+begin_src go
+type Vertex struct {
+  X, Y int
+}
+
+var (
+  v1 = Vertex{1, 2}
+  v2 = Vertex{X: 1} // Y:0 is implicit
+  v3 = Vertex{} // X:0, Y:0 is implicit
+  v3 = &Vertex{1, 2} // v3 is a pointer to Vertex (type *Vertex)
+)
+#+end_src
+
+**** Arrays
+
+The type `[n]T` is an array of `n` values of type `T`
+
+  var foobar[10]int
+
+Here, foobar is an array of 10 integers
+
+Arrays cannot be resized.
+
+#+begin_src go
+package main
+
+import "fmt"
+
+func main() {
+	var a [2]string
+	a[0] = "Hello"
+	a[1] = "World"
+	fmt.Println(a[0], a[1])
+	fmt.Println(a)
+
+	primes := [6]int{2, 3, 5, 7, 11, 13} // you can declare and initialize in one go (no pun intended)
+	fmt.Println(primes)
+}
+#+end_src
+
+**** Slices
+
+Arrays are fixed length but slices are dynamically sized - they offer a flexible view into the elements of an array.
+
+A slice is formed by specifying the 2 indices - a low and high bound
+
+  a[low:high]
+
+Low is included, high is not
+
+#+begin_src go
+package main
+
+import "fmt"
+
+func main() {
+	primes := [6]int{2, 3, 5, 7, 11, 13}
+	var s []int = primes[1:4] // slices have simlar syntax as arrays
+	fmt.Println(s)
+}
+#+end_src
+
+Slices are like references to arrays - they are just a dynamic resizable sliding window to peek at (and modify) the contents of the array
+
+Slice literals is like an array literal without a length
+
+#+begin_src go
+
+[3]bool{true, true, true} // this is an array
+[]bool{true, true, true} // this is a slice - it creates the array first and then builds a slice to reference it
+
+// examples:
+
+[]int{1, 2, 3, 4, 5}
+
+[]struct {
+  X int, 
+  Y string
+}{
+  {1, "one"}, 
+  {2, "two"}, 
+  {3, "three"}
+}
+
+// slices have a default value for low and high index as well
+// default for low: 0
+// default for high: len()
+#+end_src
+
+The slice has *length* -> the number of elements it contains -> len(s)
+The slice has *capacity* -> the number of elements in the underlying array -> cap(s)
+
+So, we can do this:
+
+#+begin_src go
+package main
+
+func main () {
+  s := []int {1, 2, 3, 4, 5}
+  
+  s1 := s[:0] // s1 has size 0
+  s1 := s[:4] // s1's size has been increased to 4
+}
+
+#+end_src
+
+The zero value of a slice is `nil`
+A `nil` slice has length and capacity of 0 and has no underlying array
+
+#+begin_src go
+package main
+
+import "fmt"
+
+func main() {
+	var s []int // empty array, so the slice is nil
+	fmt.Println(s, len(s), cap(s))
+	if s == nil {
+		fmt.Println("nil!")
+	}
+}
+#+end_src
+
+Slices can be made with `make` - it's a built in function
+`make` allocates a 0ed array and returns a slice that refers to that array
+
+Syntax: make([]int, <int for len>, <int for capacity>)
+
+Matrix:
+
+	board := [][]string{
+		[]string{"_", "_", "_"},
+		[]string{"_", "_", "_"},
+		[]string{"_", "_", "_"},
+	}
+
+
+Appending to a slice. We have the append function described in the docs as:
+
+  func append(s []T, vs ...T) []T
+
+It takes as arguments "s" which is a slice of T type. And it takes in a variable number of arguments of type T and it returns a slice of type T
+
+If the backing array of "s" is too small to fit all the given values, a bigger array will be allocated and a pointer to that new array will be returned
+
+
+#+begin_src go
+
+// create a slice
+var s []int // this has 0 capacity right now
+s = append(s, 0) // this increases the capacity of s, returns a pointer to new array
+
+#+end_src
+
+The range form of the "for" loop iterates over a slice or map
+When ranging over a slice, the default behavior is that of Python's enumerate(iterable)
+The 2 items returned are the index, the copy of the element at that index
+
+#+begin_src go
+
+a := []int {11, 22, 33, 44}
+for i, v := range a {
+  fmt.Println(i, v)
+}
+
+// you can skip the index by using _
+for _, v := range a {
+  fmt.Println(_, v) // this will throw an error
+}
+
+#+end_src
+
+**** Maps
+
+A map maps keys to values
+A zero value of a map is `nil`
+A `nil` has no keys, nor can keys be added
+
+#+begin_src go
+type Vertex struct {
+  Lat, Lon float64
+}
+
+var m map[string]Vertex
+
+func main() {
+  m = make(map[string]Vertex)
+  m["Bell Labs"] = Vertex{
+    1.11, 2.22
+  }
+  fmt.Println(m)
+}
+
+var mymap = map[string]Vertex{
+  "foo" : Vertex{1.1, 2.2},
+  "bar" : Vertex{1.2, 2.3},
+}
+
+// we can skip the type name here
+var mymap = map[string]Vertex{
+  "foo" : {1.1, 2.2},
+  "bar" : {1.2, 2.3},
+}
+
+// we can insert an element in map m
+m[key] = elem
+
+// we can get an element in map m
+elem = m[key]
+
+// we can delete an element in map m
+delete(m, key)
+
+// test if a key is there
+elem, ok = m[key]
+
+// ok is true/false. If ok is false, elem is zero value of the map's element type
+
+///////////////////////////
+// testing the word count
+///////////////////////////
+
+package main
+
+import (
+	"golang.org/x/tour/wc"
+	"strings"
+)
+
+func WordCount(s string) map[string]int {
+	res := make(map[string]int) // make is used to create a new dict
+	words := strings.Fields(s)
+	for _, v := range words { // _ because we don't want the index
+		res[v] = res[v] + 1
+	}
+	return res
+}
+
+func main() {
+	wc.Test(WordCount)
+}
+///////////////////////////
+// testing the slices
+///////////////////////////
+
+package main
+
+import "golang.org/x/tour/pic"
+
+func Pic(dx, dy int) [][]uint8 {
+	res := make([][]uint8, dx) // here, we make the doubly index, (but currently empty) slice
+	for i := 0; i < dx; i++ {
+		res[i] = make([]uint8, dy) // here, we make the inner slice
+		for j := 0; j < dy; j++ {
+			res[i][j] = uint8(i^j) // here, we populate the inner slice
+		}
+	}
+	return res
+}
+
+func main() {
+	pic.Show(Pic)
+}
+
+#+end_src
+
+
+**** Function values
+
+Functions are values too. They can be passed around just like other values - they can be used as function arguments and return values
+
+#+begin_src go
+package main
+
+import (
+	"fmt"
+	"math"
+)
+
+func compute(fn func(float64, float64) float64) float64 { // this line is extremely readable - we take in an argument called fn, which is of type function, taking in 2 floats and returning a single float
+  return fn(3, 4)   // we always call fn with 3, 4
+}
+
+func main() {
+  hypot := func(x, y float64) float64 { // here, we create a function and assign it to variable called hypot
+    return math.Sqrt(x*x + y*y)
+  }
+  fmt.Println(hypot(5, 12)) // we can call the hypot variable
+  fmt.Println(compute(hypot)) // we can call the compute function
+  fmt.Println(compute(math.Pow)) // we can call the compute function
+}
+#+end_src
+
+Functions in Go can be closures as well. Closures are just functions that reference variables from outside its body.
+
+If that function has a access to the variables, it can assign and reference them
+
+#+begin_src go
+func main() {
+	pos, neg := adder(), adder()
+	for i := 0; i < 10; i++ {
+		fmt.Println(
+			pos(i),
+			neg(-2*i),
+		)
+	}
+}
+
+
+func adder() func(int) int { // adder returns a function that takes an int and returns an int
+  sum := 0
+  return func(x int) int { // this function that we return has access to the "sum" variable and is a function closure. Each returned function has it's own "sum" variable
+    sum += int
+    return sum
+  }
+}
+
+//////////////////////////////////////
+// we can have a fibonacci closure ///
+//////////////////////////////////////
+
+package main
+
+import "fmt"
+
+// fibonacci is a function that returns
+// a function that returns an int.
+func fibonacci() func() int {
+	last := 0
+	now := 1
+	return func() int {
+		res := last + now
+		last = now
+		now = res
+		return res
+	}
+}
+
+func main() {
+	f := fibonacci()
+	for i := 0; i < 10; i++ {
+		fmt.Println(f())
+	}
+}
+#+end_src
+
+** Methods and interfaces
+
+*** Methods
+
+Go doesn't have classes. *But we can define methods on types*
+
+So, we can define a struct type and define methods on that struct. Now, you can use the struct instantiation to call that method
+If we want to associate it with a type, we need to use a special *receiver* argument - it appears in its own argument list between the `func` keyword and the method name
+
+#+begin_src go
+
+type Vertex struct{ // a normal struct with 2 attrs, both float
+  X, Y float4
+}
+
+func (v Vertex) Abs() float64 { // note the syntax, we have: func <type to associate it with> <function name> (<function args>) <function return values>
+  return math.Sqrt(v.X*v.X + v.*v.Y)
+}
+
+func main() {
+  v := Vertex{3, 4}
+  fmt.Println(v.Abs()) // we can call the function on the type as if it were the type's attribute
+}
+
+#+end_src
+
+The terminology: *the Abs method has a receiver of type Vertex named v*
+
+So, functions are normal "unassociated with type" functions
+Methods are functions which are associated with type
+
+*Remember: a method is just a function with a receiver argument.*
+
+If someone gives you a method, you can ask who is the receiver of this method? Or more explicitly, what type is the receiver of this method?
+
+:top: the example above can be re-written as 
+#+begin_src go
+package main
+
+import (
+	"fmt"
+	"math"
+)
+
+type Vertex struct {
+	X, Y float64
+}
+
+func Abs(v Vertex) float64 {
+	return math.Sqrt(v.X*v.X + v.Y*v.Y)
+}
+
+func main() {
+	v := Vertex{3, 4}
+	fmt.Println(Abs(v))
+}
+#+end_src
+
+You can declare methods on all types, not just structs.
+
+#+begin_src go
+type MyFloat float64 // we declare a new type called MyaFloat which is just a float
+
+func (f MyFloat) Abs() float64 { // the correct way to read this is to say, this function Abs can be applied on variables of type MyFloat
+  if f < 0 {
+    return float64(-f)
+  }
+  return float64(f)
+}
+
+func main() {
+	f := MyFloat(-math.Sqrt2)
+	fmt.Println(f.Abs())
+}
+#+end_src
+
+
+We can also create methods on pointer receivers
+In that case, the *receiver* argument part of the function declaration will have (t *T)
+which is to say that this function can be called on variables of type *T, that is, this function can be called on pointers to T (where T is some type)
+
+#+begin_src go
+package main
+
+import (
+	"fmt"
+	"math"
+)
+
+type Vertex struct {
+	X, Y float64
+}
+
+func (v Vertex) Abs() float64 {
+	return math.Sqrt(v.X*v.X + v.Y*v.Y)
+}
+
+func (v *Vertex) Scale(f float64) { // this function can be called on pointers of Vertex struct
+
+// here, the function Scale is associated with the type "pointer of struct Vertex". So, it modifies the parent struct
+
+	v.X = v.X * f // recall, this should have been (*v).X, C makes this easy by v->X, Go makes it easier by v.X
+	v.Y = v.Y * f
+}
+
+func main() {
+	v := Vertex{3, 4}
+	v.Scale(10)
+	fmt.Println(v.Abs()) // here, we can call the method on "v", and not on &v (which would have looked like: (&v).Abs()) which represents a pointer to Vertex, or *Vertex, which is what the method is associated to. This is because Go compiler executes this as *v for us.
+}
+#+end_src
+
+Since the methods often need to modify their receiver (the type they are associated with), pointer receivers are more common than value receivers
+
+Go has "pass by value" like C. 
+You can "pass by reference" with pointers
+
+:top: can be written with functions:
+
+#+begin_src go
+func Scale(v *Vertex, f float64) {
+	v.X = v.X * f
+	v.Y = v.Y * f
+}
+Scale(&v, 10) // we now need to pass a pointer to the function
+#+end_src
+
+Here, if try to pass just "v" and not the pointer to v, it will throw an error - the function Scale expects a pointer to Vertex, it must be give a pointer to Vertex
+
+:top: we saw an example which shows how we used the value where the pointer to that value was expected by the method. The reverse is true as well. The methods with value receivers can take pointer as well
+So:
+
+#+begin_src go
+
+func (v Vertex) Abs() float64 {
+	return math.Sqrt(v.X*v.X + v.Y*v.Y)
+}
+
+v := Vertex{3, 4}
+
+// we should be doing
+fmt.Println(v.Abs())
+
+p := &v
+// we can do
+fmt.Println(p.Abs())
+
+// here, this will be interpreted as
+fmt.Println((*p).Abs())
+
+///////////////////////////////////////
+/// we can have a fibonacci closure ///
+///////////////////////////////////////
+package main
+
+import (
+	"fmt"
+	"math"
+)
+
+type Vertex struct {
+	X, Y float64
+}
+
+func (v Vertex) Abs() float64 {
+	return math.Sqrt(v.X*v.X + v.Y*v.Y)
+}
+
+func AbsFunc(v Vertex) float64 {
+	return math.Sqrt(v.X*v.X + v.Y*v.Y)
+}
+
+func main() {
+	v := Vertex{3, 4}
+	fmt.Println((&v).Abs())
+	fmt.Println(AbsFunc(v))
+
+	p := &Vertex{4, 3}
+	fmt.Println(p.Abs())
+	fmt.Println(AbsFunc(*p))
+}
+
+#+end_src
+
+Bottomline: Functions only accept what they explicitly say they will accept
+Methods can accept either values or their pointers -> they will get the right one and work with it
+So, use value receiver if you don't want to modify receiver, use pointer receiver if you want to modify the receiver
+Also, you might want to use a pointer receiver when you want to avoid copying the value on each method call
+
+Example, look at Abs below :arrow_down:
+
+#+begin_src go
+func (v *Vertex) Abs() float64 {
+	return math.Sqrt(v.X*v.X + v.Y*v.Y)
+}
+#+end_src
+
+Here, :top: we used pointer receiver even when we didn't want to change the Vertex struct
+
+*** Interfaces
+
+There is a special type - the "interface" type
+It is defined as a set of method signatures - it just has the signatures, not the body
+
+When you declare a variable of this interface type, it can hold any value (of any type that implements this interface.
+
+So, to make things concrete: Let's say we have:
+1. An interace "x" with 3 method signatures
+2. A type "y" which implements all the 3 methods
+3. Now, you can do var x_1 x = y
+   1. Note, we were able to store y in variable x
+
+
+#+begin_src go
+package main
+
+import (
+ "fmt"
+ "math"
+)
+
+type MyFloat float64
+
+type Abser interface {
+  Abs() float64
+}
+
+func (f MyFloat) Abs() float64 {
+  if f < 0 {
+    return float64(-f)
+  }
+  return float64(f)
+}
+
+func (v *Vertex) Abs() float64 {
+  return math.Sqrt(v.X*v.X + v.Y*v.Y)
+}
+
+func main() {
+  var a Abser
+  f := MyFloat(-math.Sqrt(2))
+  v := Vertex{3, 4}
+
+  a = f // this is allowed since MyFloat implements the Abser interface
+  // so how this works is that we can have an interface and folks who implemented that interface can be assigned to a variable of that type
+
+  a = &v // this is allowed since the method is implemented by pointer to Vertex, *V. a = v is not allowed
+}
+#+end_src
+
+*A type implements an interface by implementing its methods. There is no explicit declaration of intent, no "implements" keyword*
+This means that you can declare a new interface with some method and old types that implemented that interface automatically implement that interface
+
+"Implicit interaces decouple the definition of an interface from its implementation"
+
+#+begin_src go
+package main
+
+import "fmt"
+
+type I interface {
+ M()
+}
+
+type T struct {
+ S string
+}
+
+func (t T) M() {
+ fmt.Println(t.S)
+}
+
+func main() {
+  var i I = T{"hello"} // defining a variable of type I interface and assigning to it struct of type T - this is allowed since type T implements (implicitly) the interface I
+  i.M() // technically, this interface should be called Mer and not I - recall this is the Go standard
+}
+
+#+end_src
+
+We can also consider One db for qa and prod but using only a readonly user in qa
+This will allow us to test out the gateway app with the prod data but we won't be able to test the pipeline in qa - only dev for that.
+
+**** Interface values
+
+Interfaces values (the variables of type interfaces) can be thought of as a tuple of a _value and a concrete type_ --> (value, type)
+The interface value holds a value of a specific underlying concrete type
+
+Calling a method on the interface type executes the method of the same name on its underlying type (we know that the type would have that method defined as it implements the interface)
+
+#+begin_src go
+package main
+
+import "fmt"
+
+// define an interface I
+type I interface {
+ M()
+}
+// define a struct type
+type T struct {
+ S string
+}
+
+// define a float64 type
+type F float64
+
+// make the struct type implement the interface
+func (t T) M() {
+  fmt.Println(t.S)
+}
+
+// make the float64 type implement the interface
+func (f F) M() {
+ fmt.Println(f)
+}
+
+// in main, create a var of type interface and assign it to new struct and new float64 type and call that method
+func main() {
+ var i I
+ i = F(math.Pi)
+ i.M()
+ describe(i) // we can pass i to a function that accepts interface I
+
+ i = T("hello")
+ i.M()
+}
+
+func describe(i I) {
+ fmt.Printf("(%v, %T)\n", i, i)
+}
+#+end_src
+
+**** Interface values with nil underlying values
+If the concrete value that is associated to the interface value (the interface variable) then the method will be called with a nil receiver
+
+This would have given a null pointer exception in other languages, since we passed a null pointer as the receiver to the method - *but in go, it is common to write methods that gracefully handle being called with a nil receiver*
+
+
+
+#+begin_src go
+package main
+
+import "fmt"
+
+// define an interface I
+type I interface {
+ M()
+}
+
+// define a struct type
+type T struct {
+ S string
+}
+
+// make the struct type implement the interface
+func (t *T) M() {
+  if t == nil {
+    fmt.Println("<<nil>>")
+    return
+  }
+  fmt.Println(t.S)
+}
+
+func main() {
+ var i I
+ var t *T
+ i = t
+ describe(i) // will print (<nil>, *main.T) -> <nil> is the internal representation of the struct. Note this is: (value, type)
+ i.M() // here, we are passing a nil (null) receiver to the method M
+
+ i = &T{"hello"}
+ describe(i) // will print (&{hello}, *main.T) --> here, the value is not nil
+ i.M() // this will print hello
+}
+#+end_src
+
+**** Nil interface values
+A nil interface value holds neither a value nor concrete type
+So, this is a interface value (interface variable) that is not associated with an instance of a type that implements this interface
+
+#+begin_src go
+
+var i I
+describe(i) // (<nil>, <nil>) --> nil for both value and type
+i.M() // this is a run time error because there is no type inside the interface tuple to indicate which concrete method to call
+// this :top: will give "panic: runtime error: invalid memory address or nil pointer dereference"
+
+#+end_src
+
+**** Empty interface
+The interface type that specifies zero methods is known as the empty interface
+
+#+begin_src go
+interface{}
+#+end_src
+
+An empty interface can hold values of any type
+This is used by code that handles of unknown type - like fmt.Println
+
+This is a way of sidestepping the type system in go
+
+#+begin_src go
+func main() {
+ var a interface{}
+ describe(a) // (<nil>, <nil>)
+
+ a = 42 // this is okay
+ describe(a) // (42, int)
+
+ a = "hello" // this is okay as well
+ describe(a) // (hello, string)
+}
+#+end_src
+
+**** Type assertions
+
+A type assertion provides access to an interface value's underlying concrete value
+
+#+begin_src go
+t := i.(T) // here we assert that the interface value i holds the concrete type T and assigns the underlying T value to the variable t
+// this will trigger a panic if i doesn't hold any type T
+
+// to test if the interface value holds a specific type, a type assertion can return 2 values - the underlying value and a boolean value that reports wheather the assertion succeeded
+t, ok := i.(T)
+// if i holds a value, t will hold it and ok will be true
+// if not, t will be the zero value of type T and ok will be false --> no panic occurs
+
+var i interface{} = "hello" // the catch all interface type instance i given a string (here, the interface has no name, it is an anonymous interface)
+
+s := i.(string) // s is hello
+s, ok := i.(string) // s is hello, ok is true
+
+s, ok := i.(float64) // s is 0, ok is false
+
+s := i.(float64) // panic
+#+end_src
+
+Note we talked about reflections that allow us to get the type of the varialbe, type assertions might be using it under the hood to get the type information
+
+**** Type switches
+
+They are a construct that permits several type assertions in series
+
+#+begin_src go
+switch v := i.(type) {
+ case T:
+  // here, the type is T
+ case S:
+  // here, the type is S
+ default:
+ // no match, here v has the same type as i
+}
+
+func do(i interface{}) {
+ switch v := i.(type) {
+  case int:
+    fmt.Printf("here, the type is int")
+  case string:
+    fmt.Printf("here, the type is string")
+  default:
+    fmt.Printf("None of the above, it is %T", v)
+ }
+}
+
+func main() {
+ do(21)
+ do("hello")
+ do(true) //  None of the above, it is bool. Here, i is "bool", so v also gets the bool type
+}
+#+end_src
+
+**** Stringers
+One of the most ubiquitous interfaces is the Stringer interface, defined by the fmt package
+
+It has a single method called String -> as the name suggests
+
+#+begin_src go
+type Stringer interface { // we have the Stringer interface
+ String () string
+}
+
+func (p Person) String() string { // the struct Person implements the Stringer interface
+ return fmt.Sprintf("%v (%v years)", p.Name, p.Age) // Sprintf prints the string
+}
+
+type Person struct {
+ Name string,
+ Age int
+}
+
+func main() {
+ p = Person{23, "Darshan"}
+ fmt.Printf(p) // Darshan (23 years) // the fmt.Printf just calls the String() method on the input value
+}
+
+#+end_src
+
+A simple Example:
+
+#+begin_src go
+package main
+
+import "fmt"
+
+type IPAddr [4]byte
+
+// TODO: Add a "String() string" method to IPAddr.
+func (ip IPAddr) String() string {
+	return fmt.Sprintf("%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3])
+}
+
+func main() {
+	hosts := map[string]IPAddr{
+		"loopback":  {127, 0, 0, 1},
+		"googleDNS": {8, 8, 8, 8},
+	}
+	for name, ip := range hosts {
+		fmt.Printf("%v: %v\n", name, ip) // loopback: 127.0.0.1
+	}
+}
+#+end_src
+
+*** Errors
+
+Go expresses error state with "error" values
+The `error` type is a builtin interface similar to fmt.Stringer
+
+#+begin_src go
+type error interface {
+ Error() string
+}
+
+#+end_src
+
+The fmt package looks for the error interface when printing the values
+
+Functions often return `error` value and the calling code should handle errors by testing wheather the error equals `nil`
+
+#+begin_src go
+i, err := strconv.Atoi("42")
+if err != nil {
+ fmt.Printf("Could not convert to integer")
+ return
+}
+
+Fmt.Printf("got the integer: ", i)
+#+end_src
+
+Another example:
+
+#+begin_src go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+// new struct MyError
+type MyError struct {
+	When time.Time
+	What string
+}
+
+// implement the Error method required by the error interface
+func (m *MyError) Error() string {
+	return fmt.Sprintf("Did not work at %v and %v", m.When, m.What)
+}
+
+// write a function that returns an error
+func run() error { // this method returns type error, which is to say, anything that implements the error interface, that is to say, anything type implementes the Error() method
+	return &MyError{time.Now(), "it did not work"}
+}
+
+// in main, call the function :top: returning an error and see how the Error method is invoked
+func main() {
+	if err := run(); err != nil {
+		fmt.Println("err message: ", err) // when you try to print the error, it looks for the Error() method
+	}
+}
+#+end_src
+
+So, all the functions that can fail return "error"
+
+We can change our sqrt function from earlier to return an error on getting negative values as input
+
+#+begin_src go
+package main
+
+import (
+	"fmt"
+	"math"
+)
+
+type ErrNegativeSqrt float64 // we define a custom error type called ErrNegativeSqrt
+
+func (e ErrNegativeSqrt) Error() string { // the custom error type ErrNegativeSqrt implements the error interface
+	return fmt.Sprintf("cannot Sqrt negative number: %f", float64(e)) // here, the type casting to float64 is necessary else, we'll call the Error method of this e, which calls itself - infinite loop. By type casting as e, we call the String method of e which is the String method of float64 since we don't define it explicitly
+}
+
+func Sqrt(x float64) (float64, error) { // the Sqrt function returns a float64 and an error (which may be nil)
+	z := 1.0
+	prev_z := 0.0
+
+	eps := 2.220446049250313e-16
+	if x < 0 {
+		return 0, ErrNegativeSqrt(x) // if the input value is <0, return an error - any value that implements the error interface
+	}
+
+	for n := 0; n < 10; n++ {
+		z -= (z*z - x) / (2 * z)
+		// fmt.Printf("Iteration %v: %v (%v)\n", n, z, prev_z-z)
+		if math.Abs(prev_z-z) < eps {
+			// fmt.Printf("eps has been reached")
+			break
+		}
+		prev_z = z
+	}
+	return z, nil
+}
+
+func main() {
+	fmt.Println(Sqrt(2))
+	fmt.Println(Sqrt(-2)) // here, the Sqrt function will return an error, which will be printed using Error() method above
+}
+
+#+end_src
+
+*** Readers
+
+The `io` package specifies the `io.Reader` interface, which represents the read end of a stream of data
+Any type that implements the `Read` method implements this interface
+
+The `Read` method of the `io.Reader` interface:
+#+begin_src go
+func (T) Read(b []byte) (n int, err error) // the method ought to return num of bytes read (len(b)) and error if any
+#+end_src
+
+Read populates the given byte slice with data. It also returns an error, or io.EOF when the stream ends
+
+#+begin_src go
+package main
+
+import (
+	"fmt"
+	"io"
+	"strings"
+)
+
+func main() {
+	r := strings.NewReader("Hello World!") // strings.NewReader returns a reader, a value that implements the Reader interface, so it has the Read method. Here, we give the NewReader the string data to read
+
+	b := make([]byte, 8) // we make a byte slice
+
+	for { // infinite loop
+		n, err := r.Read(b)                               // this fills the byte array with the data
+		fmt.Printf("n = %v err = %v b = %v\n", n, err, b) // this prints the number of bytes read, error if any and the values filled in the bytes slice
+		fmt.Printf("b[:n] = %q\n", b[:n])                 // we can print the bytes slice
+		if err == io.EOF {                                // if we come across eof, we break the infinite loop
+			break
+		}
+	}
+}
+#+end_src
+
+Exercise: Implement a custom Reader type that emits an infinite series of 'A'
+
+So, basically, we will define a new type (say a struct) called MyReader that will have a Read method associated with it
+That Read method should fill the input byte slice with 'A's
+
+#+begin_src go
+package main
+
+import "golang.org/x/tour/reader"
+
+type MyReader struct{}
+
+// TODO: Add a Read([]byte) (int, error) method to MyReader.
+func (mr MyReader) Read(b []byte) (n int, err error) {
+	for i := 0; i < len(b); i++ { // we iterate thru the slice and fill it with As
+		b[i] = 'A'
+	}
+	return len(b), nil
+}
+
+func main() {
+	reader.Validate(MyReader{}) // the Validate method will give it some empty byte slice and see if MyReader fills it with 'A's
+}
+#+end_src
+
+A common pattern is to take an io.Reader and wrap it with another io.Reader that modifies the stream in some way
+An example: the gzip.NewReader function takes an io.Reader (a stream of compressed data) and returns a *gzip.Reader that also implements io.Reader (a stream of decompressed data)
+
+Exercise: Implement a reader that takes in a stream of data and replaces each character with it's 13th character
+
+#+begin_src go
+package main
+
+import (
+	"io"
+	"os"
+	"strings"
+)
+
+type rot13Reader struct {
+	r io.Reader
+}
+
+func (mr *rot13Reader) Read(b []byte) (n int, err error) {
+	// we read the data using the rot13Reader's inner Reader and modify the stream and return that
+	for {
+		n, err := mr.r.Read(b) // we read the data using the original inner reader
+		for i := 0; i < n; i++ {
+			b[i] = 'a' // we modify the data stream
+		}
+		return n, err // we can just do "return" here as we have already named the return variables above
+	}
+}
+
+func main() {
+	s := strings.NewReader("Lbh penpxrq gur pbqr!") // this is the input to the normal NewReader
+	r := rot13Reader{s} // here, we wrap it with out own reader
+	io.Copy(os.Stdout, &r) // this basically calls the Read method on r and copies the bytes to stdout
+}
+
+#+end_src
+
+The io.Copy handles calling the Read method muliple times till EOF is returned etc
+
+*** Images
+
+The standard library has a package called "Images". It defines the `Image` interface
+
+#+begin_src go
+package image
+
+type Image interface {
+ ColorModel() color.Model
+ Bounds() Rectangle // Rectangle is in images package, but since Image interface is also inside images package, we don't need to write images.Rectangle
+ At(x, y int) color.Color // these are also interfaces, but here we will use predefined implementations color.RGBA, color.RGBAModel (implemented in images/color package)
+}
+
+// to get a new image
+m := image.NewRGBA(image.Rect(0, 0, 100, 100)) // this returns an implemnetation of the Image interface
+#+end_src
+
+
+We can create our own image:
+
+#+begin_src go
+package main
+
+import (
+	"image"
+	"image/color"
+
+	"golang.org/x/tour/pic"
+)
+
+// this is our implementation of the standard Image interface
+type MyImage struct {
+	i image.Image
+}
+
+// here the receiver is our custom image
+func (i MyImage) ColorModel() color.Model {
+	return color.RGBAModel
+}
+
+// here the receiver is our custom image
+func (i MyImage) Bounds() image.Rectangle {
+	return image.Rect(0, 0, 300, 300)
+}
+
+// this is interesting
+// At is supposed to return color.Color
+// From the documentation, we see that color.Color is also an interface with only 1 method RGBA() (r, g, b, a, uint32)
+// Now, the standard library implements the RGBA method. The std lib has a struct RGBA and a method RBGA() which has this struct as the receiver.
+// It looks like this:
+//type RGBA struct {
+//        R, G, B, A uint8
+//}
+func (i MyImage) At(x, y int) color.Color {
+	return color.RGBA{uint8(y), uint8(x), uint8(x+y), 255} // when we do this, we create a new struct. Now this struct implements the Color interface since the standard library has the RGBA() method defined with this struct as the receiver. So, we ca return this struct as color.Color return type
+}
+
+func main() {
+	m := MyImage{}
+	pic.ShowImage(m)
+}
+
+#+end_src
+
+This gives the result:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-03-01 07:47:07
+[[file:assets/screenshot_2018-03-01_07-47-07.png]]
+
+** Concurrency
+
+*** Goroutines
+
+They are lightweight threads managed by the Go runtime.
+They give you useful abstractions to do concurrent programming. You don't have to deal with mutexes, locks, semaphores etc - the runtime handles that for you. You get a set of very clean abstractions to work with.
+
+#+begin_src go
+go f(x, y, z)
+#+end_src
+
+This stars a new goroutine running f(x, y, z). The evaluation of f, x, y, z happens in the current goroutine (execution happens in a new goroutine)
+
+*Goroutines run in the same address space* - so access to shared memory must be synchronized - use channels.
+
+#+begin_src go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func say(s string) {
+	for i := 0; i < 5; i++ {
+		time.Sleep(100 * time.Millisecond)
+		fmt.Println(s)
+	}
+}
+
+func main() {
+	go say("world")
+	say("hello")
+}
+// this prints 
+// world
+// hello
+// hello
+// world
+// world
+// hello
+// hello
+// world
+// world
+// hello
+#+end_src
+
+Why does it print "hello" so many times? :thinking:
+
+*** Channels
+
+They are a "typed" conduit through which you can send and receive values with the channel operator <-
+
+#+begin_src go
+ch <- v // send v to channel ch
+v := <-ch // receive from ch and assign to v
+#+end_src
+
+Channels must be created before use: ch:= make(chan int)
+
+By default, sends and receives block until the other side is ready - this allows goroutines to synchronize without explicit locks/conditional variables
+
+Look at this snippet:
+#+begin_src go
+package main
+
+import "fmt"
+
+func sum(s []int, c chan int) {
+	sum := 0
+	for _, v := range s {
+		sum += v
+	}
+	c <- sum // send sum to c
+}
+
+func main() {
+	s := []int{7, 2, 8, -9, 4, 0}
+
+	c := make(chan int)
+	go sum(s[:len(s)/2], c) // we give the slice to the function
+	go sum(s[len(s)/2:], c)
+	x, y := <-c, <-c // receive from c
+
+	fmt.Println(x, y, x+y)
+}
+
+#+end_src
+
+We can make buffered channels as well
+Just provide the second argument to make(chan int)
+
+#+begin_src go
+ch := make(chan int, 100)
+#+end_src
+
+Sends block only when the buffer is full. Receives block when buffer is empty
+
+#+begin_src go
+package main
+
+import "fmt"
+
+func main() {
+	ch := make(chan int, 2) // here, the channel has capacity of 2
+	ch <- 1
+	ch <- 2
+	// ch <- 3 // this line will cause a deadlock, because the buffer is full and no one is reading from the channel
+	fmt.Println(<-ch)
+	fmt.Println(<-ch)
+}
+#+end_src
+
+**** Range and close
+
+A sender can close a channel to indicate that no more values will be sent
+The receiver can test for this by accepting a second argument when receiving
+
+#+begin_src go
+v, ok := <- ch
+#+end_src
+
+Here, `ok` is `false` if there are no more values to receive - that is, `ok` is true if the channel is closed.
+
+#+begin_src go
+for a := range c // will receive values repeatedly till the channel closes
+#+end_src
+
+Only the send ought to close the channel, not the receiver. Sending on a closed channel will cause a panic
+
+Closing channels isn't mandatory, it should be done to tell the receiver that no more values are to be expected
+
+#+begin_src go
+package main
+
+import (
+	"fmt"
+)
+
+func fibonacci(n int, c chan int) {
+	x, y := 0, 1
+	for i := 0; i < n; i++ {
+		c <- x
+		x, y = y, x+y
+	}
+	close(c) // this closes the channel with "c" as the final value being sent
+}
+
+func main() {
+	c := make(chan int, 10)
+	go fibonacci(cap(c), c) // cap(c) gives the capacity of channel c
+	for i := range c { // you can use range only if the sender actually closes the chan. If he never does, you won't know when to stop listening and this will cause a deadlock if the writer is finished writing and you are still blocked on listening
+		fmt.Println(i)
+	}
+}
+#+end_src
+
+We can use `select` statement to let a goroutine wait on multiple communication operations
+
+`select` blocks until one of its cases can run, then it executes that case. 
+It chooses one at random if multiple are ready
+
+#+begin_src go
+package main
+
+import "fmt"
+
+func fibonacci(c chan int, quit chan int) {
+	x, y := 0, 1
+	for {
+		select {
+		case c <- x:
+			x, y = y, x+y
+		case <-quit:
+			fmt.Println("quit")
+			return
+		}
+	}
+}
+
+func main() {
+	c := make(chan int) // here, we make 2 channels.
+	quit := make(chan int)
+	go func() { // this anonymous function just pulls 10 values from chan c and then puts a 0 in quit chan
+		for i := 0; i < 10; i++ {
+			fmt.Println(<-c)
+		}
+		quit <- 0
+	}()
+
+	fibonacci(c, quit) // in this function, we just see if we put a value on c chan, or if there is a value on quit chan - we'll be able to put a value on c chan if someone is listening on it
+}
+
+#+end_src
+
+We can have a default case as well, which will run if no other case is ready
+
+Consider this:
+
+#+begin_src go
+package main
+
+import "fmt"
+import "time"
+
+func main() {
+	tick := time.Tick(100 * time.Millisecond) // this will return a chan with Time type. The channel will receive the time every tick interval - every 100ms here
+	boom := time.After(500 * time.Millisecond) // here too we get a chan with Time as the type. This chan receives the current time after the mentioned time lapse.
+
+	for {
+		select {
+		case <-tick:
+			fmt.Println("tick")
+		case <-boom:
+			fmt.Println("BOOM!")
+			return
+		default:
+			fmt.Println("   .")
+			time.Sleep(50 * time.Millisecond)
+		}
+	}
+}
+#+end_src
+
+*** Exercise: Equivalent Binary trees
+
+To store the same data, we can have many binary trees. 
+We have to find if 2 given trees have the same data
+
+#+begin_src go
+type Tree struct {
+	Left *Tree
+	Value int
+	Right *Tree
+}
+#+end_src
+
+
+#+begin_src go
+package main
+
+import "golang.org/x/tour/tree"
+import "fmt"
+
+// Walk walks the tree t sending all values
+// from the tree to the channel ch.
+func Walk(t *tree.Tree, ch chan int) {
+	if t.Left != nil {
+		Walk(t.Left, ch)
+	}
+	ch <- t.Value
+	if t.Right != nil {
+		Walk(t.Right, ch)
+	}
+}
+
+// Same determines whether the trees
+// t1 and t2 contain the same values.
+func Same(t1, t2 *tree.Tree) bool {
+	ch1 := make(chan int)
+	go Walk(t1, ch1) // the Walk method just does an inorder traversal of the BST and gives the values
+	
+	ch2 := make(chan int)
+	go Walk(t2, ch2)
+	
+	var v1, v2 int
+	
+	for c := 0; c < 10; c ++ {
+		v1, v2 = <-ch1, <-ch2 // we compare each value and if even one is not same, we conclude the trees are not the same
+		if v1 != v2 {
+			return false
+		}
+	}
+	return true
+}
+
+func main() {
+	fmt.Println(Same(tree.New(10), tree.New(10)))
+}
+
+#+end_src
+
+*** sync.Mutex
+
+Channels are great for communication among goroutines, but what if we don't need communication, but just want only one goroutine to access a variable at a time to avoid conflicts
+
+This is called _mutual exclusion_ and the datastructure that provides it is called _mutex_
+
+Go's standard library has sync.Mutex with these 2 methods:
+ - Lock
+ - Unlock
+
+Look at this example, starting from main
+
+#+begin_src go
+package main
+
+import (
+	"fmt"
+	"sync"
+	"time"
+)
+
+// SafeCounter is safe to use concurrently.
+type SafeCounter struct {
+	v   map[string]int
+	mux sync.Mutex
+}
+
+// Inc increments the counter for the given key.
+func (c *SafeCounter) Inc(key string) {
+	c.mux.Lock()
+	// Lock so only one goroutine at a time can access the map c.v.
+	c.v[key]++
+	c.mux.Unlock()
+}
+
+// Value returns the current value of the counter for the given key.
+func (c *SafeCounter) Value(key string) int {
+	c.mux.Lock()
+	// Lock so only one goroutine at a time can access the map c.v.
+	defer c.mux.Unlock()
+	return c.v[key]
+}
+
+func main() {
+	c := SafeCounter{v: make(map[string]int)} // initialize the struct, it has an internal mutex
+	for i := 0; i < 1000; i++ {
+		go c.Inc("somekey") // the Inc method increase the key's value after Lock()
+	}
+
+	time.Sleep(time.Second)
+	fmt.Println(c.Value("somekey")) // Value locks to read the value and then unlocks before method exit
+}
+#+end_src
+
+*** Exercise: Web crawler

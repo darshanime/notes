@@ -2575,3 +2575,113 @@ func main() {
 #+end_src
 
 *** Exercise: Web crawler
+
+
+* Misc notes
+
+** Anonymous fields in structs
+
+In structs, you can have anonymous fields. 
+When looking at the source for github.com/PuerkitoBio/fetchbot (a slim web crawler), I came across the `BasicAuthProvider` interface
+
+#+begin_src go
+type BasicAuthProvider interface {
+    BasicAuth() (user string, pwd string) // return the username pass to perform request with basic auth
+}
+#+end_src
+
+There is a "Cmd" struct that must implement this if it needs to set the auth headers
+
+#+begin_src go
+type Cmd struct {
+	U *url.URL
+	M string
+}
+#+end_src
+
+Now, normally you would implement it as:
+
+#+begin_src go
+func (c *Cmd) BasicAuth() (string, string) {
+  return "id", "password"
+}
+#+end_src
+
+However, in the tests for the package, I saw this:
+
+#+begin_src go
+type basicAuthCmd struct {
+	*Cmd
+	user, pwd string
+}
+
+func (ba *basicAuthCmd) BasicAuth() (string, string) {
+	return ba.user, ba.pwd
+}
+
+#+end_src
+
+Note here, the receiver is not *Cmd, but *basicAuthCmd.
+However, even then, the Cmd is said to have implemented the interface and would pass the check
+#+begin_src go
+    // here, cmd is "cmd Command"
+    // Command is an interface that mandates URL() and Method() methods, which Cmd struct does - simply return the U and M string attrs
+	if ba, ok := cmd.(BasicAuthProvider); ok {
+		req.SetBasicAuth(ba.BasicAuth())
+	}
+#+end_src
+
+This is because in the `basicAuthCmd` struct, the `Cmd` is an anon attribute.
+So, you can refer to the attributes of Cmd (which are U, M) directly via the `basicAuthCmd` - so the compiler doesn't complain if you pass basicAuthCmd struct where Cmd struct is expected - because the Cmd struct is an anon attribute whose attrs can be directly accessed
+
+
+Link: http://golangtutorials.blogspot.in/2011/06/anonymous-fields-in-structs-like-object.html
+
+Consider this:
+
+#+begin_src go
+package main
+
+import "fmt"
+
+type Kitchen struct {
+	numOfPlates int
+}
+
+type House struct {
+	Kitchen
+	numOfRooms int
+}
+
+func main() {
+	h := House{Kitchen{4}, 40}
+	fmt.Printf("Num of rooms: %d, Num of plates: %d\n", h.numOfRooms, h.numOfPlates) // this is allowed
+}
+#+end_src
+
+Also, we can access the Kitchen struct like so `h.Kitchen`, so this is allowed: `h.Kitchen.numOfPlates`
+
+Naming conflicts are okay if they are not at the same level - so, we can have numOfPlates in House struct as well - when accessed, this will be presented and it will overshadow the value of Kitchen.numOfPlates
+
+But, at the same level, we cannot have a naming conflict
+
+#+begin_src go
+type Kitchen struct {
+    numOfLamps int
+}
+
+type Bedroom struct {
+    numOfLamps int
+}
+
+type House struct {
+    Kitchen
+    Bedroom
+}
+
+func main() {
+    h := House{Kitchen{2}, Bedroom{3}} //kitchen has 2 lamps, Bedroom has 3 lamps
+    fmt.Println("Ambiguous number of lamps:", h.numOfLamps) //this is an error due to ambiguousness - is it Kitchen.numOfLamps or Bedroom.numOfLamps
+}
+#+end_src
+

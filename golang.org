@@ -2685,3 +2685,156 @@ func main() {
 }
 #+end_src
 
+
+* How to Write Go Code
+
+** All Go code is in a single workspace
+** The workspace has repositories
+** Each repositories have 1 or more packages
+** Each package has 1 or more Go source files(or more directories) in a single directory
+
+** Workspace has 3 dirs
+*** src
+ - It contains Go source files
+*** pkg
+ - It contains package objects
+ - They have `.a` extension. One directory for each arch (eg: darwin_amd64)
+*** bin
+ - It contains executable commands
+ - this path is under $PATH, so when you install, you can use the command directly from terminal
+
+$GOPATH is used to specify the location of the workspace
+
+** Import paths
+ - globally unique import path for your package
+ - When working on a new project, create the package in github.com/user dir, just in case you publish it later
+ - eg: let's build our first program `hello`
+
+`$ mkdir $GOPATH/src/github.com/user/hello`
+
+#+begin_src go
+package main
+
+import "fmt"
+
+func main() {
+	fmt.Printf("Hello, world.\n")
+}
+#+end_src
+
+** First program
+Now we can build and install that program with the `go` tool
+
+`go install github.com/user/hello`
+
+You can run :top: from anywhere in the system, the `go` tool will use the $GOPATH
+If you are in the hello dir, you can do `go install`
+
+The `install` command will produce an executable binary and places it in the workspace's `bin` directory as `hello` (`hello.exe` under Windows) - eg: $GOPATH/bin/hello
+
+This can be executed now with `$GOPATH/bin/hello`, or simply `hello` since `$GOPATH/bin` is in the `$PATH`
+
+** First library
+We'll write a go library and use it from the `hello` program
+
+We'll create a dir for it in the right place
+
+`$ mkdir $GOPATH/src/github.com/user/stringutil`
+
+We can write `reverse.go` now
+
+#+begin_src go
+// Package stringutil contains utility functions for working with strings.
+package stringutil
+
+// Reverse returns its argument string reversed rune-wise left to right.
+func Reverse(s string) string {
+  r := []rune(s)
+  for a, b := 0, len(r)-1, a < len(r/2), a, b = a+1, b-1 {
+    r[a], r[b] = r[b], r[a]
+  }
+  return string(s)
+}
+#+end_src
+
+Now we can build it: `$ go build github.com/user/stringutil`
+(just `go build` if in that dir) - this is just to make sure our program builds
+
+Now, in `hello.go` we can do:
+
+#+begin_src go
+package main
+
+import (
+	"fmt"
+
+	"github.com/user/stringutil" // we are using our new library here
+)
+
+func main() {
+	fmt.Printf(stringutil.Reverse("!oG ,olleH"))
+}
+#+end_src
+
+When we install `hello`, it will install `stringutil` as well since `stringutil` is a dependency for `hello`
+
+Our workspace looks like this:
+
+#+begin_src
+bin/
+    hello                 # command executable
+pkg/
+    linux_amd64/          # this will reflect your OS and architecture
+        github.com/user/
+            stringutil.a  # package object
+src/
+    github.com/user/
+        hello/
+            hello.go      # command source
+        stringutil/
+            reverse.go    # package source
+#+end_src
+
+When we did `go install github.com/user/hello`, we got `stringutil.a` object in a directory inside `pkg/linux_amd64`. This is so that future invocations of `go` tool can find the package object there and not recompile the package again. 
+
+Go command executables are statically linked; the package objects need not be present to run Go programs - so, the binary that is generated is a single complete binary having all the components it needs to run  (like `jq`)
+
+The package name should be the last element of the import path; the package imported as "crypto/rot13" should be named "rot13"
+
+*The executable commands must always use "package main".*
+
+** Testing
+
+Go has a lightweight testing framework in the std lib - the `testing` package, use it with `go test`
+
+The tests can be in files ending with `_test.go` and have functions named `TestXXX` with the signature `t *testing.T`
+
+If the function calls a failure function such as `t.Error` or `t.Fail` (both defined in the `testing` package), the test is considered to have failed
+We can add a test for our stringutil function
+
+#+begin_src go
+package stringutil
+
+func TestReverse(t *Testing.T) {
+	cases := []struct {
+		in, want string
+	}{
+		{"Hello, world", "dlrow ,olleH"},
+		{"Hello, 世界", "界世 ,olleH"},
+		{"", ""},
+	}
+
+	for _, c := range cases {
+		got := Reverse(c.in)
+		if got != c.want {
+			t.Errorf("Reverse(%q) == %q, want %q", c.in, got, c.want)
+		}
+	}
+}
+#+end_src
+
+Run the test like so:
+#+begin_src bash
+$ go test github.com/user/stringutil
+ok  	github.com/user/stringutil 0.165s
+#+end_src

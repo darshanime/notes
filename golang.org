@@ -2838,3 +2838,581 @@ Run the test like so:
 $ go test github.com/user/stringutil
 ok  	github.com/user/stringutil 0.165s
 #+end_src
+
+* Effective Go
+
+** Introduction
+
+A straight translation of a program from Java to Go won't produce satisfactory results, Go programs are to be written in Go perspective - this document will teach us about that.
+
+** Examples
+
+Tip:
+The Go package sources (the standard library) is intended to serve as examples and ideas of how to use the language.
+
+
+** Formatting
+
+`gofmt` operates at the source file level, `go fmt` operates at the package level
+
+Tabs are used by default, don't change them unless you absolutely have to
+
+** Commentary
+Go has C-style block comments `/* */` and C++ style line comments `//`
+
+Block comments are extracted by `godoc` to generate documentation hosted on godoc.org
+
+Comments that appear before top-level declarations without any intervening newlines are extracted along with the declaration to serve as explanatory text for the item
+
+Every package should have a package comment, a block comment preceding the package clause - in any file in the package works.
+It appears at the top in the godoc page for the package
+
+Eg:
+
+#+begin_src
+/*
+Package regexp implements a simple library for regular expressions.
+
+The syntax of the regular expressions accepted is:
+
+    regexp:
+        concatenation { '|' concatenation }
+    concatenation:
+        { closure }
+    closure:
+        term [ '*' | '+' | '?' ]
+    term:
+        '^'
+        '$'
+        '.'
+        character
+        '[' [ '^' ] character-ranges ']'
+        '(' regexp ')'
+*/
+package regexp
+#+end_src
+
+The comments are unintrepreted plain text, so HTML, markdown etc won't work
+
+Any comment immediately preceding a top level declaration serves as a "doc comment" for that declaration. Every exported name in a package should have a doc comment - the doc comment should start with the name being declared
+
+** Names
+Capitalized names are exported in Go
+
+*** Package names
+Good package names are single words, no need of under_scores or mixCaps
+
+The exported names will be prefixed by the package names, so use that to your advantage
+Example:
+
+bufio.Reader and not bufio.BufReader
+
+Also, we have io.Reader too, but since the package is different, it's okay
+Similarly, we have a package ring - it has only 1 exported type: Ring
+So, to make new instances of Ring, we don't have ring.NewRing, but ring.New
+
+Long names don't automatically make things more readable.
+
+*** Getters
+
+Go doesn't have automatic support for getters and setters - but you can add it yourself
+It's not idiomatic (godiomatic?) to put `Get` in the name
+
+If you have an unexported field (say, owner), the getter method should be called Owner, and not GetOwner
+A setter function can be called SetOwner
+
+This reads well:
+
+#+begin_src go
+owner := obj.Owner()
+if owner != user {
+  obj.SetOwner(user)
+}
+#+end_src
+
+*** Interface names
+
+One method interfaces should have method + "-er" - eg: Reader, Writer, Formatter etc
+
+Also, if you have a new type and it implements the same methods as a method on a well-known type, use the same name - eg, call the string converter method String and not ToString (String also happens to mandated by the Stringer interface)
+
+*** MixedCaps
+
+Go likes MixedCaps and mixedCaps, under_scores are not welcome
+
+** Semicolons
+
+Go's formal grammar uses semicolons to terminate statements, but the lexer adds them automatically so they don't need to appear in the source code
+
+The rule is this: if the last token before a newline is an identifier (which includes words like `int` and `float64`), a basic literal such as a number or string constant, or one of these tokens - `break, continue, fallthrough, return, ++, --, ) }` the lexer inserts a semicolon after the token
+
+Rephrasing :top:
+
+"If the newline comes after a token that could end a statement, insert a semicolon"
+
+So, we won't have semicolons inserted by the lexer
+
+This has the consequence that you cannot put the opening brace of a control structure (if, for, switch or select) on the next line
+
+#+begin_src go
+if i < f() {
+    g()
+}
+
+// correct :top:
+
+if i < f()  // wrong!
+{           // wrong!
+    g()
+}
+
+// incorrect :top:
+#+end_src
+
+
+** Control structures
+
+ - Similar to C, but differ in important ways.
+ - There is no `do`, no `while`. `switch` is more flexible
+ - `if` and `switch` accept an *optional initialization statement* like that of `for`
+ - `break` and `continue` take an optional label to identify what to break or continue (like, `loop` from fetchbot)
+ - `select` can also used as a select for types (as a type switch)
+ - `select` can also be used as a multiway communications multiplexer
+ - the syntax is also a little different: no parantheses and the bodies must always be brace delimited
+
+*** if
+#+begin_src go
+if x > 0 {
+  return y
+}
+#+end_src
+
+Recall `if` and `switch` accept an initialization statement, commonly used to setup a local variable
+
+#+begin_src go
+if err := file.Chmod(0664); err != nil {
+    log.Print(err)
+    return err
+}
+#+end_src
+
+*** Redeclaration and reassignment
+
+Consider:
+
+#+begin_src go
+f, err := os.Open(name) // here, we declare f and err
+d, err := f.Stat() // here, we re-assign err since it is already declared above
+#+end_src
+
+The `:=` declaration of variable `v` may appear even if it has already been declared, provided in these cases:
+ - this declaration is in the same scope as the existing declaration of `v`
+   - if v is already declared in an outer scope, the declaration will create a new variable (for that scope)
+ - the corresponding value in the initialization is assignable to v (that is, if it is the same type as v's old type)
+ - there is at least one other variable in the declaration that is being declared anew (and the old one gets value of same type as last time)
+
+*** For
+
+Go's `for` unifies C's `for`, `while` and `do-while`
+
+#+begin_src go
+// this is C's for
+for init; condition; post {}
+
+// this is C's while
+for condition {}
+
+// this is C's for(;;)
+for {}
+#+end_src
+
+Creating an index right there in the for loop is convenient
+
+#+begin_src go
+sum := 0
+for i := 0; i < 10; i++ {
+    sum += i
+}
+#+end_src
+
+To loop over an iterable (like array, slice, string, map, reading from a channel), use `range`
+
+#+begin_src go
+for key, value := range oldMap {
+    newMap[key] = value
+}
+#+end_src
+
+To use only the first item (the key of key, index), drop the second
+
+#+begin_src go
+for key := range m {
+    if key.expired() {
+        delete(m, key)
+    }
+}
+#+end_src
+
+
+To use only the 2nd, use _ for the first
+#+begin_src go
+sum := 0
+for _, value := range array {
+    sum += value
+}
+#+end_src
+
+If you iterate thru a string, it is parsed as Unicode code points and each iteration gets a `rune` - which is one individual unicode code point (size varies of course, the ascii ones have the same encoding as ascii - 8 bits)
+
+If the encoding is erroneous, the replacement rune is U+FFFD (size is one byte)
+
+#+begin_src go
+for pos, char := range "日本\x80語" { // \x80 is an illegal UTF-8 encoding
+    fmt.Printf("character %#U starts at byte position %d\n", char, pos)
+}
+#+end_src
+
+prints
+
+#+begin_src
+character U+65E5 '日' starts at byte position 0
+character U+672C '本' starts at byte position 3
+character U+FFFD '�' starts at byte position 6
+character U+8A9E '語' starts at byte position 7
+#+end_src
+
+Note the size varies for each rune
+
+*** Switch
+
+Go's `switch` is more general than C's
+The expressions need not be constants, or even integers
+The cases are tried from top to bottom
+
+#+begin_src go
+func unhex(c byte) byte {
+	switch {
+	case '0' <= c && c <= '9':
+		return c - '0'
+	case 'a' <= c && c <= 'f':
+		return c - 'a' + 10
+	}
+	return 0
+}
+#+end_src
+
+You can have multiple clauses for `case`
+#+begin_src go
+func shouldEscape(c byte) bool {
+    switch c {
+    case ' ', '?', '&', '=', '#', '+', '%':
+        return true
+    }
+    return false
+}
+#+end_src
+
+`break` can be used to terminate `switch` early. 
+It can also be used to break out of a surrounding loop - you can put a label on the loop and `break` to that label
+
+
+#+begin_src go
+Loop:
+	for n := 0; n < len(src); n += size {
+		switch {
+		case src[n] < sizeOne:
+			if validateOnly {
+				break
+			}
+			size = 1
+			update(src[n])
+
+		case src[n] < sizeTwo:
+			if n+1 >= len(src) {
+				err = errShortInput
+				break Loop // we break out of Loop
+			}
+			if validateOnly {
+				break // here we only break out of the of the switch
+			}
+			size = 2
+			update(src[n] + src[n+1]<<shift)
+		}
+	}
+#+end_src
+
+Example:
+#+begin_src go
+// Compare returns an integer comparing the two byte slices,
+// lexicographically.
+// The result will be 0 if a == b, -1 if a < b, and +1 if a > b
+func Compare(a, b []byte) int {
+    for i := 0; i < len(a) && i < len(b); i++ {
+        switch {
+        case a[i] > b[i]:
+            return 1
+        case a[i] < b[i]:
+            return -1
+        }
+    }
+    switch {
+    case len(a) > len(b):
+        return 1
+    case len(a) < len(b):
+        return -1
+    }
+    return 0
+}
+#+end_src
+
+*** Type switch
+
+`switch` can also be used to discover the dynamic type of an interface variable. Such a type switch uses the syntax of a type assertion with the keyword `type` in parantheses. 
+If a varialbe is declared in the expression, the variable will have the corresponding type in each clause
+
+#+begin_src go
+var t interface{}
+
+t = functionOfSomeType() // this function returns some type
+
+switch t := t.(type) { // use the same name here
+default:
+	fmt.Printf("unexpected type %T\n", t) // %T prints whatever type t has
+case bool:
+    fmt.Printf("boolean %t\n", t)             // t has type bool
+case int:
+    fmt.Printf("integer %d\n", t)             // t has type int
+case *bool:
+    fmt.Printf("pointer to boolean %t\n", *t) // t has type *bool
+case *int:
+    fmt.Printf("pointer to integer %d\n", *t) // t has type *int
+}
+#+end_src
+
+** Functions
+
+*** Multiple return values
+
+In Go, functions and methods can return multiple values
+
+Ex, look at the `Write` method on files from `os` package
+`func (file *File) Write(b []byte) (n int, err error)`
+
+It returns the num of bytes written and a non-nil error when `n!=len(b)`
+
+*** Named result parameters
+
+You can name the return variables of a function and they can be used as regular variables. 
+
+"When named, they are initialized to the zero values for their types when the function begins; if the function executes a return statement with no arguments, the current values of the result parameters are used as the returned values."
+
+
+The naming of the return variables can make the code shorter and cleaner - they serve as documentation if for example you are returning 2 ints etc
+
+They are used nicely here:
+
+#+begin_src go
+func ReadFiull(r Reader, buf []byte) (n int, err error) {
+  for len(buf) > 0 && err == nil {
+    var nr int
+    nr, err = r.Read(buf)
+    n += nr
+    buf = buf[nr:]
+  }
+  return
+}
+#+end_src
+
+*** Defer
+Go's defer statement schedules a function call to be run immediately before the function executing `defer` returns
+
+Canonical examples are unlocking a mutex, closing a file, response body etc
+
+2 points about defer:
+ - multiple defers are allowed
+ - they are executed in a LIFO manner
+ - so, defer fn_a() followed by defer fn_b() means, fn_b() runs first
+ - The arguments to the deffered function are evaluated when the defer executes, not when the call executes
+   - so, the argument is evaluated when you write the defer statement, not when the function being deffered is called
+
+Example:
+
+#+begin_src go
+import "fmt"
+
+func trace(s string) string {
+	fmt.Println("entering: ", s)
+	return s
+}
+
+func un(s string) {
+	fmt.Println("leaving: ", s)
+}
+
+func a() {
+	defer un(trace("a"))
+	fmt.Println("in a")
+}
+
+func b() {
+    defer un(trace("b"))
+    fmt.Println("in b")
+    a()
+}
+
+func main() {
+    b()
+}
+
+// prints
+// entering: b
+// in b
+// entering: a
+// in a
+// leaving: a
+// leaving: b
+#+end_src
+
+** Data
+
+*** Allocation with new
+
+Go has 2 allocation primitives - "new" and "make"
+
+Both do different things:
+ - "new" allocates memory - it does not _initialize_ it, it only _zeros_ it
+ - so, new(T) allocates zeroed storage for a new item of type T and returns its address, a value of type *T
+ - In go terminology, it returns a pointer to a newly allocated zero value of type T
+
+
+It is really nice if you can make the zero-value-useful. Since the memory returned by "new" is zeroed, this becomes particularly convenient
+
+Eg: documentation of bytes.Buffers states that the zero value of Buffer is an empty buffer, ready to use
+
+Similarly, sync.Mutex does not have explicit constructor or Init method, the zero value of a sync.Mutex is defined to be an unlocked mutex
+
+This works if transitively - if a = b, and b = c, then a = c
+Consider:
+
+#+begin_src go
+type SyncedBuffer struct {
+    lock    sync.Mutex
+    buffer  bytes.Buffer
+}
+
+// here, the struct is ready to be used on initialization directly
+// both p and v will work without further arrangement
+p := new(SyncedBuffer) // type *SyncedBuffer
+var v SyncedBuffer // type SyncedBuffer
+#+end_src
+
+
+*** Constructors and composite literals
+Sometimes, the zero value isn't good enough and you want an initializing constructor
+
+Consider this derived from package `os`:
+#+begin_src go
+func NewFile(fd int, name string) *File {
+	if fb < 0 {
+		return nil
+	}
+	f := new(File)
+	f.fd = fd
+	f.name = name
+	f.dirinfo = nil
+	f.nepipe = 0
+	return f
+}
+#+end_src
+
+We can reduce the boilerplate by using a composite literal - an expression that creates a new instance each time it is evaluated:
+
+#+begin_src go
+func NewFile(fd int, name string) *File {
+	if fb < 0 {
+		return nil
+	}
+	f := File{fd, name, nil, 0}
+	return &f
+}
+#+end_src
+
+Here, we are returning the address of a local variable and that's OK!
+Recall this is where we were making the mistake when writing the C program to reverse a linked list with Prabal
+
+It's okay in Go because taking the address of a composite literal allocates a fresh instance each time it is evaluated
+
+If the fields of a composite literal are not named, they must be laid out in order and all must be present. If you name them however, you can skip some and the skipped ones get the zero values of their respect types
+
+If no values are present, you get a zero value for all the struct's fields - File{}
+These are equivalent - new(File), &File{}
+
+Composite literals can also be used for arrays, slices and maps
+eg:
+
+#+begin_src go
+a := [...]string {Encone: "no error", Eio: "Eio", Einval: "invalid argument"}
+b := []string {Encone: "no error", Eio: "Eio", Einval: "invalid argument"}
+c := map[int]string{Encone: "no error", Eio: "Eio", Einval: "invalid argument"}
+#+end_src
+
+*** Allocation with make
+
+The other allocating construct in Go is "make"
+The `make(T, args)` serves a purpose different from new(T)
+
+It creates ONLY - slices, maps and channels
+It returns an *initialized* (not *zeroed*) value of type T (*not *T*)
+
+"The reason for the distinction is that these three types represent, under the covers, references to data structures that must be initialized before use"
+
+The slice for example is a 3 item descriptor containing:
+ - a pointer to the data (inside an array)
+ - length
+ - capacity
+
+All 3 are required and until those items are initialized, the slice is nil
+
+For eg:
+
+`make([]int, 10, 100)`
+
+Allocates an array of 100 ints and then creates a slice structure with length 10 and a capacity of 100 pointing at the first 10 elements of an array
+
+
+* TODO
+Arrays
+Slices
+Two-dimensional slices
+Maps
+Printing
+Append
+Initialization
+Constants
+Variables
+The init function
+Methods
+Pointers vs. Values
+Interfaces and other types
+Interfaces
+Conversions
+Interface conversions and type assertions
+Generality
+Interfaces and methods
+The blank identifier
+The blank identifier in multiple assignment
+Unused imports and variables
+Import for side effect
+Interface checks
+Embedding
+Concurrency
+Share by communicating
+Goroutines
+Channels
+Channels of channels
+Parallelization
+A leaky buffer
+Errors
+Panic
+Recover
+A web server

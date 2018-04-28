@@ -3235,3 +3235,49 @@ if you want level by level printing, i.e. on different lines, you have to use tw
 if you want dfs traversal (preorder, inorder, postorder), you can use recursion - (which uses the inbuilt recursion stack), or for iterative, you have to use stacks. (could be one or two)
 
 TRAVERSALS ARE PURE STACK/QUEUE PLAY. DO THE DRY RUN AND YOU WILL KNOW HOW THINGS SHOULD WORK.
+
+* Blitz algorithms 1
+
+** Theta Notation
+t(n) = O(f(n)) when t(n) \le c.f(n) \forall (for all) n \ge n_{0}
+
+So, you can multiply f(n) with a constant and it should be over t(n)
+
+Similarly, 
+t(n) = \Omega(f(n)) when t(n) \ge c.f(n) \forall n \ge n_{0}
+
+So, consider a asymptotic function, which goes to y = 10 as n \to \infin
+Here, we can say that this function is both O(10) and \Omega(10), so it is \Theta(10)
+
+So, \Theta is:
+c_{1}.f(n) \le t(n) \le c_{2}.f(n)
+
+t(n) is grows exactly by f(n)
+
+** Little-Oh notation
+
+T(n) = o(f(n)) iff for *all* constants c > 0 ((as opposed to *a* constant c > 0 in Big-Oh)), \exists a constant n_{0} such that:
+T(n) \le c.f(n) \forall n \ge n_{0}
+
+Rephrasing, for any constant c, there must be a n large enough such that t(n) \le f(n)
+
+So, little-oh is a more strong statement
+
+2n^{3 }+ 4n^{2 }+ 2n + 4 = O(n^{3})
+BUT
+2n^{3 }+ 4n^{2 }+ 2n + 4 = o(n^{4})
+
+Another example:
+2^{n+10} = O(2^{n})
+BUT
+2^{n+10} = o(2^{n+1}^{})
+
+(Note: 2^{10n} = O(2^{10n}) and not O(2^{n}))
+
+Similarly little omega notation
+
+
+
+
+
+

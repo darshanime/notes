@@ -3230,7 +3230,7 @@ Canonical examples are unlocking a mutex, closing a file, response body etc
 
 2 points about defer:
  - multiple defers are allowed
- - they are executed in a LIFO manner
+ - they are executed in a LIFO manner - like stacks
  - so, defer fn_a() followed by defer fn_b() means, fn_b() runs first
  - The arguments to the deffered function are evaluated when the defer executes, not when the call executes
    - so, the argument is evaluated when you write the defer statement, not when the function being deffered is called
@@ -3291,7 +3291,7 @@ Eg: documentation of bytes.Buffers states that the zero value of Buffer is an em
 
 Similarly, sync.Mutex does not have explicit constructor or Init method, the zero value of a sync.Mutex is defined to be an unlocked mutex
 
-This works if transitively - if a = b, and b = c, then a = c
+This works well transitively - (if a = b, and b = c, then a = c) too
 Consider:
 
 #+begin_src go
@@ -3345,7 +3345,8 @@ It's okay in Go because taking the address of a composite literal allocates a fr
 If the fields of a composite literal are not named, they must be laid out in order and all must be present. If you name them however, you can skip some and the skipped ones get the zero values of their respect types
 
 If no values are present, you get a zero value for all the struct's fields - File{}
-These are equivalent - new(File), &File{}
+
+*These are equivalent - new(File), &File{}* - recall Pike says, you can initialize the values you care for and the rest will be given the type's zero values
 
 Composite literals can also be used for arrays, slices and maps
 eg:
@@ -3362,9 +3363,9 @@ The other allocating construct in Go is "make"
 The `make(T, args)` serves a purpose different from new(T)
 
 It creates ONLY - slices, maps and channels
-It returns an *initialized* (not *zeroed*) value of type T (*not *T*)
+It returns an *initialized* (not *zeroed*) value of type T (_not *T_)
 
-"The reason for the distinction is that these three types represent, under the covers, references to data structures that must be initialized before use"
+"The reason for the distinction is that these three types represent, under the covers, references to data structures that must be initialized before use" (not zeroed, but initialized)
 
 The slice for example is a 3 item descriptor containing:
  - a pointer to the data (inside an array)
@@ -3378,6 +3379,228 @@ For eg:
 `make([]int, 10, 100)`
 
 Allocates an array of 100 ints and then creates a slice structure with length 10 and a capacity of 100 pointing at the first 10 elements of an array
+
+** Go Slices: usage and internals
+Slices are just an abstraction over Go's arrays. Arrays are like in every other language, they are a sequences of typed data. To be defined, they need to have a length and element type. Example, [4]int is an array of size 4, with the data type being int.
+The size is fixed, so [4]int and [5]int are 2 different "types"
+(think of the array type as being a vector, like a vector has 2 components to be defined, magnitude and direction, the array has length and data type)
+
+#+begin_src go
+var a [4]int
+a[0] = 1
+b := a[0] // b == 1
+#+end_src
+
+Array's are initialized with the zero values of the data type. So, :top: a[3]==0 is true. 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-04-28 14:55:22
+[[file:assets/screenshot_2018-04-28_14-55-22.png]]
+
+The in-memory representation of [4]int :top:
+
+Go's arrays are values, in that the array variable is not a pointer to the first element of the array, but of the entire array.
+Since Go has pass by value, if you pass the array variable around, you create a copy of it, to avoid that, you have to pass the reference to the array (the pointer to the array)
+
+"One way to think about arrays is as a sort of struct but with indexed rather than named fields: a fixed-size composite value."
+
+#+begin_src go
+a := [2]string{"foo", "bar"}
+b := [...]string{"foo", "baz"} // the compiler does the counting here
+#+end_src
+
+Arrays are old, they are okay. Slices are awesome. The build on arrays to provide flexibility and convenience.
+
+The type specification for a slice is `[]T`, note the absence of length
+declaration is exactly the same as arrays without the length
+
+#+begin_src go
+a := []string{"foo", "bar"}
+#+end_src
+
+You can use `make` to create the slices, signature is:
+
+#+begin_src go
+func make([]T, len, cap) []T
+#+end_src
+
+Note, the slice is returned, not the pointer to the slice
+
+The capacity is optional. If omitted, cap = len
+
+#+begin_src go
+var s []byte // declaration
+s = make([]byte, 5, 5) // initialization, equivalently, s = make([]byte, 5)
+// we have s == []byte{0, 0, 0, 0, 0}
+#+end_src
+
+You can create a slice by slicing an existing slice or array. 
+So, b[1:4] will create a new slice with elements 1, 2, 3 from b
+
+#+begin_src go
+b := []byte{'g', 'o', 'l', 'a', 'n', 'g'}
+// b[1:4] == []byte{'o', 'l', 'a'}, sharing the same storage as b
+#+end_src
+
+Like in python, b[:] == b
+
+How to create a slice given an array?
+#+begin_src go
+x := [3]string{"Лайка", "Белка", "Стрелка"}
+s := x[:] // a slice referencing the storage of x
+#+end_src
+
+*** Slice internals
+
+A slice is a descriptor of an array segment. It consists of:
+ - a pointer to the array
+ - the length of the segment
+ - its capacity (the max length of the segment)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-04-28 15:14:40
+[[file:assets/screenshot_2018-04-28_15-14-40.png]]
+
+Recall we had a array byte from earlier, [5]byte
+
+Our slice s = make([]byte, 5) looks like this:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-04-28 15:15:46
+[[file:assets/screenshot_2018-04-28_15-15-46.png]]
+
+The length (2nd block in slice, 5 here) is the number of elements referred to by the slice. The capacity is the number of elements in the underlying array beginning at the element referred to by the slice pointer. 
+
+Consider we slice s above
+s2 := s[2:4]
+
+Now, we have another slice that points to the same underlying array that s was pointing to, but s2 has length 2 and capacity 3
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-04-28 15:18:26
+[[file:assets/screenshot_2018-04-28_15-18-26.png]]
+
+"Slicing does not copy the slice's data. It creates a new slice value that points to the original array." - so if you modify a slice, the underlying array gets modified as well
+
+
+*** Growing slices (the copy and append functions)
+
+To increase the capacity of a slice, you must create a new, larger slice and copy the contents of the original slice into it.
+(Just like how dynamic array implementations work in other languages)
+
+Here, we have a slice "s", we make a new slice "t" and copy the contents of s into t and then assign the value t to s
+
+#+begin_src go
+t := make([]byte, len(s), (cap(s)+1)*2)
+for i := range(s) {
+  t[i] = s[i]
+}
+s = t
+#+end_src
+
+We can use the built-in copy function as well
+
+`func copy(dst, src []T) int`
+
+Here, int is the number of elements copied
+
+#+begin_src go
+t := make([]byte, len(s), (cap(s)+1)*2)
+copy(t, s)
+s = t
+#+end_src
+
+One common operation is appending data at the end of the slice
+#+begin_src go
+func AppendByte(slice []byte, data ...byte) []byte {
+	m := len(slice)
+	n := m + len(data)
+	if n > cap(slice) { // we need to reallocate, provision a larger slice
+		newSlice := make([]byte, (n+1)*2)
+		copy(newSlice, slice)
+		slice = newSlice
+	}
+	slice = slice[0:n]
+	copy(slice[m:n], data)
+	return slice
+}
+#+end_src
+
+Usage:
+#+begin_src go
+p := []byte{2, 3, 5}
+p = AppendByte(p, 7, 11, 13)
+// p == []byte{2, 3, 5, 7, 11, 13}
+#+end_src
+
+This function can be used if you need fine grained control over how the slice grows, (2x each time or not etc)
+But if you don't want that level of control, just fly with the in built `append` function
+
+#+begin_src go
+func append(s []T, x...T) []T
+
+// example
+
+a := make([]int, 1)
+// a == []int{0}
+a = append(a, 1, 2, 3)
+// a == []int{0, 1, 2, 3}
+
+#+end_src
+
+
+To append one slice to another, we can use ... Syntax to expand the 2nd argument to a list of arguments
+(like python's *list)
+
+#+begin_src go
+a := []string{"John", "Paul"}
+b := []string{"George", "Ringo", "Pete"}
+a = append(a, b...) // equivalent to "append(a, b[0], b[1], b[2])"
+// a == []string{"John", "Paul", "George", "Ringo", "Pete"}
+#+end_src
+
+Recall that the zero value of a slice (nil) acts like a 0 length slice, so you can declare a slice variable and append to it in a loop
+
+#+begin_src go
+// Filter returns a new slice holding only
+// the elements of s that satisfy fn()
+func Filter(s []int, fn func(int) bool) []int {
+    var p []int // == nil
+    for _, v := range s {
+        if fn(v) {
+            p = append(p, v)
+        }
+    }
+    return p
+}
+#+end_src
+
+*** A possible gotcha
+
+Since a slice is a reference to the underlying array, image a scenario where you have a large file and you read the contents of that file into a []byte and then you do a regexp search for a few bytes. But since the slice that represents the few bytes references the array, the GC cannot claim the memory and the array stays in memory
+
+To solve it, make a new slice and return that
+
+#+begin_src go
+func CopyDigits(filename string) []byte {
+    b, _ := ioutil.ReadFile(filename)
+    b = digitRegexp.Find(b)
+    c := make([]byte, len(b))
+    copy(c, b)
+    return c
+}
+
+// more concisely, 
+func CopyDigits(filename string) []byte {
+    b, _ := ioutil.ReadFile(filename)
+    b = digitRegexp.Find(b)
+    return append(make([]byte, len(b)), b)
+}
+#+end_src
 
 
 * TODO

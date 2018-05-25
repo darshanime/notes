@@ -1,0 +1,792 @@
+* Introduction to Cloud Infrastructure Technologies
+LFS151.x
+
+Cloud was used to refer to the internet. Now it refers to "remote systems" which you can use. 
+Cloud computing is the use of on demand network accessible pool of remote resources (networks, servers, storage, applications, services)
+
+Clouds can be private (your own datacenter, managed by you or externally - walmart has a largest private cloud in the world - you'd generally use openstack to manage it), public cloud (aws), hybrid cloud (you use aws to augment your internal cloud etc)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-05-23 18:18:25
+[[file:assets/screenshot_2018-05-23_18-18-25.png]]
+** Virtualization
+
+It is the act of creating a virtual (rather than an actual version of some computer hardware/operating systems/storage devices/other computer resources
+
+Virtual Machines are created on top of a "hypervisor" - which runs on top of the Host Machine's OS
+Hypervisors allow us to emulate hardware like CPU, disk, network, memory etc - it also allows us to install Guest Machines on it
+
+What we would do is, install Linux on a bare-metal and after setting up the Hypervisor, create multiple Guest Machines with Windows (for eg)
+
+Some of the hypervisors are:
+ - KVM
+ - VMWare
+ - Virtualbox
+
+Hypervisors can be hardware or software. Most recent CPUs now have hardware virtualizatioin support. 
+
+** KVM
+"Kerven Virtual Machine is a full virtualization solution for Linux on x86 hardware"
+
+It's a part of the Linux kernel and has been ported to some other architectures as well now
+
+It basically provides "an API" that other tools like qemu can use to build virtual machines on the Linux kernel
+
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-05-23 18:09:10
+[[file:assets/screenshot_2018-05-23_18-09-10.png]]
+
+KVM exposes the /dev/kvm interface using which an external userspace host (eg QEMU) can emulate a OS (like Windows, Solaris, Linux etc)
+You can have the applications running on QEMU which will pass the syscalls from the application to the host kernel via the /dev/kvm interface
+
+Virtualbox is an alternative to the KVM+QEMU combo (KVM can be used by other host software too), it is by Oracle
+
+** Vagrant
+
+Using VMs gives us numerous benefits:
+ - reproducible environments - which can be deployed/shared easily
+ - managing (and isolating) different projects with a sandbox env for each
+
+Vagrant allows us to automate the setup of one or more VMs by providing an end to end life cycle cli tool
+It has support for multiple providers (hypervisors) - and even for docker now
+
+*** Vagrantfile
+We have to write a Vagrantfile to describe our VM and vagrant will do the rest
+
+#+begin_src ruby
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure(2) do |config|
+   # Every Vagrant development environment requires a box. You can search for 
+   # boxes at https://atlas.hashicorp.com/search.
+   config.vm.box = "centos/7"
+
+   # Create a private network, which allows host-only access to the machine
+   # using a specific IP.
+   config.vm.network "private_network", ip: "192.168.33.10"
+
+   # config.vm.synced_folder "../data", "/vagrant_data"
+
+   config.vm.provider "virtualbox" do |vb|
+      # Customize the amount of memory on the VM:
+      vb.memory = "1024"
+   end
+
+   config.vm.provision "shell", inline: <<-SHELL
+         yum install vim -y
+   SHELL
+end
+#+end_src
+
+The vagrant command can do operations like ssh, up, destroy etc
+
+*** Boxes
+
+You need to provide an image in the Vagrantfile (like the FROM directive in Dockerfile) which can be used to instantiate the machines.
+In the example above, we have used ~centos/7~
+Atlas is a central repository of the base images.
+
+Box is the actual image of the VM that you built from the base image (after following the steps in your Vagrantfile) - it is analogous to the docker image that you build from the Dockerfile
+
+Like docker images, you can version these images/boxes
+
+*** Vagrant providers
+These are the underlying hypervisors used - like KVM, virtualbox (which is the default), now docker etc
+
+*** Synced folders
+These allow you to "mount" your local dir on the host with a VM
+
+*** Provisioning
+
+These allow us to install software, make configuration changes etc after the machine is booted - it is part of the ~vargant up~ process. You can use provisioners like Ansible, shell, chef, docker etc
+
+So you need to provide 2 things to vagrant - provider and provisioner (eg: kvm, ansible respectively)
+
+*** Plugins
+Vagrant has plugins as well to extend functionality 
+
+
+** Infrastructure as a service
+
+IaaS is the on-demand supply of physical and virtual computing resources (storage, network, firewall, load balancers etc)
+IaaS uses some form of hypervisor (eg kvm, vmware etc)
+
+AWS uses the Xen hypervisor
+Google uses the KVM hypervisor
+
+When you request an EC2 instance for eg, AWS creates a virtual machine using some hypervisor and then gives you access to that VM
+
+
+You can become a IaaS provider yourself using OpenStack. 
+OpenStack very modular and has several components for different virtual components etc:
+ - keystone
+   - for identity, token, catalog etc
+ - nova
+   - for compute resources
+   - with Nova we can select an underneath Hypervisor depending on the requirement, which can be either libvirt (qemu/KVM), Hyper-V, VMware, XenServer, Xen via libvirt.
+ - horizon
+   - web based UI
+ - neutron
+   - network as a service
+etc
+
+** Platform as a service
+
+PaaS is a class of services that allow users to develop, run and manage applications without worrying about the underlying infrastructure.
+
+Eg: openshift origin, deis, heroku etc
+PaaS can be deployed on top of IaaS or independently on VMs, baremetal and containers - I.e the "thing" powering your applications (which you don't have to worry about) can be a VM (via IaaS or otherwise), baremetal servers, containers etc
+
+*** Cloud Foundry
+It is an open source PaaS that provides a choice of clouds, developer frameworks, application servers
+It can be deployed on premise, or on an IaaS like aws, openstack etc
+
+There are many commercial cloud foundry prooviders as well - like IBM bluemix etc
+
+CF gives you:
+ - application portability
+ - application auto scaling
+ - dynamic routing
+ - centralized logging
+ - security
+ - support for different IaaS
+
+CF runs on top of VMs from existing IaaS like aws, openstack etc
+CF uses some VMs as components VMs - these run all the different components of CF to provide different PaaS functionalities
+and Application VMs - these run ~Garden containers~ inside which your application is deployed  
+
+CF has 3 major components:
+ - Bosh
+   - it is the system orchestration to configure VMs into well defined state thru manifest files. It provisions VMs automatically (sitting on top of IaaS - like terraform), then using the manifest files, it configures CF on them
+
+ - cloud controller
+   - it runs the applications and other processes on provisioned VMs
+ - Go router
+   - it routes the incoming traffic to the right place (cloud controller or application)
+
+CF uses ~buildpacks~ that provide the framework and runtime support for the applications. There are buildpacks for Java, Python, Go etc
+
+You can have custom buildpacks as well. When an application is pushed to CF:
+ - it detects the required buildpack and installs it on the droplet execution agent (DEA) where the application needs to run
+ - the droplet containers OS-specific pre-built root filesystem called stack, the buildpack and source code of the application
+ - the droplet is then given to the application VM (diego cell) which unpacks, compiles and runs it
+
+So, (everything) -> dea -> droplet -> VMs
+
+The application runs a container using the ~Garden runtime~
+It supports running docker images as well, but it uses the garden runtime to run them
+
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-05-23 19:36:21
+[[file:assets/screenshot_2018-05-23_19-36-21.png]]
+
+
+The messaging layer is for the component VMs to communicate with each other internally thru HTTP/HTTPS protocols.  Note it uses ~consul~ for long-lived control data, such as IP addresses of component VMs
+
+Hasura (and heroku etc) are PaaS too just like cloudfoundry
+
+The difference b/w CF and hasura is that hasura uses k8s to manage your applications, CF has it's own thing :top:
+(bosh, garden etc)
+
+CF can be integrated with CI/CD pipelines as well
+
+*** Open Shift
+This is an open source PaaS solution by RedHat.
+OpenShift v3 uses Docker and Kubernetes underneath, (so hasura is just a commercial provider of openshift like platform at this point)
+
+It can be deployed on CoreOS
+
+There are 3 different paths for OpenShift as offered by RedHat
+ - openshift online
+   - you deploy your applications on openshift cluster managed by redhat and pay for the usage
+ - openshift dedicated
+   - you get your own dedicated openshift cluster managed by RH
+ - openshift enterprise
+   - you can create your own private PaaS on your hardware (on premise installation of OpenShift?)
+
+Upsteam development of openshift happens on GH and it is called as OpenShift Origin
+
+OpenShift Origin is like open source Hasura
+
+OSv3 (the latest Open Shift) has a framework called ~source to image~ which creates Docker images from the source code directly
+OSv3 integrates well with CI/CD etc
+
+OS Enterprise gives you GUI, access control etc
+
+RedHat and Google are collaborating to offer OS Dedicated on Google Cloud Platform
+
+OS creates an internal docker registry and pushes docker images of your application to it etc
+
+The pitch for OS is that:
+ - it enables developers to be more efficient and productive by allowing them to quickly develop, host and scale apps in the cloud via a user friendly UI and out of the box features like logging, security etc
+
+It's written in Go
+
+*** Heroku
+
+It is a fully managed container based PaaS company. Heroku supports many languages like Python, Go, Clojure etc
+To use Heroku, you have to follow the Heroku way of doing things:
+ - mention the commands used in a Procfile
+ - mention the steps to execute to compile/built the app using a buildpack
+ - the application is fetched from GH/dropbox/via API etc and the buildpack is run on the fetched application code
+ - The runtime created by running the buildpack on the code, (fetching the dependency, configuring variables etc) is called a ~slug~
+ - you can add ~add-ons~ that provide more functionality like logging, monitoring etc
+ - a combination of slug, configuration variables, and add-ons is referred to as a release, on which we can perform upgrade or rollback.
+
+Each process is run in a virtualized UNIX container called a ~dyno~. Each dyno gets its own ephemeral storage. The ~dyno manager~ manages the dynos across all applications running on Heroku
+
+Individual components of an application can be scaled up or down using dynos.
+
+The UI can be used to manage the entire application (create, release, rollback etc)
+
+Hasura is just like Heroku (heroku uses the the git push to a custom remote too) - just using k8s
+
+
+*** Deis
+
+It is like OpenShift, just it does not have a GUI but a cli only. It helps you make the k8s experience smoother, in that it manages (like a PaaS should), the release, logging, rollback, CI/CD etc
+
+CoreOS is a lightweight OS to run just containers. It supports the Docker and rkt container runtimes right now.
+
+Overview of Deis:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-05-23 20:16:23
+[[file:assets/screenshot_2018-05-23_20-16-23.png]]
+
+
+The data plane is where the containers run - the router mesh routes traffic to the data plane
+There is also a control plane that is for admins, which accepts logs etc, and can be accessed via the deis api
+the router mesh again routes deis api traffic to the control plane
+
+Deis can deploy applications from Dockerfiles, docker images, heroku buildpacks (which was what we used at appknox)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-05-23 20:20:21
+[[file:assets/screenshot_2018-05-23_20-20-21.png]]
+
+The deis workflow :top:
+
+~etcd~ is a distributed key-value database which contains the IPs of the containers so that it can route the traffic it gets from the router to the right container
+
+
+** Containers
+
+Containers are "operating system level virtualization" that provide us with "isolated user-space instances" (aka containers)
+These user-space instances have the application code, required dependencies for our code, the required runtime to run the application etc
+
+*** The Challenge
+
+Often our applications have specific dependency requirements. And they need to run on a myriad of machines
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-05-23 20:26:11
+[[file:assets/screenshot_2018-05-23_20-26-11.png]]
+
+As developers, we don't want to worry about this mess. We want our application to work irrespective of the underlying platform and other applications that might be running on the platform. Also, we want them to run efficiently, using only the resources they need and not bogging down the host machines
+
+Docker allows us to bundle our applications with all it's dependencies "in a box" - basically a binary that has a isolated worldview, is agnostic of other things running on the host machine. The binary cannot run directly, it needs to be run a runtime (eg docker runtime, rkt runtime, garden runtime etc)
+
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-05-23 20:29:19
+[[file:assets/screenshot_2018-05-23_20-29-19.png]]
+
+The container will run identically on all the platforms - the runtime will make sure of that
+
+This container (having our application and it's dependencies and it's runtime) is called the image.
+A running instance of the image is referred to as a container. 
+We can spin multiple containers (objects) from the image (class)
+The image is built using a dockerfile
+
+Dockerfile -> docker image -> docker containers
+
+The docker container runs as a normal process on the host's kernel
+
+*** Building blocks
+
+The Linux kernel provides all the building blocks for the containers. The run times are just opionated APIs around the base kernel API
+
+**** Namespaces
+A namespaces wraps a particular system resource like network, process id in an abstraction and makes it appear to the process within the namespace that they have their own isolated instance of the global resource.
+The resources that are namespaced are:
+ - pid - provides each namespace to have the same PIDs - each container can have its own PID 1
+ - net - provides each namespace with its own network stack - each container has its own IP address
+ - mnt - provides each namespace with its own view of filesystem
+ - ipc - provides each namespace with its own interprocess communication
+ - uts - provides each namespace with its own hostname and domainname
+ - user - provides each namespace with its own user and group id number spaces.
+   - *a root user is not the root user on the host machine*
+
+     
+**** cgroups
+
+Control groups are used to organize processes hierarchically and *distribute system resources along the hierarchy in a controlled and configurable manner* - so cgroups are mostly about distributing these system resources within the namespaces above
+
+The following ~cgroups~ are available for linux:
+ - blkio - to share block io
+ - cpu - to share compute
+ - cpuacct
+ - cpuset
+ - devices
+ - freezer
+ - memory
+
+
+**** Union filesystem
+
+The union filesystem allows files and directories of separate filesystems (aka layers) to be transparently overlaid on each other to create a new virtual filesystem
+
+An image used in docker is made of multiple layers which are merged to create a ready-only filesystem. The container gets a read-write layer which is an ephemeral layer and it is local to the container
+
+*** Container runtimes
+
+Namespaces and cgroups have existed in the kernel for a long time. The run times are just wrappers around those apis and provide a easy workflow to work with them - in some talks, developers show how you can play with the apis directly
+
+Like POSIX, which is a specification of the API surface that the kernel should provide for the applications, so that they are portable, for containers we have OCI - The Open Container Initiative (under the auspices of The Linux Foundation)
+
+The OCI governance body has specifications to create standards on operating system process and application containers.
+
+This is so that there is cross compatibility between different container runtimes and operating systems - no vendor lockins etc. Also, same containers can be then run under different runtimes (this is how CF runs docker containers under it's garden runtime)
+
+~runC~ is a CLI tool for spawning and running containers according to the specifications.
+
+Docker uses the ~runC~ container runtime  - so docker is fully compatible with the OCI specification
+Docker uses the ~containerd~ daemon to control ~runC~ containers
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-05-23 22:16:00
+[[file:assets/screenshot_2018-05-23_22-16-00.png]]
+
+
+Docker CLI -> docker engine -> ~containerd~ -> ~runC~
+
+Another container runtime is ~rkt~ (rock-it)
+~rkt~ does not support OCI containers currently - but it is in the pipeline - https://github.com/rkt/rkt/projects/4
+But ~rkt~ can run docker images. 
+
+Since version 1.11, the Docker daemon no longer handles the execution of containers itself. Instead, this is now handled by containerd. More precisely, the Docker daemon prepares the image as an Open Container Image (OCI) bundle and makes an API call to containerd to start the OCI bundle. containerd then starts the container using runC.
+~rkt~ takes the same docker image runs it without bundling it as an OCI bundle.
+
+~rkt~ can run "App Container Images" specified by the "App Container Specification" 
+
+*** Containers vs VMs
+
+A VM runs on top of a Hypervisor, which emulates the different hardware - CPU, memory etc
+Between an application and a Guest OS, there are multiple layers - guest OS, hypervisor, host OS
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-05-23 22:26:44
+[[file:assets/screenshot_2018-05-23_22-26-44.png]]
+
+In contrast to this, Containers run directly as processes on top of the host OS. This helps containers get near native performance and we can have a large number of containers running on a single host machine
+
+*** Docker runtime
+
+Docker follows a client-server architecture. 
+The docker client connects to the docker server (docker host) and executes the commands
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-05-23 22:28:58
+[[file:assets/screenshot_2018-05-23_22-28-58.png]]
+
+Docker Inc. has multiple products:
+
+ - Docker Datacenter
+ - Docker Trusted Registry
+   - Universal Control Plane
+ - Docker Cloud
+ - Docker Hub
+
+
+** Operating systems for containers
+
+Ideally, it would be awesome if our OSes just live to run our containers - we can rid them of all the packages and services that aren't used in running containers
+
+Once we remove the packages which are not required to boot the base OS and run container-related services, we are left with specialized OSes, which are referred to as *Micro OSes for containers.*
+
+Examples:
+ - atomic host (redhat)
+ - coreos
+ - ubuntu snappy
+ - vmware photon
+
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-05-23 22:54:47
+[[file:assets/screenshot_2018-05-23_22-54-47.png]]
+
+
+
+*** Atomic Host
+Atomic Host is a lightweight operating system that is based on the fedora, centos, rhel family
+It is a sub-project of Project Atomic - which has other projects like Atomic Registry etc
+
+With Atomic Host we can develop, run, administer and deploy containerized applications
+
+Atomic Host, though having a minimal base OS, has systemd and journald.
+It is built on top of the following:
+ - rpm-ostree
+   - one cannot manage individual packages as there is no ~rpm~
+   - to get any required service, you have to start a respective container
+   - there are 2 bootable, immutable and versioned filesystems - one used to boot the system, other used to fetch updates from upstream. Both are managed using rpm-ostree
+ - systemd
+   - to manage system services for atomic host
+ - docker
+   - AH supports docker as a container runtime (which means ~runC~ as the container runtime)
+ - k8s
+   - with k8s, we can create a cluster of AH to run applications at scale
+
+We have the usual docker command, but we get the ~atomic~ command to control the base host OS. AH can be managed using Cockpit which is another project under Project Atomic
+
+*** CoreOS
+
+CoreOS is a minimal operating system for running containers. It supports ~docker~ (so basically, ~runC~) and ~rkt~ container runtimes. It is designed to operate in a cluster mode
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-05-24 21:27:56
+[[file:assets/screenshot_2018-05-24_21-27-56.png]]
+
+Note how the CoreOS machines are all connected to etcd and are controlled via a local machine
+
+It is available on most cloud providers
+
+CoreOS does not have any package managers and the OS is treated as a single unit. There are 2 root partitions, active and passive. 
+When the system is booted with the active partition, the passive partition can be used to download the latest updates.
+
+Self updates are also possible, and the ops team can choose specific release channels to deploy and control the application with update strategies. 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-05-24 21:35:38
+[[file:assets/screenshot_2018-05-24_21-35-38.png]]
+
+*booted off of partition A
+
+:top:
+partition A was initially active and updates were getting installed on partition B. After the reboot, partition B becomes active and updates are installed on partition A, if available.
+
+CoreOS is built on top of the following:
+
+**** docker/rkt
+CoreOS supports both these runtimes
+
+**** etcd
+It is a distributed key-value pair, used to save the cluster state, configuration etc 
+
+**** systemd
+
+It is an ~init~ system which helps us manage services on Linux
+
+example
+#+begin_src
+[Unit]
+Description=My Service
+Required=docker.service
+After=docker.service
+
+[Service]
+ExecStart=/usr/bin/docker run busybox /bin/sh -c "while true; do echo foobar; sleep 1; done"
+
+[Install]
+WantedBy=multi-user.target
+#+end_src
+
+**** fleet
+
+It is used to launch applications using the ~systemd~ unit files. With ~fleet~ we can treat the CoreOS cluster as a single ~init~ system
+
+#+begin_src
+[Unit]
+Description=My Advanced Service
+After=etcd.service # we need etcd and docker to be running before our service starts
+After=docker.service
+
+[Service]
+TimeoutStartSec=0
+ExecStartPre=-/usr/bin/docker kill apache1
+ExecStartPre=-/usr/bin/docker rm apache1 # do this before running my service command
+ExecStartPre=/usr/bin/docker pull coreos/apache
+ExecStart=/usr/bin/docker run --name apache1 -p 8081:80 coreos/apache /usr/sbin/apache2ctl -D FOREGROUND # our service command
+ExecStartPost=/usr/bin/etcdctl set /domains/example.com/10.10.10.123:8081 running # do this after running our service command
+ExecStop=/usr/bin/docker stop apache1 # run this to stop the service
+ExecStopPost=/usr/bin/etcdctl rm /domains/example.com/10.10.10.123:8081
+
+[Install]
+WantedBy=multi-user.target
+#+end_src
+
+CoreOS has a registry product (like docker registry) called Quay. Their enterprise k8s solution is called ~Tectonic~
+
+
+*** VMware Photon
+
+Photon OS is a minimal Linux container host developer by VMware and runs blazingly fast on VMware platforms
+
+It supports the docker, rkt and pivotal garden runtimes and is available on aws ec2, gcp, azure
+it has a yum compatible package manager as well
+
+It is written in Python + Shell
+
+*** RancherOS
+
+It is a 20MB linux distribution that runs docker containers.
+It runs directly on top of the linux kernel. 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-05-24 22:02:30
+[[file:assets/screenshot_2018-05-24_22-02-30.png]]
+
+RancherOS runs 2 instances of the docker daemon. The first one is used to run the system containers (~dhcp~, ~udev~ etc)
+The 2nd is used to run user level containers
+
+How about running docker containers in rancheros with gvisor?
+The system containers will be run with gvisor
+
+We can use rancher to setup k8s and swarm clusters. It is the most "minimal" of all minimal OSes
+
+
+
+** Container Orchestration
+
+Running containers on a single host is okay, not so fancy. What we want is to run containers at scale. The problems we want to solve are:
+
+ - who can bring multiple hosts together and make them part of a cluster - so that the hosts are abstracted away and all you have is a pool of resources
+ - who will schedule the containers to run on specific hosts
+ - who will connect the containers running on different hosts so that they can access each other?
+ - who will take care of the storage for the containers when they run on the hosts
+
+
+Container orchestration tools solve all these problems - along with different plugins
+CO is an umbrella term that encompasses container scheduling and cluster management. 
+Container Scheduling - which host a container or group of containers should be deployed
+Cluster Management Orchestrater - manages the underlying nodes - add/delete them etc
+
+Some options:
+ - docker swarm
+ - k8s
+ - mesos marathon
+ - cloud foundry diego
+ - amazon ecs
+ - azure container service
+
+
+
+*** Docker Swarm
+
+It is a native CO tool from Docker, Inc
+It logically groups multiple docker engines to create a virtual engine on which we can deploy and scale applications
+
+The main components of a swarm cluster are:
+ - swarm manager
+   - it accepts commands on behalf of the cluster and takes the scheduling decisions. One or more nodes can be configured as managers (they work in active/passive modes)
+   - swarm agents
+     - they are the hosts which run the docker engine and participate in the cluster
+   - swarm discovery service
+     - docker has a project called ~libkv~ which abstracts out the various kv stores and provides a uniform interface. It supports etcd, consul, zookeeper currently
+   - overlay networking
+     - swarm uses ~libnetwork~ to configure the overlay network and employs ~VxLAN~ between different hosts
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-05-24 22:30:20
+[[file:assets/screenshot_2018-05-24_22-30-20.png]]
+
+**** Features
+ - it is compatible with docker tools and api so the workflow is the same
+ - native support to docker networking and volumes
+ - built in scheduler supporting flexible scheduling
+   - filters:
+     - node filters (constraint, health)
+     - container filters (affinity, dependency, port)
+   - strategies
+     - spreak
+     - binpack
+     - random
+ - can scale to 1000 nodes with 50K containers
+ - supports failover, HA
+ - pluggable scheduler architecture, which means you can use mesos or k8s as scheduler
+ - node discovery can be done via - hosted discovery service, etcd/consul, static file
+
+
+
+**** Docker Machine
+It helps us configure and manage local or remote docker engines - we can start/inspect/stop/restart a managed host, upgrade the docker client and daemon, configure a docker client to talk to our host etc
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-05-24 22:38:12
+[[file:assets/screenshot_2018-05-24_22-38-12.png]]
+
+
+It has drivers for ec2, google cloud, vagrant etc. We can also add existing docker engines to docker machines
+
+Docker machine can also be used to configure a swarm cluster
+
+**** Docker Compose
+
+It allows us to define and run multi-container applications on a single host thru a configuration file. 
+
+*** Kubernetes
+
+It is an open source project for automating deployment, operations, scaling of containerized applications.
+It was the first project to be accepted as the hosted project of Cloud Native Computing Foundation - CNCF
+
+It currently only supports docker as the container runtime, in the future it plans to add support for ~rkt~
+
+
+The high level architecture of k8s is:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-05-24 23:00:31
+[[file:assets/screenshot_2018-05-24_23-00-31.png]]
+
+
+Each node is labeled as a minion. It has a docker engine on which runs the kubelet, (the k8s "agent"), cAdvisor (?), a proxy and one or more pods. In the pods run the containers. 
+
+Then we have the management guys - including the scheduler, replication controller, authorization/authenticator, rest api etc
+
+**** Key Components of the k8s architecture
+
+***** Cluster
+The cluster is a group of nodes (virtual or physical) and other infra resources that k8s uses to run containerized applications
+
+***** Node
+The node is a system on which pods are scheduled and run. The node runs a daemon called kubelet which allows communication with the master node
+
+***** Master
+The master is a system that takes pod scheduling decisions and manages replication and manager nodes
+
+***** Pod
+The Pod is a co-located (located on the same place/node) group of containers with shared volumes. It is the smallest deployment unit in k8s. A pod can be created independently but its recommended to use replication controller
+
+***** Replication controller
+It manages the lifecycle of the pods
+Makes sure there are the desired number of pods running at any given point of time
+
+Example of replication controller:
+
+#+begin_src
+apiVersion: v1
+kind: ReplicationController
+metadata:
+ name: fronted
+spec:
+ replicas: 2
+ templates:
+  metadata:
+   labels:
+    app: dockerchat
+    tier: frontend
+  spec:
+   containers:
+   - name: chat
+     image: nkhare/dockerchat:v1
+     env:
+     - name: GET_HOSTS_FROM
+       value: dns
+     ports:
+     - containerPort: 5000
+#+end_src
+
+***** Replica sets
+   - "they are the next generation replication controller"
+   - RS supports set-based selector requirements, whereas RC only supports equality based selector support
+ - Deployments
+   - with k8s 1.2, a new object has been added - deployment
+   - it provides declarative updates for pods and RSes
+   - you need to describe the desired state in a deployment object and the deployment controller will change the actual state to the desired state at a controlled rate for you
+   - can be used to create new resources, replace existing ones by new ones etc
+
+A typical use case:
+- Create a Deployment to bring up a Replica Set and Pods.
+- Check the status of a Deployment to see if it succeeds or not.
+- Later, update that Deployment to recreate the Pods (for example, to use a new image).
+- Rollback to an earlier Deployment revision if the current Deployment isn’t stable.
+- Pause and resume a Deployment
+
+Example deployment:
+
+#+begin_src
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+    template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.7.9
+        ports:
+        - containerPort: 8
+#+end_src
+
+***** Service
+A service groups sets of pods together and provides a way to refer to them from a single static IP address and the corresponding DNS name. 
+
+Example of a service file
+#+begin_src
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  labels:
+    app: dockchat
+    tier: frontend
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 5000
+  selector:
+    app: dockchat
+    tier: frontend
+#+end_src
+
+***** Label
+It is an arbitrary key-value pair attached to a resource like pod, replication controller etc
+in the eg above :top:, we defined ~app~ and ~tier~ as the labels.
+
+***** Selector
+They allow us to group resources based on labels. 
+In the example above, the ~frontend~ service will select all ~pods~ which have the labels app=dockerchat, tier=frontend
+
+***** Volume
+The volume is an external filesystem or storage which is available to pods. They are built on top of docker volumes
+
+***** Namespace
+It adds a prefix to the name of the resources so that it is easy to distinguish between different projects, teams etc in the same cluster. 
+
+**** Features
+ - placement of containers based on resource requirements and other constraints
+ - horizontal scaling thru cli and ui, auto-scaling based on cpu load as well
+ - rolling updates and rollbacks
+ - supports multiple volume plugins like gcp/aws disk, ceph, cinder, flocker etc to attach volumes to pods - recall the pods share volumes
+ - self healing by restarting the failed pods etc
+ - secrets management
+ - supports batch execution
+
+
+
+
+

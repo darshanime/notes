@@ -13,6 +13,7 @@ Available notes:
   * [Artificial Intelligence](./artificial_intelligence.org)
   * [Machine Learning (Learning from data)](./learning_from_data.org)
   * [Pro Python](./pro_python.org)
+  * [Introduction to Cloud Infrastructure Technologies](./cloud.org)
   * [Computer Arch](./comp_arch.org)
   * [Ansible](./ansible.org)
   * [C language](./C_language.org)

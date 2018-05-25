@@ -2685,6 +2685,31 @@ func main() {
 }
 #+end_src
 
+** init()
+
+The entry point for any go software is main(). However, if that package has an init() (even the main package), it will be called before everything else. 
+Actually, even before that package's init(), the global vars in that package will be initialized first. 
+SO:
+#+begin_src go
+var WhatIsThe = AnswerToLife()
+
+func AnswerToLife() int {
+    return 42
+}
+
+func init() {
+    WhatIsThe = 0
+}
+
+func main() {
+    if WhatIsThe == 0 {
+        fmt.Println("It's all a lie.")
+    }
+}
+#+end_src
+
+Here, AnswerToLife will be called first. This is to initialize the WhatIsThe variable. 
+Next, init() will be called. Finally, main().
 
 * How to Write Go Code
 

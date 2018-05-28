@@ -1,7 +1,7 @@
 * Introduction to Cloud Infrastructure Technologies
 LFS151.x
 
-Cloud was used to refer to the internet. Now it refers to "remote systems" which you can use. 
+Cloud was used to refer to the internet. Now it refers to "remote systems" which you can use.
 Cloud computing is the use of on demand network accessible pool of remote resources (networks, servers, storage, applications, services)
 
 Clouds can be private (your own datacenter, managed by you or externally - walmart has a largest private cloud in the world - you'd generally use openstack to manage it), public cloud (aws), hybrid cloud (you use aws to augment your internal cloud etc)
@@ -24,7 +24,7 @@ Some of the hypervisors are:
  - VMWare
  - Virtualbox
 
-Hypervisors can be hardware or software. Most recent CPUs now have hardware virtualizatioin support. 
+Hypervisors can be hardware or software. Most recent CPUs now have hardware virtualizatioin support.
 
 ** KVM
 "Kerven Virtual Machine is a full virtualization solution for Linux on x86 hardware"
@@ -61,7 +61,7 @@ We have to write a Vagrantfile to describe our VM and vagrant will do the rest
 # vi: set ft=ruby :
 
 Vagrant.configure(2) do |config|
-   # Every Vagrant development environment requires a box. You can search for 
+   # Every Vagrant development environment requires a box. You can search for
    # boxes at https://atlas.hashicorp.com/search.
    config.vm.box = "centos/7"
 
@@ -107,7 +107,7 @@ These allow us to install software, make configuration changes etc after the mac
 So you need to provide 2 things to vagrant - provider and provisioner (eg: kvm, ansible respectively)
 
 *** Plugins
-Vagrant has plugins as well to extend functionality 
+Vagrant has plugins as well to extend functionality
 
 
 ** Infrastructure as a service
@@ -121,7 +121,7 @@ Google uses the KVM hypervisor
 When you request an EC2 instance for eg, AWS creates a virtual machine using some hypervisor and then gives you access to that VM
 
 
-You can become a IaaS provider yourself using OpenStack. 
+You can become a IaaS provider yourself using OpenStack.
 OpenStack very modular and has several components for different virtual components etc:
  - keystone
    - for identity, token, catalog etc
@@ -157,7 +157,7 @@ CF gives you:
 
 CF runs on top of VMs from existing IaaS like aws, openstack etc
 CF uses some VMs as components VMs - these run all the different components of CF to provide different PaaS functionalities
-and Application VMs - these run ~Garden containers~ inside which your application is deployed  
+and Application VMs - these run ~Garden containers~ inside which your application is deployed
 
 CF has 3 major components:
  - Bosh
@@ -304,7 +304,7 @@ Docker allows us to bundle our applications with all it's dependencies "in a box
 The container will run identically on all the platforms - the runtime will make sure of that
 
 This container (having our application and it's dependencies and it's runtime) is called the image.
-A running instance of the image is referred to as a container. 
+A running instance of the image is referred to as a container.
 We can spin multiple containers (objects) from the image (class)
 The image is built using a dockerfile
 
@@ -327,7 +327,7 @@ The resources that are namespaced are:
  - user - provides each namespace with its own user and group id number spaces.
    - *a root user is not the root user on the host machine*
 
-     
+
 **** cgroups
 
 Control groups are used to organize processes hierarchically and *distribute system resources along the hierarchy in a controlled and configurable manner* - so cgroups are mostly about distributing these system resources within the namespaces above
@@ -373,12 +373,12 @@ Docker CLI -> docker engine -> ~containerd~ -> ~runC~
 
 Another container runtime is ~rkt~ (rock-it)
 ~rkt~ does not support OCI containers currently - but it is in the pipeline - https://github.com/rkt/rkt/projects/4
-But ~rkt~ can run docker images. 
+But ~rkt~ can run docker images.
 
 Since version 1.11, the Docker daemon no longer handles the execution of containers itself. Instead, this is now handled by containerd. More precisely, the Docker daemon prepares the image as an Open Container Image (OCI) bundle and makes an API call to containerd to start the OCI bundle. containerd then starts the container using runC.
 ~rkt~ takes the same docker image runs it without bundling it as an OCI bundle.
 
-~rkt~ can run "App Container Images" specified by the "App Container Specification" 
+~rkt~ can run "App Container Images" specified by the "App Container Specification"
 
 *** Containers vs VMs
 
@@ -394,7 +394,7 @@ In contrast to this, Containers run directly as processes on top of the host OS.
 
 *** Docker runtime
 
-Docker follows a client-server architecture. 
+Docker follows a client-server architecture.
 The docker client connects to the docker server (docker host) and executes the commands
 
 #+ATTR_ORG: :width 400
@@ -465,10 +465,10 @@ Note how the CoreOS machines are all connected to etcd and are controlled via a 
 
 It is available on most cloud providers
 
-CoreOS does not have any package managers and the OS is treated as a single unit. There are 2 root partitions, active and passive. 
+CoreOS does not have any package managers and the OS is treated as a single unit. There are 2 root partitions, active and passive.
 When the system is booted with the active partition, the passive partition can be used to download the latest updates.
 
-Self updates are also possible, and the ops team can choose specific release channels to deploy and control the application with update strategies. 
+Self updates are also possible, and the ops team can choose specific release channels to deploy and control the application with update strategies.
 
 #+ATTR_ORG: :width 400
 #+ATTR_ORG: :height 400
@@ -486,7 +486,7 @@ CoreOS is built on top of the following:
 CoreOS supports both these runtimes
 
 **** etcd
-It is a distributed key-value pair, used to save the cluster state, configuration etc 
+It is a distributed key-value pair, used to save the cluster state, configuration etc
 
 **** systemd
 
@@ -545,7 +545,7 @@ It is written in Python + Shell
 *** RancherOS
 
 It is a 20MB linux distribution that runs docker containers.
-It runs directly on top of the linux kernel. 
+It runs directly on top of the linux kernel.
 
 #+ATTR_ORG: :width 400
 #+ATTR_ORG: :height 400
@@ -573,7 +573,7 @@ Running containers on a single host is okay, not so fancy. What we want is to ru
 
 
 Container orchestration tools solve all these problems - along with different plugins
-CO is an umbrella term that encompasses container scheduling and cluster management. 
+CO is an umbrella term that encompasses container scheduling and cluster management.
 Container Scheduling - which host a container or group of containers should be deployed
 Cluster Management Orchestrater - manages the underlying nodes - add/delete them etc
 
@@ -640,7 +640,7 @@ Docker machine can also be used to configure a swarm cluster
 
 **** Docker Compose
 
-It allows us to define and run multi-container applications on a single host thru a configuration file. 
+It allows us to define and run multi-container applications on a single host thru a configuration file.
 
 *** Kubernetes
 
@@ -658,7 +658,7 @@ The high level architecture of k8s is:
 [[file:assets/screenshot_2018-05-24_23-00-31.png]]
 
 
-Each node is labeled as a minion. It has a docker engine on which runs the kubelet, (the k8s "agent"), cAdvisor (?), a proxy and one or more pods. In the pods run the containers. 
+Each node is labeled as a minion. It has a docker engine on which runs the kubelet, (the k8s "agent"), cAdvisor (?), a proxy and one or more pods. In the pods run the containers.
 
 Then we have the management guys - including the scheduler, replication controller, authorization/authenticator, rest api etc
 
@@ -743,7 +743,7 @@ spec:
 #+end_src
 
 ***** Service
-A service groups sets of pods together and provides a way to refer to them from a single static IP address and the corresponding DNS name. 
+A service groups sets of pods together and provides a way to refer to them from a single static IP address and the corresponding DNS name.
 
 Example of a service file
 #+begin_src
@@ -768,14 +768,14 @@ It is an arbitrary key-value pair attached to a resource like pod, replication c
 in the eg above :top:, we defined ~app~ and ~tier~ as the labels.
 
 ***** Selector
-They allow us to group resources based on labels. 
+They allow us to group resources based on labels.
 In the example above, the ~frontend~ service will select all ~pods~ which have the labels app=dockerchat, tier=frontend
 
 ***** Volume
 The volume is an external filesystem or storage which is available to pods. They are built on top of docker volumes
 
 ***** Namespace
-It adds a prefix to the name of the resources so that it is easy to distinguish between different projects, teams etc in the same cluster. 
+It adds a prefix to the name of the resources so that it is easy to distinguish between different projects, teams etc in the same cluster.
 
 **** Features
  - placement of containers based on resource requirements and other constraints
@@ -785,8 +785,258 @@ It adds a prefix to the name of the resources so that it is easy to distinguish 
  - self healing by restarting the failed pods etc
  - secrets management
  - supports batch execution
+ - packages all the necessary tools - orchestration, service discovery, load balancing
 
 
 
+*** Apache Mesos
 
+Mesos is a higher level orchestrater, in that it can be used to treat a cluster of nodes as one big computer, and allows us to run different applications on the pool of nodes (eg: hadoop, jenkins, web server etc)
+
+It has functionality that crosses between IaaS and PaaS
+
+**** Mesos Components
+
+***** Master
+
+It is the "brain" of the mesos cluster and provides a single source of truth.
+The master node mediates between schedulers and slaves.
+The slaves advertise their resources to the master node. The master node forwards them to the scheduler who gives the task to run on the slave to the master and the master forwards them to the slave.
+
+
+Slaves -> master -> scheduler -> master -> slaves
+
+***** Slaves
+They execute the tasks send by the scheduler via the master node
+
+***** Frameworks
+
+They are distributed applications that solve a particular use case. 
+It consists of a scheduler and an executor. The scheduler gets a resource offer, which it can accept or decline. The executor accepts the jobs from the scheduler and runs them
+
+Examples of existing frameworks - hadoop, spark, auror etc. 
+We can create our own too
+
+***** Executor
+
+They are used to run jobs on slaves. 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-05-28 23:42:00
+[[file:assets/screenshot_2018-05-28_23-42-00.png]]
+
+
+**** Features
+ - it can scale to 10k nodes
+ - uses Zookeeper for fault tolerant replicated master and slaves
+ - provides support for docker containers
+ - allows multi-resource scheduling (memory, CPU, disk, ports)
+ - has Java, Python, C++ APIs for developing new parallel applications
+
+Mesos ships binaries for different components (master, slaves, frameworks etc) which can be used to create the mesos cluster
+
+**** Mesosphere
+
+Mesophere offers a commercial solution on top of Apache Mesos called Mesosphere Enterprise DC/OS (which is also opensource). 
+It comes with the Marathon framework which has the features:
+ - HA
+ - supports docker natively
+ - logging, web api etc
+
+DC/OS stands for Datacenter Operating System
+It treats the entire data center as one large computer
+
+DC/OS is in Python!
+
+**** DC/OS
+
+It has 2 main components:
+
+***** DC/OS Master
+It has the following components
+- mesos master process
+  - similar to the *master* component in mesos
+- mesos dns
+  - provides service discovery within the cluster, so applications and services within the cluster can reach each other
+- marathon
+  - framework which comes by default with dc/os and provides the _init system_
+- zookeeper
+  - high performance coordination service that manages dc/os services
+- admin router
+  - open source nginx config which provides central authentication and proxy to dc/os services within the cluster
+
+***** DC/OS Agent
+- Memos agent process
+  - runs the ~mesos-slave~ process, which is similar to the *slave* component of Mesos
+- Mesos containerization
+  - lightweight containerization and resource isolation of executors
+  - uses cgroups and namespaces
+- docker container
+  - provides support for launching tasks that contain docker images
+
+*** Hashicorp Nomad
+It is a cluster manager and resource scheduler which is distributed, HA and sclaes to thousands of nodes.
+
+Designed to run micro services and batch jobs.
+Supports different workloads, like containers, VMs, individual applications
+
+Since it is a Go project, it is distributed as a single statically linked binary and runs in a server and client mode.
+
+To submit a job, use the HCL - hashicorp configuration language.
+Once submitted, Nomad will find available resources in the cluster and run it to maximize the resource utilization
+
+Sample job file:
+
+#+begin_src
+# Define the hashicorp/web/frontend job
+job "hashicorp/web/frontend" {
+    # Run in two datacenters
+    datacenters = ["us-west-1", "us-east-1"]
+
+    # Only run our workload on linux
+    constraint {
+        attribute = "$attr.kernel.name"
+        value = "linux"
+    }
+
+    # Configure the job to do rolling updates
+    update {
+        # Stagger updates every 30 seconds
+        stagger = "30s"
+
+        # Update a single task at a time
+        max_parallel = 1
+    }
+
+    # Define the task group
+    group "frontend" {
+        # Ensure we have enough servers to handle traffic
+        count = 10
+
+        task "web" {
+            # Use Docker to run our server
+            driver = "docker"
+            config {
+                image = "hashicorp/web-frontend:latest"
+            }
+
+            # Ask for some resources
+            resources {
+                cpu = 500
+                memory = 128
+                network {
+                    mbits = 10
+                    dynamic_ports = ["http"]
+                }
+            }
+        }
+    }  
+}
+#+end_src
+
+This would start 10 containers from the ~hashicord/web-frontend:latest~ docker image
+
+**** Features
+- Supports both cluster management and resource scheduling
+- supports multiple workloads like containers, VMs, unikernels, individual applications (like apache mesos)
+- ships with just one binary
+- has multi-datacenter support and multi-region support - we can run nomad client/server running in different clouds to get a logical nomad cluster
+- bin packs applications onto servers to achieve high resource utilization
+
+
+
+*** Amazon ECS
+It is a service provided by AWS offering container orchestration and management on top of EC2 instances using Docker.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-05-29 00:25:59
+[[file:assets/screenshot_2018-05-29_00-25-59.png]]
+
+Some of the components:
+
+- Cluster
+Logical grouping of container instances on which tasks are placed
+
+- container instances
+It is an ec2 instance with ecs agent that has been registered with a cluster
+
+- task definition
+Specifies the blueprint of an application which consists of 1 or more containers
+
+- scheduler
+Places tasks on the container instances. 
+
+- service
+1 or more instances of tasks to run depending on task definition. 
+- task
+Running container instance from the task definition
+- container
+Docker container created from task definition
+
+
+The features are that it fits in nicely with the rest of AWS ecosystem - cloudwatch for monitoring, cloudtrail for logging etc
+It can support 3rd party schedulers like mesos marathon
+
+
+*** Google Container Engine
+
+GKE is a fully managed solution for running k8s on google cloud.
+It is like coreos' tectonic, redhat's openorigin and aws' ecs - a fully managed k8s service
+
+*** Azure container service
+
+It simplifies creation, configuration, management of containerized applications on microsoft azure
+it uses either apache mesos, or docker swarm to orchestrate applications which are containerized using the docker runtime.
+
+** Unikernels
+
+One trend has been towards removing unnecessary components from our servers. We have VMs, then we moved to containers which removed a lot of redundant components - like a kernel etc (instead replying on the host os). Then we have mini oses like coreos' container linux which was made specially to run containers. 
+One extreme trend here is to strip down the host os further so that it now only has "specialized, single address space machine images" constructed to solely run our application only - we don't even need containers now, our application runs directly with the kernel code
+
+The single address space executable has both the application and kernel components. 
+It only contains:
+- the application code
+- configuration files of the application
+- user space libraries needed by the application (like the tcp stack maybe)
+- application runtime (like the jvm for eg)
+- system libraries of the unikernel which allow it to communicate with the hypervisor
+
+x86 has protection rings - the kernel runs on ~ring0~ with maximum privileges, the application on ~ring3~ with least privileges.
+
+With unikernels, everything runs on ~ring0~
+UK would run directly on top of hypervisors like Xen, or even on bare metal
+
+Example of a UK created by the ~mirage compiler~
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-05-29 00:50:16
+[[file:assets/screenshot_2018-05-29_00-50-16.png]]
+
+
+Benefits include faster boot times, maximized resource utilization, easily reproducible VM environment. 
+Safer environment since the attack surface has been reduced
+
+*** Implementations
+There are many implementations, mainly falling in 2 categories:
+- specialized and purpose built unikernels
+  - the utilize all the modern features of the hardware, and aren't posix compliant. Eg: ING, Clive, MirageOS
+
+- Generalized "fat" unikernels
+  - the run unmodified applications, which make the fat. (?)
+  - examples: OSv, BSD Rump kernels
+
+*** Docker and Unikernels
+
+In Jan 2016, Docker brought Unikernels to make them 1st class citizens of the Docker ecosystem.
+Both containers and unikernels can coexist on the same host, they can be managed by the same docker library
+
+Unikernels power Docker Engine on top of Alpine Linux on Mac and Windows with their default hypervisors (xhyve Virtual Machine and Hyper-V VM respectively)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-05-29 01:00:26
+[[file:assets/screenshot_2018-05-29_01-00-26.png]]
 

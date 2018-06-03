@@ -1040,3 +1040,207 @@ Unikernels power Docker Engine on top of Alpine Linux on Mac and Windows with th
 #+DOWNLOADED: /tmp/screenshot.png @ 2018-05-29 01:00:26
 [[file:assets/screenshot_2018-05-29_01-00-26.png]]
 
+*** Microservices
+
+They are small independent processes that communicate with each other to form complex applications which utilize language agnostic APIs.
+
+The components (aka services) are highly decoupled, do one thing and do it well (the UNIX philosophy), allow a modular approach
+
+In monoliths, the entire application is built as a single code base (repo). In microservices, the application is built with many small components (services) which communicate with each other using rest apis/grpc etc
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-05-31 09:55:27
+[[file:assets/screenshot_2018-05-31_09-55-27.png]]
+
+The graphic above is very insightful :top:
+
+**** Advantages
+- The microservices allow us to scale the components that are under load currently and now have to deploy the entire thing with each scale up
+
+- Microservices allow us to be polyglots - we can choose any language to write any service in. It doesn't matter because the application talks to one another using APIs etc
+
+- Cascading failure is averted - if one instance of a service fails, others continue to work etc
+There is a catch however, if all instances of a particular service is slow to respond/fails, it can lead to cascading failures
+
+- Services can be reused as well
+
+**** Disadvantages
+
+- Need to find the right "size" of the services
+
+- Deploying a monolith is simple, deploying a microservice is tricky, needs a orchestrater like k8s
+
+- End to end testing becomes difficult because of so many moving parts
+
+- managing databases can be difficult
+
+- monitoring can be a little difficult
+
+
+*** Containers as a Service
+
+There are companies providing containers on demand. 
+A CaaS sits between IaaS and PaaS. Examples include - Docker Universe Control Plane.
+When you demand containers, you don't have to worry about infrastructure, you get it on demand for you. Also, your application gets deployed and taken care of. This is close the AWS Lambda, the serverless tech where you don't have to worry about infra/deployment too
+
+Examples of CaaS providers:
+- OpenStack Magnum
+- Docker Universe Control Plane
+
+Other solutions that enable CaaS are (or what CaaS uses under the hood):
+- Kubernetes
+- aws ecs
+- tectonic (coreos' k8s as a service)
+- rancher (the miniOS)
+
+
+**** Docker Universe Control Plane
+
+UCP provides a centralized container management solution (on premise or on the cloud)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-03 23:10:15
+[[file:assets/screenshot_2018-06-03_23-10-15.png]]
+
+UCP works with Docker Machine, Docker Swarm etc so adding and removing nodes is simpler. UCP also integrates well with auth mechanisms like LDAP/AD so one can define fine grained policies and roles. 
+
+***** Features
+- works with existing auth tools like LDAP, LDAD, SSO with docker trusted registry
+- works with existing docker tools like DM, DC
+- has a web gui
+- provides a centralized container management solution
+
+
+**** Docker Datacenter
+
+Docker has another project - Docker Datacenter, which builds on top of UCP and DTR. It is hosted completely behind a firewall.
+
+It leverages Docker Swarm under the hood and has out of the box logging, monitoring etc
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-03 23:15:35
+[[file:assets/screenshot_2018-06-03_23-15-35.png]]
+
+In UCP, we can define and start containers on demand using the UI which also has logs etc for that container
+The developers can deploy applications without worrying about the infra etc.
+
+
+**** Project Magnum
+
+Openstack Magnum is a CaaS service built on top of OpenStack.
+
+We can choose the underlying orchestrater from k8s, swarm, or mesos.
+
+There are 2 components to Magnum
+- Server API
+Magnum Client talks to this service
+- Conductor
+It manages the cluster lifecycle thru *Heat* and communicates with the *container orchestration enginer* (COE)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-03 23:22:06
+[[file:assets/screenshot_2018-06-03_23-22-06.png]]
+
+***** Magnum Components
+- Bay
+Bays are the nodes on which the COE sets up the cluster
+- BayModels
+Stores metadata information about Bays like COE, keypairs, images to use etc
+- COE
+It is the container orchestrater used by magnum. Currently supported orchestrater are k8s, swarm, or mesos. COEs can run on top of Micro OSes like CoreOS, atomic host etc
+- Pod
+A colocated (located close to one another) group of application containers that run with a shared context
+- Service
+An abstraction which defines a logical set of pods and a policy to access them
+- Replication Controller
+Abstraction for managing a group of pods to ensure that a specified number of resources are running
+- Container
+The docker container running the actual user application
+
+***** Features
+- Magnum offers an asynchronous API that is compatible with Keystone
+- multi-tenant
+- HA, scalable
+
+
+*** Software defined networking and networking for containers
+
+SDN decouples the network control layer from the layer which controls the traffic. This allows SDN to program the control layer to create custom rules in order to meet the networking requirements.
+
+**** SDN Architecture
+In networking (in general), we have 3 planes defined:
+
+- Data Plane (aka Forwarding Plane)
+It is responsible for handling data packets and applying actions to them based on rules in lookup-tables
+
+- Control Plane
+It is tasked with calculating and programming the actions for the data plane. Here the forwarding decisions are made and the services (Quality of Service, VLANs) are implemented
+
+- Management Plane
+Here we can configure and manage the network devices
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-03 23:39:40
+[[file:assets/screenshot_2018-06-03_23-39-40.png]]
+
+
+**** Activities performed by a network device
+
+The network device facilitates the 
+
+Every network device performs 3 activities:
+- Ingress and Egress packets
+Done at the lowest level, which decides what to do with the ingress packets - weather to forward them or not (based on the forwarding tables) - these activities are mapped as data plane activities.
+All routers, switches, modem etc are part of this plane
+
+- Collect, Process, Manage network information
+Using this information, the network device makes the forwarding decisions, which the data plane follows. 
+
+- Monitor and manage the network
+We can use the tools available in the Management Plane to manage the network devices eg: SNMP - Simple Network Management Protocol
+
+In SDN, we decouple the control plane with the data plane. The control plane has a centralized view of the overall network, which allows it to create forwarding tables that the data plane uses to manage network traffic (the network devices follow the rules)
+
+The Control Plane has APIs that take requests from applications to configure the network. After preparing the desired state of the network, it is given to the Data Plane (aka Forwarding Plane) using a well defined protocol like OpenFlow
+
+We can also use tools like Ansible, Chef etc to configure SDN.
+
+
+**** Introduction to Networking for Containers
+Containers need to be connected on the same host and across hosts. The host kernel uses the Network Namespace feature of the kernel to isolate the network from one container to another on the host.
+The network namespace can be shared as well
+
+On a single host, we can use the *Virtual Ethernet (~vnet~)* feature with Linux bridging to give a virtual network interface to each container and assign it an IP address - this is as if each container was a full machine on itself and had an ethernet port, a unique IP on the network.
+
+With kernel features like IPVLAN, we can configure each container to have a unique and world-wide routable IP address - this will allow us to do connect containers on any host to other containers on any other host. It is a recent feature and the support for different container runtimes is coming soon.
+
+Currently, to do multi-host networking with containers, the most common solution is to use some form of *Overlay* network driver, which encapsulates the Layer 2 traffic to a higher layer. (Recall Layer 2 is the layer that transfers frames (which are the smallest units of bits on L2) between hosts on the same local network)
+
+Examples of this type of implementation are Docker Overlay Driver, Flannel, Weave etc. Project Calico allows multi-host networking at Layer 3 using BGP - border gateway protocol
+
+**** Container Networking Standards
+
+There are 2 different standards for container networking
+- The Container Network Model - CNM
+Docker Inc. Is the primary driver for this networking model. It is implemented using the libnetwork model which has the follow utilizations:
+ - Null
+   - the NOOP (no operation) implementation of the driver. It is used when no networking is required
+ - Bridge
+   - It provides a Linux specific bridging implementation based on Linux Bridge
+ - Overlay
+   - It provides a multi host communication over VXLAN
+ - Remote
+   - it does not provide a driver. Instead, it provides a means of supporting drivers over a remote transport, by which we can write 3rd party drivers
+
+- Container Networking Interface
+CoreOS is the primary driver for this networking model. It is derived from the ~rkt~ networking proposal. k8s supports CNI.
+
+
+**** Service Discovery
+
+

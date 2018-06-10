@@ -1221,7 +1221,7 @@ With kernel features like IPVLAN, we can configure each container to have a uniq
 
 Currently, to do multi-host networking with containers, the most common solution is to use some form of *Overlay* network driver, which encapsulates the Layer 2 traffic to a higher layer. (Recall Layer 2 is the layer that transfers frames (which are the smallest units of bits on L2) between hosts on the same local network)
 
-Examples of this type of implementation are Docker Overlay Driver, Flannel, Weave etc. Project Calico allows multi-host networking at Layer 3 using BGP - border gateway protocol
+Examples of this type of implementation are Docker Overlay Driver, Flannel, Weave etc. Project Calico allows multi-host networking at Layer 3 using BGP - border gateway protocol. L3 is basically the IP layer
 
 **** Container Networking Standards
 
@@ -1233,7 +1233,7 @@ Docker Inc. Is the primary driver for this networking model. It is implemented u
  - Bridge
    - It provides a Linux specific bridging implementation based on Linux Bridge
  - Overlay
-   - It provides a multi host communication over VXLAN
+   - It provides a multi host communication over VXLAN (recall the technology where we encapsulated the L3 packets etc)
  - Remote
    - it does not provide a driver. Instead, it provides a means of supporting drivers over a remote transport, by which we can write 3rd party drivers
 
@@ -1243,4 +1243,554 @@ CoreOS is the primary driver for this networking model. It is derived from the ~
 
 **** Service Discovery
 
+Service discovery is important for when we do multi host networking, and some form of orchestration.
+SD is a mechanism by which processes can find each other automatically and talk. For k8s, it means mapping a container name with it's IP address so that we can access the container without worrying about it's exact location (the node on which it resides etc)
 
+SD has 2 parts:
+- Registration
+  - The k8s scheduler registers the container in some key value store like etcd, consul etc when the container starts/stops
+- lookup
+  - services and applications use lookup to get the address of a container so that they can connect to it. This is done using some form of DNS. In k8s, the DNS resolves the requests by looking up the entries in the key-value store used for *Registration*. Examples of such DNS services include SkyDNS, Mesos-DNS etc
+
+
+*** Networks on docker
+We can list the available networks on docker (on our PC) with:
+
+$ docker network ls
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-10 19:31:15
+[[file:assets/screenshot_2018-06-10_19-31-15.png]]
+
+Here, we have 3 different types of networks, ~bridge~, ~host~, ~none~
+
+**** Bridge
+
+The bridge is a hardware device that has 2 ports - it passes traffic from one network on to another network. It operates on L2, which means it transfers the frames (which make up the packages) using the MAC address of the attached devices
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-10 19:33:57
+[[file:assets/screenshot_2018-06-10_19-33-57.png]]
+
+Here, when we say bridge, we mean a virtual bridge - actually, a virtual switch.
+A networking switch has multiple ports (interfaces. Very loosely, an interface is just a source/sink of frames). It can accept frames from one port and forward it to the destination device attached on another port.
+It operates on L2, which means it uses hardware address (like MAC) to identify the destination device
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-10 19:38:23
+[[file:assets/screenshot_2018-06-10_19-38-23.png]]
+
+
+A classical use is to connect 2 devices to an external network say (like the internet)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-10 19:39:34
+[[file:assets/screenshot_2018-06-10_19-39-34.png]]
+
+Ref: http://www.innervoice.in/blogs/2012/08/16/understanding-virtual-networks-the-basics/
+
+So, here the bridge is actually a virtual switch like the one above.
+It routes traffic from our container to a physical interface on the host
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-10 19:41:06
+[[file:assets/screenshot_2018-06-10_19-41-06.png]]
+
+By default, docker uses a virtual bridge called ~docker0~ and all the containers get an IP from this bridge. Docker uses a virtual ethernet ~vnet~ to create 2 virtual interfaces, one end of which is attached to the container and the other end to the ~docker0~ bridge.
+
+When we install docker on a single host, the ~docker0~ interface is created:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-10 19:48:33
+[[file:assets/screenshot_2018-06-10_19-48-33.png]]
+
+Creating a new container and looking at it's interfaces shows us it got an IP from the range 172.17.0.0/16, catered by the bridge network.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-10 19:49:52
+[[file:assets/screenshot_2018-06-10_19-49-52.png]]
+
+
+
+Getting more info about the bridge network is easy:
+
+#+begin_src json
+$ docker network inspect bridge
+[
+     {
+        "Name": "bridge",
+        "Id": "6f30debc5baff467d437e3c7c3de673f21b51f821588aca2e30a7db68f10260c",
+        "Scope": "local",
+        "Driver": "bridge",
+        "EnableIPv6": false,
+        "IPAM": {
+            "Driver": "default",
+            "Options": null,
+            "Config": [
+                {
+                    "Subnet": "172.17.0.0/16"
+                }
+            ]
+        },
+        "Internal": false,
+        "Containers": {
+            "613f1c7812a9db597e7e0efbd1cc102426edea02d9b281061967e25a4841733f": {
+                 "Name": "c1",
+                 "EndpointID": "80070f69de6d147732eb119e02d161326f40b47a0cc0f7f14ac7d207ac09a695",
+                 "MacAddress": "02:42:ac:11:00:02",
+                 "IPv4Address": "172.17.0.2/16",
+                 "IPv6Address": ""
+             }
+         },
+         "Options": {
+             "com.docker.network.bridge.default_bridge": "true",
+             "com.docker.network.bridge.enable_icc": "true",
+             "com.docker.network.bridge.enable_ip_masquerade": "true"
+             "com.docker.network.bridge.host_binding_ipv4": "0.0.0.0",
+             "com.docker.network.bridge.name": "docker0",
+             "com.docker.network.driver.mtu": "1500"
+         },
+         "Labels": {}
+      }
+ ]
+#+end_src
+
+***** Creating a new bridge network is simple
+
+~docker network create --driver bridge mybridge~
+
+Now starting a container to use the new bridge is simple also:
+~docker run --net=mybridge -itd --name=c2 busybox~
+
+Bridge network does not support automatic service discovery, so you have to use the legacy ~--link~ option, which will connect the other container to the same bridge
+
+
+**** NULL
+
+Null means no networking. If we attach a container to a ~null~ driver, we just get the ~loopback~ (~lo~) interface. The container won't be accessible from the outside
+
+~docker run -it --name=c3 --net=none busybox /bin/sh~
+
+
+**** Host
+If we don't want the container to have a separate network namespace, we can use the ~host~ driver
+
+~docker run -it --name=c4 --net=host  busybox /bin/sh~
+The container will have full access to the host network.
+
+A container with ~host~ driver has access to all the interfaces on the host machine
+
+
+**** Sharing network namespaces
+We can have 2 or more containers share the same network namespaces. This means they be able to refer to each other by referring to ~localhost~
+
+Start a container:
+~docker run -it --name=c5 busybox /bin/sh~
+
+Now, start another container
+~docker run -it --name=c6 --net=container:c5 busybox /bin/sh~
+
+K8s uses this feature to share the network namespace among all the containers in a pod
+
+*** Docker Multi-host networking
+
+Most of multi host networking solutions for docker are based on *Overlay* network.
+We encapsulate the container's IP packet, transfer it over the wire, decapsulate it and then forward it to the destination container.
+
+Examples of projects using the overlay networks are:
+- docker overlay driver
+- flannel
+- waeve
+
+Calico uses border gateway protocol (BGP) to do IP based routing instead of encapsulation, so it operates on L3
+
+**** libnetwork
+Docker's implementation of the overlay network driver is in _libnetwork, a built-in VXLAN based overlay network driver_ and the ~libkv~ library.
+
+To configure the overlay network, we configure a key-value store and connect it with docker engine in each host.
+Docker uses ~libkv~ to configure the k-v store which supports etcd, consule and zookeeper as the backend store
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-10 20:23:39
+[[file:assets/screenshot_2018-06-10_20-23-39.png]]
+
+Once the k-v store is configured, we can create an overlay network using 
+~docker network create --driver overlay multi-host-network~
+
+~multi-host-network~ is the name of the network we created
+
+
+To create a container which uses the multi-host Overlay network we created, we have to start the container with a command like the following:
+
+~$ docker run -itd --net=multi-host-network busybox~
+
+What happens under the hood is that each packet is encapsulated, sent to the destination host node having the destination container (the k-v store is used to find the IP of the destination host node), which decapsulates it and sends it to the destination container
+
+When we create a new docker engine on a new host, we can give it the location of the k-v store using
+
+~docker-machine create -d virtualbox --engine-opt="cluster-store=consul://$(docker-machine ip keystore):8500" --engine-opt="cluster-advertise=eth1:2376" node2~
+
+In docker swarm, the central k-v store has been implemented in the swarm core itself, so we don't need to create it outside. 
+We have to if we don't use swarm and connect the containers directly 
+
+The containers on ~node2~ above, get 2 interfaces (the overlay network, the bridge for connecting to host machine) (each having it's own IP addresses)
+
+The driver makes sure that only the packets from the overlay network interface are encapsulated (and decapsulated) etc
+
+
+*** Docker networking Plugins
+
+We implement Docker Remote Driver APIs to write custom network plugins for docker. 
+Docker has plugins for network and volumes (so we can use them to provision glusterfs volumes for containers eg)
+
+Examples:
+- weave network plugin
+Weave net provides multi-host container networking for docker.
+
+In Software Defined Networking, we decouple the control plane (use to control the containers etc, do the admin stuff) with the data plane (which has the traffic for our containers)
+
+** Software defined Storage (ADS)
+
+Used to manage storage hardware with software. Software can provide different features, like replication, erasure coding, snapshot etc on top of pooled resources
+
+SDS allows multiple access methods like File, Block, Object
+
+Examples of software defined storage:
+- Ceph
+- Gluster
+- FreeNAS
+- Nexenta
+- VMware Virtual SAN
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-10 20:46:31
+[[file:assets/screenshot_2018-06-10_20-46-31.png]]
+
+Here, the storage on the different individual hosts has been abstracted away and SDS provices a pool of storage to the containers via the network
+
+
+*** Ceph
+
+Ceph is a distributed:
+- object store
+  - which means it allows us to store objects like S3
+- block storage
+  - which allows you to mount ceph as a block device, write a filesystem on it etc. Ceph will automatically replicate the contents on the block etc
+- file system 
+ - ceph provides a traditional file system API with POSIX semantics, so you can do open('/path/on/ceph/fs')
+
+
+Minio is also an object store like ceph etc. What it does too is, manage replication and sharding of the objects given to it
+
+
+**** Ceph architecture
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-10 20:58:49
+[[file:assets/screenshot_2018-06-10_20-58-49.png]]
+
+***** Reliable Autonomic Distributed Object Store - RADOS
+
+It is the object store which stores objects. This layer makes sure data is consistent and in a reliable state. 
+It performs the following operations:
+- replication
+- failure detection (of a node in a ceph cluster)
+- recovery
+- data migration
+- rebalancing data across cluster nodes
+
+RADOS has 3 main components:
+- Object Storage Device
+  - user content is written and retrieved using read operations. OSD daemon is typically tied to one physical disk in the cluster
+- Ceph Monitors
+  - responsible for monitoring the cluster state
+- Ceph Metadata Server
+  - needed only by cephFS to store file hierarchy and metadata for files
+
+***** Librados
+
+It allows direct access to Rados from languages like C, C++, Python, Java etc. 
+Ceph Block Device, CephFS are implemented on top o librados
+
+***** Ceph Block Device
+This provides the block interface for Ceph. It allows ceph block devices to be mounted as block devices and used as such
+
+***** Rados Gateway (RadosGW)
+It provices a REST API interface for Ceph, which is compatible with AWS S3
+
+***** Ceph File System (CephFS)
+It provides a POSIX compliant distributed filesystem on top of Ceph
+
+**** Advantages of using Ceph
+- Open source storage supporting Object, Block and File System storage
+- Runs on commodity hardware, without vendor lock in
+- Distributed file syste, no single point of failure
+
+
+*** Gluster
+
+Gluster is a scalable network filesystem which can run on common off-the-shelf hardware. It can be used to create large, distributed storage solutions for media streaming, data analysis and other data-and-bandwith intensive tasks. GlusterFS is free and open source
+
+**** GlusterFS volumes
+
+We need to start by grouping machines in a trusted pool. Then, we group the directories (called bricks) from those machines in a GlusterFS volume using FUSE (file system in user space).
+
+So, add machines to form a pool. On the machines, create partitions (aka bricks) and group them to form glusterfs volumes
+
+GlusterFS supports different kinds of volumes:
+- distributed glusterfs volumes
+- replicated glusterfs volumes
+- distributed replicated glusterfs volumes
+- stripped glusterfs volumes
+- distributed stripped glusterfs volumes
+
+GlusterFS does not have a centralized metadata server (unlike HDFS), so no single point of failure. 
+It uses an elastic hashing algorithm to store files on bricks.
+
+The GlusterFS volume can be accessed using one of the following methods:
+- Native FUSE mount
+- NFS (Network File System)
+- CIFS (Common Internet File System)
+
+
+
+**** Benefits
+- supports object, block, filesystem storage
+- does not have a metadata server, so no SPOF
+- open source, posix compatible, HA by data replication etc
+
+*** Introduction to storage management for containers
+
+Containers are ephemeral by nature, so we have to store data outside the container. In a multi-host environment, containers can be scheduled to run on any host. So we need to make sure the volume required by the container is available on the node on which the container is scheduled to run
+
+We will see how docker uses Docker Volumes to store persistent data. Also, we will look at Docker Volume Plugins to see how it allows vendors to support their storage for docker. 
+
+**** Docker Storage backends
+
+Docker uses copy-on-write to start containers from images, which means we don't have to copy an image while starting a container.
+
+Docker supports the following storage backends:
+- aufs (another union file system)
+- btrfs
+- device mapper
+- overlay
+- vfs (vritual file system)
+- zfs
+
+**** Docker Volumes vs host directory mounts
+
+You can mount a host directory on a container and store data there. Or you can mount a docker volume container and store data there. They are 2 different approaches. 
+The first one is not portable, since each host might not have that directory present locally. This is the reason you can't mount host directories in Dockerfiles because dockerfiles are suppose to be portable.
+
+A better idea is to create a docker volume container and mount that with your container. 
+
+Examples: 
+
+~docker run --volumes-from dbdata -v $(pwd):/backup ubuntu tar cvf /backup/backup.tar /dbdata~
+
+Here, we have launched a new container and mounted the volume from ~dbdata~ volume container. We also mounted ~pwd~ which is a local host directory as ~/backup~ in the container.
+
+Docker volume plugins allow us to use different storage backends as data volume containers - like btrfs etc. Much like k8s allows us to use gluster, ceph etc as volumes.
+
+**** Docker Volumes
+Docker volumes are different from mounted directories on containers.
+
+A data volume is a specially designated directory within containers that bypasses the union file system. 
+- data volumes can be shared and reused among containers
+- changes to data volume are made directly
+- changes to data volume won't be included when you update an image
+
+To create a container with a volume:
+
+~docker run -d --name web -v /webapp nkhare/webapp~
+
+This :top: will create a volume inside the default docker working directory ~/var/lib/docker~ on the host system
+
+We can create a named volume as well:
+~docker volume create --name my-named-volume~
+
+This can be later mounted and used
+
+Mounting a host directory inside a container is simple too
+~docker run -d --name web -v /mnt/webapp:/webapp nkhare/webapp~
+
+Here, we mount the host's ~/mnt/webapp~ to the ~/webapp~ in the container
+
+To share persistent data across containers, or share persistent data with a non persistent container, we can use data volume container.
+
+You can create data volumes:
+~docker create -v /data --name dbstore ubuntu~
+
+And use them:
+~docker run --volumes-from dbstore --name=client1 centos /bin/sh~
+~docker run --volumes-from dbstore --name=client2 centos /bin/sh~
+
+Volume plugins supported by docker:
+- flocker
+- glusterfs
+- blockbridge
+- emc rex-xray
+
+If you use gluster volume, you get all the replication, HA etc out of the box
+
+Let's discuss some of them
+
+***** Flocker
+A flocker docker volume is referred to as a dataset. 
+Flocker manages docker containers and data volumes together. This makes sure that the volumes follow the containers. 
+
+K8s has this and a lot more out of the box
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-10 23:55:41
+[[file:assets/screenshot_2018-06-10_23-55-41.png]]
+
+
+****** Supported storage options for flocker
+- aws ebs
+- openstack cinder
+- emc scaleio
+- vmware vsphere
+- netapp ontap
+
+** DevOps and CI/CD
+
+In CD, we deploy the entire application/software automatically, provided that all the tests' results and conditions have met the expectations.
+
+Some of the software used in the CI/CD domain are Jenkins, Drone, Travis and Shippable
+
+
+*** Jenkins
+It is one of the most popular tools used for doing any kind of automation. 
+
+It can build freestyle, apache ant, apache maven based projects. 
+Plugins can be used to extend functionality. Pipelines can be built to implement CD.
+
+Pipelines can survive jenkins master restarts, are pausable for human approval, are versatile (can fork or join, loop, work in parallel), extensible (can be integrated with other plugins)
+
+*** Drone
+It provides both hosted and on-premise solutions to do CI for projects hosted on Github, BitBucket
+
+*** Travis CI
+It is a hosted, distributed CI solution for projects hosted on Github.
+
+Configuration is set thru ~.travis.yml~ which defines how our built should be executed step-by-step
+
+A typical build consists of 2 steps:
+- install
+- script
+  - to run the build script
+
+There are several build options:
+- before_install
+- install
+- before_script
+- script
+- after_success or after_failure
+- before_deploy
+- deploy
+- after_deploy
+- after_script
+
+
+** Tools for cloud infrastructure - configuration management
+Configuration Management tools allow us to define the desired state of the systems in an automated way
+
+*** Ansible
+It is by RedHat
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-11 00:16:55
+[[file:assets/screenshot_2018-06-11_00-16-55.png]]
+
+
+The host inventory can be static or dynamic
+Ansible Galaxy is a free site for finding, downloading and sharing community developed ansible roles
+
+
+*** Puppet
+It runs in a master/slave mode.
+We need to install Puppet Agent on each system we want to manage/configure with Puppet.
+
+Each agent:
+- Connects securely to Puppet Master to get the series of instructions in a file referred to as the Catalog File
+- Performs operations from the Catalog File to get to the desired state
+- Sends back the status to Puppet Master
+
+Puppet Master can be installed only on *nix systems. It:
+
+- Compiles the Catalog File for hosts based on the system, configuration, manifest file, etc
+- Sends the Catalog File file to agents when they query the master
+- Has information about the entire environment, such as host information, metadata like authentication keys, etc
+- Gathers the report from each agent and then prepares the overall report
+
+Centralized reporting needs PuppetDB
+
+
+*** Chef
+
+It too runs in a client/master model. A client is installed on each host we want to manage.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-11 00:22:33
+[[file:assets/screenshot_2018-06-11_00-22-33.png]]
+Apart from chef client and master, we also have chef workstation which is used to:
+- develop cookbooks and recipes
+- run command line tools
+- configure policy, roles etc
+
+
+Of all the above :top:, only Ansible is completely agentless
+
+** Tools for cloud infrastructure - build and release
+
+Like we can version control our software, we can codify and version control our infrastructure as well - infrastructure as code
+
+*** Terraform
+It allows us to write infrastructure as code. This allows us to write the same infrastructure everywhere - the code is the different, we have to write it for each provider etc, and we have to make the functionality be the same everywhere, but once we do it, we get the same infrastructure.
+
+Terraform has providers which understand the underlying VMs, network switches etc as resources
+The provider is responsible for exposing the resources which makes terraform agnostic to the underlying platforms. 
+
+A custom provider can be created thru plugins
+- IaaS: aws, do, gce, openstack etc
+- PaaS: heroku, cloudfoundry
+- SaaS: DNSimple
+
+
+
+** Tools for cloud infrastructure - key value pair store
+
+For building any distributed and dynamically scalable environment, we need an endpoint which is a single point of truth.
+This means this endpoint must agree on one version of the truth, using consensus etc
+Most k-v stores provide rest apis for doing operations like GET, PUT, DELETE etc.
+
+Some examples of k-v stores:
+- etcd
+- consul
+
+
+*** etcd
+Etcd is an open source k-v pair storage based on raft consensus algorithm. 
+It can run in a standalone or cluster mode. It can gracefully handle master election during network partitions, can tolerate machine failures, including the master
+
+We can also watch on a value of a key, which allows us to do certain operations based on the value changes.
+
+*** consul
+It is distributed, highly-available system which can be used for service discovery, configuration. 
+Apart from k-v store, it features like:
+- service discovery in conjunction with DNS or HTTP
+- health checks for services and nodes
+- multi-datacenter support

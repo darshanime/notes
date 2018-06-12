@@ -1,0 +1,376 @@
+* Introduction to Kubernetes
+LFS158x
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-12 20:59:07
+[[file:assets/screenshot_2018-06-12_20-59-07.png]]
+* Introduction
+
+Kubernetes is an open source system for automating deployment, scaling and management of containerzied applications
+
+It means helmsman, or "ship pilot" in Greek. The analogy is to think of k8s as a manager for ships loaded with containers
+
+K8s has new releases every 3 months. The latest is 1.10
+
+Some of the lessons put in k8s come from Borg, like:
+- api servers
+- pods
+- ip per pod
+- services
+- labels
+
+K8s has features like:
+- automatic binpacking
+K8s automatically schedules the containers based on resource usage and constraints
+
+- self healing
+Following the declarative paradigm, k8s makes sure that the infra is always what it should be
+
+- horizontal scaling
+- service discovery and load balancing
+K8s groups sets of containers and refers to them via a DNS. This DNS is also called k8s service. 
+K8s can discover these services automatically and load balance requests b/w containers of a given service.
+
+- automated rollouts and rollbacks without downtime
+- secrets and configuration management
+- storage orchestration
+With k8s and its plugins we can automatically mount local, external and storage solutions to the containers in a seamless manner, based on software defined storage (SDS)
+
+- batch execution
+K8s supports batch execution
+
+- role based access control
+
+K8s also abstracts away the hardware and the same application can be run on aws, digital ocean, gcp, bare metal, VMs etc once you have the cluster up (and also given you don't use the cloud native solutions like aws ebs etc)
+
+K8s also has a very pluggable architecture, which means we can plug in any of our components and use it. The api can be extended as well. We can write custom plugins too
+
+** Cloud Native Computing Foundation
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-12 22:20:29
+[[file:assets/screenshot_2018-06-12_22-20-29.png]]
+
+The CNCF is one of the projects hosted by the Linux Foundation. It aims to accelerate the adoption of containers, microservices, cloud native applications.
+
+Some of the projects under the cncf:
+- containerd
+  - a container runtime - used by docker
+- rkt
+  - another container runtime from coreos
+- k8s
+  - container orchestration engine
+- linkerd
+  - for service mesh
+- envoy
+  - for service mesh
+- gRPC
+  - for remote procedure call (RPC)
+- container network interface - CNI
+  - for networking api
+- CoreDNS
+  - for service discovery
+- Rook
+  - for cloud native storage
+- notary
+  - for security
+- The Update Framework - TUF
+  - for software updates
+- prometheus
+  - for monitoring
+- opentracing
+  - for tracing
+- jaeger
+  - for distributed tracing
+- fluentd
+  - for logging
+  - vitess
+    - for storage
+
+this set of CNCF projects can cover the entire lifecycle of an application, from its execution using container runtimes, to its monitoring and logging
+
+The cncf helps k8s by:
+- neutral home for k8s trademark and enforces proper usage
+- offers legal guidance on patent and copyright issues
+- community building, training etc
+
+
+
+** K8s architecture
+
+K8s has 3 main components:
+- master node
+- worker node
+- distributed k-v store, like etcd
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-12 22:30:46
+[[file:assets/screenshot_2018-06-12_22-30-46.png]]
+
+The user contacts the ~api-server~ present in the master node via cli, apis, dashboard etc
+The master node also has controller, scheduler etc
+
+Each of the worker node has:
+- kubelet
+- kube-proxy
+- pods
+
+
+*** Master Node
+It is responsible for managing the kubernetes cluster. We can have more than 1 master node in our kubernetes cluster. This will enable HA mode. Only one will be master, others will be followers
+
+The distributed k-v store, etcd can be a part of the master node, or it can be configured externally.
+
+**** API server
+All the administrative tasks are performed via the api server. The user sends rest commands to the api server which then validates and processes the requests. After executing the requests, the resulting state of the cluster is stored in a distributed k-v store etcd
+**** Scheduler
+It schedules work on different worker nodes. It has the resource usage information for each worker node. It keeps in mind the constrains that the user might have set on each pod etc. The scheduler takes into account the quality of the service requirements, data locality, affinity, anti-affinity etc
+
+It schedules pods and services
+
+**** Controller manager
+It manages non-terminating control loops which regulate the state of the kubernetes cluster. 
+The CM knows about the descried state of the objects it manages and makes sure that the object stays in that state. 
+In a control loop, it makes sure that the desired state and the current state are in sync
+
+**** etcd
+It is used to store the current state of the cluster. 
+
+*** Worker Node
+
+It runs applications using Pods and is controlled by the master node. The master node has the necessary tools to connect and manage the pods. 
+A pod is a scheduling unit in kubernetes. It is a logical collection of one or more containers which are always scheduled together.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-12 22:47:03
+[[file:assets/screenshot_2018-06-12_22-47-03.png]]
+
+A worker node has the following components:
+- container runtime
+- kubelet
+- kube-proxy
+
+**** Continer Runtime
+To run and manage the container's lifecycle, we need a container runtime on all the worker nodes. 
+Examples include:
+- containerd
+- rkt
+- lxd
+
+**** kubelet
+
+It is an agent that runs on each worker node and communicates with the master node.
+It receives the pod definition (for eg from api server, can receive from other sources too) and runs the containers associated with the pod, also making sure that the pods are healthy.
+
+The kublet connects to the container runtime using the CRI - container runtime interface
+The CRI consists of protocol buffers, gRPC API, libraries
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-12 23:27:32
+[[file:assets/screenshot_2018-06-12_23-27-32.png]]
+
+The CRI shim converts the CRI commands into commands the container runtime understands
+
+The CRI implements 2 services:
+
+- ImageService
+It is responsible for all the image related operations
+
+- RuntimeService
+It is responsible for all the pod and container related operations
+
+With the CRI, kubernetes can use different container runtimes. Any container runtime that implements CRI can be used by kubernetes to manage pods, containers, container images
+
+***** CRI shims
+
+Some examples of CRI shims
+- dockershim
+With dockershim, containers are cerated using docker engine that is installed on the worker nodes. 
+The docker engine talks to the containerd and manages the nodes
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-12 23:44:47
+[[file:assets/screenshot_2018-06-12_23-44-47.png]]
+***** cri-containerd
+
+With cri-containerd, we directly talk to containerd by passing docker engine
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-12 23:47:28
+[[file:assets/screenshot_2018-06-12_23-47-28.png]]
+***** cri-o
+
+There is an initiative called OCI - open container initiative that defines a spec for container runtimes. 
+What cri-o does is, it implements the container runtime interface - CRI with a general purpose shim layer that can talk to all the container runtimes that comply with the OCI.
+
+This way, we can use any oci compatible runtime with kubernetes (since cri-o will implement the cri)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-12 23:51:33
+[[file:assets/screenshot_2018-06-12_23-51-33.png]]
+
+Note here, the cri-o implements the CNI, and also has the image service and the runtime service
+
+**** kube-proxy
+
+To connect to the pods, we group them logically, and the use a ~Service~ to connect to them. The service exposes the pods to the external world and load balances across them
+
+Kube-proxy is responsible for setting the routes in the iptables of the node when a new service is created such that the service is accessible from outside. The apiserver gives the service a IP which the kube-proxy puts in the node's iptables
+
+The kube-proxy is responsible for "implementing the service abstraction" - in that it is responsible for exposing a load balanced endpoint that can be reached from inside or outside the cluster to reach the pods that define the service.
+
+Some of the modes in which it operates to achieve that :top:
+
+1. Proxy-mode - userspace
+
+In this scheme, it uses a proxy port.
+
+The kube-proxy does 2 things:
+- it opens up a _proxy port_ on each node for each new service that is created
+- it sets the iptable rules for each node so that whenever a request is made for the service's ~clusterIP~ and it's port (as specified by the apiserver), the packets come to the _proxy port_ that kube-proxy created. The kube-proxy then uses round robin to forward the packets to one of the pods in that service
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-13 00:17:51
+[[file:assets/screenshot_2018-06-13_00-17-51.png]]
+
+So, let's say the service has 3 pods A, B, C that belong to service S (let's say the apiserver gave it the endpoint 10.0.1.2:44131). Also let's say we have nodes X, Y, Z
+
+earlier, in the userland scheme, each node got a new port opened, say 30333.
+Also, each node's iptables got updated with the endpoints of service S (10.0.1.2:44131) pointing to <node A IP>:30333, <node B IP>:30333, <node C IP>:30333
+
+Now, when the request comes to from and node, it goes to <node A IP>:30333 (say) and from there, kube-proxy sends it to the pod A, B or C whichever resides on it. 
+
+
+
+2. iptables
+
+Here, there is no central proxy port. For each pod that is there in the service, it updates the iptables of the nodes to point to the backend pod directly.
+
+Continuing the above example, here each node's iptables would get a separate entry for each of the 3 pods A, B, C that are part of the service S.
+So the traffic can be routed to them directly without the involvement of kube-proxy
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-13 00:28:09
+[[file:assets/screenshot_2018-06-13_00-28-09.png]]
+
+This is faster since there is no involvement of kube-proxy here, everything can operate in the kernelspace. However, the iptables proxier cannot automatically retry another pod if the one it initially selects does not respond.
+
+So we need a readiness probe to know which pods are healthy and keep the iptables up to date
+
+3. Proxy-mode: ipvs
+
+The kernel implements a virtual server that can proxy requests to real server in a load balanced way. 
+This is better since it operates in the kernelspace and also gives us more loadbalancing options
+
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-13 00:32:19
+[[file:assets/screenshot_2018-06-13_00-32-19.png]]
+
+
+
+**** etcd
+Etcd is used for state management. It is the truth store for the present state of the cluster. Since it has very important information, it has to be highly consistent. It uses the raft consensus protocol to cope with machine failures etc.
+
+Raft allows a collection of machines to work as a coherent group that can survive the failures of some of its members. At any given time, one of the nodes in the group will be the master, and the rest of them will be the followers. Any node can be treated as a master.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-13 00:35:17
+[[file:assets/screenshot_2018-06-13_00-35-17.png]]
+
+In kubernetes, besides storing the cluster state, it is also used to store configuration details such as subnets, ConfigMaps, Secrets etc
+
+
+**** Network setup challenges
+To have a fully functional kubernetes cluster, we need to make sure:
+1. a unique ip is assigned to each pod
+2. containers in a pod can talk to each other (easy, make them share the same networking namespace )
+3. the pod is able to communicate with other pods in the cluster
+4. if configured, the pod is accessible from the external world
+
+
+1. Unique IP
+For container networking, there are 2 main specifications:
+
+- Container Network Model - CNM - proposed by docker
+- Container Network Interface - CNI - proposed by CoreOS
+
+kubernetes uses CNI to assign the IP address to each Pod
+
+The runtime talks to the CNI, the CNI offloads the task of finding IP for the pod to the network plugin
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-13 00:52:15
+[[file:assets/screenshot_2018-06-13_00-52-15.png]]
+
+2. Containers in a Pod
+Simple, make all the containers in a Pod share the same network namespace. This way, they can reach each other via localhost
+
+3. Pod-to-Pod communication across nodes
+
+Kubernetes needs that there shouldn't be any NAT - network address translation when doing pod-to-pod communication. This means, that each pod should have it's own ip address and we shouldn't have say, a subnet level distribution of pods on the nodes (this subent lives on this node, and the pods are accessible via NAT)
+
+
+4. Communication between external world and pods
+This can be achieved by exposing our services to the external world using kube-proxy
+
+
+** Installing Kubernetes
+Kubernetes can be installed in various configurations:
+- all-in-one single node installation
+Everything on a single node. Good for learning, development and testing. Minikube does this
+- single node etcd, single master, multi-worker
+- single node etcd, multi master, multi-worker
+We have HA
+- multi node etcd, multi master, multi-worker
+Here, etcd runs outside Kubernetes in a clustered mode. We have HA. This is the recommended mode for production.
+
+
+Kubernetes on-premise
+- Kubernetes can be installed on VMs via Ansible, kubeadm etc
+- Kubernetes can also be installed on on-premise bare metal, on top of different operating systems, like RHEL, CoreOS, CentOS, Fedora, Ubuntu, etc. Most of the tools used to install VMs can be used with bare metal as well. 
+
+Kubernetes in the cloud
+- hosted solutions
+Kubernetes is completely managed by the provider. The user just needs to pay hosting and management charges. 
+Examples:
+ - GKE
+ - AKS
+ - EKS
+ - openshift dedicated
+ - IBM Cloud Container Service
+
+- Turnkey solutions
+These allow easy installation of Kubernetes with just a few clicks on underlying IaaS
+ - Google compute engine
+ - amazon aws
+ - tectonic by coreos
+
+- Kubernetes installation tools
+There are some tools which make the installation easy
+ - kubeadm
+This is the recommended way to bootstrap the Kubernetes cluster. It does not support provisioning the machines
+
+ - KubeSpray
+It can install HA Kubernetes clusters on AWS, GCE, Azure, OpenStack, bare metal etc. It is based on Ansible and is available for most Linux distributions. It is a Kubernetes incubator project 
+
+ - Kops
+Helps us create, destroy, upgrade and maintain production grade HA Kubernetes cluster from the command line. It can provision the machines as well. AWS is officially supported
+
+You can setup Kubernetes manually by following the repo Kubernetes the hard way by Kelsey Hightower.
+
+
+
+

@@ -1790,7 +1790,115 @@ We can also watch on a value of a key, which allows us to do certain operations 
 
 *** consul
 It is distributed, highly-available system which can be used for service discovery, configuration. 
-Apart from k-v store, it features like:
+Apart from k-v store, it has features like:
 - service discovery in conjunction with DNS or HTTP
 - health checks for services and nodes
 - multi-datacenter support
+
+
+** Tools for cloud infrastructure - image building
+
+We need an automated way of creating images - either docker images or VM images for different cloud platforms.
+
+The extremely naive way to do is to create a docker image of a base container, the install the required software and then store the resulting image on disk. This is not scalable.
+Or you can use Dockerfile - the docker engine create a container after each command and persists it on the disk
+
+
+We can also use Packer
+
+*** Packer
+Packer is a tool from Hashicorp for creating virtual images for different platforms from configuration files
+
+Generally, the process of creating virtual images has 3 steps:
+- building base image
+Has support for aws, do, docker etc
+
+- provision the base image to do configuration
+We need a provisioner like Ansible, chef, puppet, shell etc to do the provisioning
+
+- post build operations
+We can move the image to a central repository etc
+
+** Tools for cloud infrastructure - debugging, logging etc
+
+Some of the tools which we use for debugging, logging, monitoring:
+- strace
+- tcpdump
+- gdb
+- syslog
+- nagios
+
+Containers have some challenges compared to monitoring/logging/debugging traditional VMs:
+- containers are ephemeral
+- containers do not have kernel space components
+
+We want to do MLD from the outside, so as to reduce the footprint of the container. 
+
+Debugging: sysdig
+Logging: Docker logging driver
+Monitoring: sysdig, cAdvisor (or Heapster which uses cAdvisor underneath), Prometheus, Datadog, new relic
+
+Docker has commands like ~inspect~, ~logs~ to get insights from containers.
+With the docker logging driver, we can forward logs to the corresponding drivers, like syslog, journald, fluentd, awslog, splunk.
+Once the logs are saved in a central location, we can use the respective tools to get the insights.
+
+Docker has monitoring commands like ~docker stats~, ~docker top~
+
+*** Sysdig
+
+It is an open source tool which describes itself as:
+
+"strace + tcpdump + htop + iftop + lsof + awesome sauce".
+
+Sysdig inserts a kernel module inside the running linux kernel, this allows it to capture system calls and OS events.
+
+
+*** cAdvisor
+It is an open source tool to collect stats from host system and running containers.
+It collects, aggregates, processes and exports information about running containers
+
+You can enable the cAdvisor container like so:
+
+#+begin_src
+sudo docker run --volume=/:/rootfs:ro --volume=/var/run:/var/run:rw --volume=/sys:/sys:ro --volume=/var/lib/docker/:/var/lib/docker:ro --publish=8080:8080 --detach=true --name=cadvisor google/cadvisor:latest
+#+end_src
+
+Now you can go to http://host_ip:8080 to view the stats.
+cAdvisor also supports exporting the stats to InfluxDB. It also exposes container statistics as prometheus metrics.
+
+*** Heapster
+
+It enables container cluster monitoring and performance analysis. 
+Heapster collects and interprets various signals, like compute resource usage, lifecycle events, etc., and exports cluster metrics via REST endpoints.
+
+
+*** fluentd
+It is an open source data collector
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-11 23:48:34
+[[file:assets/screenshot_2018-06-11_23-48-34.png]]
+
+It has more than 300 plugins to connect input sources and output sources. It does filtering, buffering, routing as well.
+
+It is a good replacement for logstash
+Fluentd is one of the logging drivers supported by docker
+
+We can either specify the logging driver for docker daemon or specify it while starting the container
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-11 23:50:28
+[[file:assets/screenshot_2018-06-11_23-50-28.png]]
+
+
+
+** Misc notes
+
+- With the cloud's _pay-as-you-go_ model and _software-defined-everything_ model, starts have a very low barrier to take an enterprise assignment.
+- Hybrid model is useful when you want to keep your data on-premise and serve the request from Public clouds.
+- you can built docker images using debootstrap, packer, docker built with dockerfile, docker commit
+
+
+

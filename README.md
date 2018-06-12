@@ -15,6 +15,7 @@ Available notes:
   * [Pro Python](./pro_python.org)
   * [Introduction to Cloud Infrastructure Technologies](./cloud.org)
   * [Computer Arch](./comp_arch.org)
+  * [Kubernetes](./kubernetes.org)
   * [Ansible](./ansible.org)
   * [C language](./C_language.org)
   * [Emacs](./emacs.org)

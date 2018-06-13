@@ -372,5 +372,64 @@ Helps us create, destroy, upgrade and maintain production grade HA Kubernetes cl
 You can setup Kubernetes manually by following the repo Kubernetes the hard way by Kelsey Hightower.
 
 
+** Minikube
+
+Prerequisites to run minikube:
+- Minikube runs inside a VM on Linux, Mac, Windows. So the use minikube, we need to have the required hypervisor installed first. We can also use ~--vm-driver=none~ to start the Kubernetes single node "cluster" on your local machine
+- kubectl - it is a binary used to interact with the Kubernetes cluster
 
 
+We know about ~cri-o~, which is a general shim layer implementing CRI (container runtime interface) for all OCI (open containers initiative) compliant container runtimes
+
+To use cri-o runtime with minikube, we can do:
+
+~minikube start --container-runtime=cri-o~
+then, docker commands won't work. We have to use: ~sudo runc list~ to list the containers for example
+
+** Kubernetes dashboard 
+
+We can use the kubectl cli to access Minikube via CLI, Kubernetes dashboard to access it via cli, or curl with the right credentials to access it via APIs
+
+Kubernetes has an API server, which is the entry point to interact with the Kubernetes cluster - it is used by kubectl, by the gui, and by curl directly as well
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-13 23:48:48
+[[file:assets/screenshot_2018-06-13_23-48-48.png]]
+
+
+The api space :top: is divided into 3 independent groups. 
+- core group
+  - ~/api/v1~
+  - this includes objects such as pods, services, nodes etc
+- named group
+  - these include objects in ~/apis/$NAME/$VERSION~ format
+    - The different levels imply different levels of stability and support:
+      - alpha - it may be dropped anytime without notice, eg: ~/apis/batch/v2alpha1~
+      - beta - it is well tested, but the semantics may change in incompatible ways in a subsequent beta or stable release. Eg: ~/apis/certificates.k8s.io/v1beta1~
+      - stable - appears in released software for many subsequent versions. Eg ~apis/networking.k8s.io/v1~
+- system wide
+  - this group consists of system wide API endpoints, like ~/healthz~, ~/logs~, ~/metrics~, ~/ui~ etc
+
+
+Minikube has a dashboard, start it with ~minikube dashboard~
+
+You can get a dashboard using the ~kubectl proxy~ command also. It starts a service called ~kubernetes-dashboard~ which runs inside the ~kube-system~ namespace
+access the dashboard on ~localhost:8001~
+once ~kubectl proxy~ is configured, we can use curl to localhost on the proxy port - ~curl http://localhost:8001~
+
+If we don't use ~kubectl proxy~, we have to get a token from the api server by:
+
+~$ TOKEN=$(kubectl describe secret $(kubectl get secrets | grep default | cut -f1 -d ' ') | grep -E '^token' | cut -f2 -d':' | tr -d '\t' | tr -d " ")~
+
+Also, the api server endpoint:
+~$ APISERVER=$(kubectl config view | grep https | cut -f 2- -d ":" | tr -d " ")~
+
+Now, it's a matter of a simple curl call:
+~$ curl $APISERVER --header "Authorization: Bearer $TOKEN" --insecure~
+
+** Kubernetes building blocks
+Kubernetes has several objects like Pods, ReplicaSets, Deployments, Namespaces etc
+We also have Labels, Selectors which are used to group objects together.
+
+ 

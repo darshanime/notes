@@ -432,4 +432,1049 @@ Now, it's a matter of a simple curl call:
 Kubernetes has several objects like Pods, ReplicaSets, Deployments, Namespaces etc
 We also have Labels, Selectors which are used to group objects together.
 
+Kubernetes has a rich object model which is used to represent *persistent entities*
+The persistent entities describe:
+- what containerized applications we are running, and on which node
+- application resource consumption
+- different restart/upgrade/fault tolerance policies attached to applications
+
+With each object, we declare our intent (or desired state) using *spec* field.
+The Kubernetes api server always accepts only json input. Generally however, we write ~yaml~ files which are converted to json by ~kubectl~ before sending it
+
+Example of deployment object: 
+#+begin_src yaml
+apiVersion: apps/v1 # the api endpoint we want to connect to
+kind: Deployment # the object type
+metadata: # as the name implies, some info about deployment object
+  name: nginx-deployment
+  labels:
+    app: nginx
+  spec: # desired state of the deployment
+    replicas: 3
+    selector:
+      matchLabels:
+        app: nginx
+    template:
+      metadata:
+        labels:
+          app: nginx
+      spec: # desired state of the Pod
+        containers:
+          - name: nginx
+            image: nginx:1.7.9
+            ports:
+              - containerPort: 80
+#+end_src
+
+Once this is created, Kubernetes attaches the ~status~ field to the object
+
+*** Pods
+
+It is the smallest and simplest Kubernetes object, a unit of deployment in Kubernetes.
+It is a logical unit representing an application. 
+The pod is a logical collection of containers which are deployed on the same host (colocated), share the same network namespace, mount the same external storage volume
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-14 19:31:56
+[[file:assets/screenshot_2018-06-14_19-31-56.png]]
+
+Pods cannot self heal, so we use them with controllers, which can handle pod's replication, fault tolerance, self heal etc.
+Examples of controllers:
+- Deployments
+- ReplicaSets
+- ReplicationControllers
+
+We attach the pod's spec (specification) to other objects using pods templates like in previous example
+
+*** Labels
+
+They are key-value pairs that are attached to any Kubernetes objects (like pods)
+They are used to organize and select a subset of objects.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-14 20:02:04
+[[file:assets/screenshot_2018-06-14_20-02-04.png]]
+
+
+**** Label Selectors
+
+Kubernetes has 2 types of selectors:
+- equality based selectors
+We can use =, ==, or != operators
+- set based selectors
+Allows filtering based on a set of values. We can use ~in~, ~notin~, ~exist~ operators. 
+Eg: ~env in (dev, qa)~ which allows selecting objects where env label is dev or qa
+
+
+*** ReplicationControllers
+
+A rc is a controller that is part of the master node's controller manager. It makes sure that the specified number of replicas for a Pod is running - no more, no less.
+We generally don't deploy pods on their own since they can't self-heal, we almost always use ~ReplicationController~s to deploy and manage them.
+
+*** ReplicaSets
+
+~rs~ is the next generation ~ReplicationController~. It has both equality and set based selectors. RCs only support equality based controllers. 
+
+RSs can be used independently, but they are mostly used by Deployments to orchestrate pod creation, deletion and updates. 
+A deployment automatically creates the ReplicaSets
+
+
+*** Deployments 
+Deployment objects provide declarative (just describe what you want, not how to get it) updates to Pods and ReplicaSets.
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-14 20:20:37
+[[file:assets/screenshot_2018-06-14_20-20-37.png]]
+
+Here, :top:, the Deployment creates a ~ReplicaSet A~ which creates 3 pods. In each pod, the container runs ~nginx:1.7.9~ image.
+
+Now, we can update the nginx to say ~1.9.1~. This will trigger a new ReplicaSet to be created. Now, this ReplicaSet will make sure that there are the required number of pods as specified in it's spec (that's what it does)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-14 20:23:38
+[[file:assets/screenshot_2018-06-14_20-23-38.png]]
+
+
+Once the ReplicaSet B is ready, Deployment starts pointing to it
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-14 20:24:16
+[[file:assets/screenshot_2018-06-14_20-24-16.png]]
+
+The Deployments provide features like Deployment recording, which allows us to rollback if something goes wrong. 
+
+*** Namespaces
+
+If we want to partition our Kubernetes cluster into different projects/teams, we can use Namespaces to logically divide the cluster into sub-clusters.
+
+The names of the resources/objects created inside a namespace are unique, but not across Namespace.
+
+#+begin_src
+$ kubectl get namespaces
+NAME          STATUS       AGE
+default       Active       11h
+kube-public   Active       11h
+kube-system   Active       11h
+#+end_src
+
+The namespace above are:
+- default
+This is the default namespace
+- kube-system
+Objects created by the Kubernetes system
+- kube-public
+It is a special namespace, which is readable by all users and used for special purposes - like bootstrapping a cluster
+
+We can use Resource Quotas to divide the cluster resources within Namespaces. 
+
+
+** Authentication, Authorization, Admission Control
+
+Each API access request goes thru the following 3 stages:
+- authentication
+You are who you say you are
+- authorization
+You are allowed to access this resource 
+- admission control
+Further modify/reject requests based on some additional checks, like Quota.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-14 20:42:57
+[[file:assets/screenshot_2018-06-14_20-42-57.png]]
+
+Kubernetes does not have an object called _user_, not does it store _usernames_. 
+There are 2 kinds of users:
+- normal users
+They are managed outside of Kubernetes cluster via independent services like user/client certificates, a file listing usernames/passwords, google accounts etc.
+
+- service accounts
+With *Service Account* users, in-cluster processes communicate with the API server. Most of the SA users are created automatically via the API server, or can be created manually. The SA users are tied to a given namespace and mount the respective credentials to communicate with the API server as Secrets. 
+
+*** Authenticator Modules
+For authentication, Kubernetes uses different authenticator modules.
+- client certificates
+We can enable client certificate authentication by giving a CA reference to the api server which will validate the client certificates presented to the API server. The flag is ~--client-ca-file=/path/to/file~
+
+- static token file
+We can have pre-defined bearer tokens in a file which can be used with ~--token-auth-file=/path/to/file~
+the tokens would last indefinitely, and cannot be changed without restarting the api server
+
+- bootstrap tokens
+Can be used for bootstrapping a Kubernetes cluster
+
+- static password file
+Similar to static token file. The plag is: ~--basic-auth-file=/path/to/file~. The passwords cannot be changed without restarting the api-server
+
+- service account tokens
+This authenticator uses bearer tokens which are attached to pods using the ~ServiceAccount~ admission controller (which allows the in-cluster processes to talk to the api server)
+
+- OpenID Connect tokens
+OpenID Connect helps us connect with OAuth 2 providers like Google etc to offload authentication to those services
+
+- Webhook Token Authentication
+We can offload verification to a remote service via webhooks
+
+- Keystone password
+- Authenticating Proxy
+Such as nginx. We have this for our logs stack at Draup
+
+
+*** Authorization
+
+After authentication, we need authorization. 
+
+Some of the API request attributes that are reviewed by Kubernetes are: user, group, extra, Resource, Namespace etc. They are evaluated against policies. There are several modules that are supported.
+
+- Node Authorizer
+It authorizes API requests made by kubelets (it authorizes the kubelet's read operations for services, endpoints, nodes etc, and write operations for nodes, pods, events etc)
+
+- ABAC authorizer - Attribute based access control
+Here, Kubernetes grants access to API requests which combine policies with attributes. Eg: 
+
+#+begin_src
+{
+  "apiVersion": "abac.authorization.kubernetes.io/v1beta1",
+  "kind": "Policy",
+  "spec": {
+    "user": "nkhare",
+    "namespace": "lfs158",
+    "resource": "pods",
+    "readonly": true
+  }
+}
+#+end_src
+
+Here, :top:, ~nkhare~ has only ~read only~ access to pods in namespace ~lfs158~.
+
+To enable this, we have to start the API server with the ~--authorization-mode=ABAC~ option and specify the authorization policy with ~--authorization-policy-file=PolicyFile.json~
+
+- Webhook authorizer
+We can offload authorizer decisions to 3rd party services. To use this, start the API server with ~authorization-webhook-config-file=/path/to/file~ where the file has the configuration of the remote authorization service.
+
+- RBAC authorizer - role based access control
+Kubernetes has different roles that can be attached to subjects like users, service accounts etc
+while creating the roles, we restrict access to specific operations like ~create, get, update, patch~ etc
+
+There are 2 kinds of roles:
+- role
+With role, we can grant access to 2 kinds of roles:
+- Role
+We can grant access to resources within a specific namespace
+
+- ClusterRole
+Can be used to grant the same permission as Role, but its scope is cluster-wide.
+
+We will only focus on ~Role~
+
+Example:
+
+#+begin_src
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: lfs158
+  name: pod-reader
+rules:
+- apiGroups: [""] # "" indicates the core API group
+  resources: ["pods"]
+  verbs: ["get", "watch", "list"]
+#+end_src
+
+Here, we created a ~pod-reader~ role which can only access pods in the ~lfs158~ namespace
+one we create this Role, we can bind users with ~RoleBinding~
+
+There are 2 kinds of ~RoleBinding~s:
+- RoleBinding
+This allows us to bind users to the same namespace as a Role. 
+
+- ClusterRoleBinding
+It allows us to grant access to resources at cluster-level and to all namespaces
+
+
+To start API server with rbac option, we use ~--authorization-mode=RBAC~
+we can also dynamically configure policies.
+
+
+*** Admission Control
+It is used to specify granular access control policies which include allowing privileged containers, checking on resource quota etc.
+There are different admission controllers to enforce these eg: ~ResourceQuota, AlwaysAdmit, DefaultStorageClass~ etc.
+
+They come into affect only after API requests are authenticated and authorized
+
+To use them, we must start the api server with the flag ~admission-control~ which takes a comma separated ordered list of controller names.
+~--admission-control=NamespaceLifecycle,ResourceQuota,PodSecurityPolicy,DefaultStorageClass~
+
+
+** Services
+
+We will learn about services, which are used to group Pods to provide common access points from the external world. 
+We will learn about ~kube-proxy~ daemon, which runs each on worker node to provide access to services. 
+Also, we'll talk about *service discovery* and *service types* which decide the access scope of a service.
+
+*** Connecting users to Pods
+
+Pods are ephemeral, they can be terminated, rescheduled etc. We cannot connect to them using pod IP directly. Kubernetes provides a higher level abstraction called ~Service~ which logically groups Pods and a policy to access them. 
+The grouping is achieved with labels and selectors.
+
+Example consider this:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-16 23:33:07
+[[file:assets/screenshot_2018-06-16_23-33-07.png]]
+
+Here, we have grouped the pods into 2 logical groups based on the selectors ~frontend~ and ~db~.
+
+We can assign a name to the logical group, called a Service name eg: ~frontend-svc~ and ~db-svc~.
+
+Example:
+
+#+begin_src
+kind: Service
+apiVersion: v1
+metadata:
+  name: frontend-svc
+spec:
+  selector:
+    app: frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5000
+#+end_src
+
+Here, :top:, we are creating ~frontend-svc~ service. By default each service also gets an IP address which is routable only inside the cluster. 
+The IP attached to each service is aka as ~ClusterIP~ for that service (eg: ~172.17.0.4~ here in the diagram)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-16 23:36:44
+[[file:assets/screenshot_2018-06-16_23-36-44.png]]
+
+The user/client now connects to the IP address which forwards the traffic to the pods attached to it. It does the load balancing, routing etc.
+
+We also in our service spec, defined a ~targetPort~ as 5000. So the service will route the traffic to port 5000 on the pods. If we don't select it, it will be the same port as the service port (80 in the example above)
+
+A tuple of Pods, IP addresses, along with the targetPort is referred to as a Service endpoint. In our case, frontend-svc has 3 endpoints: 10.0.1.3:5000, 10.0.1.4:5000, and 10.0.1.5:5000.
+
+
+
+All the worker nodes run ~kube-proxy~ which watches the API server for addition and removal of services. 
+For each new service, the ~kube-proxy~ updates the iptables of all the nodes to route the traffic for its ClusterIP to the service endpoints (node-ip:port tuples). It does the load balancing etc. The ~kube-proxy~ _implements_ the service abstraction.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-16 23:48:17
+[[file:assets/screenshot_2018-06-16_23-48-17.png]]
+
+*** Service Discovery
+
+Services are the primary mode of communication in Kubernetes, so we need a way to discover them at runtime. 
+*Kubernetes supports 2 methods of discovering a service*:
+
+- Environment Variables
+As soon as a pod runs on any worker node, the ~kubelet~ daemon running on that node adds a set of environment variables in the pod for all the active services. 
+Eg: consider a service ~redis-master~, with exposed port ~6379~ and ClusterIP as ~172.17.0.6~ 
+
+This would lead to the following env vars to be declared in the pods:
+#+begin_src
+REDIS_MASTER_SERVICE_HOST=172.17.0.6
+REDIS_MASTER_SERVICE_PORT=6379
+REDIS_MASTER_PORT=tcp://172.17.0.6:6379
+REDIS_MASTER_PORT_6379_TCP=tcp://172.17.0.6:6379
+REDIS_MASTER_PORT_6379_TCP_PROTO=tcp
+REDIS_MASTER_PORT_6379_TCP_PORT=6379
+REDIS_MASTER_PORT_6379_TCP_ADDR=172.17.0.6
+#+end_src
+
+- DNS
+Kubernetes has an add-on for DNS, which creates a DNS record for each Service and its format is ~my-svc.my-namespace.svc.cluster.local~. 
+Services within the same namespace can reach other service with just their name. For example, if we add a Service redis-master in the my-ns Namespace, then all the Pods in the same Namespace can reach to the redis Service just by using its name, redis-master. Pods from other Namespaces can reach the Service by adding the respective Namespace as a suffix, like redis-master.my-ns. 
+
+This method is recommended. 
+
+
+*** ServiceType
+
+While defining a Service, we can also choose it's scope. We can decide if the Service
+- is accessible only within the cluster
+- is accessible from within the cluster AND the external world
+- maps to an external entity which resides outside to the cluster
+
+The scope is decided with the ~ServiceType~ declared when creating the service. 
+
+Service types - ClusterIP, NodePort
+
+**** ClusterIP, NodePort
+
+ClusterIP is the default ServiceType. A service gets its virtual IP using the ClusterIP. This IP is used for communicating with the service and is accessible only within the cluster
+
+With the NodePort ServiceType in addition to creating a ClusterIP, a port from the range 30,000-32,767 also gets mapped to the Service from all the worker nodes. 
+Eg: if the ~frontend-svc~ has the NodePort ~32233~, then when we connect to any worked node on ~32233~, the packets are routed to the assigned ClusterIP ~172.17.0.4~
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-17 00:04:39
+[[file:assets/screenshot_2018-06-17_00-04-39.png]]
+
+NodePort is useful when we want to make our service accessible to the outside world. The end user connects to the worker nodes on the specified port, which forwards the traffic to the applications running inside the cluster. 
+
+To access the service from the outside world, we need to configure a reverse proxy outside the Kubernetes cluster and map the specific endpoint to the respective port on the worked nodes.
+
+There is another ServiceType: LoadBalancer
+
+**** LoadBalancer
+- With this ServiceType, NodePort and ClusterIP services are automatically created, and the external loadbalancer will route to them
+
+- The Services are exposed at a static port on each worker node.
+- the Service is exposed externally using the underlying cloud provider's load balancer.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-17 00:09:07
+[[file:assets/screenshot_2018-06-17_00-09-07.png]]
+
+**** ServiceType: ExternalIP
+
+The cluster administrator can manually configure the service to be mapped to an external IP also. The traffic on the ExternalIP (and the service port) will be routed to one of the service endpoints
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-17 00:13:05
+[[file:assets/screenshot_2018-06-17_00-13-04.png]]
+
+**** ServiceType: ExternalName
+
+It is a special ServiceType that has no selectors, or endpoints. 
+When accessed within a cluster, it returns a ~CNAME~ record of an externally configured service.
+
+This is primarily used to make an externally configured service like ~my-db.aws.com~ available inside the cluster using just the name ~my-db~ to other services inside the same namespace. 
+
+*** Deploying a Service
+
+Example of using NodePort
+
+#+begin_src
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+  labels:
+    run: web-service
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    protocol: TCP
+  selector:
+    app: nginx 
+#+end_src
+
+Create it using:
+
+#+begin_src
+$ kubectl create -f webserver-svc.yaml
+service "web-service" created
+
+
+$ kubectl get svc
+NAME          TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
+kubernetes    ClusterIP   10.96.0.1      <none>        443/TCP        1d
+web-service   NodePort    10.110.47.84   <none>        80:31074/TCP   12s
+#+end_src
+
+We can access it at: ~$(CLUSTER_IP):31074~
+
+This is the port that will route the traffic to the service endpoint's port 80
+(recall again, the Service Endpoint is just the tuples of (node IP:service port), the service port is the ~targetPort~ in the service spec)
+
+Deploying MongoDB
+We need a Deployment and a Service
+
+#+begin_src
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rsvp-db
+  labels:
+    appdb: rsvpdb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      appdb: rsvpdb
+  template:
+    metadata:
+      labels:
+        appdb: rsvpdb
+    spec:
+      containers:
+      - name: rsvp-db
+        image: mongo:3.3
+        ports:
+        - containerPort: 27017
+
+$ kubectl create -f rsvp-db.yaml
+deployment "rsvp-db" created
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb
+  labels:
+    app: rsvpdb
+spec:
+  ports:
+  - port: 27017
+    protocol: TCP
+  selector:
+    appdb: rsvpdb
+
+
+$ kubectl create -f rsvp-db-service.yaml
+service "mongodb" created
+#+end_src
+
+
+
+** Liveness and Readiness Probes
+
+They are used by kubelet to control the health of the application running inside the Pod's container.
+Liveness probe is like the health check on AWS' ELB. If the health check fails, the container is restarted
+
+It can be defined as:
+- liveness command
+- liveness HTTP request
+- TCP liveness probe
+
+Example:
+
+#+begin_src
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    test: liveness
+  name: liveness-exec
+spec:
+  containers:
+  - name: liveness
+    image: k8s.gcr.io/busybox
+    args:
+    - /bin/sh
+    - -c
+    - touch /tmp/healthy; sleep 30; rm -rf /tmp/healthy; sleep 600
+    livenessProbe:
+      exec:
+        command:
+        - cat
+        - /tmp/healthy
+      initialDelaySeconds: 3
+      periodSeconds: 5
+#+end_src
+
+Here, we start a container with a command which creates a new file in ~/tmp~.
+Next, we defined the ~livenessProbe~ to be a command which ~cat~s the file. If it exists, the container is healthy we say.
+
+Deleting this file will trigger a restart
+
+We can also define a HTTP request as the liveness test:
+
+#+begin_src
+livenessProbe:
+      httpGet:
+        path: /healthz
+        port: 8080
+        httpHeaders:
+        - name: X-Custom-Header
+          value: Awesome
+      initialDelaySeconds: 3
+      periodSeconds: 3
+#+end_src
+
+Here, we hit the ~/healthz~ endpoint on port ~8080~
+
+We can also do TCP liveness probes
+The kubelet attempts to open the TCP socket to the container which is running the application. If it succeeds, the application is considered healthy, otherwise the kubelet marks it as unhealthy and triggers a restart
+
+#+begin_src
+livenessProbe:
+      tcpSocket:
+        port: 8080
+      initialDelaySeconds: 15
+      periodSeconds: 20
+#+end_src
+
+*** Readiness Probe
+
+Sometimes, the pod has to do some task before it can serve traffic. This can be loading a file in memory, downloading some assets etc.
+We can use Readiness probes to signal that the container (in the context of Kubernetes, containers and Pods are used interchangeably) is ready to receive traffic.
+
+#+begin_src
+readinessProbe:
+  exec:
+    command:
+    - cat
+    - /tmp/healthy
+  initialDelaySeconds: 5
+  periodSeconds: 5
+#+end_src
+
+** Kubernetes volume management
+
+Kubernetes uses Volumes for persistent storage. We'll talk about PersistantVolume and PersistentVolumeClaim which help us attach volumes to Pods
+
+A Volume is essentially a directory backed by a storage medium. 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-17 11:29:10
+[[file:assets/screenshot_2018-06-17_11-29-10.png]]
+
+A Volume is attached to a Pod and shared by the containers of that Pod. 
+The volume has the same lifespan as the Pod and it outlives the containers of the Pod - it allows data to be preserved across container restarts.
+
+A directory which is mounted inside a Pod is backed by the underlying Volume Type. The Volume Type decides the properties of the directory, like: size, content etc
+
+There are several volume types:
+- emptyDir
+An empty Volume is created for the Pod as soon as it is schedules on the worker node. The Volume's life is coupled with the Pod's. When the Pod dies, the contents of the emptyDir Volume are deleted
+
+- hostPath
+We can share a directory from the host to the Pod. If the Pod dies, the contents of the hostPath still exist. Their use is not recommended because not all the hosts would have the same directory structure 
+
+- gcePersistentDisk
+We can mount Google Compute Engine's PD (persistent disk) into a Pod
+
+- awsElasticBlockStore
+We can mount AWS EBS into a Pod
+
+- nfs
+We can mount nfs share 
+
+- iscsi
+We can mount iSCSI into a Pod. Iscsi stands for (internet small computer systems interface), it is an IP based storage networking standard for linking data storage facilities. 
+
+- secret
+With the ~secret~ volume type, we can pass sensitive information such as passwords to pods.
+
+- persistentVolumeClaim
+
+We can attach a PersistentVolume to a pod using PersistentVolumeClaim.
+PVC is a volume type
+
+*** PersistentVolumes
+
+In a typical setup, storage is maintained by the system administrators. The developer just gets instructions to use the storage, and doesn't have to worry about provisioning etc
+
+Using vanilla Volume Types makes the same model difficult in the Kubernetes. So we have PersistentVolume (PV), which provides APIs for users and administrators to manage and consume storage of the above Volume Types. 
+To manage - PV API resource type
+To consume - PVC API resource type
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-17 11:38:36
+[[file:assets/screenshot_2018-06-17_11-38-36.png]]
+PV :top:
+
+PVs can be dynamically provisioned as well - using the StorageClass resource. A StorageClass contains pre-defined provisioners and parameters to create a PV. 
+How it works is, the user sends a PVC request and this results in the creation of a PV
+
+Some of the Volume Types that support managing storage using PV:
+
+- GCEPersistentDisk
+- AWSElasticBlockStore
+- AzureFile
+- NFS
+- iSCSI
+
+*** PersistentVolumeClaim
+
+A PVC is a request for storage by the user. User requests PV resources based on size, access modes etc. 
+Once a suitable PV is found, it is bound to a PVC.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-17 11:44:02
+[[file:assets/screenshot_2018-06-17_11-44-02.png]]
+
+The administrator provisions PVs, the user requests them using PVC. Once the suitable PVs are found, they are bound to the PVC and given to the user to use.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-17 11:44:52
+[[file:assets/screenshot_2018-06-17_11-44-52.png]]
+
+After use, the PV can be released. The underlying PV can then be reclaimed and used by someone else. 
+
+*** CSI - Container Storage Interface
+
+Note: Kubernetes interfaces are always CXI - Container X Interface (eg: CNI, CSI etc)
+
+We have several CO - Container Orchestraters (Kubernetes, Mesos, Cloud Foundry). Each manages volumes in its own way. This lead to a difficult time for the storage vendors as they have to support all the different COs. 
+Also, the code written by the vendors has to live "in-tree" in the COs and has to be tied to the release cycle of the COs. This is not ideal
+
+So, the volume interface is standardized now so that a volume plugin using the CSI would work for all COs.
+
+
+** ConfigMaps and Secrets
+
+While deploying an application, we may need to pass runtime parameters like endpoints, passwords etc. To do this we can use ~ConfigMap API~ resource. 
+
+We can use ConfigMaps to pass key-value pairs, which can be consumed by pods, or any other system components like controllers.
+There are 2 ways to create ConfigMaps:
+
+*** From literal values
+Recall literal values are just values defined "in-place"
+
+#+begin_src
+$ kubectl create configmap my-config --from-literal=key1=value1 --from-literal=key2=value2
+configmap "my-config" created 
+#+end_src
+
+
+*** From files
+
+#+begin_src
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: customer1
+data:
+  TEXT1: Customer1_Company
+  TEXT2: Welcomes You
+  COMPANY: Customer1 Company Technology Pct. Ltd.
+
+$ kubectl create -f customer1-configmap.yaml
+configmap "customer1" created
+#+end_src
+
+We can use the ConfigMap values from inside the Pod using:
+
+#+begin_src
+....
+ containers:
+      - name: rsvp-app
+        image: teamcloudyuga/rsvpapp
+        env:
+        - name: MONGODB_HOST
+          value: mongodb
+        - name: TEXT1
+          valueFrom:
+            configMapKeyRef:
+              name: customer1
+              key: TEXT1
+        - name: TEXT2
+          valueFrom:
+            configMapKeyRef:
+              name: customer1
+              key: TEXT2
+        - name: COMPANY
+          valueFrom:
+            configMapKeyRef:
+              name: customer1
+              key: COMPANY
+....
+#+end_src
+
+We can also mount a ConfigMap as a Volume inside a Pod. For each key, we will see a file in the mount path and the content of that file becomes the respective key's value.
+
+*** Secrets
+
+Secrets are similar to ConfigMaps in that they are key-value pairs that can be passed on to Pods etc. The only difference being they deal with sensitive information like passwords, tokens, keys etc
+
+The Secret data is stored as plain text inside etcd, so the administrators must restrict access to the api server and etcd
+
+We can create a secret literally
+~$ kubectl create secret generic my-password --from-literal=password=mysqlpassword~
+
+The above command would create a secret called my-password, which has the value of the password key set to mysqlpassword.
+
+
+Analyzing the get and describe examples below, we can see that they do not reveal the content of the Secret. The type is listed as Opaque.
+#+begin_src
+$ kubectl get secret my-password
+NAME          TYPE     DATA   AGE 
+my-password   Opaque   1      8m
+
+$ kubectl describe secret my-password
+Name:          my-password
+Namespace:     default
+Labels:        <none>
+Annotations:   <none>
+
+Type  Opaque
+
+Data
+====
+password.txt:  13 bytes
+#+end_src
+
+We can also create a secret manually using a YAML configuration file. With secrets, each object data must be encoded using ~base64~.
+
+So:
+
+#+begin_src
+# get the base64 encoding of password
+$ echo mysqlpassword | base64
+
+bXlzcWxwYXNzd29yZAo=
+
+# now use it to create a secret
+apiVersion: v1
+kind: Secret
+metadata:
+  name: my-password
+type: Opaque
+data:
+  password: bXlzcWxwYXNzd29yZAo=
+#+end_src
+
+
+Base64 is not encryption of course, so decrypting is easy:
+#+begin_src
+$ echo "bXlzcWxwYXNzd29yZAo=" | base64 --decode
+#+end_src
+
+Like ConfigMaps, we can use Secrets in Pods using:
+- environment variables
+#+begin_src
+.....
+         spec:
+      containers:
+      - image: wordpress:4.7.3-apache
+        name: wordpress
+        env:
+        - name: WORDPRESS_DB_HOST
+          value: wordpress-mysql
+        - name: WORDPRESS_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: my-password
+              key: password
+.....
+#+end_src
+
+- mounting secrets as a volume inside a Pod. A file would be created for each key mentioned in the Secret whose content would be the respective value.
+
+
+*** Ingress
+
+We earlier saw how we can access our deployed containerized application from the external world using Services. We talked about ~LoadBalancer~ ServiceType which gives us a load balancer on the underlying cloud platform. This can get expensive if we use too many Load Balancers.
+
+We also talked about NodePort which gives us a port on each worker node and we can have a reverse proxy that would route the requests to the (node-ip:service-port) tuples. 
+However, this can get tricky, as we need to keep track of assigned ports etc.
+
+Kubernetes has ~Ingress~ which is another method we can use to access our applications from the external world.
+
+With Services, routing rules are attached to a given Service, they exist as long as the service exists. If we decouple the routing rules from the application, we can then update our application without worrying about its external access.
+
+The Ingress resource helps us do that.
+
+According to kubernetes.io
+~an ingress is a collection of rules that allow inbound connections to reach the cluster Services~
+
+To allow inbound connection to reach the cluster Services, ingress configures a L7 HTTP load balancer for Services and provides the following:
+- TLS - transport layer security
+- Name based virtual hosting
+- Path based routing
+- Custom rules
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-17 12:45:17
+[[file:assets/screenshot_2018-06-17_12-45-17.png]]
+
+With Ingress, users don't connect directly the a Service. They reach the Ingress endpoint, and from there, the request is forwarded to the respective Service. (note the usage of request, not packets since Ingress is L7 load balancer)
+
+#+begin_src
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: web-ingress
+  namespace: default
+spec:
+  rules:
+  - host: blue.example.com
+    http:
+      paths:
+      - backend:
+          serviceName: webserver-blue-svc
+          servicePort: 80
+  - host: green.example.com
+    http:
+      paths:
+      - backend:
+          serviceName: webserver-green-svc
+          servicePort: 80
+#+end_src
+
+
+The requests for both (blue.example.com and green.example.com) will come to the same Ingress endpoint which will route it to the right Service endpoint
+
+The example above :top: is an example of name based virtual hosting ingress rule
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-17 13:08:20
+[[file:assets/screenshot_2018-06-17_13-08-20.png]]
+
+We can also have fan out ingress rules, in which we send the requests like example.com/blue and example.com/green which would be forwarded to the correct Service
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-17 13:09:04
+[[file:assets/screenshot_2018-06-17_13-09-04.png]]
+
+The Ingress resource uses the Ingress Controller which does the request forwarding.
+
+**** Ingress Controller
+
+It is an application that watches the master node's API server for changes in the ingress resources and updates the L7 load balancer accordingly. 
+
+Kubernetes has several different Ingress Controllers (eg: Nginx Ingress Controller) and you can write yours too.
+
+Once the controller is deployed (recall it's a normal application) we can use it with an ingress resource
+
+#+begin_src
+$ kubectl create -f webserver-ingress.yaml
+#+end_src
+
+*** Other Kubernetes topics
+
+Kubernetes also has features like auto-scaling, rollbacks, quota management etc
+
+
+**** Annotations
+We can attach arbitrary non-identifying metadata to any object, in a key-value format
+
+#+begin_src
+"annotations": {
+  "key1" : "value1",
+  "key2" : "value2"
+}
+#+end_src
  
+They are not used to identify and select objects, but for:
+- storing release ids, git branch info etc
+- phone/pages numbers
+- pointers to logging etc
+- descriptions
+
+Example:
+
+#+begin_src
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: webserver
+  annotations:
+    description: Deployment based PoC dates 2nd June'2017
+....
+....
+#+end_src
+
+Annotations can be looked at by using describe
+
+~$ kubectl describe deployment webserver~
+
+**** Deployments
+
+If we have recorded our Deployment before doing our update, we can revert back to a know working state if the deployment fails
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-17 13:55:43
+[[file:assets/screenshot_2018-06-17_13-55-43.png]]
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-06-17 13:55:28
+[[file:assets/screenshot_2018-06-17_13-55-28.png]]
+
+
+Deployments also has features like:
+- autoscaling
+- proportional scaling
+- pausing and resuming
+
+A deployment automatically creates a ReplicaSet - which makes sure the correct number of Pods are present and pass the liveness probe.
+
+**** Jobs
+
+A Job creates 1 or more Pods to perform a given task. The Job object takes the responsibility of Pod failures and makes sure the task is completed successfully. After the task, the Pods are terminated automatically. 
+We can also have cron jobs etc
+
+**** Quota Management
+In a multi tenant deployment, fair usage is vital. Administrators can use ResourceQuota object to limit resource consumption per Namespace
+
+We can have the following types of quotas per namespace:
+- Compute Resource Quota
+We can limit the compute resources (CPU, memory etc) that can be requested in a given namespace
+
+- Storage Resource Quota 
+We can limit the storage resources (PVC, requests.storage etc)
+
+- Object Count Quota
+We can restrict the number of objects of a given type (Pods, ConfigMaps, PVC, ReplicationControllers, Services, Secrets etc)
+
+This is implemented using cgroups under the hood
+
+**** DaemonSets
+If we want a "ghost" Pod(a pod that is running on all nodes at all times), for eg to collect monitoring data from all nodes etc we can use DaemonSet object.
+
+Whenever a node is added to the cluster, a Pod from a given DaemonSet is created on it. If the DaemonSet is deleted, all Pods are deleted as well.
+
+**** StatefulSets
+The StatefulSet controller is used for applications that require a unique identity such as name, network identifications, strict ordering etc - eg: mysql cluster, etcd cluster
+
+The StatefulSet controller provides identity and guaranteed ordering of deployment and scaling to Pods.
+
+**** Kubernetes Federation
+We can manage multiple Kubernetes clusters from a single control plane using Kubernetes Federation. We can sync resources across the clusters and have cross-cluster discovery, allowing us to do Deployments across regions and access them using a global DNS record.
+
+The Federation is very useful when we want to build a hybrid solution, in which we can have one cluster running inside our private datacenter and another one on the public cloud. We can also assign weights for each cluster in the Federation, to distribute the load as per our choice.
+
+**** Custom Resources
+In Kubernetes, a resource is an API endpoint. It stores a collection of API objects. Eg: a Pod resource contains all the Pod objects.
+
+If the existing Kubernetes resources are not sufficient to fulfill our requirements, we can create new resources using *custom resources*
+
+To make a resource declarative(like the rest of Kubernetes), we have to write a custom controller - which can interpret the resource structure and perform the required actions. 
+
+There are 2 ways of adding custom resources:
+- CRDs - custom resource definitions 
+- API aggregation
+They are subordinate API servers which sit behind the primary API server and act as proxy. They offer more fine grained control. 
+
+**** Helm
+When we deploy an application on Kubernetes, we have to deal with a lot of manifests (the yaml containing the spec) such as Deployments, Services, Volume Claims, Ingress etc. 
+It can be too much work to deploy them one by one specially for the common use cases like deploying a redis cluster etc. 
+
+We can bundle these manifests after templatizing them into a well-defined format (with some metadata). This becomes a package essentially - we call them Charts. 
+They can then be served by package managers like Helm. 
+
+Helm is a package manager (analogous to yum and apt) for Kubernetes, which can install/update/delete those Charts in the Kubernetes cluster.
+
+Helm has two components:
+- A client called helm, which runs on your user's workstation
+- A server called tiller, which runs inside your Kubernetes cluster.
+
+
+The client helm connects to the server tiller to manage Charts
+
+**** Monitoring and Logging
+2 popular solutions are:
+- Heapster
+It is a cluster wide aggregator of monitoring and event data which is natively supported on Kubernetes.
+
+- Prometheus
+It can also be used to scrape resource usage from different Kubernetes components and objects.
+
+We can collect logs from the different components of Kubernetes using fluentd, which is an open source data collector. We can ship the logs to Elasticsearch etc. 

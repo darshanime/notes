@@ -218,6 +218,118 @@ This way, we can use any oci compatible runtime with kubernetes (since cri-o wil
 
 Note here, the cri-o implements the CNI, and also has the image service and the runtime service
 
+***** Notes
+It can get a little messy sometimes, all these things. 
+
+Docker engine is the whole thing, it was a monolith that enabled users to run containers. Then it was broken down into individual components. It was broken down into:
+- docker engine
+- containerd
+- runc
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-08-11 23:07:13
+[[file:assets/screenshot_2018-08-11_23-07-13.png]]
+
+runC is the lowest level component that implements the OCI interface. It interacts with the kernel and does the "runs" the container
+
+containerd does things like take care of setting up the networking, image transfer/storage etc - It takes care of the complete container runtime (which means, it manages and makes life easy for runC, which is the actual container runtime). Unlike the Docker daemon it has a reduced feature set; not supporting image download, for example.
+
+Docker engine just does some high level things itself like accepting user commands, downloading the images from the docker registry etc. It offloads a lot of it to containerd.
+
+"the Docker daemon prepares the image as an Open Container Image (OCI) bundle and makes an API call to containerd to start the OCI bundle. containerd then starts the container using runC."
+
+Note, the runtimes have to be OCI compliant, (like runC is), that is, they have to expose a fixed API to managers like containerd so that they(containerd) can make life easy for them(runC) (and ask them to stop/start containers)
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-08-11 23:15:15
+[[file:assets/screenshot_2018-08-11_23-15-15.png]]
+
+
+rkt is another container runtime, which does not support OCI yet, but supports the appc specification. But it is a full fledged solution, it manages and makes it's own life easy, so it needs no containerd like daddy.
+
+So, that's that. Now let's add another component (and another interface) to the mix - Kubernetes
+
+Kubernetes can run anything that satisfies the CRI - container runtime interface. 
+
+You can run rkt with k8s, as rkt satisfies CRI - container runtime interface. Kubernetes doesn't ask for anything else, it just needs CRI, it doesn't give a FF about how you run your containers, OCI or not.
+
+containerd does not support CRI, but cri-containerd which is a shim around containerd does. So, if you want to run containerd with Kubernetes, you have to use cri-containerd (this also is the default runtime for Kubernetes). cri-containerd recently got renamed to CRI Plugin.
+
+If you want to get the docker engine in the mix as well, you can do it. Use dockershim, it will add the CRI shim to the docker engine. 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-08-11 23:27:18
+[[file:assets/screenshot_2018-08-11_23-27-18.png]]
+
+Now, like containerd can manage and make life easy for runC (the container runtime), it can manage and make life easy for other container runtimes as well - in fact, for every container runtime that supports OCI - like Kata container runtime (known as ~kata-runtime~ - https://github.com/kata-containers/runtime.) - which runs kata containers, Clear Container runtime (by Intel).
+
+Now we know that rkt satisfies the CRI, cri-containerd (aka CRI Plugin) does it too. 
+
+Note what containerd is doing here. It is not a runtime, it is a manager for runC which is the container runtime. It just manages the image download, storage etc. Heck, it doesn't even satisfy CRI. 
+
+That's why we have CRI-O. It is just like containerd, but it implements CRI. CRI-O needs a container runtime to run images. It will manage and make life easy for that runtime, but it needs a runtime. It will take any runtime that is OCI compliant. So, naturally, ~kata-runtime~ is CRI-O compliant, runC is CRI-O compliant. 
+
+Use with Kubernetes is simple, point Kubernetes to CRI-O as the container runtime. (yes yes, CRI-O, but CRI-O and the actual container runtime IS. And Kubernetes is referring to that happy couple when it says container runtime). 
+
+Like containerd has docker to make it REALLY usable, and to manage and make life easy for containerd, CRI-O needs someone to take care of image management - it has buildah, umochi etc.
+
+crun is another runtime which is OCI compliant and written in C. It is by RedHat.
+
+We already discussed, kata-runtime is another runtime which is OCI compliant. So, we can use kata-runtime with CRI-O like we discussed.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-08-11 23:53:04
+[[file:assets/screenshot_2018-08-11_23-53-04.png]]
+
+Note, here, the kubelet is talking to CRI-O via the CRI. CRI-O is talking to cc-runtime (which is another runtime for Intel's clear containers, yes, OCI compliant), but it could be kata-runtime as well.
+
+Don't forget containerd, it can manage and make life easy for all OCI complaint runtimes too - runC sure, but also kata-runtime, cc-runtime
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-08-11 23:55:06
+[[file:assets/screenshot_2018-08-11_23-55-06.png]]
+
+Here, note just the runtime is moved from runC to kata-runtime. 
+To do this, in the containerd config, just change runtime to "kata"
+
+Needless to say, it can run on Kubernetes either by CRI-O, or by cri-containerd (aka CRI Plugin). 
+
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-08-11 23:56:57
+[[file:assets/screenshot_2018-08-11_23-56-57.png]]
+
+This is really cool :top:
+
+Kubernetes, represented here by it's Ambassador, Mr. Kubelet runs anything that satisfies the CRI. 
+Now, we have several candidates that can.
+- Cri-containerd makes containerd do it.
+- CRI-O does it natively.
+- Dockershim makes the docker engine do it.
+
+Now, all the 3 guys above, can manage and make life easy for all OCI compliant runtimes - runC, kata-runtime, cc-runtimes.
+
+We also have frakti, which satisfies CRI, like rkt, but doesn't satisfy OCI, and comes bundled with it's own container runtime.
+
+
+Here we have CRI-O in action managing and making life easy for OCI compliant kata-runtime and runC both
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-08-12 00:02:16
+[[file:assets/screenshot_2018-08-12_00-02-16.png]]
+
+We have some more runtimes as well:
+- railcar - OCI compliant, written in rust
+- Pouch - Alibaba's modified runC
+- nvidia runtime - nvidia's fork of runC
+
 **** kube-proxy
 
 To connect to the pods, we group them logically, and the use a ~Service~ to connect to them. The service exposes the pods to the external world and load balances across them
@@ -1478,3 +1590,6 @@ It is a cluster wide aggregator of monitoring and event data which is natively s
 It can also be used to scrape resource usage from different Kubernetes components and objects.
 
 We can collect logs from the different components of Kubernetes using fluentd, which is an open source data collector. We can ship the logs to Elasticsearch etc. 
+
+
+* Official Tutorial

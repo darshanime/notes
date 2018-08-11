@@ -3270,9 +3270,12 @@ BUT
 Another example:
 2^{n+10} = O(2^{n})
 BUT
-2^{n+10} = o(2^{n+1}^{})
+2^{n+10} = o(2^{n+11}^{})
 
 (Note: 2^{10n} = O(2^{10n}) and not O(2^{n}))
+
+Little Oh is to say that the function f(n) is actually greater than T(n), even without the constants business, it is actually greater.
+
 
 Similarly little omega notation
 

@@ -1,0 +1,69 @@
+* Elasticsearch The Definitive Guide
+A distributed real-time search and analytics engine
+
+* Prelude
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-07-03 18:45:34
+[[file:assets/screenshot_2018-07-03_18-45-34.png]]
+
+Elasticsearch is built on top of Apache Lucene. It is a "full text search engine" library. 
+Elasticsearch is a wrapper around Lucene, it hides the internal details of Lucene behind a coherent, REST API. It can be described as:
+
+- a distributed real-time document store where every field is indexed and search-able.
+  - "Distributed" - the data is sharded and partitioned.
+  - Real time - the new documents are index online and are immediately available for query
+  - Document Store - Elasticsearch accepts json documents
+
+
+Elasticsearch has sensible defaults and is usable out of the box. It is also highly configurable, all the components are configurable and flexible.
+
+Marvel is a management and monitoring tool used for Elasticsearch. It has an interactive console called Sense. Recall we used this in the early days with Piyush
+
+Elasticsearch comes as a binary which runs in the JVM. You just need Java installed on your machine to run Elasticsearch
+
+A node is a running instance of Elasticsearch. A cluster is a group of nodes with the same cluster.name that are working together to share data and to provide failover and scale,
+
+If you don't change the ~cluster.name~, your nodes could join other nodes in a different cluster on the same network.
+
+API to shutdown Elasticsearch : ~curl -XPOST 'http://localhost:9200/_shutdown'~
+* Part 1
+** You Know, for Search
+
+Elasticsearch can be reached by 2 means:
+1. Java API
+When using Java, you can use these
+  - Node Client
+It joins a cluster as a non data node, it doesn't hold the data itself, it knows where the data lives.
+  - Transport Client
+It is lighter weight client and can be used to transport client to a remote cluster. 
+
+Both the clients use a custom elasticsearch transport protocol to talk to the cluster. 
+
+2. RESTful API with JSON over HTTP
+
+All other languages can communicate with Elasticsearch over port 9200 using a RESTful API
+
+------
+
+Elasticsearch uses JavaScript Object Notation (JSON) as the serialization format for documents. 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-07-03 19:19:39
+[[file:assets/screenshot_2018-07-03_19-19-39.png]]
+
+JSON allows for rich information storage which can be difficult if we move to a tabular structure. 
+
+
+** Life Inside a Cluster
+** Data In, Data Out
+** Distributed Document Store
+** Searching - The Basic Tools
+** Mapping and Analysis
+** Full Body Search
+** Sorting and Relevance
+** Distributed Search Execution
+** Index Management
+** Inside a Shard

@@ -1,0 +1,31 @@
+* Amazon Web Services ECS - EC2 Container Service
+- need a docker container
+- need to push it to ecr - and set up iam controls for access restriction
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-08-07 10:37:15
+[[file:assets/screenshot_2018-08-07_10-37-15.png]]
+
+
+- In a single sentence, "ECS is a service to automate the running of containers on a fleet of instances"
+- It orchestrates the deployment(placement, self heal) and running of the containers
+- ECS has an agent like the kubelet, running on each instance.
+
+- after creating a cluster, we need to define a task.
+- A Task is a json document which defines what to run on the cluster
+  - it references an image to download, volumes etc
+  - Tasks are versioned
+- use the console to launch a submitted task
+
+- launching a task is good for a one off script etc
+- we could also launch a Service
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-08-07 10:48:01
+[[file:assets/screenshot_2018-08-07_10-48-01.png]]
+
+
+25*1*0.00001406*12*3600*30
+25*5*0.00000353*12*3600*30

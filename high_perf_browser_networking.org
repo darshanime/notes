@@ -1,0 +1,219 @@
+* High-Performance Browser Networking
+- Ilya Grigorik
+
+Good developers know how things work. Great developers know why things work
+
+This book talks about the myriad of networking protocols it rides on: TCP, TLS, UDP, HTTP etc
+
+Some of the quick insights:
+- tcp is not always the best transport mechanism
+- reusing connections is a critical optimization technique (~keep-alive~ helps with this)
+- terminating sessions at a server closer to the client leads to lower latency
+* Networking 101
+** Primer on Latency and Bandwidth
+
+Speed is a feature, it is also important to the bottom-line performance of the applications:
+- faster sites lead to better user engagement, user retention, conversions.
+
+
+
+There are 2 critical components that dictate the performance of all network traffic. 
+- Latency
+  - the time from source sending a packet to the destination receiving it
+- Bandwidth
+  - Maximum throughput of a (logical or physical) communication path
+
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-07-06 19:40:02
+[[file:assets/screenshot_2018-07-06_19-40-02.png]]
+
+The latency is how long it takes to travel between the 2 ISPs. The width between the red lines is the bandwidth. 
+
+Latency has several components, even within a typical router:
+- propagation delay
+
+  - "The time required for a message to travel from the sender to the receiver" - is a function of distance over speed with which the signal propagates.
+  - generally around ~c~, the speed of light
+
+- transmission delay
+  - "Time required to push the packet's bits into the link" - is a function of packet's length, data rate of the link
+  - depends on the available data rate of the transmitting link (has nothing to do with distance b/w origin and destination)
+    - so, if we want to say transfer 10Mb file over 1Mbps and 100Mbps, it will take 10s to put the entire file on the wire over 1mbps, on 100mbps, it will take 0.1s
+
+- processing delay
+  - "The required to process the packet header, check for bit level errors, determine the packet's destination"
+  - this is nowadays done in the hardware, so the delays are very small
+
+- queuing delay
+  - "The amount of time the incoming packet is waiting in the queue, waiting to be processed.
+  - high if the packets are coming in at a rate faster than how the router can process, they are queued in a buffering channel.
+
+
+Total latency is the sum of all the above latencies. :top:
+
+If our source and destination are far away, it will have a higher propagation delay
+If there are a lot of intermediate routers, the transmission and processing delays will be more
+If the load of the traffic along the path is high, the queuing delay will be higher
+
+
+Bufferbloat - modern routers have a large packet buffers, (as they don't want to lose any packets) - however, this breaks TCP's congestion avoidance mechanisms and introduces high and variable latency delays into the network
+
+Often, a significant delay is in the last mile - getting the packet to the ISP's network. This last mile latency can depend on several things; deployed technology, topology of the network, time of the day etc. 
+
+For most websites, latency is the performance bottleneck, not bandwidth. 
+
+Latency can be measured with ~traceroute~
+It sends a packet with "hop limit" (is it the TTL, time to live on the packet?). When the limit is reached, the intermediary returns an ICMO time execcded message, allowing ~traceroute~ to measure the latency of each network hop
+
+
+Optical fibers are light carrying pipes, slightly thicker than a human hair. It can carry many wavelengths of light thru a process known as WDM - wavelength division modulation, so the bandwidth is high. The total bandwidth of a fiber link is the multiple of per-channel data rate and the number of multiplexed channels.
+
+Most of the core data paths of the Internet, specially over large distances, are optical fibers. However, the available capacity at the edges of the network is much, much less, and varies wildly based on deployed technology (dial up, DSL, cable, wireless, fiber to home etc). This limits the bandwidth to the end user - The available bandwidth to the user is a function of the lowest capacity link between the client and the destination server
+
+** Building Block of TCP
+
+At the heart of the Internet are 2 protocols; IP and TCP
+- IP (Internet Protocol)
+  - it provides the host-to-host routing and addressing.
+- TCP (Transmission Control Protocol)
+  - provides the abstraction of a reliable network running over an unreliable channel
+  - It hides most of the complexity of network communication; retransmission of lost data, in order delivery, congestion control/avoidance, data integrity
+  - TCP guarantees that the bytes received are in the same order that they were sent in.
+  - TCP is optimized for accurate delivery, not a timely one (unlike UDP?)
+
+TCP/IP is commonly referred to as the Internet Protocol Suite. 
+TCP is the protocol of choice for most of the popular applications: world wide web, email, file transfers etc
+
+Hmm, so it is possible to create a new protocol, either on IP or something new entirely on the network infrastructure that we have right now. It would have to be on the IP though, if we want to use the existing network routers etc.
+
+ 
+Fun fact: HTTP standard does not specify TCP as the only transport protocol. We could also deliver HTTP via a datagram socket (ie User Datagram Protocol, or UDP) or any other transport protocol of our choice. However, TCP is mostly used.
+
+*** Three way handshake
+All TCP connections start with the 3 way handshake.
+
+The client and the server must agree on starting packet sequence numbers (among other parameters)
+- SYN
+  - Client picks a random sequence number ~x~ and sends a SYN packet
+
+- SYN ACK
+  - server increments ~x~ by 1, picks own random sequence number ~y~
+
+- ACK
+ - client increments both ~x~ and ~y~ by 1 and completes the handshake by dispatching the last ACK package in the handshake
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-07-06 22:01:53
+[[file:assets/screenshot_2018-07-06_22-01-53.png]]
+
+After the 3 way handshake is complete, the application data can being to flow between the client and the server.
+The client can send a packet immediately after the ACK packet. 
+
+An important and obvious optimization is reusing TCP connections. Note, the delay in the connection is not governed by bandwidth, but the latency between the client and the server
+
+TCP Fast Open is an optimization that allows data transfers within the SYN packet onwards. 
+
+
+*** Congestion Avoidance and Control
+
+Congestion collapse could affect any network with asymmetric bandwidth capacity between the nodes. If the bandwidth of one node is say, 100Mbps, it will load a very large chunk of packets on the wire and the other node won't be able to process them this fast. 
+
+Consider this: a node is sending packets to another node. If the roundtrip time has exceeded the maximum retransmission interval, the sending host will think that the packet has been lost and will retransmit. This will lead to flooding of all the available buffers in the switching nodes with these packets, which will have to be dropped now. The condition will persist, it won't go away on it's own
+
+The congestion collapse wasn't a problem in ARPANET because the nodes had uniform bandwidth and the backbone had substantial excess capacity. 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-07-06 22:16:25
+[[file:assets/screenshot_2018-07-06_22-16-25.png]]
+
+To address the issue of congestion, multiple mechanisms were implemented in TCP to govern the rate at which the data can be sent in both directions: flow control, congestion control, congestion avoidance.
+
+**** Flow control
+
+It is a mechanism to prevent the sender from overwhelming the receiver with data it may not be able to process - the receiver may be busy, under heavy load etc.
+
+Each side of the TCP connection advertises its own receive window, (~rwnd~), which communicates the size of the available buffer space to hold the incoming data. 
+
+If the window reaches zero, then it is treated as a signal that no more data should be sent until the existing data in the buffer has been cleared by the application layer.
+This continues thruout the lifetime of every TCP connection, each ACK packet carries the latest rwnd value for each side, allowing both sides to dynamically adjust the data flow rate to the capacity and processing speed of the sender and receiver.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-07-06 22:21:33
+[[file:assets/screenshot_2018-07-06_22-21-33.png]]
+
+Fun fact: the original TCP specification allocated 16bits for advertising the receive window side, this means the maximum value of the window size was 2^{16} = 64kb. This is not a optimal window size especially for networks that exhibit high bandwidth delay product. 
+To deal with this, RFC 1323 provided a "TCP window scaling" option, which is communicated during the TCP 3 way handshake and carries a value that represents the number of bits to left shift the 16bit window size field in future ACKs.
+
+Today, TCP window scaling is enabled by default on all major platforms. However, intermediate nodes, routers, and firewalls can rewrite or even strip this option entirely. If your connection to the server, or the client, is unable to make full use of the available bandwidth, then checking the interaction of your window sizes is always a good place to start. On Linux platforms, the window scaling setting can be checked and enabled via the following commands:
+~$ sysctl net.ipv4.tcp_window_scaling~
+~$ sysctl -w net.ipv4.tcp_window_scaling=1~
+
+**** Slow start
+
+Flow control was not sufficient in preventing congestion collapse. The problem was that flow control prevented the sender from overwhelming the receiver, but there was no mechanism to prevent either side from overwhelming the entire network - they don't know the available bandwidth at the beginning of a new connection. Hence, they need a mechanism to estimate it and adapt their speeds to the continuously changing conditions within the network.
+
+To illustrate one example where such an adaptation is beneficial, imagine you are at home and streaming a large video from a remote server that managed to saturate your downlink to deliver the maximum quality experience. Then another user on your home network opens a new connection to download some software updates. All of the sudden, the amount of available downlink bandwidth to the video stream is much less, and the video server must adjust its data rate—otherwise, if it continues at the same rate, the data will simply pile up at some intermediate gateway and packets will be dropped, leading to inefficient use of the network.
+
+Jacobson and Karels documented 4 algorithms to address these problems: slow start, congestion avoidance, fast retransmit, fast recovery.
+
+In slow start, the client and the server start with a small congestion window size ~cwnd~. 
+
+*Congestion window size* - the sender side limit on the amount of data the sender can have in flight before receiving an acknowledgment from the client. 
+
+We have a new rule: the max amount of data in flight (not ACKed) between the client and the server is the minimum of rwnd (the receive window size), and cwnd (the congestion window size). 
+
+The algorithm is, the cwnd window size is set to 1 to start with (this was later changed to 4 (rfc 2581), and then to 10 (rfc 6928)). Since the max data in flight for a new tcp connection is the minimum of rwnd and cwnd, the server can send upto 4 (or 1 or 10) network segments and then stop even if the rwnd is higher. Then, for every received ack, the slow start algorithm will increse the cwnd window size by 1 segment. So for every ACKed packet, 2 new packets (1 because 1 ACK was received, and 1 increase in size of cwnd). This phase of the tcp connection is commonly known as the "exponential growth" algorithm as the client and the server are trying to quickly converge on the available bandwidth on the network path between them.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-07-06 22:45:48
+[[file:assets/screenshot_2018-07-06_22-45-48.png]]
+
+every TCP connection must go through the slow-start phase—we cannot use the full capacity of the link immediately!
+
+Also, we can compute a simple formula to find the time taken to reach a cwnd of size N
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-07-06 22:47:06
+[[file:assets/screenshot_2018-07-06_22-47-06.png]]
+
+Consider these parameters:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-07-06 22:47:27
+[[file:assets/screenshot_2018-07-06_22-47-27.png]]
+
+Putting in the values, we get:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-07-06 22:47:40
+[[file:assets/screenshot_2018-07-06_22-47-40.png]]
+
+So, a new tcp connection will require 224 ms to reach the 64kb rwnd (receiving window size). The fact that the client and server may be capable of transferring at Mbps+ data rates has no effect—that’s slow-start.
+
+
+To decrease the amount of time it takes to grow the congestion window, we can decrease the roundtrip time between the client and server—e.g., move the server geographically closer to the client. Or we can increase the initial congestion window size to the new RFC 6928 value of 10 segments.
+
+Slow-start is not as big of an issue for large, streaming downloads, as the client and the server will arrive at their maximum window sizes after a few hundred milliseconds and continue to transmit at near maximum speeds—the cost of the slow-start phase is amortized over the lifetime of the larger transfer.
+
+However, for many HTTP connections, which are often short and bursty, it is not un‐ usual for the request to terminate before the maximum window size is reached. As a result, the performance of many web applications is often limited by the roundtrip time between server and client: slow-start limits the available bandwidth throughput, which has an adverse effect on the performance of small transfers.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-07-06 22:50:32
+[[file:assets/screenshot_2018-07-06_22-50-32.png]]
+
+
+
+
+
+
+
+

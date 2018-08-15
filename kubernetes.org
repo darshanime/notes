@@ -1592,4 +1592,612 @@ It can also be used to scrape resource usage from different Kubernetes component
 We can collect logs from the different components of Kubernetes using fluentd, which is an open source data collector. We can ship the logs to Elasticsearch etc. 
 
 
-* Official Tutorial
+* Kubernetes Up and Running
+
+#+BEGIN_QUOTE
+Kubernetes would like to thank every sysadmin who has woken up at 3am to restart a process.
+#+END_QUOTE
+
+
+Kubernetes intends to radically simplify the task of building, deploying, and maintaining distributed systems.
+
+
+From the first programming languages, to object-oriented programming, to the development of virtualization and cloud infrastructure, the history of computer science is a history of the development of abstractions that hide complexity and empower you to build ever more sophisticated applications.
+
+** Benefits of Kubernetes include:
+
+**** Velocity
+The speed with which you can deploy new features and components - while keeping the service up reliably.
+Kubernetes provides this by providing immutability, declarative configuration, self healing systems
+
+***** Immutability
+Containers and Kubernetes encourage developers to build distributed systems that adhere to the principles of immutable infrastructure. 
+
+With immutable infrastructure, once an artifact is created in the system it does not change via user modifications.
+
+Traditionally, this was not the case, they were treated as mutable infrastructure. With mutable infrastructure, changes are applied as incremental updates to an existing system. 
+
+A system upgrade via the apt-get update tool is
+a good example of an update to a mutable system. Running apt sequentially
+downloads any updated binaries, copies them on top of older binaries, and makes incremental updates to configuration files.
+
+In contrast, in an immutable system, rather than a series of incremental updates and changes, an entirely new, complete image is built, where the update simply replaces the entire image with the newer image in a single operation. There are no incremental changes. 
+
+In Draup, we have the artifact which is the source code, which is replaced by a new git clone, but the pip packages etc maybe updated/removed incrementally. Hence, we use mutable infrastructure. 
+In services, we have docker compose, and subsequently immutable infrastructure. 
+
+Consider containers. What would you rather do?
+- You can login to a container,run a command to download your new software, kill the old server, and start the new one.
+- You can build a new container image, push it to a container registry,kill the existing container, and start a new one.
+
+In the 2nd case, the entire artifact replacement makes it easy to track changes that you made, and also to rollback your changes. Go-Jek's VP's lecture during the recent #go-include meetup comes to mind, where he spoke about "snowflakes" that are created by mutable infrastructure. 
+
+***** Declarative Configuration
+
+Everything in Kubernetes is a declarative configuration object that represents the desired state of the system. It is Kubernetes’s job to ensure that the actual state of the world matches this desired state.
+
+declarative configuration is an alternative to imperative configuration, where the state of the world is defined by the execution of a series of instructions rather than a declaration of the desired state of the world.
+
+While imperative commands define actions, declarative configurations define state.
+
+To understand these two approaches, consider the task of producing three replicas of a piece of software. With an imperative approach, the configuration would say: “run A, run B, and run C.” The corresponding declarative configuration would be “replicas equals three.”
+
+
+***** Self healing systems
+As a concrete example of the self-healing behavior, if you assert a desired state of three replicas to Kubernetes, it does not just create three replicas — it continuously ensures that there are exactly three replicas. If you manually create a fourth replica Kubernetes will destroy one to bring the number back to three. If you manually destroy a replica, Kubernetes will create one to again return you to the desired state.
+
+**** Scaling (of both software and teams)
+
+Kubernetes achieves and enables scaling by favoring decoupled architectures. 
+
+***** Decoupling
+In a decoupled architecture each component is separated from other components by defined APIs and service load balancers.
+
+Decoupling components via load balancers makes it easy to scale the programs that make up your service, because increasing the size (and therefore the capacity) of the program can be done without adjusting or reconfiguring any of the other layers of your service. Each can be scaled independently. 
+
+Decoupling servers via APIs makes it easier to scale the development teams because each team can focus on a single, smaller microservice with a comprehensible surface area
+
+Crisp APIs between microservices (defining an interface b/w services) limit the amount of cross-team communication overhead required to build and deploy software. Hence, teams can be scaled effectively. 
+
+***** Easy scaling
+We can have autoscaling at 2 levels
+- pods
+  - they can be configured to be scaled up or down depending on some predefined condition
+  - this assumes that the nodes have resources to support the new number of pods
+- cluster nodes
+  - since each node is exactly like the previous one, adding a new node to the cluster is trivial and can be done with a few commands or a prebaked image.
+
+Also, since Kubernetes allows us to bin pack, we can place containers from different services onto a single server. This reduces stastical noise and allows us to have a more reliable forecast about growth of different services. 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-08-12 15:12:58
+[[file:assets/screenshot_2018-08-12_15-12-58.png]]
+
+Here, we see each time is decoupled by APIs. The Hardware Ops team has to provide the hardware. The kernel team just needs the hardware to make sure their kernel is providing the system calls api. The cluster guys need the api so that they can provision the cluster. The application developers need the kube api to run their apps. Everyone is happy.
+
+**** Abstracting the infrastructure
+When your developers build their applications in terms of container images and deploy them in terms of portable Kubernetes APIs, transferring your application between environments, or even running in hybrid environments, is simply a matter of sending the declarative config to a new cluster.
+
+Kubernetes has a number of plug-ins that can abstract you from a particular cloud. For example, Kubernetes services know how to create load balancers on all major public clouds as well as several different private and physical infrastructures. Likewise, Kubernetes PersistentVolumes and PersistentVolumeClaims can be used to abstract your applications away from specific storage implementations.
+
+
+
+Container images bundle an application and its dependencies, under a root filesystem, into a single artifact. The most popular container image format is the Docker image format, the primary image format supported by Kubernetes. 
+
+Docker images also include additional metadata used by a container runtime to start a running application instance based on the contents of the container image.
+
+Each layer adds, removes, or modifies files from the preceding layer in the filesystem. This is an example of an overlay filesystem. There are a variety of different concrete implementations of such filesystems, including aufs,
+overlay, and overlay2.
+
+*** Dockerfiles
+
+There are several gotchas that come when people begin to experiment with container images that lead to overly large images. The first thing to remember is that files that are removed by subsequent layers in the system are actually still present in the images; they’re just inaccessible.
+
+
+Another pitfall that people fall into revolves around image caching and building. Remember that each layer is an independent delta from the layer below it. Every time you change a layer, it changes every layer that comes after it. Changing the preceding layers means that they need to be rebuilt, repushed, and repulled to deploy your image to development.
+
+
+In general, you want to order your layers from least likely to change to most likely to change in order to optimize the image size for pushing and pulling.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-08-12 20:35:27
+[[file:assets/screenshot_2018-08-12_20-35-27.png]]
+
+In the 1st case, every time the server.js file changes, the node package layer has to be pushed and pulled. 
+
+Kubernetes relies on the fact that images described in a pod manifest are available across every machine in the cluster. 
+So that the scheduler can schedule Pods on any container. 
+
+Recall we heard this point at the Kubernetes meetup organized by the Redhat guys at Go-Jek. 
+
+Docker provides an API for creating application containers on Linux and Windows systems. Note, docker now has windows containers as well. 
+
+It’s important to note that unless you explicitly delete an image it will live on your system forever, even if you build a new image with an identical name. Building this new image simply moves the tag to the new image; it doesn’t delete or replace the old image.
+Consequently, as you iterate while you are creating a new image, you will often create many, many different images that end up taking up unnecessary space on your computer.
+To see the images currently on your machine, you can use the docker images command. 
+
+
+** kubectl
+
+kubectl can be used to manage most Kubernetes objects such as pods, ReplicaSets, and services. kubectl can also be used to explore and verify the overall health of the cluster.
+
+
+*** kubectl describe nodes <node-name>
+
+This gives us information about the instance OS, memory, harddisk space, docker version, running pods etc
+
+#+begin_src
+Non-terminated Pods:         (2 in total)
+  Namespace                  Name                CPU Requests  CPU Limits  Memory Requests  Memory Limits
+  ---------                  ----                ------------  ----------  ---------------  -------------
+  kube-system                aws-node-hl4lc      10m (0%)      0 (0%)      0 (0%)           0 (0%)
+  kube-system                kube-proxy-bgblb    100m (5%)     0 (0%)      0 (0%)           0 (0%)
+#+end_src
+
+Here, note the "requests" and "limits"
+Requests are the resources requested by the pod. It is guaranteed to be present. The "limit" is the maximum resources the pod can consume. 
+
+A pod’s limit can be higher than its request, in which case the extra resources are supplied on a best-effort basis. They are not guaranteed to be present on the node.
+
+** Cluster components
+Many of the components of Kubernetes are deployed using Kubernetes itself. All of these components run in the kube-system namespace.
+
+*** Kubernetes proxy
+It implements the "service" abstraction. It is responsible for routing network traffic to load balanced services in the Kubernetes cluster. 
+kube-proxy is implemented in Kubernetes using the ~DaemonSet~ object. 
+
+*** Kubernetes DNS
+Kubernetes also runs a DNS server, which provides naming and discovery for the services that are defined in the cluster. This DNS server also runs as a replicated service on the cluster. 
+
+There is also a Kubernetes service that performs load-balancing for the DNS server
+
+#+begin_src
+$ k8s kubectl get services --namespace=kube-system kube-dns
+NAME       TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)         AGE
+kube-dns   ClusterIP   10.100.0.10   <none>        53/UDP,53/TCP   1h
+#+end_src
+
+For all containers, the DNS for that pod has been set to point to this internal ip in the ~/etc/resolve.conf~ file for that container.
+
+*** Kubernetes UI
+
+Needs to be deployed.
+
+** Basic ~kubectl~ commands
+There are some basic kubectl commands that apply to all Kubernetes objects.
+
+*** Namespaces
+Kubernetes uses namespaces to organize objects in the cluster. By default, the ~default~ namespace is used. If you want to use a different namespace, you can pass kubectl the --namespace flag.
+
+
+*** Contexts
+If you want to change the default namespace more permanently, you can use a context.
+
+A context is like a set of settings. It can either have just a different namespace configuration, or can even point to a whole new cluster. 
+Note, creating and using contexts gets recorded in the ~$HOME/.kube/config~
+
+Let's create a different namespace context:
+~kubectl config set-context my-context --namespace=mystuff~
+
+This creates a new context, but it doesn’t actually start using it yet. To use this
+newly created context, you can run:
+
+~$ kubectl config use-context my-context~
+
+*** Viewing Kubernetes resources
+Everything contained in Kubernetes is represented by a RESTful resource.
+
+Each Kubernetes object exists at a unique HTTP path; for example, https://your-k8s.com/api/v1/namespaces/default/pods/my-pod leads to the representation of a pod in the default namespace named my-pod. The kubectl command makes HTTP requests to these URLs to access the Kubernetes objects that reside at these paths. By default, it prunes information so that it fits on a single line. To get more info, use ~-o wide~, or ~-o json~, or ~-o yaml~
+
+The most basic command for viewing Kubernetes objects via kubectl is get.
+
+Eg: ~kubectl get <resouce-name>~ will get a listing of all resources in the current namespace. 
+To get a particular resource,  ~kubectl get <resouce-name> <object-name>~
+
+kubectl uses the JSONPath query language to select fields in the returned object.
+~kubectl get pods my-pod -o jsonpath --template={.status.podIP}~
+
+*** CRUDing Kubernetes objects
+Objects in the Kubernetes API are represented as JSON or YAML files. These files are either returned by the server in response to a query or posted to the server as part of an API request.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-08-15 14:49:29
+[[file:assets/screenshot_2018-08-15_14-49-29.png]]
+
+To delete, ~kubectl delete -f obj.yaml~
+
+Labels and annotations are tags for your objects.
+you can update the labels and annotations on any Kubernetes object using the annotate and label commands. For example, to
+add the color=red label to a pod named bar, you can run: ~$ kubectl label pods bar color=red~
+
+*** Debugging commands
+
+To view logs of a container: ~$ kubectl logs <pod-name>~
+To execute command on a container ~kubectl exec -it <pod-name> -- bash~
+To copy files to and from a container using the cp command ~kubectl cp <pod-name>:/path/to/remote/file /path/to/local/file~
+
+
+
+** Pods
+
+Containers in a pod share the host volume. 
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-08-15 15:00:49
+[[file:assets/screenshot_2018-08-15_15-00-49.png]]
+
+Here, the web serving and git containers are part of the same logical group, so they are in the same pod. But they are still in separate containers since we don't want one's memory leak to OOM (out of memory, process terminated) the other.
+
+The name goes with the whale theme of Docker containers, since a Pod is also a group of whales.
+
+Each container within a Pod runs in its own cgroup (which means they have their own limits on resource usage), but they share a number of Linux namespaces (eg network)
+
+Applications running in the same Pod share the same IP address and port space (network namespace), have the same hostname (UTS namespace), and can communicate using native interprocess communication channels over System V IPC or POSIX message queues (IPC namespace).
+
+However, applications in different Pods are isolated from each other(since they don't share the namespaces); they have different IP addresses, different hostnames, and more. Containers in different Pods running on the same node might as well be on different servers.
+
+
+Before putting your containers in same Pod, think:
+- do they have a truly symbiotic relationship?
+  - as in, can they work if they are on different machines
+- do you want to scale them together?
+  - as in, it doesn't make sense to scale 1st container without also scaling 2nd container
+
+In general, the right question to ask yourself when designing Pods is, “Will these containers work correctly if they land on different machines?” If the answer is “no,” a Pod is the correct grouping for the containers. If the answer is “yes,” multiple Pods is probably the correct solution. 
+
+In the example of Git pod web server pod, two containers interact via a local filesystem. It would be impossible for them to operate correctly if the containers were scheduled on different machines.
+
+Pods are described in a Pod manifest. The Pod manifest is just a text-file representation of the Pod Kubernetes API object.
+
+Declarative configuration in Kubernetes is the basis for all of the self-healing behaviors in Kubernetes that keep applications running without user action.
+
+The Kubernetes API server accepts and processes Pod manifests before storing them in persistent storage (etcd). 
+The scheduler also uses the Kubernetes API to find Pods that haven’t been scheduled to a node. Once scheduled to a node, Pods don’t move and must be explicitly destroyed and rescheduled.
+
+The simplest way to create a Pod is via the imperative ~kubectl run command~.
+Eg: ~$ kubectl run kuard --image=gcr.io/kuar-demo/kuard-amd64:1~
+
+#+begin_src yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kuard
+spec:
+  containers:
+    - image: gcr.io/kuar-demo/kuard-amd64:1
+      name: kuard
+      ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+#+end_src
+
+This is equivalent to:
+
+The Pod manifest will be submitted to the Kubernetes API server. The Kubernetes system will then schedule that Pod to run on a healthy node in the cluster, where it will be monitored by the kubelet daemon process. 
+
+#+begin_src
+$ docker run -d --name kuard \ --publish 8080:8080 gcr.io/kuar-demo/kuard-amd64:1
+#+end_src
+
+Get running pods: ~$ kubectl get pods~
+
+Get more info: ~kubectl describe pods kuard~
+Deleting a pod: ~kubectl delete pods/kuard~ or via the file ~kubectl delete -f kuard-pod.yaml~
+
+When a Pod is deleted, it is not immediately killed. Instead, if you run kubectl get pods you will see that the Pod is in the Terminating state. All Pods have a
+termination grace period. By default, this is 30 seconds. When a Pod is transitioned to Terminating it no longer receives new requests. In a serving
+scenario, the grace period is important for reliability because it allows the Pod to finish any active requests that it may be in the middle of processing before it is terminated.
+It’s important to note that when you delete a Pod, any data stored in the containers associated with that Pod will be deleted as well. If you want to persist data across multiple instances of a Pod, you need to use PersistentVolumes.
+
+The data is not deleted when the pod is restarted etc
+
+*you can port forward directly to localhost using kubectl*
+kubectl port-forward kuard 8080:8080
+
+On running this :top:, a secure tunnel is created from your local machine, through the Kubernetes master, to the instance of the Pod running on one of the worker nodes.
+
+
+You can run commands on the pod too:
+~$ kubectl exec kuard date~, even an interactive one ~$ kubectl exec -it kuard bash~
+
+Copying files to and fro is easy:
+~$ kubectl cp <pod-name>:/captures/capture3.txt ./capture3.txt~
+
+Generally speaking, copying files into a container is an antipattern. You really should treat the contents of a container as immutable.
+
+When you run your application as a container in Kubernetes, it is automatically kept alive for you using a process health check. This health check simply ensures that the main process of your application is always running. If it isn’t, Kubernetes restarts it.
+
+However, in most cases, a simple process check is insufficient. For example, if your process has deadlocked and is unable to serve requests, a process health check will still believe that your application is healthy since its process is still running.
+To address this, Kubernetes introduced health checks for application liveness. Liveness health checks run application-specific logic (e.g., loading a web page) to verify that the application is not just still running, but is functioning properly. Since these liveness health checks are application-specific, you have to define them in your Pod manifest.
+
+Liveness probes are defined per container, which means each container inside a Pod is health-checked separately.
+
+#+begin_src
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kuard
+spec:
+  containers:
+    - image: gcr.io/kuar-demo/kuard-amd64:1
+      name: kuard
+      ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+      livenessProbe:
+        httpGet:
+          path: /healthy
+          port: 8080
+        initialDelaySeconds: 5
+        timeoutSeconds: 1
+        periodSeconds: 10
+        failureThreshold: 3
+#+end_src
+
+If the probe fails, the pod is restarted.
+Details of the restart can be found with kubectl describe kuard. The “Events” section will have text similar to the
+following:
+   Killing container with id docker://2ac946...:pod "kuard_default(9ee84...)"
+   container "kuard" is unhealthy, it will be killed and re-created.
+
+
+Kubernetes makes a distinction between liveness and readiness. Liveness determines if an application is running properly. Containers that fail liveness checks are restarted. Readiness describes when a container is ready to serve user requests. Containers that fail readiness checks are removed from service load balancers.
+Readiness probes are configured similarly to liveness probes.
+
+*** Health checks
+Kubernetes supports different kinds of healthchecks:
+- tcpSocket
+  - it the tcp connection succeeds, considered healthy. This is for non http applications, like databases etc
+- exec
+  - These execute a script or program in the context of the container. Following typical convention, if this script returns a zero exit code, the probe succeeds; otherwise, it fails. exec scripts are often useful for custom application validation logic that doesn’t fit neatly into an HTTP call.
+
+Kubernetes allows users to specify two different resource metrics. Resource requests specify the minimum amount of a resource required to run the application. Resource limits specify the maximum amount of a resource that an application can consume.
+
+#+begin_src
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kuard
+spec:
+  containers:
+    - image: gcr.io/kuar-demo/kuard-amd64:1
+ name: kuard
+resources:
+  requests:
+    cpu: "500m"
+    memory: "128Mi"
+ports:
+  - containerPort: 8080
+    name: http
+    protocol: TCP
+#+end_src
+
+Here, :top:, we requested a machine with at least half cpu free, and 128mb of memory. 
+
+a Pod is guaranteed to have at least the requested resources when running on the node. Importantly, “request” specifies a minimum. It does not specify a maximum cap on the resources a Pod may use.
+
+Imagine that we have container whose code attempts to use all available CPU cores. Suppose that we create a Pod with this container that requests 0.5 CPU. 
+
+Kubernetes schedules this Pod onto a machine with a total of 2 CPU cores.
+As long as it is the only Pod on the machine, it will consume all 2.0 of the available cores, despite only requesting 0.5 CPU.
+
+If a second Pod with the same container and the same request of 0.5 CPU lands on the machine, then each Pod will receive 1.0 cores.
+
+If a third identical Pod is scheduled, each Pod will receive 0.66 cores. Finally, if a fourth identical Pod is scheduled, each Pod will receive the 0.5 core it requested, and the node will be at capacity.
+
+CPU requests are implemented using the cpu-shares functionality in the Linux kernel.
+
+With memory, it is a little different. If we put a pod with say 256MB requested and it takes up everything, on adding a new pod, we can't take away half the memory, since it is being used. Here, the pod is killed and restarted, but with less available memory on the machine for the container to consume.
+
+To cap the max a pod can use, we can set the Limits
+
+#+begin_src
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kuard
+spec:
+  containers:
+    - image: gcr.io/kuar-demo/kuard-amd64:1
+      name: kuard
+      resources:
+        requests:
+          cpu: "500m"
+          memory: "128Mi"
+        limits:
+          cpu: "1000m"
+          memory: "256Mi"
+      ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+#+end_src
+
+A container with a CPU limit of 0.5 cores will only ever get 0.5 cores, even if the CPU is otherwise idle.
+
+*** Persisting Data with Volumes
+
+When a Pod is deleted or a container restarts, any and all data in the container’s filesystem is also deleted.
+
+To persist data beyond the pod, use Volumes.
+
+There are 2 additions to add volumes to pods:
+- spec.volumes
+  - This array defines all of the volumes that may be accessed by containers in the Pod manifest. Note that not all containers are required to mount all volumes defined in the Pod.
+- volumeMounts
+  - This array  defines the volumes that are mounted into a particular container, and the path where each volume should be mounted. Note that two different containers in a Pod can mount the same volume at different mount paths.
+
+
+So, first in spec.volumes, we define what volumes may be used by the containers in the Pod. And, in volumeMounts, we actually use them.
+
+#+begin_src
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kuard
+spec:
+  volumes:
+    - name: "kuard-data"
+      hostPath:
+        path: "/var/lib/kuard"
+  containers:
+    - image: gcr.io/kuar-demo/kuard-amd64:1
+      name: kuard
+      volumeMounts:
+        - mountPath: "/data"
+          name: "kuard-data"
+      ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+#+end_src
+
+Here, we define kuard-data as the volume, and then mount it on the kuard container. 
+
+There are various types of volumes:
+- ~emptyDir~
+  - Such a volume is scoped to the Pod’s lifespan, but it can be shared between two containers. (in our example above, this forms the basis for communication between our Git sync and web serving containers). This survives the pod restart
+- ~hostDir~
+  - this can mount arbitrary locations on the worker node into the container
+  - this was used in the example above :top:
+  - This can be used when the pod wants to direct access to the instance's block storage for eg. But shouldn't be used to store ordinary data since not all the hosts would have the same underlying dir structure.
+- network storage
+  - if you want the data to stay with the Pod even when the pod is moved around, restarted etc, use one of the several options available in the network based storage
+  - Kubernetes includes support for standard protocols such as NFS and iSCSI as well as cloud provider–based storage APIs for the major cloud providers (both public and private)
+
+#+begin_src
+# Rest of pod definition above here
+   volumes:
+       - name: "kuard-data"
+         nfs:
+           server: my.nfs.server.local
+           path: "/exports"
+#+end_src
+
+
+Once you’ve submitted the manifest to the API server, the Kubernetes scheduler finds a machine where the Pod can fit and schedules the Pod to that machine(note, it first finds the node to host the Pod). Once scheduled, the kubelet daemon on that machine is responsible for creating
+the containers that correspond to the Pod, as well as performing any health checks defined in the Pod manifested.
+
+We can use an ReplicaSet object to automate the creation of multiple identical Pods and ensure that they are recreated in the event of a node machine failure.
+
+*** Labels and Annotations
+
+Labels and annotations let you work in sets of things that map to how you think about your application. You can organize, mark, and cross-index all of your resources to represent the groups that make the most sense for your application.
+
+Labels are key/value pairs that can be attached to Kubernetes objects such as Pods and ReplicaSets. Both the key and value are represented by strings. Names must also start and end with an alphanumeric character and permit the use of dashes (-), underscores (_), and dots (.) between characters.
+
+Annotations are key/value pairs designed to hold nonidentifying information that can be leveraged by tools and libraries.
+
+Labels are for your use, annotations are for use by tools (including Kubernetes) and libraries
+
+You can apply a label like so: ~kubectl label deployments alpaca-test "canary=true".~ and remove it like so: ~$ kubectl label deployments alpaca-test "canary-".~
+
+Label selectors are used to filter Kubernetes objects based on a set of labels. Selectors use a simple Boolean language. They are used both by end users (via tools like kubectl) and by different types of objects (such as how ReplicaSet
+relates to its Pods).
+
+Eg: ~$ kubectl get pods --selector="ver=2" .~
+supports AND - ~$ kubectl get pods --selector="app=bandicoot,ver=2".~
+supports OR - ~$ kubectl get pods --selector="app in (alpaca,bandicoot)".~
+
+Each deployment (via a ReplicaSet) creates a set of Pods using the labels specified in the template embedded in the deployment. 
+
+
+When a Kubernetes object refers to a set of other Kubernetes objects, a label selector is used.
+
+#+begin_src
+selector:
+     matchLabels:
+       app: alpaca
+     matchExpressions:
+       - {key: ver, operator: In, values: [1, 2]}
+#+end_src
+
+Annotations provide a place to store additional metadata for Kubernetes objects with the sole purpose of assisting tools and libraries. They can be used for the tool itself or to pass configuration information between external systems.
+
+There is overlap, and it is a matter of taste as to when to use an annotation or a label. When in doubt, add information to an object as an annotation and promote it to a label if you find yourself wanting to use it in a selector.
+
+Annotations are used by Kubernetes too:
+- Communicate a specialized scheduling policy to a specialized scheduler.
+- Enable the Deployment object to keep track of ReplicaSets that it is managing for rollouts.
+- Prototype alpha functionality in Kubernetes (instead of creating a first-class API field, the parameters for that functionality are instead encoded in an annotation).
+- During rolling deployments, annotations are used to track rollout status and provide the necessary information required to roll back a deployment to a previous state.
+
+The value component of an annotation is a free-form string field.
+
+Annotations are defined in the common metadata section in every Kubernetes object:
+
+#+begin_src
+   metadata:
+     annotations:
+       example.com/icon-url: "https://example.com/icon.png"
+#+end_src
+
+Using labels and annotations properly unlocks the true power of Kubernetes’s flexibility and provides the starting point for building automation tools and deployment workflows.
+
+*** Service Discovery
+Service discovery tools help solve the problem of finding which processes are listening at which addresses for which services.
+
+A good service discovery tool has these features:
+- low latency to requests
+- is able to store richer information - like ports the services are running on
+- information propagates quickly
+
+Real service discovery in Kubernetes starts with a Service object.
+
+Just as the kubectl run command is an easy way to create a Kubernetes deployment(and start pods), we can use kubectl expose to create a service.
+
+By default, we have the kubernetes service already created for us so that we can find and talk to the Kubernetes API
+
+The service is assigned a new type of virtual IP called a cluster IP. This is a special IP address the system will load-balance across all of the pods that are identified by the selector.
+
+Because the cluster IP is virtual it is stable and it is appropriate to give it a DNS address. 
+
+Kubernetes provides a DNS service exposed to Pods running in the cluster. This Kubernetes DNS service was installed as a system component when the cluster was first created. The DNS service is, itself, managed by Kubernetes and is a great example of Kubernetes building on Kubernetes. The Kubernetes DNS service provides DNS names for cluster IPs.
+
+When we expose a service ~myservice~, it is available in the cluster as:
+~myservice.default.svc.cluster.local~.
+The syntax is: ~service-name.namespace.svc.cluster.local~
+- ~svc~ is required to allow Kubernetes to expose other types of things as DNS in the future
+- ~cluster.local~ can be changed if required to allow unique DNS names across multiple clusters.
+
+When referring to the service from same namespace, you can use ~myservice~, else, ~myservice.default~ works. Full name works as well.
+
+To allow outside traffic to come in, we need ~NodePorts~.
+In addition to a cluster IP, the system picks a port (or the user can specify one), and every node in the cluster then forwards traffic to that port to the service.
+
+Finally, if you have support from the cloud that you are running on you can use the LoadBalancer type.
+This builds on NodePorts by additionally configuring the cloud to create a new load balancer and direct it at nodes in your cluster.
+
+Under the hood, with each service, Kubernetes creates an object called ~Endpoints~ that contains the IP address for that service.
+
+To use a service, an advanced application can talk to the Kubernetes API directly to look up endpoints and call them.
+
+Cluster IPs are stable virtual IPs that load-balance traffic across all of the endpoints in a service. This is performed by a component running on every node in the cluster called the kube-proxy
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-08-15 22:42:36
+[[file:assets/screenshot_2018-08-15_22-42-36.png]]
+
+The ~kube-proxy~ looks for new services in the cluster from the apiserver. When a new service comes in, it writes the iptables rules on the node, so that packets can be routed. If the set of endpoints for a service changes (due to pods coming and going or due to a failed readiness check) the set of iptables rules is rewritten.
+
+Once set, the cluster IP cannot be modified without deleting and recreating the Service object.
+
+The Kubernetes service address range is configured using the --service-cluster-ip-range flag on the kube-apiserver binary.
+
+EKS does not support modifying all the flags on the apiserver.
+
+Earlier, for SD, pods used to define env vars to know the ClusterIP of the service they wanted to access. A problem with the environment variable approach is that it requires resources to be created in a specific order. 
+The services must be created before the pods that reference them. This can introduce quite a bit of complexity when deploying a set of services that make up a larger application. 
+
+
+
+
+
+
+

@@ -2196,6 +2196,262 @@ Earlier, for SD, pods used to define env vars to know the ClusterIP of the servi
 The services must be created before the pods that reference them. This can introduce quite a bit of complexity when deploying a set of services that make up a larger application. 
 
 
+*** ReplicaSets
+
+Generally, we want multiple pods to run, not a single instance. This can be for:
+- Redundancy (so we can survive failure of a single pod)
+- Scale
+- Sharding (Different replicas can handle different parts of a computation in parallel.)
+
+A user managing a replicated set of Pods considers them as a single entity to be defined and managed. This is precisely what a ReplicaSet is. 
+
+A ReplicaSet acts as a cluster-wide Pod manager, ensuring that the right types and number of Pods are running at all times.
+
+ReplicaSets are the building blocks for self healing infrastructure. 
+Pods managed by ReplicaSets are automatically rescheduled under certain failure conditions such as node failures and network partitions.
+
+
+The actual act of managing the replicated Pods is an example of a reconciliation loop. Such loops are fundamental to most of the design and implementation of Kubernetes. They are part of the controller binary. 
+
+Kubernetes is completely decoupled. All of the core concepts of Kubernetes are modular with respect to each other and that they are swappable and replaceable with other components.
+
+Though ReplicaSets create and manage Pods, they do not own the Pods they create. ReplicaSets use label queries to identify the set of Pods they should be managing. This makes ReplicaSets very clean and decoupled. Their code can be used to manage something else also, based on their labels.
+
+Another example of decoupling, ReplicaSets that create multiple Pods and the services that load-balance to those Pods are also totally separate, decoupled API objects. 
+
+This has several advantages:
+
+- Adopting Existing Containers
+  - And because ReplicaSets are decoupled from the Pods they manage, you can simply create a ReplicaSet that will “adopt” the existing Pod, and scale out additional copies of those containers.
+- Quarantining Containers
+  - If a pod is misbehaving, you can change the label on it and ReplicaSet will see that one pod is less and create a new one. Now, you can debug the pod.
+
+
+
+ReplicaSets are designed to represent a single, scalable microservice inside your architecture. Every Pod that is created by the ReplicaSet controller is entirely homogeneous. 
+Typically, these Pods are then fronted by a Kubernetes service load balancer, which spreads traffic across the Pods that make up the service. Generally speaking, ReplicaSets are designed for stateles (or nearly stateless) services.
+
+
+**** ReplicaSet spec
+
+All ReplicaSets must have a unique name (~metadata.name~), the number of Pods (replicas) that should be running cluster-wide at a given time, and a Pod template that describes the Pod to be created when the defined number of replicas is not met.
+
+#+begin_src
+apiVersion: extensions/v1beta1
+kind: ReplicaSet
+metadata:
+  name: kuard
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: kuard
+        version: "2"
+    spec:
+      containers:
+        - name: kuard
+          image: "gcr.io/kuar-demo/kuard-amd64:2"
+#+end_src
+
+Note, the ~spec.template.metadata.labels~, these are the labels that are monitored by the rs
+
+The selector in the ReplicaSet spec should be a proper subset of the labels in the Pod template.
+ 
+Sometimes you may wonder if a Pod is being managed by a ReplicaSet, and, if it is, which ReplicaSet. To enable this kind of discovery, the ReplicaSet controller adds an annotation to every Pod that it creates. The key for the annotation is ~kubernetes.io/created-by~.
+
+Note that such annotations are best-effort; they are only created when the Pod is created by the ReplicaSet, and can be removed by a Kubernetes user at any time.
+
+
+**** Autoscaling
+Autoscaling means nothing, there are multiple types of autoscaling:
+- horizontal autoscaling
+  - increasing the number of pods in response to load
+- vertical autoscaling
+  - increasing the resources for each running pod
+
+To autoscale on CPU or some other metric, you need ~heapster~ installed. 
+~kubectl autoscale rs kuard --min=2 --max=5 --cpu-percent=80~
+
+This command creates an autoscaler that scales between two and five replicas with a CPU threshold of 80%.
+
+To view, modify, or delete this resource you can use the standard kubectl commands and the horizontalpodautoscalers
+resource. horizontalpodautoscalers is quite a bit to type, but it can be shortened to hpa: ~$ kubectl get hpa~
+
+It’s a bad idea to combine both autoscaling and imperative or declarative management of the number of replicas, so use either static number of pods, or use hpa
+
+If you don’t want to delete the Pods that are being managed by the ReplicaSet
+you can set the --cascade flag to false to ensure only the ReplicaSet object is deleted and not the Pods:
+~$ kubectl delete rs kuard --cascade=false~
+
+
+
+*** DaemonSets
+
+This is used if you want to schedule a single Pod on every node in the cluster. 
+DaemonSets are used to deploy system daemons such as log collectors and monitoring agents, which typically must run on every node.
+Generally, these pods are expected to be long running services.
+
+You can exclude any node in DaemonSets if you wish by specifying the ~nodeName~ field in the Pod spec. 
+
+#+begin_src yaml
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: fluentd
+  namespace: kube-system
+  labels:
+    app: fluentd
+spec:
+  template:
+    metadata:
+      labels:
+        app: fluentd
+    spec:
+      containers:
+      - name: fluentd
+        image: fluent/fluentd:v0.14.10
+        resources:
+          limits:
+            memory: 200Mi
+          requests:
+            cpu: 100m
+            memory: 200Mi
+        volumeMounts:
+        - name: varlog
+          mountPath: /var/log
+        - name: varlibdockercontainers
+          mountPath: /var/lib/docker/containers
+          readOnly: true
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: varlog
+        hostPath:
+          path: /var/log
+      - name: varlibdockercontainers
+        hostPath:
+          path: /var/lib/docker/containers
+#+end_src
+
+Each DaemonSet must include a Pod template spec, which will be used to create Pods as needed. 
+
+You can use labels to select nodes on which to run the DaemonSet
+
+The following DaemonSet configuration limits nginx to running only on nodes with the ssd=true label set
+#+begin_src yaml
+apiVersion: extensions/v1beta1
+kind: "DaemonSet"
+metadata:
+  labels:
+    app: nginx
+    ssd: "true"
+  name: nginx-fast-storage
+spec:
+  template:
+    metadata:
+      labels:
+app: nginx
+        ssd: "true"
+    spec:
+      nodeSelector:
+        ssd: "true"
+      containers:
+        - name: nginx
+          image: nginx:1.10.0
+#+end_src
+
+Of course, set the labels using: ~kubectl label nodes k0-default-pool-35609c18-z7tb ssd=true~
+
+Adding the ssd=true label to additional nodes will case the nginx-fast- storage Pod to be deployed on those nodes. The inverse is also true: if a required label is removed from a node, the Pod will be removed by the DaemonSet controller.
+
+This is the reconciliatory loop in action. 
+
+Prior to Kubernetes 1.6, the only way for pods in DaemonSets to be updated was to delete them.   
+
+
+Now, you can do rolling updates using ~spec.updateStrategy.type~ -> ~RollingUpdate~ etc
+
+There are 2 parameters: 
+- ~spec.minReadySeconds~ (how long a Pod must be “ready” before the rolling update proceeds to upgrade subsequent Pods)
+- ~spec.updateStrategy.rollingUpdate.maxUnavailable~ (how many Pods may be simultaneously updated by the rolling update)
+
+
+
+DaemonSets provide an easy-to-use abstraction for running a set of Pods on every node in a Kubernetes cluster, or if the case requires it, on a subset of nodes based on labels. The DaemonSet provides its own controller and scheduler.
+
+These DaemonSets aren’t really traditional serving applications, but rather add additional capabilities and features to the Kubernetes cluster itself.
+
+*** Jobs
+
+They are short-lived, one-off tasks which run on Kubernetes.
+
+A Job creates Pods that run until successful termination (i.e., exit with 0). In contrast, a regular Pod will continually restart regardless of its exit code.
+
+They are represented by the ~Job~ object. The Job object coordinates running a number of pods in parallel.
+
+
+If the Pod fails before a successful termination, the Job controller will create a new Pod based on the Pod template in the Job specification. 
+
+The 2 parameters that are important are: ~completions~, and ~parallelism~
+
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-08-16 21:44:19
+[[file:assets/screenshot_2018-08-16_21-44-19.png]]
+
+After the Job has completed, the Job object and related Pod are still around. This is so that you can inspect the log output. Note that this Job won’t show up in kubectl get jobs unless you pass the -a flag. Without this flag kubectl hides completed Jobs.
+
+
+#+begin_src yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: oneshot
+  labels:
+    chapter: jobs
+spec:
+  template:
+    metadata:
+      labels:
+        chapter: jobs
+    spec:
+      containers:
+      - name: kuard
+        image: gcr.io/kuar-demo/kuard-amd64:1
+        imagePullPolicy: Always
+        args:
+        - "--keygen-enable"
+        - "--keygen-exit-on-complete"
+        - "--keygen-num-to-gen=10"
+      restartPolicy: OnFailure
+#+end_src
+
+
+
+Generating keys can be slow. Let’s start a bunch of workers together to make key generation faster. We’re going to use a combination of the completions and
+parallelism parameters. Our goal is to generate 100 keys by having 10 runs of kuard with each run generating 10 keys. But we don’t want to swamp our cluster, so we’ll limit ourselves to only five pods at a time.
+This translates to setting completions to 10 and parallelism to 5.
+
+The spec now has: ~spec.parallelism=5~ and ~spec.completions=10~
+
+**** Work Queues
+There is a producer that puts jobs on the Work queue, and there are multiple consumers that consume the tasks.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-08-17 13:44:49
+[[file:assets/screenshot_2018-08-17_13-44-49.png]]
+The Job abstraction allows you to model batch job patterns ranging from simple one-time tasks to parallel jobs that process many items until work has been exhausted.
+
+Jobs are a low-level primitive and can be used directly for simple workloads. Or you can make libraries to build on top of them.
+
+*** ConfigMaps and Secrets
+
+It is a good practice to make container images as reusable as possible. The same image should be able to be used for development, staging, and production. Which means, the same container should be flexible enough to be used on all the environments. This is where ConfigMaps and Secrets come into the picture. They allow us to specialize the image at runtime. 
+
+ConfigMaps are used to provide configuration information for workloads. This can either be fine-grained information (a short string) or a composite value in the form of a file. 
+Secrets are similar to ConfigMaps but focused on making sensitive information available to the workload. They can be used for things like credentials or TLS certificates.
 
 
 

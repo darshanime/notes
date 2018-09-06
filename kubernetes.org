@@ -11,7 +11,7 @@ Kubernetes is an open source system for automating deployment, scaling and manag
 
 It means helmsman, or "ship pilot" in Greek. The analogy is to think of k8s as a manager for ships loaded with containers
 
-K8s has new releases every 3 months. The latest is 1.10
+K8s has new releases every 3 months. The latest is 1.11
 
 Some of the lessons put in k8s come from Borg, like:
 - api servers

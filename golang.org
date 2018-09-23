@@ -2685,6 +2685,242 @@ func main() {
 }
 #+end_src
 
+** custom type for []int
+In a problem, I had to give a rotated slice of ints. 
+For eg, given ~1 2 3 4 5~, and rotation of ~4~, I had to output: ~5 1 2 3 4~
+
+I created a custom type and attached a method to that type, (alternatively I could have written a function)
+
+#+begin_src go
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"os"
+	"strconv"
+	"strings"
+)
+
+func readSlice(reader *bufio.Reader) []int {
+	inp, _ := reader.ReadString('\n')
+	inp = strings.TrimSuffix(inp, "\n")
+	nums := strings.Split(inp, " ")
+
+	var a []int
+	for _, j := range nums {
+		i, _ := strconv.Atoi(string(j))
+		a = append(a, i)
+	}
+	return a
+}
+
+type mySlice []int
+
+func (m *mySlice) rotatedValue(i, n int) int {
+	l := len(*m)
+	if (i - n) >= 0 {
+		return i - n
+	}
+	return l + (i - n)
+}
+
+func main() {
+	reader := bufio.NewReader(os.Stdin)
+	t := readSlice(reader)
+	s, n := t[0], t[1]
+	var inp mySlice
+	inp = readSlice(reader)
+	res := make(mySlice, s)
+	for index, v := range inp {
+		res[inp.rotatedValue(index, n)] = v
+	}
+	fmt.Println(strings.Trim(fmt.Sprint(res), "[]"))
+}
+#+end_src
+
+Note, here, the readSlice outputs []int. But, we are assigning output of readSlice to ~var inp mySlice~. This is okay.
+However, if you had something like this:
+
+
+#+begin_src go
+// Foo is a normal struct
+type Foo struct {
+	a string
+	b string
+}
+
+// Foo2 is a superstruct for Foo, it has more fields
+type Foo2 struct {
+	Foo
+	c string
+}
+
+func returnFoo(s Foo) Foo {
+	return s
+}
+
+func main() {
+	f := Foo{a: "a", b: "b"}
+	var b Foo2
+	b = returnFoo(f) // error! You cannot assign Foo to Foo2
+	fmt.Println(returnFoo(f))
+	fmt.Println(b)
+}
+
+#+end_src
+
+If we make make the functions return Foo2, then this happens:
+
+#+begin_src go
+func returnFoo2(s Foo2) Foo2 {
+	return s
+}
+
+func main() {
+
+	// f := Foo2{a: "a", b: "b"} --> Cannot use this to create Foo2
+	f := Foo2{Foo: Foo{a: "a", b: "b"}, c: "c"}
+    // f := Foo2{Foo{a: "a", b: "b"},"c"} --> also legal
+    // f := Foo2{Foo{"a","b"},"c"} --> also legal
+
+	var b Foo
+	// b = returnFoo2(f) --> error, cannot assign Foo2 to Foo
+	fmt.Println(returnFoo2(f))
+	fmt.Println(b)
+}
+#+end_src
+
+However, if the return type of ~returnFoo~ was an interface, we could assign to anything that implements that interface.
+
+This is also not allowed:
+
+#+begin_src go
+type Foo3 Foo2
+
+func main() {
+	// f := Foo2{a: "a", b: "b"} --> Cannot use this to create Foo2
+	f := Foo2{Foo{"a", "b"}, "c"}
+	var b Foo3 // cannot assign Foo2 to Foo3 variable
+	b = returnFoo2(f)
+	fmt.Println(returnFoo2(f))
+	fmt.Println(b)
+}
+#+end_src
+We can't even use it for ~type Foo3 string~
+
+#+begin_src go
+func returnFoo2(s Foo2) string {
+	return s.c
+}
+
+type Foo3 string
+
+func main() {
+	// f := Foo2{a: "a", b: "b"} --> Cannot use this to create Foo2
+	f := Foo2{Foo{"a", "b"}, "c"}
+	var b Foo3 // error -> cannot assign string to Foo3
+	b = returnFoo2(f)
+	fmt.Println(returnFoo2(f))
+	fmt.Println(b)
+}
+#+end_src
+
+However, this works:
+
+#+begin_src go
+func returnFoo2(s Foo2) []int {
+	return []int{1}
+}
+
+type Foo3 []int
+
+func main() {
+	// f := Foo2{a: "a", b: "b"} --> Cannot use this to create Foo2
+	f := Foo2{Foo{"a", "b"}, "c"}
+	var b Foo3
+	b = returnFoo2(f)
+	fmt.Println(returnFoo2(f))
+	fmt.Println(b)
+}
+
+#+end_src
+Here, we are able to assign []int to Foo3
+Asked about this here: https://stackoverflow.com/questions/52308617/implicit-type-conversion-in-go
+
+The answer is mostly that int[] is an ~unnamed type~ whereas ~int~ is a named type. And the spec says ~x is assignable to T~ if ~x's type V and T have identical underlying types and at least one of V or T is not a named type.~
+
+Good quote from Tim Heckman on Gophers slack regarding using methods vs function
+#+BEGIN_QUOTE
+Functions should generally be for things working on inputs, methods should be for things that use state and optionally inputs. So when I see things like `type Foo []int` I wonder if there is a better way.
+#+END_QUOTE
+
+** variables reuse in loops
+
+Consider this:
+
+#+begin_src go
+package main
+
+import "fmt"
+
+func main() {
+	var a int
+	for i := 0; i < 10; i++ {
+		b := i
+		a = i
+		fmt.Println(b, a)
+	}
+}
+#+end_src
+
+Here, in each loop iteration, the variable ~i~ is shared. When the loop starts, the compiler created a variable ~i~ and gives it a memory location. On each iteration, it is overwritten. This is why you can't use the index directly in a go routine etc. 
+
+However, in the example above :top:
+I use ~b:=i~ in each iteration, so I was confused as to why this is not erroring out, since ~b~ would be created in the first iteration and then next time, ~b~ would error out since we are using ~:=~ which is to initialize new variables. 
+
+It is correct Go code since *each iteration of a for loop is a new scope*. So, when we use ~:=~ in each iteration, it is similar to
+
+#+begin_src go
+package main
+
+import (
+	"fmt"
+)
+
+func main() {
+	a := 0
+	{
+		a := 1
+		fmt.Println(a) // will print 1
+	}
+	fmt.Println(a) // will print 0
+    // here, if you want to promote the value of the inner scope to the outer scope, assign the value to a variable declared in the outer scope (use a = 1 in the inner scope for eg)
+}
+#+end_src
+
+However, if you aren't using the inner scope variables outside the iteration scope, the compiler will reuse the memory for the next iteration scope.
+
+In competitive program, this fact can be used to not have to reset variables used in the iteration's scope. Note, this can only be used if you are using ~:=~ in the iteration scope, and not if you are promoting the values from inside to outside.
+
+When using maps, be careful to check ~val, ok := mymap[mykey]~. ~ok~ will be ~true~ if the key was present, else it will be false. The statement will always execute and will return the zero type of the value of ~mymap~. So, if it is ~map[int]int~, it will return ~0~
+
+
+This fails
+#+begin_src go
+    // code
+	if k >= len(nums) {
+		acc := nums[:]
+	} else {
+		acc := nums[0:k]
+	}
+
+	sort.Slice(acc, func(i, j int) bool { return acc[i] > acc[j] })
+    // code
+#+end_src
+
+This is because ~acc~ is defined only in the scope of the ~if~ statement. It doesn't exist outside. To access it outside, do predeclare it with, ~var acc []int~, and use it with ~acc = nums[:]~. 
+
 ** init()
 
 The entry point for any go software is main(). However, if that package has an init() (even the main package), it will be called before everything else. 
@@ -3664,3 +3900,6 @@ Errors
 Panic
 Recover
 A web server
+
+
+

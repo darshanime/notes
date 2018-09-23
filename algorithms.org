@@ -3276,11 +3276,5 @@ BUT
 
 Little Oh is to say that the function f(n) is actually greater than T(n), even without the constants business, it is actually greater.
 
-
 Similarly little omega notation
-
-
-
-
-
 

@@ -3230,3 +3230,694 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 #+end_src
 
+* Istio
+
+Istio is a service mesh. When you deploy microservices to cloud platforms, you want to control the interaction between the services. You may want:
+- explicit rules like, frontend should talk to backend only, the frontend cannot talk to database etc
+- to roll out a new version and test perform A/B testing on it, with say 1% of the traffic. So, you want to route 1% of the network traffic on a service to this new version.
+- to mirror the entire traffic to a new version of the service to check out how it performs under production load before deploying it
+- to set timeouts, retries on requests so that you get circuit breaking features etc (like Netflix's Hystrix, GoJek's Heimdall)
+
+
+Istio helps with all that :top:
+
+It basically injects a sidecar container in all your pods (running ~envoy~, which is a proxy server, like we can operate nginx) and hijacks the network. Everything goes thru istio(via envoy) now. This allows it to control the network at a very fine grained level, like setting the network rules, timeouts, retries etc. 
+All the features are implemented by the envoy proxy, istio makes it accessible and integrated with COs (cloud orchestrators)
+
+This act of hijacking the network, by having an agent running along all the containers forms a "service mesh"
+~The term service mesh is used to describe the network of microservices that make up such applications and the interactions between them~
+
+Istio documentation says:
+
+#+BEGIN_QUOTE
+As a service mesh grows in size and complexity, it can become harder to understand and manage. Its requirements can include discovery, load balancing, failure recovery, metrics, and monitoring. A service mesh also often has more complex operational requirements, like A/B testing, canary releases, rate limiting, access control, and end-to-end authentication.
+#+END_QUOTE
+
+We manage and configure Istio using its control plane.
+#+BEGIN_QUOTE
+Istio is platform-independent and designed to run in a variety of environments, including those spanning Cloud, on-premise, Kubernetes, Mesos, and more. You can deploy Istio on Kubernetes, or on Nomad with Consul.
+#+END_QUOTE
+
+Istio is designed to be customizable, and can be extended, and integrated with existing solutions for ACLs, logging, monitoring etc.
+
+Istio has a sidecar injector, which looks out for new pods and automatically injects envoy sidecar in the pod. It works by registering the sidecar injector as a admission webhook which allows it to dynamically change the pod configuration before the pod starts. 
+ 
+** Architecture
+The Istio service mesh is logically split into a data plane and control plane
+
+- data plane
+  - consists of a set of intelligent proxies deployed as sidecars which mediate and control all network communication b/w microservices.
+  - it also has Mixer which is a general purpose policy and telemetry hub (so it gets resource usage (cpu, ram) etc)
+- control hub
+  - manages and configures the components in the data plane - the proxy and mixers
+
+
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-09-10 11:15:33
+[[file:assets/screenshot_2018-09-10_11-15-33.png]]
+
+Note here, Service A is trying to talk to Service B. The traffic goes thru envoy proxy. It is allowed only after the policy checks are passed by the Mixer in the Control Plane API.
+
+The control plane also has Pilot, and Citadel
+
+** Istio Components
+*** Envoy
+Envoy is an high performance C++ proxy designed to be used as a sidecar container in service meshes.
+Istio uses many builtin envoy features like:
+- dynamic service discovery
+- load balancing
+- tls termination
+- http/2 and grpc proxies
+- circuit breakers
+- health checks
+- staged rollouts with %based traffic split
+- fault injection
+- rich metrics
+
+These features allow istio to extract a wealth of signals about traffic behavior as ~attributes~, which can be used to enforce policy decisions, and monitoring purposed.
+
+*** Mixer
+Istio’s Mixer component is responsible for policy controls and telemetry collection. It provides backend abstraction and intermediation - ie it abstracts away the rest of Istio from the implementation details of individual infrastructure backends. 
+It takes the attributes provided by envoy and enforces the policy.
+
+Mixer includes a flexible plugin model. This model enables istio to interface with a variety of host environments and infrastructure backends. This, Mixer abstracts envoy proxy and istio managed services from these details
+
+*** Pilot
+Pilot provides service discovery, traffic management capabilities for intelligent routing (A/B, canary deployments), resiliency etc.
+So, Pilot is used as in, it directs the packets across the service mesh. The Mixer says this route is allowed, the Pilot takes over from there. It dictates the timeout, the retries, the circuit breaking etc. 
+
+Pilot consumes high level routing rules provided by the user from the control plane and propagates them to the sidecars at runtime.
+
+Pilot abstracts platform specific service discovery mechanisms for both operator and proxy (like CRI-O). So now, the operator (cluster administrator) can use the same interface for traffic management across any CO - this is like the operator is given the CRI interface. 
+If any project wants to be used as a proxy for Istio (like maybe Nginx), they just have to implement the Envoy data plane APIs and istio will be happy to talk to them.
+
+*** Citadel
+It provides service-to-service and end-user authentication with built-in identity and credential management. 
+
+#+BEGIN_QUOTE
+You can use Citadel to upgrade unencrypted traffic in the service mesh. Using Citadel, operators can enforce policies based on service identity rather than on network controls. Starting from release 0.5, you can use Istio’s authorization feature to control who can access your services.
+#+END_QUOTE
+
+*** Galley
+It validates user authored Istio API configuration. Over time it will be at the forefront of the Control Plane and will be responsible for configuration ingestion, processing and distribution component of Istio. It will be the sole interface to the user accessing the control plane.
+
+
+** Traffic Management
+
+Istio's traffic management essentially decouples traffic flow and infrastructure scaling. This allows us to specify via Pilot the traffic rules which we want, rather than saying which specific pods/VMs should receive traffic. 
+
+#+BEGIN_QUOTE
+For example, you can specify via Pilot that you want 5% of traffic for a particular service to go to a canary version irrespective of the size of the canary deployment, or send traffic to a particular version depending on the content of the request.
+#+END_QUOTE
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-09-10 11:58:53
+[[file:assets/screenshot_2018-09-10_11-58-53.png]]
+
+
+*** Pilot and Envoy
+#+BEGIN_QUOTE
+The core component used for traffic management in Istio is Pilot, which manages and configures all the Envoy proxy instances deployed in a particular Istio service mesh. 
+Pilot lets you specify which rules you want to use to route traffic between Envoy proxies and configure failure recovery features such as timeouts, retries, and circuit breakers.
+It also maintains a canonical model of all the services in the mesh and uses this model to let Envoy instances know about the other Envoy instances in the mesh via its discovery service.
+#+END_QUOTE
+
+Each envoy instance has the load balancing information from Pilot, so it intelligently distributes traffic to the right place (following its specified routing rules), performs health checks etc
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-09-10 12:02:58
+[[file:assets/screenshot_2018-09-10_12-02-58.png]]
+
+Pilot abstracts the CO from envoy proxy and the user. To envoy, it exposes the Envoy API and to the user, it employs the Rules API.
+
+Want to be used by Istio as proxy? Implement the Envoy API
+Want to be used by Istio to configure traffic rules in the CO? Contribute to Istio a platform adapter.
+
+Istio maintains a canonical representation of services in the mesh that is independent of the underlying platform - in the Abstract Model layer. 
+
+For eg, the Kubernetes adapter (eg of a platform adapter) in Pilot implements the necessary controllers to watch the Kubernetes API server for changes to pod registration information, ingress resources, 3rd party resources that store traffic management rules etc.
+This data is translated into the canonical representation. An Envoy-specific configuration is then generated based on the canonical representation.
+
+
+You can specify high-level traffic management rules through Pilot’s Rule configuration. These rules are translated into low-level configurations and distributed to Envoy instances via the process outlined above. Once the configuration is set on the envoy instance, it doesn't need to talk to Pilot. So, the Pilot just configures envoy and then it gets working on it's own.
+
+So, essentially:
+
+High level rules -> abstract model -> envoy configuration -> envoy
+
+
+Istio in it's canonical model of the services, maintains a version of all the services it has. It isa finer-grained way to subdivide services. You can specify the traffic routing rules based on the service versions to provide additional control over traffic b/w services. 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-09-10 12:14:41
+[[file:assets/screenshot_2018-09-10_12-14-41.png]]
+
+Note how the user is putting the rule using the Rules API component of Pilot. It is converting that to envoy configuration and sending it over. The envoy starts respecting it immediately since it is a built in feature for it.
+Routing rules allow Envoy to select a version based on conditions such as headers, tags associated with source/destination, and/or by weights assigned to each version.
+
+So, one way to describe Istio is: ~Istio is just a platform agnostic way to configure Envoy proxy.~
+
+Istio does not provide a DNS. Applications can try to resolve the FQDN using the DNS service present in the underlying platform (kube-dns, mesos-dns, etc.).
+
+*** Ingress and Egress
+
+Since all inbound and outbound (ingress and egress) traffic is proxied thru the envoy side car, we can add retries, timeout, circuit breaking etc to the traffic and obtain detailed metrics on the connections to these services.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-09-10 12:54:56
+[[file:assets/screenshot_2018-09-10_12-54-56.png]]
+
+*** Failure handling
+Istio’s traffic management rules allow you to set defaults for failure recovery per service and version that apply to all callers.
+
+Note, this is why we put the retry defaults in the virtualservice for draup services
+
+#+begin_src yaml
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: foobar-vs
+spec:
+  hosts:
+  - "*.foobar.com"
+  http:
+  - timeout: 3s
+    route:
+      - destination:
+          host: foobar-se
+        weight: 100
+    retries:
+      attempts: 3
+#+end_src
+
+#+BEGIN_QUOTE
+However, consumers of a service can also override timeout and retry defaults by providing request-level overrides through special HTTP headers. With the Envoy proxy implementation, the headers are ~x-envoy-upstream-rq-timeout-ms~ and ~x-envoy-max-retries~, respectively.
+#+END_QUOTE
+
+** Policies and Telemetry
+
+#+BEGIN_QUOTE
+Istio provides a flexible model to enforce authorization policies and collect telemetry for the services in a mesh.
+They include such things as access control systems, telemetry capturing systems, quota enforcement systems, billing systems, and so forth. Services traditionally directly integrate with these backend systems, creating a hard coupling and baking-in specific semantics and usage options.
+#+END_QUOTE
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-09-10 13:27:02
+[[file:assets/screenshot_2018-09-10_13-27-02.png]]
+
+
+
+The Envoy sidecar logically calls Mixer before each request to perform precondition checks, and after each request to report telemetry. 
+
+The sidecar has local caching such that a large percentage of precondition checks can be performed from cache. Additionally, the sidecar buffers outgoing telemetry such that it only calls Mixer infrequently.
+
+Mixer has 2 components from a high level:
+- Backend abstraction
+  - it abstracts away the backend and provides the rest of istio with a consistent abstraction of the backend
+- Intermediation
+  - Mixer allows operators(cluster admin) to have fine grained control b/w the mesh and infrastructure backends
+
+Mixer also has reliability and scalability benefits. Policy enforcement and telemetry collection are entirely driven from configuration. 
+
+*** Adapters
+#+BEGIN_QUOTE
+Mixer is a highly modular and extensible component. One of its key functions is to abstract away the details of different policy and telemetry backend systems, allowing the rest of Istio to be agnostic of those backends.
+#+END_QUOTE
+
+Note, it supports plugins for both policy and telemetry backend systems. 
+
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-09-10 14:23:45
+[[file:assets/screenshot_2018-09-10_14-23-45.png]]
+
+
+
+* CSI - Container Storage Interface
+
+** RPCs
+RPC allows one computer to call a subroutine in another computer. It is a high level model for client-server communication.
+
+In a microservices, one could use RPCs and not HTTP APIs since RPCs have several advantages over HTTP APIs.
+
+*** History
+In the early days, there were protocols that were great for human to application communication, like Email etc, but none for computer-computer application protocols. 
+
+Just like we have procedure calls, (which are function calls), we have remote procedure calls which call the procedures that aren't on the same machine, but are remote. 
+
+The idea was that, since in a local procedure call, the compiler gives us the ability to make the call, the idea was that the compiler could play a role in enabling remote procedure calls as well.
+
+
+*** General
+When the client sends a RPC, it blocks till the server sends the response back. The server receives the request and starts process execution. 
+There has to be some code on the client machine that knows this is a RPC and makes the needed network communication and get the answer and present it as the return value of the procedure call.
+
+The RPC framework knows which server to contact, which port to contact, how to serialize the call, marshal it's arguments etc. On the server side, similar stub should be present to unmarshall the arguments etc.
+
+** Intro to gRPC - https://www.youtube.com/watch?v=RoXT_Rkg8LA
+We know how apps talk to one another. It is SOAP, REST (HTTP + JSON). REST is just a architectural principle, about how to structure your API when you use HTTP+JSON etc.
+
+REST is not that great, actually. It has some advantages:
+- easy to understand - text based protocols
+- great tooling to inspect and modify etc
+- loose coupling b/w client and server makes changes relatively easy
+- high quality implementation in every language.
+
+It has disadvantages as well:
+- No formal API contract - there is documentation (swagger etc), but no formal contract
+- Streaming is difficult
+- Bidirectional streaming not possible (that's why we had to invent websockets etc)
+- Operations are difficult to model ("restart the computer", should that be a POST, GET call?)
+- Many times your services are just HTTP endpoints, and don't follow the REST principles nicely.
+- Not the most efficient since we are using gRPC
+
+
+GRPC solves all these problems. You first define a contract using GRPC IDL - GRPC Interface Definition Language. 
+
+#+begin_src
+service Identity {
+  rpc GetPluginInfo(GetPluginInfoRequest)
+    returns (GetPluginInfoResponse) {}
+
+  rpc GetPluginCapabilities(GetPluginCapabilitiesRequest)
+    returns (GetPluginCapabilitiesResponse) {}
+
+  rpc Probe (ProbeRequest)
+    returns (ProbeResponse) {}
+}
+
+message GetPluginInfoResponse {
+  // The name MUST follow reverse domain name notation format
+  // (https://en.wikipedia.org/wiki/Reverse_domain_name_notation).
+  // It SHOULD include the plugin's host company name and the plugin
+  // name, to minimize the possibility of collisions. It MUST be 63
+  // characters or less, beginning and ending with an alphanumeric
+  // character ([a-z0-9A-Z]) with dashes (-), underscores (_),
+  // dots (.), and alphanumerics between. This field is REQUIRED.
+  string name = 1;
+
+  // This field is REQUIRED. Value of this field is opaque to the CO.
+  string vendor_version = 2;
+
+  // This field is OPTIONAL. Values are opaque to the CO.
+  map<string, string> manifest = 3;
+}
+#+end_src
+
+Here, we have define a ~Identity~ service, which supports 3 procedure calls - ~GetPluginInfo~, ~GetPluginCapabilities~, ~Probe~. 
+See how the ~GetPluginInfo~ takes in the ~GetPluginInfoRequest~ and returns a ~GetPluginInfoResponse~. Then we defined what the ~GetPluginInfoResponse~ looks like below that.
+
+This is a formal definition, with types. We can run a compiler thru it. 
+
+~protoc --proto_path=. --python_out=plugins-grpc:./py calls.proto~
+
+This will generate client side code that can call the RPC. 
+Similarly, we can generate the server side code as well.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-09-16 13:58:12
+[[file:assets/screenshot_2018-09-16_13-58-12.png]]
+
+
+Grpc is the framework which makes the RPC possible, it is a implementation of the RPC protocol.
+
+GRPC is a protocol built on top of HTTP/2 as the transport protocol. The messages that you send and receive are serialized using Protocol Buffers - you can use some other. 
+
+Clients open one long lived connection to a grpc server. A new HTTP/2 stream for each RPC call. This allows multiple simultaneous inflight RPC calls. Allows client side and server side streaming. 
+
+The compiler can generate stubs in 9 languages. The reference implementation of grpc is in C. Ruby, Python are all bindings to the C core.
+
+Gprc supports plugabble middleware, on the client and server side which can be used to do logging etc. 
+
+Swagger solves some of the problems around contract, in that people can make swagger IDL like contracts, but it is still text based protocol, doesn't solve bidirectional streaming. Also, the swagger IDL is verbose. 
+
+One problem is that you can't call this from the browser. The fact that it relies on having an intimate control over the HTTP2 connection means you need to have a shim layer in between.
+
+Many companies have exposed grpc APIs to the public - like Google Cloud (their pub sub api, speech recognition api) etc.
+
+** gRPC - https://www.youtube.com/watch?v=OZ_Qmklc4zE
+
+Grpc - gRPC Remote Procedure Calls. GRPC by itself is agnostic of schema, only when it is used with protocol buffers, it has enforced schema.
+
+It is a recursive fullform. It is a open source, high performance "RPC framework"
+
+It is the next generation of Snubby RPC build and used inside Google. 
+
+
+*** Getting Started
+- defining a service in a ~.proto~ file using protocol buffers IDL
+- generate the client and server stub using the protocol buffer compiler
+- extend the generated server class in your code to fill in the business logic
+- invoke it using the client stubs
+
+*** An aside: Protocol Buffers
+Google's lingua franca for serializing data - RPCs and storage. It is binary (so compact), structures can be extended in backward and forward compatible ways.
+
+It is strongly typed, supports several data types
+
+
+*** Example
+Let's write an example called Route Guide. There are clients traveling around and talking to a central server. Or, it can be 2 friends traveling along 2 different routes and talking to each other.
+
+We have to decide: what types of services do we need to expose? What messages to send?
+
+#+begin_src
+syntax = "proto3";
+
+// Interface exported by the server.
+service RouteGuide {
+  // A simple RPC.
+  //
+  // Obtains the feature at a given position.
+  //
+  // A feature with an empty name is returned if there's no feature at the given
+  // position.
+  rpc GetFeature(Point) returns (Feature) {}
+
+  // A Bidirectional streaming RPC.
+  //
+  // Accepts a stream of RouteNotes sent while a route is being traversed,
+  // while receiving other RouteNotes (e.g. from other users).
+  rpc RouteChat(stream RouteNote) returns (stream RouteNote) {}
+}
+
+// Points are represented as latitude-longitude pairs in the E7 representation
+message Point {
+  int32 latitude = 1;
+  int32 longitude = 2;
+}
+
+// A feature names something at a given point.
+//
+// If a feature could not be named, the name is empty.
+message Feature {
+  // The name of the feature.
+  string name = 1;
+
+  // The point where the feature is detected.
+  Point location = 2;
+}
+
+// A RouteNote is a message sent while at a given point.
+message RouteNote {
+  // The location from which the message is sent.
+  Point location = 1;
+
+  // The message to be sent.
+  string message = 2;
+}
+#+end_src
+
+Grpc supports 2 types of RPCs:
+- unary
+  - client sends a request
+  - server sends a response
+- client streaming rpc
+  - client sends multiple messages
+  - server sends one response
+- server streaming rpc
+  - client sends one response
+  - server sends multiple messages
+- bi-directional streaming rpc
+  - client and server independently send multiple messages to each other
+
+Now running the proto compiler on this will give you the client and server stubs. You just have to implement the business logic using these stubs. 
+
+Grpc is extensible:
+- interceptors
+- transports
+- auth and security - plugin auth mechanisms
+- stats, monitoring, tracing - has promotheseus, zipkin integrations
+- service discovery - consul, zookeeper integrations
+- supported with proxies - envoy, nginx, linkerd
+
+Grpc has deadline propagation, cancellation propagation
+
+The wire protocol used by grpc is based on HTTP/2 and the specification is well established. 
+
+
+** Container Storage Interface - https://www.youtube.com/watch?v=ktwY1anKN58
+Kubernetes needs storage. So, initially the started with *in-tree plugins* for various storage provisioners, like aws ebs, google persistent disks etc. This was not ideal because:
+- the release cycles of the plugins was tied to release of Kubernetes
+- the plugin code ran with same access level as the Kubernetes core, so a bug could take down Kubernetes
+- the code of the plugins was in the code, and maintaining it was difficult because the aws folks had to get in and make changes and the Kubernetes core team would have to review it for example.
+- source code had to be opensourced, regardless of whether the storage vendors wanted that or not
+
+
+This led to the creation of the *out of tree plugins*. First came flex volumes. These needed binaries to be present on each node(even master), like the CNI binaries and needed root access to the node. This also means, if the master is not accessible (like in many managed Kubernetes services), you can't attach there.
+
+The latest and greatest out of tree implementation is CSI - Container Storage Interface. It is a spec, which is created by folks from not just Kubernetes but other COs like Mesos. Now, any storage vendor who wants to provide storage, has to just implement the CSI spec and his storage solution should be pluggable into the COs.
+
+
+The In tree volume plugins won't be deprecated because Kubernetes has a very strict deprecation policy. So, the logic will be changed to proxy the calls thru the CSI plugin internally. 
+
+
+The talk is by Jie Yu, Mesosphere. He is the co-author of the CSI spec.
+
+*** Motivations and background
+
+We have several COs and several storage vendors.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-09-16 16:47:15
+[[file:assets/screenshot_2018-09-16_16-47-15.png]]
+
+We wanted a common spec so that the vendors could provide volumes for many COs.
+
+Also, a new standard was created because the existing storage interfaces had one or more of the following issues:
+- cli based interface
+- lack of idempotency on APIs
+- in tree interface
+- tightly coupled with an implementation
+- too heavyweight 
+
+
+*** Goals
+
+So, the Goals for CSI were:
+- interoperable
+- vendor neutral
+- focus on specification (CSI committee won't implement anything, only Storage Vendors will)
+- control plane only
+- keep it simple and boring
+
+First meet on Feb 2017. In Dec 2017, CSI 0.1 released. 
+Kubernetes 1.9 added alpha support for CSI.
+
+*** Design Choices
+
+1. in-tree vs out-of-tree
+   - in-tree means the volume plugin code will be in the same binary, will be running in the same OS process as CO process
+   - possible to have in-tree but out of process, but this gets complicated since we then have to define both north bound API (talk to CO), south bound API (talk to drivers)
+   - in out-of-tree implementations, the code lives outside the CO core codebase and the CO calls the plugin via CLI or service interfaces. Eg would be flex volumes.
+   - It is possible to be out of tree, but in process via dynamic library loading but it is complicated and won't work if different COs are in different languages.
+   - *Decision*: The committee went with out of tree, out of process
+
+2. Service vs. CLI
+   - cli - the vendor deploys binaries on hosts, CO invokes the binary with args.
+     - this is followed by CNI, flex volumes
+   - long running service - vendor deploys services on hosts (via systemd, Kubernetes etc), CO makes requests to the service
+   - *Decision*: The committee went with service based because:
+     - services are easier to deploy
+     - root access is required to install CLI binaries
+     - deploying CLI binary dependencies is not easy
+     - fuse based backends required long running processes, so why not one more
+
+
+3. Idempotency
+   - this is good for failure recovery
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-09-16 17:07:49
+[[file:assets/screenshot_2018-09-16_17-07-49.png]]
+
+If CO says create volume A, but the response is lost, the CO will retry and the Storage Plugin will create another volume and the first one will be lost. This is avoided if the API is idempotent. 
+For this, the call has to give a id for the volume. 
+
+4. Wire protocol: gRPC
+
+This was chosen because it is language agnostic, easy to write specification, big community with lots of tooling, real production users.
+It is also part of the cncf
+
+5. Async vs. Sync APIs
+
+Async would mean when the CO requests a volume, the plugin returns immediately and says okay, I will create the volume and send a message when it is ready. 
+
+Sync would mean the CO blocks
+
+*Decision*: Synchronous APIs
+- keep it simple, async is more complex
+- async does not solve the long running operation problem - if the operation takes too long, the CO should be able to timeout, this is possible with a sync API
+- Plugin implementation can be async, the interface b/w the CO and the plugin has to be synchronous
+
+6. Plugin packaging and deployment
+How should the plugin be packaged and deployed? 
+
+*Decision*: Don't dictate
+The spec does not dictate that. The only requirement is that it should provide a grpc endpoint over unix socket for now.
+
+So, possible options for deployment:
+- container deployed by CO (eg DaemonSet in Kubernetes)
+- systemd services deployed by cluster admin
+- can have running services someplace else, the CO connects via grpc (so you can have a company that provides these endpoints)
+
+7. Controller and Node services
+  - Identified 2 sets of control plane operations that have different characteristics - Node and Controller services.
+  - Node services are the services that have to run on the node that is using the volume
+    - OS mount/unmount, iSCSI initiator
+  - Controller services can be run on any node
+    - volume attach/detach (eg EBS), volume creation/deletion
+  - *Decision*: Created 2 above mentioned sets of APIs
+
+There are several options for deploying the node services and controller services.
+   - Option 1: Split Controller and Node services
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-09-16 17:03:45
+[[file:assets/screenshot_2018-09-16_17-03-45.png]]
+
+Here, we have the Node Service deployed on all the nodes, and there is a controller service running "somewhere" that the master can call. 
+
+   - Option 2: Headless
+
+Some COs don't have the master node, everything is just a node. In this case, you can bundle both the node and the controller service on a single container and the CO will talk to it. 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-09-16 17:05:43
+[[file:assets/screenshot_2018-09-16_17-05-43.png]]
+  
+
+
+*** Spec Overview
+
+There are 3 core grpc services
+1. Identity
+Gives basic information about the plugin, like the GetPluginInfo, GetPluginCapabilities, Probe (to see if the plugin is healthy or not etc). 
+
+2. Controller
+
+
+- ~CreateVolume~
+- ~DeleteVolume~
+- ~ControllerPublishVolume~ - make the volume available on the node (can be just "attach" on the node, (not mount, attach))
+- ~ControllerUnpublishVolume~
+- ~ValidateVolumeCapabilities~
+- ~ListVolumes~
+- ~GetCapacity~
+- ~ControllerGetCapabilities~
+
+Many of the calls are optional. 
+
+
+3. Node
+This service has to run on the node where the volume will be used
+
+- ~NodeStageVolume~ - this should be called only once for a volume on a given node (eg ~mount~)
+- ~NodeUnstageVolume~
+- ~NodePublishVolume~
+- ~NodeUnpublishVolume~
+- ~NodeGetId~
+- ~NodeGetCapabilities~
+
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-09-16 17:54:10
+[[file:assets/screenshot_2018-09-16_17-54-10.png]]
+The lifecycle for the volume. 
+Note, first the ControllerPublishVolume is called to make the volume "ready". Then the NodePublishVolume is called to "mount" etc
+
+If you want to write a plugin for GCE PD say,
+- need both controller and node services
+- create the persistent disk with CreateVolume (use the google cloud apis underneath)
+- attach the disk in the ControllerPublishVolume
+- format and mount the volume in the NodeStageVolume
+- perform a bind mount in the NodePublishVolume
+
+(Reference implementation in: github.com/googlecloudplatform/compute-persistent-disk-csi-driver)
+
+Can create a plugin for LVM - logical volume manager etc
+
+*** CO Integrations
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-09-16 17:58:56
+[[file:assets/screenshot_2018-09-16_17-58-56.png]]
+
+
+We have 2 types of pods (each with a sidecar provided by the Kubernetes team. The side car sits b/w the volume plugin and the apiserver. It understands the CSI spec and the apiserver also. It translates commands between the two)
+- controller pod - running the controller service of the plugin
+- node pod - running the node service of the plugin
+
+*** Governance model
+- Inclusive and open
+- independent of any single CO
+- try to avoid a storage vendor war
+
+*** Future
+- topology aware
+  - the CO needs to know whether a volume can be used within a given zone or not
+- snapshot support
+- volume resizing
+- plugin registration (to tell the CO here the unix socket for the plugin is)
+  - Kubernetes already has it's own spec for this - called device plugin
+- smoke test suite
+
+
+
+
+** External Provisioner - https://github.com/kubernetes-csi/external-provisioner
+
+Ref: https://kubernetes-csi.github.io/docs/CSI-Kubernetes.html
+
+Recall we had sidecar containers running along with the CSI volumes which are there to translate between the CSI speak that the volume speaks and the apiserver.
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-09-16 19:28:37
+[[file:assets/screenshot_2018-09-16_19-28-37.png]]
+
+Here, we see that on a node, there are 2 containers - the side car container, and the CSI driver container. There are 3 sidecars that are needed to manage Kubernetes events and make appropriate calls to the CSI driver.
+
+They are: external attacher, external provisioner, driver registrar
+
+*** External Attacher
+This implements the ~Controller~ services. It watches the Kubernetes ~VolumeAttachment~ objects and triggers CSI ~ControllerPublish~ and ~ControllerUnpublish~ operations against the driver endpoint.
+
+*** External Provisioner
+It looks out for ~PersistentVolumeClaim~ objects and triggers the ~CreateVolume~ and ~DeleteVolume~ operations against the driver endpoint. 
+
+*** Driver Registrar
+It is a sidecar container that registers the CSI driver with the kubelet and adds the drivers custom NodeId to a label on the Kubernetes Node API object.
+
+
+The kubelet runs on every node and is responsible for making the CSI calls ~NodePublish~ and ~NodeUnpublish~. 
+Important document - https://github.com/kubernetes/community/blob/master/contributors/design-proposals/storage/container-storage-interface.md
+
+
+The design docs say that there will be an in-tree csi plugin:
+#+BEGIN_QUOTE
+To support CSI Compliant Volume plugins, a new in-tree CSI Volume plugin will be introduced in Kubernetes. This new volume plugin will be the mechanism by which Kubernetes users (application developers and cluster admins) interact with external CSI volume drivers.
+#+END_QUOTE
+
+However, 
+
+#+BEGIN_QUOTE
+Provision/delete and attach/detach must be handled by some external component that monitors the Kubernetes API on behalf of a CSI volume driver and invokes the appropriate CSI RPCs against it.
+#+END_QUOTE
+
+So, we have external provisioner and external attacher respectively. 

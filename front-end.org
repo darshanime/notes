@@ -378,10 +378,25 @@ id selector:
 class selector:
       .center {//css}
 
-element+class selector:
+element.class selector:
    p.center {//css}
 <p class="center large">This paragraph refers to two classes.</p>
 
+element element selector:
+    div p {//css}
+    // selects all the <p> elements inside <div> element
+    
+element > element selector:
+    div > p {//css}}
+    // selects all the <p> elements where the parents is a <div> element
+    
+element + element
+    div + p {//css}}
+    // selects all the <p> elements that are placed immediately after <div> elements
+
+element ~ element 
+    div ~ p{//css}}
+    // selects every <p> element that are preceded by a <div> element
 
 multiple selectors allowed
 h1, h2, p {//css}

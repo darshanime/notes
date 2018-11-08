@@ -2947,6 +2947,38 @@ func main() {
 Here, AnswerToLife will be called first. This is to initialize the WhatIsThe variable. 
 Next, init() will be called. Finally, main().
 
+** Make to create maps
+Use ~make(map[int]int)~ for eg. 
+Since map is a reference, you can pass it directly to function and changes will show up.
+Channels created using make are references too. 
+
+Strings are immutable, taking a substring mystr[a:b] returns a new string.
+You are not allowed to modify a string in place.
+
+~mystr := "hello world"~
+
+:top: this is a string literal, you are defining it in place
+
+** Arrays
+By default, arrays are zero values of their types
+array literal ~myArray:=[...]{1, 2, 3}~
+
+Array type + length is a type, so ~[3]int~ and ~[4]int~ are different types
+Arrays are fixed length
+
+Slices are a pointer (a reference) to an array, so can be passed around and modified. 
+Make liberal use of slices (they are cheap references to the same array)
+
+Use ~make([]int, <len>, <cap>)~ to initialize it
+
+
+
+
+Map is a reference to a hash table. To create it, either use a map literal
+~myMap := map[int]int{1:2}~
+or use ~make~:
+~myMap := make(map[int]int)~
+
 * How to Write Go Code
 
 ** All Go code is in a single workspace

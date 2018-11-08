@@ -1,0 +1,481 @@
+* Structure And Interpretation of Computer Programs
+** Foreword
+
+The subject matter of this book has focus on 3 phenomena:
+- the human mind
+- collections of computer programs
+- the computer
+
+
+Since it is very difficult to formally prove the correctness of large programs, what we end up doing us having a large number of small programs of whose correctness we have become sure and then learn the art of combining them into larger structures using organization techniques of proven value.
+
+These techniques of combining these small programs is discussed at length in this book. 
+We can learn a great deal of this organization technique by studying the programs that convert the code programmers write to "machine" programs, what the hardware understands. 
+
+"It is better to have 100 functions operate on one data structure than to have 10 functions operate on 10 data structures." -> echoes Pike's "Bigger the interface, weaker the abstraction"
+
+** Chapter 1 - Building Abstractions with Procedures
+
+The acts of mind, on simple ideas are 3:
+- taking simple ideas and combining them to form a compound idea
+- being able to join 2 compound (or simple) ideas without making them one
+- recognizing the joined ideas as separate ideas from other ideas
+
+We will study the "computational process" - they aren't the unix processes etc, they are the abstract beings that inhabit the computers.
+
+They manipulate "data", their evolution is governed by pattern of rules called programs - so, programs are just things humans create to direct processes.
+
+The programs are the spells which create and control these processes - the aatma.
+
+#+BEGIN_QUOTE
+Well-designed computational systems, like well-designed automobiles or nuclear reactors, are designed in a modular manner
+#+END_QUOTE
+
+"Recursive equations" are a kind of logical expressions. They can be used as a model for computation. 
+Lisp was invented to explore the use of recursive equations for modeling computation.
+
+Lisp's description of processes, or as Lisp likes to call them, "procedures" can be represented and manipulated as data - rephrasing, it has the ability of handling procedures as data. It blurs the distinction between "passive" data and "active" processes - this enables powerful programming paradigms.
+
+Since we can treat procedures as data, Lisp is great for writing programs that manipulate other programs as data, which is something that must be done by, compilers and interpreters.
+
+*** 1.1 The Elements of Programming
+
+The programming language serves as a framework within which we organize our ideas about processes (the broader process we talked about in the last section)
+
+Languages provides us means of combining simple ideas to form complex ones.
+There are 3 mechanisms for doing that:
+
+- primitive expressions
+  - which represent the simplest entities the language is concerned with
+- means of combination
+  - by which compound elements are built from simpler ones
+- means of abstraction
+  - by which compound elements can be *named and manipulated as units*
+
+
+There are 2 kinds of elements, "procedures" and "data". 
+Data is the stuff we want to manipulate, procedures are the things that manipulate it.
+
+Why Scheme?
+#+BEGIN_QUOTE
+Scheme, the dialect of Lisp that we use, is an attempt to bring together the power and elegance of Lisp and Algol. From Lisp we take:
+- the metalinguistic power that derives from the simple syntax
+- the uniform representation of programs as data objects
+- the garbage-collected heap-allocated data. 
+
+From Algol we take:
+- lexical scoping and block structure
+#+END_QUOTE
+
+**** 1.1.1 Expressions
+We can try out some basic expressions.
+The interpreter can "evaluate" the expression and return the result of evaluating that expression.
+
+One kind of expression can be ~55~, on evaluation, it returns the same number back ~55~
+
+#+begin_src scheme
+55
+;Value: 55
+
+3 error> (+ 12 12)
+
+;Value: 24
+
+3 error> (/ 10 5)
+
+;Value: 2
+#+end_src
+
+There expressions :top:, formed by delimiting a "list of expressions" within parentheses are called "combinations"
+
+The leftmost expressions is called "operator", and the remaining elements(expressions) are called "operands"
+
+The value of the "combination" is obtained by applying the procedure specified by the operator to the arguments that are the values of the operands.
+
+
+The convention of placing the operand on the left is called prefix notation.
+This has the advantage of accepting variable number of operands and that each operand can be an expression
+
+Eg: ~(+ (* 3 (+ (* 2 4) (+ 3 5))) (+ (- 10 7) 6))~
+
+
+**** 1.1.2 Naming and the Environment
+
+One important feature of programming languages is that they provide us with the option to refer to computational objects with names
+
+*The name identifies a _variable_ whose _value_ is the object*
+
+In scheme, we use ~define~ to name things.
+
+~(define size 2)~
+
+Now, we have a expression with value 2, which can be referred to by the variable ~size~
+
+This allows us to do:
+
+~(* 5 size)~
+
+More eg:
+
+#+begin_src scheme
+(define pi 3.14159)
+(define radius 10)
+(* pi (* radius radius))
+314.159
+(define circumference (* 2 pi radius)) circumference
+62.8318
+#+end_src
+
+#+BEGIN_QUOTE
+~Define~ is our language’s simplest means of abstraction, for it allows us to use simple names to refer to the results of compound operations, such as the circumference computed above
+#+END_QUOTE
+
+Complex programs are created by building step-by-step computational objects of increasing complexity. 
+This leads to incremental development and testing of programs.
+
+Note, the interpreter needs to maintain this mapping between names and values - this is called the environment.
+
+**** 1.1.3 Evaluating Combinations
+
+Evaluating combinations is inherently a recursive operation. To evaluate an expression, the interpreter has to recursively evaluate each operand expression.
+
+Consider:
+
+#+begin_src scheme
+(* (+ 2 (* 4 6))
+   (+ 3 5 7))
+#+end_src
+
+This can be represented with:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-11-08 18:49:33
+[[file:assets/screenshot_2018-11-08_18-49-33.png]]
+
+Here, the combination is represented as a tree. Each combination (that makes up the overall combination --> recall, combinations are just operator and operand expressions) can be represented as a node. The branches of the node are the operator and operands. 
+
+The terminal nodes are the original expressions( --> recall, expressions = operands/operators), and the internal ones are derived expressions.
+
+Note how the value of the operands percolate upwards, from the terminal nodes to higher levels. 
+
+#+BEGIN_QUOTE
+In general, we shall see that recursion is a very powerful technique for dealing with hierarchical, treelike objects 
+#+END_QUOTE
+
+The "percolate values upward" form of evaluation is an example of a general kind of precess known as "*tree accumulation*"
+
+We have to evaluate the expressions recursively. To end somewhere, we make these assumptions for the primitive cases, the terminal nodes:
+
+
+- values of numerals are the numbers they name
+- values of built-in operators are the machine instructions sequences that carry out the corresponding operations
+- values of other names are the objects associated with those names in the environment
+
+These are the *General Evaluation Rules*
+
+"the general notion of the environment as providing a context in which evaluation takes place will play an important role in our understanding of program execution."
+
+Note, there are some exceptions to the general evaluation rules mentioned above. ~define~ for example, ~(define x 3)~ does not apply ~define~ to 2 arguments ~x~ and ~3~, but does something special of associating the value of ~3~ with variable name ~x~. That is, ~(define x 3)~ is not a combination.
+
+Such exceptions are "special forms". They have their own evaluation rules.
+
+
+#+BEGIN_QUOTE
+The various kinds of expressions (each with its associated evaluation rule) constitute the syntax of the programming language.
+#+END_QUOTE
+
+Lisp has a simple syntax because the evaluation rule for ALL expressions in the language can be described by the above 3 general rules and a small number of special forms.
+
+**** 1.1.4 Compound Procedures
+
+Procedure definitions are a more powerful abstraction technique by which *a _compound operation_ can be give a name and then referred to as a unit*.
+
+Eg:
+
+#+begin_src scheme
+(define (square x) (* x x))
+#+end_src
+
+Here, we associated the procedure ~square~ with the expression ~(* x x)~, which is a compound operation.
+
+Here, ~x~ in the compound expression ~(* x x)~ is a local name. 
+
+General syntax:
+
+#+begin_src scheme
+(define (<name> <formal parameters>) <body>)
+#+end_src
+
+#+BEGIN_QUOTE
+The <name> is a symbol to be associated with the procedure definition in the environment. 
+The <formal parameters> are the names used within the body of the procedure to refer to the corresponding arguments of the procedure. 
+The <body> is an expression that will yield the value of the procedure application when the formal parameters are replaced by the actual arguments to which the procedure is applied
+#+END_QUOTE
+
+Usage:
+
+#+begin_src scheme
+(square (+ 2 5))
+49
+#+end_src
+
+One cannot tell by looking at the conditional if it is a compound procedure or built into the interpreter (primitive procedure).
+
+**** 1.1.5 The Substitution Model for Procedure Application
+Evaluation of both primitive and compound procedures is the same for the interpreter. In both cases, recursively evaluate the operands and apply them to the operator.
+
+Here, the value of the operator = procedure (primitive or compound)
+value of the operands = arguments
+
+How to apply the compound procedure to arguments?
+- evaluate the body of the procedure with each formal parameter replaced by the corresponding argument (using the general evaluation rules)
+
+Example:
+
+#+begin_src scheme
+(f 5) ;; defination of (define (f a)) is (sum-of-squares (+ a 1) (* a 2))
+(sum-of-squares (+ 5 1) (* 5 2)) ;; dfination of (define (sum-of-squares x y)) is (+ (square x) (square y))
+(+ (square 6) (square 10))
+(+ (* 6 6) (* 10 10))
+(+ 36 100)
+136
+#+end_src
+
+This :top: model of evaluating a procedure is called *substitution model*
+It is a simple model of evaluating which is okay for now. Later we'll study more complex models. The substitution model breaks down for procedures with "mutable data"
+
+We saw earlier that the interpreter first evaluates the operator and operands and then applies the resulting procedures to the resulting arguments.
+
+An alternative way can be, first simplify the expressions - both operator and operands by replacing them with their definitions till only primitive operators are left and then perform the evaluation.
+
+In this case,
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-11-08 20:38:52
+[[file:assets/screenshot_2018-11-08_20-38-52.png]]
+Note: in this approach, we performed ~(+ 5 1)~ twice, same with ~(* 5 2)~
+If we have evaluated (+ 5 1) first, we could substitute to get (square 6), avoiding the double computation
+
+This, :top: "fully expand then reduce" evaluation model is called "normal-order evaluation"
+earlier we had studied "evaluate the arguments and then apply" - which the interpreter actually uses - which is called "applicative order evaluation"
+
+Lisp uses applicative order evaluation (evaluate the args, then apply) because it is more efficient (see above) and also because normal order evaluation fails when you have procedures that can't be modeled by direct substitution till you get primitive operands.
+
+**** 1.1.6 Conditional Expressions and Predicates
+
+Till now, we don't have predicates in our procedures. 
+Lisp has a special form for this, called ~cond~
+
+Eg:
+
+#+begin_src scheme
+    (define (abs x)
+     (cond ((> x 0) x)
+           ((= x 0) 0)
+           ((> x 0) (- x))
+           )
+  )
+#+end_src
+
+The general form is:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-11-08 21:52:37
+[[file:assets/screenshot_2018-11-08_21-52-37.png]]
+
+p_{1} is the predicate and e is the expression to be returned.
+
+So, syntax is, cond followed by pairs of ~(<p> <e>)~ (called clauses)
+The order of the clauses is important, the first predicate to evaluate to true succeeds. 
+
+The word predicate is used for procedures(or expressions) that return true or false
+
+#+begin_src scheme
+(define (abs x) 
+  (cond ((< x 0) (- x)) (else x)))
+#+end_src
+
+Here, ~else~ is a special symbol that can be used in place of ~p~ in the final clause of a cond (only in the final clause, in fact - anything that always evaluates to true can be used)
+
+Lisp has some more syntactic sugar here:
+
+#+begin_src scheme
+(define (abs x)
+  (if (< x 0) 
+      (- x) 
+       x))
+#+end_src
+
+So, syntax for if is:
+
+~(if <predicate> <consequent> <alternative>)~
+
+If the predicate evaluates to true, consequent is returned, else the alternative is returned - (evaluated and returned)
+
+Apart from <, >, = we have more predicates: 
+- (and e_{1} ... e_{n}) ;; start l to r, if any e evaluates to false, return false
+- (or e_{1} ... e_{n}) ;; start l to r, if any e evaluates to true, return false - don't evaluate the rest of the expressions
+- (not e_{1})
+
+~and~ and ~or~ are special forms, since not all expressions are necessarily evaluated. ~not~ is an ordinary procedure.
+
+
+#+begin_src scheme
+(define (square a) (* a a))
+
+(define (sum-of-squares a b) (+ (square a) (square b)))
+
+(define (largest a b)
+  (if (> a b) a b)
+  )
+
+(define (ex1.3v2 a b c)
+  (sum-of-squares (largest a b) (largest b c))
+  )
+
+(ex1.3v2 5 2 3)
+;; 34
+#+end_src
+
+Basically, look for any repetition of code, and make it a procedure
+
+**** 1.1.7 Example: Square Roots by Newton’s Method
+**** 1.1.8 Procedures as Black-Box Abstractions
+
+* Reserved
+    1.2 Procedures and the Processes They Generate
+        1.2.1 Linear Recursion and Iteration
+        1.2.2 Tree Recursion
+        1.2.3 Orders of Growth
+        1.2.4 Exponentiation
+        1.2.5 Greatest Common Divisors
+        1.2.6 Example: Testing for Primality
+    1.3 Formulating Abstractions with Higher-Order Procedures
+        1.3.1 Procedures as Arguments
+        1.3.2 Constructing Procedures Using Lambda
+        1.3.3 Procedures as General Methods
+        1.3.4 Procedures as Returned Values
+
+2 Building Abstractions with Data
+
+    2.1 Introduction to Data Abstraction
+        2.1.1 Example: Arithmetic Operations for Rational Numbers
+        2.1.2 Abstraction Barriers
+        2.1.3 What Is Meant by Data?
+        2.1.4 Extended Exercise: Interval Arithmetic
+    2.2 Hierarchical Data and the Closure Property
+        2.2.1 Representing Sequences
+        2.2.2 Hierarchical Structures
+        2.2.3 Sequences as Conventional Interfaces
+        2.2.4 Example: A Picture Language
+    2.3 Symbolic Data
+        2.3.1 Quotation
+        2.3.2 Example: Symbolic Differentiation
+        2.3.3 Example: Representing Sets
+        2.3.4 Example: Huffman Encoding Trees
+    2.4 Multiple Representations for Abstract Data
+        2.4.1 Representations for Complex Numbers
+        2.4.2 Tagged data
+        2.4.3 Data-Directed Programming and Additivity
+    2.5 Systems with Generic Operations
+        2.5.1 Generic Arithmetic Operations
+        2.5.2 Combining Data of Different Types
+        2.5.3 Example: Symbolic Algebra
+
+3 Modularity, Objects, and State
+
+    3.1 Assignment and Local State
+        3.1.1 Local State Variables
+        3.1.2 The Benefits of Introducing Assignment
+        3.1.3 The Costs of Introducing Assignment
+    3.2 The Environment Model of Evaluation
+        3.2.1 The Rules for Evaluation
+        3.2.2 Applying Simple Procedures
+        3.2.3 Frames as the Repository of Local State
+        3.2.4 Internal Definitions
+    3.3 Modeling with Mutable Data
+        3.3.1 Mutable List Structure
+        3.3.2 Representing Queues
+        3.3.3 Representing Tables
+        3.3.4 A Simulator for Digital Circuits
+        3.3.5 Propagation of Constraints
+    3.4 Concurrency: Time Is of the Essence
+        3.4.1 The Nature of Time in Concurrent Systems
+        3.4.2 Mechanisms for Controlling Concurrency
+    3.5 Streams
+        3.5.1 Streams Are Delayed Lists
+        3.5.2 Infinite Streams
+        3.5.3 Exploiting the Stream Paradigm
+        3.5.4 Streams and Delayed Evaluation
+        3.5.5 Modularity of Functional Programs and Modularity of Objects
+
+4 Metalinguistic Abstraction
+
+    4.1 The Metacircular Evaluator
+        4.1.1 The Core of the Evaluator
+        4.1.2 Representing Expressions
+        4.1.3 Evaluator Data Structures
+        4.1.4 Running the Evaluator as a Program
+        4.1.5 Data as Programs
+        4.1.6 Internal Definitions
+        4.1.7 Separating Syntactic Analysis from Execution
+    4.2 Variations on a Scheme — Lazy Evaluation
+        4.2.1 Normal Order and Applicative Order
+        4.2.2 An Interpreter with Lazy Evaluation
+        4.2.3 Streams as Lazy Lists
+    4.3 Variations on a Scheme — Nondeterministic Computing
+        4.3.1 Amb and Search
+        4.3.2 Examples of Nondeterministic Programs
+        4.3.3 Implementing the Amb Evaluator
+    4.4 Logic Programming
+        4.4.1 Deductive Information Retrieval
+        4.4.2 How the Query System Works
+        4.4.3 Is Logic Programming Mathematical Logic?
+        4.4.4 Implementing the Query System
+            4.4.4.1 The Driver Loop and Instantiation
+            4.4.4.2 The Evaluator
+            4.4.4.3 Finding Assertions by Pattern Matching
+            4.4.4.4 Rules and Unification
+            4.4.4.5 Maintaining the Data Base
+            4.4.4.6 Stream Operations
+            4.4.4.7 Query Syntax Procedures
+            4.4.4.8 Frames and Bindings
+
+5 Computing with Register Machines
+
+    5.1 Designing Register Machines
+        5.1.1 A Language for Describing Register Machines
+        5.1.2 Abstraction in Machine Design
+        5.1.3 Subroutines
+        5.1.4 Using a Stack to Implement Recursion
+        5.1.5 Instruction Summary
+    5.2 A Register-Machine Simulator
+        5.2.1 The Machine Model
+        5.2.2 The Assembler
+        5.2.3 Generating Execution Procedures for Instructions
+        5.2.4 Monitoring Machine Performance
+    5.3 Storage Allocation and Garbage Collection
+        5.3.1 Memory as Vectors
+        5.3.2 Maintaining the Illusion of Infinite Memory
+    5.4 The Explicit-Control Evaluator
+        5.4.1 The Core of the Explicit-Control Evaluator
+        5.4.2 Sequence Evaluation and Tail Recursion
+        5.4.3 Conditionals, Assignments, and Definitions
+        5.4.4 Running the Evaluator
+    5.5 Compilation
+        5.5.1 Structure of the Compiler
+        5.5.2 Compiling Expressions
+        5.5.3 Compiling Combinations
+        5.5.4 Combining Instruction Sequences
+        5.5.5 An Example of Compiled Code
+        5.5.6 Lexical Addressing
+        5.5.7 Interfacing Compiled Code to the Evaluator
+
+
+
+
+
+

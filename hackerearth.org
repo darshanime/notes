@@ -1,0 +1,295 @@
+** reading an int and string from stdin
+To read an int, use: 
+#+begin_src go
+	var num int
+	_, err := fmt.Scanf("%d", &num)
+#+end_src
+
+Here, _ is the #bytes read in. 
+
+#+begin_src go
+// Scanf scans text read from standard input, storing successive
+// space-separated values into successive arguments as determined by
+// the format. It returns the number of items successfully scanned.
+// If that is less than the number of arguments, err will report why.
+// Newlines in the input must match newlines in the format.
+// The one exception: the verb %c always scans the next rune in the
+// input, even if it is a space (or tab etc.) or newline.
+func Scanf(format string, a ...interface{}) (n int, err error) {
+	return Fscanf(os.Stdin, format, a...)
+}
+#+end_src
+
+So, can be used to read in many args at once too.
+
+Eg:
+#+begin_src go
+package main
+
+import (
+	"fmt"
+)
+
+func main() {
+	var num int
+	var msg string
+	_, err := fmt.Scanf("%d\n%s", &num, &msg)
+	if err != nil {
+		fmt.Println("err", err)
+	}
+	// reader := bufio.NewReader(os.Stdin)
+	// msg, _ := reader.ReadString('\n')
+	fmt.Println(num * 2)
+	fmt.Print(msg)
+}
+#+end_src
+
+Alt:
+#+begin_src go
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"os"
+)
+
+func main() {
+	var num int
+	_, err := fmt.Scanf("%d", &num)
+	if err != nil {
+		fmt.Println("err", err)
+	}
+	reader := bufio.NewReader(os.Stdin)
+	msg, _ := reader.ReadString('\n')
+	fmt.Println(num * 2)
+	fmt.Print(msg)
+}
+#+end_src
+
+** Competitive programming
+When solving competitive programming questions, we have, max allowed running times:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /tmp/screenshot.png @ 2018-08-22 22:15:39
+[[file:assets/screenshot_2018-08-22_22-15-39.png]]
+
+#+begin_src go
+// go program to accept a number and print all prime numbers upto that number
+package main
+
+import (
+	"fmt"
+	"strconv"
+	"strings"
+)
+
+// isPrime...
+func isPrime(n int) bool {
+	for i := 2; i <= (n+1)/2; i++ {
+		if n%i == 0 {
+			return false
+		}
+	}
+	return true
+}
+
+func main() {
+	var num int
+	var ans []int
+	_, err := fmt.Scanf("%d", &num)
+	if err != nil {
+		fmt.Println("err", err)
+	}
+	for i := 2; i < num; i++ {
+		if isPrime(i) {
+			ans = append(ans, i)
+		}
+	}
+	var s []string
+
+	for _, j := range ans {
+		// fmt.Println(i, " - ", j)
+		s = append(s, strconv.Itoa(j))
+	}
+	fmt.Printf(strings.Join(s, " "))
+}
+#+end_src
+
+** ways to declare a map
+#+begin_src go
+res := map[rune]int{}
+res := make(map[rune]int)
+#+end_src
+
+Both work :top:
+
+I wanted to read a string as a line, I did this:
+#+begin_src go
+reader := bufio.NewReader(os.Stdin)
+x, _ := reader.ReadString('\n')
+x = strings.TrimSuffix(x, "\n")
+#+end_src
+
+Note, the TrumSuffix which removes the newline character. Splitting the string and parsing the integer fails otherwise.
+
+A full fledged program to print the transpose of a matrix
+#+begin_src go
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"os"
+	"strconv"
+	"strings"
+)
+
+// isPrime...
+func isPrime(n int) bool {
+	for i := 2; i <= (n+1)/2; i++ {
+		if n%i == 0 {
+			return false
+		}
+	}
+	return true
+}
+
+func main() {
+	reader := bufio.NewReader(os.Stdin)
+	var n, m int
+	_, err := fmt.Scanf("%d %d", &n, &m)
+	if err != nil {
+		fmt.Println("err", err)
+	}
+	res := make([][]int, 0)
+	for i := 0; i < n; i++ {
+		x, _ := reader.ReadString('\n')
+		x = strings.TrimSuffix(x, "\n")
+		tres := strings.Split(x, " ")
+		// fmt.Println("x", x)
+		// fmt.Println("tres", tres)
+		resj := make([]int, 0)
+		for _, c := range tres {
+			// fmt.Println("c", c)
+			xint, _ := strconv.Atoi(c)
+			// fmt.Println("xint", xint)
+			resj = append(resj, xint)
+		}
+		// fmt.Println("resj", resj)
+		res = append(res, resj)
+	}
+	// fmt.Println("res", res)
+	for i := 0; i < m; i++ {
+		for j := 0; j < n; j++ {
+			fmt.Printf("%d ", res[j][i])
+		}
+		fmt.Printf("\n")
+	}
+}
+#+end_src
+
+
+** sort the slice
+
+#+begin_src go
+sort.Slice(a, func(i, j int) bool { return a[i] < a[j] })
+sort.Slice(b, func(i, j int) bool { return b[i] < b[j] })
+#+end_src
+
+
+
+** function to read slice
+
+#+begin_src go
+func readSlice(reader *bufio.Reader) []int {
+	inp, _ := reader.ReadString('\n')
+	inp = strings.TrimSuffix(inp, "\n")
+	nums := strings.Split(inp, " ")
+
+	var a []int
+	for _, j := range nums {
+		i, _ := strconv.Atoi(string(j))
+		a = append(a, i)
+	}
+	return a
+}
+func main() {
+	reader := bufio.NewReader(os.Stdin)
+	a = readSlice(reader)
+	b = readSlice(reader)
+}
+#+end_src
+
+** a strange thingy, bug?
+
+#+begin_src go
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"os"
+	"sort"
+	"strconv"
+	"strings"
+)
+
+func readSlice(reader *bufio.Reader) []int {
+	inp, _ := reader.ReadString('\n')
+	inp = strings.TrimSuffix(inp, "\n")
+	nums := strings.Split(inp, " ")
+
+	var a []int
+	for _, j := range nums {
+		i, _ := strconv.Atoi(string(j))
+		a = append(a, i)
+	}
+	return a
+}
+
+func main() {
+	var t int
+	fmt.Scanf("%d", &t)
+	reader := bufio.NewReader(os.Stdin)
+
+	for i := 0; i < t; i++ {
+		var n, k int
+		fmt.Scanf("%d %d", &n, &k)
+		a := readSlice(reader)
+		sort.Slice(a, func(p, q int) bool { return a[p] < a[q] })
+		if a[0] >= k {
+			fmt.Println(0)
+		} else {
+			fmt.Println(k - a[0])
+		}
+	}
+}
+#+end_src
+
+This program in go1.8.3 worked correctly - https://www.hackerearth.com/practice/data-structures/arrays/1-d/practice-problems/algorithm/micro-and-array-update/
+
+That is, on each iteration it picked the right values via fmt.Scanf.
+However, if we move the ~var n, k int~ outside the ~for~ loop, it doesn't scan the second time and continues with the first scanned value.
+
+*This could be due to intermixing of Scanf and readSlice* :top:
+the thing is, Scanf string we gave was ~fmt.Scanf("%d %d", &n, &k)~, which doesn't accept ~\n~. So, it was kept there and the ~readSlice~ got the wrong input.
+
+
+** iterating a slice
+You can iterate thru a slice partially
+#+begin_src go
+for _, value := range mySlice[5:10] {
+    // use value
+}
+#+end_src
+
+When iterating thru the slice in reverse, start from ~len(mySlice)-1~ and go upto ~i>=0~
+#+begin_src go
+	for i := len(res) - 1; i >= 0; i-- {
+		fmt.Print(res[i])
+	}
+
+#+end_src
+
+

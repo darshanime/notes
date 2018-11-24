@@ -1,0 +1,79 @@
+* Exercise 1 - Quiz Game
+
+To read a CSV with 2 columns - Question, Answer.
+Present a quiz to the user, note the answers provided. 
+** Solution:
+- two flags - filename should be able to choose the csv file
+- read the CSV, store the questions in a ~map[int]Question~
+- iterate thru the map, show the question to the user, record the answer
+- in the end, show the score
+
+* Exercise 2 - UrlShortner
+
+There are some common names in the http circles for the Go standard libary.
+
+1. ~Handler interface~
+#+begin_src go
+type Handler interface {
+	ServeHTTP(ResponseWriter, *Request)
+}
+#+end_src
+
+A Handler response to the HTTP request. It has the method ServerHTTP, which should write reply headers to the ResponseWriter and then return.
+
+2. ~type HandlerFunc~ 
+
+HandlerFunc is a type, which is just a function. This function is just the ServeHTTP function.
+#+begin_src go
+// The HandlerFunc type is an adapter to allow the use of
+// ordinary functions as HTTP handlers. If f is a function
+// with the appropriate signature, HandlerFunc(f) is a
+// Handler that calls f.
+type HandlerFunc func(ResponseWriter, *Request)
+
+// ServeHTTP calls f(w, r).
+func (f HandlerFunc) ServeHTTP(w ResponseWriter, r *Request) {
+	f(w, r)
+}
+#+end_src
+
+It's usecase is this. Let's say we want to write a function X that can serve requests. One way is to create a new type and make that type have the ServeHTTP method which calls this function X. Or, we can just type cast that function X with http.HandlerFunc(function X) and just use it
+
+
+3. ServeMux
+
+#+begin_src go
+// ServeMux is an HTTP request multiplexer.
+// It matches the URL of each incoming request against a list of registered
+// patterns and calls the handler for the pattern that
+// most closely matches the URL.
+#+end_src
+
+
+**  Unmarshal vs Marshall
+Unmarshal is taking in JSON and converting it into structs etc.
+Marshalling is taking structs and converting them to JSON etc.
+
+#+BEGIN_QUOTE
+Unmarshal parses the JSON-encoded data and stores the result in the value pointed to by v. If v is nil or not a pointer, Unmarshal returns an InvalidUnmarshalError.
+
+Unmarshal uses the inverse of the encodings that Marshal uses, allocating maps, slices, and pointers as necessary, with the following additional rules: 
+#+END_QUOTE
+
+
+** converting a file to []byte
+Once we’ve used the os.Open function to read our file into memory, we then have to convert it toa byte array using ioutil.ReadAll. 
+
+
+** using var f T vs f := T
+One reason you would want to define the type of a variable first and not use := is this:
+
+#+begin_src go
+var f func(string)
+f := func(s string) {
+    f(s)
+}
+#+end_src
+
+Here, we have recursive definition of ~f~, which won't work when we do ~f:=T~
+

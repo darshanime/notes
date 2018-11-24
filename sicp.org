@@ -1304,8 +1304,159 @@ Square root is the root of the equation: f(x) = x^{1/2} or y^{2} = x
 this can be rewritten as x/y = y.
 This can be solved by finding the fixed point of x/y
 
+We can find the fixed points by applying the same function to itself till the values don't change much.
+
+#+begin_src scheme
+;; fixed point
+(define tolerance 0.001)
+
+(define (fixed-point f first-guess)
+  (define (close-enough? x y)
+    (< (abs (- x y)) tolerance))
+  ;; note now we use a different name for the inner def
+  (define (try guess)
+    (let ((next-value (f guess)))
+      (if (close-enough? next-value guess)
+          next-value
+          (try next-value))))
+  (try first-guess))
+
+;; we can find solution to y = siny + cosy
+(fixed-point (lambda (x) (+ (sin x) (cos x))) 1.0)
+;Value: 1.2590038597400248
+#+end_src
+
+This is similar to the process for finding the square roots; repeatedly improving the guess until the result is close enough.
+
+We can rewrite ~sqrt~ as a ~fixed-point~ solution, 
+
+#+begin_src scheme
+(define (sqrt x)
+  (fixed-point (lambda (y) (/ x y)) 1.0))
+#+end_src
+
+This won't converge. 
+#+BEGIN_QUOTE
+Unfortunately, this fixed-point search does not converge. Consider an initial guess y 1 . The next guess is y2 = x/y1 and the next guess is y3 = x/y2 = x/(x/y1 ) = y1 . 
+#+END_QUOTE
+
+We can prevent this by damping the oscillations. Since our answer lies between y_{t+1} and x/y_{t}, we can have the new value of y_{t+1} as (1/2)*(y_{t+1} + x/y_{t})
+
+So, we can find the sqrt as:
+#+begin_src scheme
+(define (sqrt x)
+  (fixed-point (lambda (y) (average y (/ x y))) 1.0))
+
+;; 1.35
+(define (golden-ration x)
+  (fixed-point (lambda (y) (average y (+ 1 (/ 1 x)))) 1.0))
+
+;; 1.36
+(define (ex1.36-without-damping)
+  (fixed-point (lambda (x) (/ (log 1000) (log x))) 2))
+
+(ex1.36-without-damping)
+9.965784284662087
+3.004472209841214
+6.279195757507157
+3.759850702401539
+5.215843784925895
+4.182207192401397
+4.8277650983445906
+4.387593384662677
+4.671250085763899
+4.481403616895052
+4.6053657460929
+4.5230849678718865
+4.577114682047341
+4.541382480151454
+4.564903245230833
+4.549372679303342
+4.559606491913287
+4.552853875788271
+4.557305529748263
+4.554369064436181
+4.556305311532999
+4.555028263573554
+4.555870396702851
+;Value: 4.555870396702851
+
+
+(define (ex1.36-damping)
+  (fixed-point (lambda (x) (average x (/ (log 1000) (log x)))) 2))
+
+(ex1.36-damping)
+5.9828921423310435
+4.922168721308343
+4.628224318195455
+4.568346513136242
+4.5577305909237005
+4.555909809045131
+4.555599411610624
+;Value: 4.555599411610624
+
+;; 1/37
+;; recurisve procedure, iterative process
+(define (cont-frac n d k)
+  (define (fn t) (/ (n k) (+ (d k) t)))
+  (define (cont-frac-iter n d k term)
+    (if (= k 1) (fn term)
+        (cont-frac-iter n d (- k 1) (fn term))))
+  (cont-frac-iter n d k 0))
+
+
+;; recurisve procedure, recursive process
+(define (cont-frac-recursive n d k)
+  (define (fn t) (/ (n k) (+ (d k) t)))
+  (define (cont-frac-re n d k)
+    (if (= k 1) 0
+        (fn (cont-frac-re n d (- k 1)))))
+  (cont-frac-re n d k))
+
+;; note the difference between the iterative process and the recursive one.
+;; the iterative one has a state variable which needs to be carried around
+;; the recursive one just has keeps "k" with it
+#+end_src
+
+#+begin_src scheme
+;; 1.38
+(define (n i) i)
+(define (d i)
+  (cond ((= (remainder (+ i 1) 3) 0) (* 2 (/ (+ 1 i) 3)))
+         (else 1)))
+(cont-frac-recursive (lambda (i) 1.0) d 500)
+
+;; 1.39
+(define (tan-cf x k)
+  (define (d1.39 i)
+    (+ 1.0 (* 2 (- i 1))))
+  (define (n1.39 i)
+    (if (= i 1) x
+        (square x)))
+  (define (cont-frac-recursive-1.39 n d k c)
+    (define (fn t) (/ (n c) (- (d c) t)))
+    (if (= c k) 0
+        (fn (cont-frac-recursive-1.39 n d k (+ c 1)))))
+  (cont-frac-recursive-1.39 n1.39 d1.39 k 1))
+#+end_src
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         1.3.4 Procedures as Returned Values
+
+
 
  
 

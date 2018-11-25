@@ -1441,26 +1441,202 @@ So, we can find the sqrt as:
 #+end_src
 
 
+**** 1.3.4 Procedures as Returned Values
+This ability to pass procedures as arguments makes the language more expressive. We can get more if we are able to return procedures as values too. We can use it to abstract away average damping from ~fixed-point~ earlier.
+
+Average damping can be defined as a function (~g(x)~ say) whose value at ~x~ is average of ~x~ and another given function ~f(x)~.
+
+
+Earlier in the ~fixed-point~, we added damping. We can make that a procedure too
+
+#+begin_src scheme
+;; note what we had earlier
+;; the fixed-point just repeatedly applied f till values were close enough
+;; to add damping we use this:
+(define (golden-ration)
+  (fixed-point (lambda (x) (average x (+ 1 (/ 1 x)))) 1.0))
+;; here, we are passing a anonymous function to fixed-point that takes a value and returns the average of x and f(x)
+
+;; so, we can write a procedure that does this. It should take a function (which accepts a parameter x) and return another function whose value is the average of x and f(x)
+(define (average-damp f)
+  (lambda (x) (average x (f x))))
+;; this x will be provided to the function in the fixed-point procedure. Starting with first-guess
+#+end_src
+
+#+begin_src scheme
+;; example raw usage of average-damp
+((average-damp square) 10)
+55
+#+end_src
+
+We can rewrite sqrt now:
+
+#+begin_src scheme
+(define (sqrt-w/damping x)
+  (fixed-point (average-damp (lambda (y) (/ x y))) 2.0))
+#+end_src
+
+#+BEGIN_QUOTE
+Notice how this formulation makes explicit the three ideas in the method: 
+- fixed-point search, 
+- average damping, 
+- and the function y \to x/y.
+
+Note how much cleaner the idea becomes when expressed in terms of these abstractions.
+
+In general, there are many ways to formulate a process as a procedure. 
+Experienced programmers know how to choose procedural formulations that are particularly perspicuous, and where useful elements of the process are exposed as separate entities that can be reused in other applications. 
+
+As a simple example of reuse, notice that the cube root of x is a fixed point of the function y \to x/y^{2} , so we can immediately generalize our square-root procedure to one that extracts cube-roots
+#+END_QUOTE
+
+#+begin_src scheme
+(define (cube-root-w/damping x)
+  (fixed-point (average-damp (lambda (y) (/ x (square y)))) 2.0))
+#+end_src
+
+***** Abstractions and first-class procedures
+We have seen how to use the compute square root using:
+- fixed-point search (the first one, without damping)
+- Newton's method (which itself can be expressed as a fixed-point process) ((the second one, with damping))
+
+Thus, we have seen 2 ways to compute sqrt as fixed-points. We can express this idea of having multiple ways to doing fixed points as an higher level abstraction
+
+#+begin_src scheme
+(define (fixed-point-of-transform g transform guess)
+  (fixed-point (transform g) guess))
+
+;; so, our variant of the average-damp is just one of the transformation that can be applied
+;; we can do some other damping also. And if we use this abstraction, once we have a better damping method, 
+;; that helps converge to solutions faster, we can just start using that
+(define (sqrt-fixed-point-of-transform x)
+  (fixed-point-of-transform (lambda (y) (/ x y)) average-damp 1.0))
+#+end_src
+
+#+BEGIN_QUOTE
+As programmers, we should be alert to opportunities to identify the underlying abstractions in our programs and to build upon them and generalize them to create more powerful abstractions. This is not to say that one should always write programs in the most abstract way possible; expert programmers know how to choose the level of abstraction appropriate to their task.
+#+END_QUOTE
+
+
+#+BEGIN_QUOTE
+In general, programming languages impose restrictions on the ways in which computational elements can be manipulated. 
+
+Elements with the fewest restrictions are said to have first-class status. Some of the ‘‘rights and privileges’’ of first-class elements are:
+
+- They may be named by variables.
+- They may be passed as arguments to procedures. 
+- They may be returned as the results of procedures. 
+- They may be included in data structures. 
+
+Lisp, unlike other common programming languages, awards *procedures full first-class status*. This poses challenges for efficient implementation, but the resulting gain in expressive power is enormous. 
+#+END_QUOTE
+
+#+begin_src scheme
+;; 1.40
+(define (inc x)
+  (+ x 1))
+
+(define (double fn)
+  (lambda (x) (fn (fn x))))
+
+
+;; 1.41
+(((double (double double)) inc) 5)
+;; (D (D D) inc 5)
+;; (D (D(D)) inc 5)
+;; (D(D(D(D))) inc 5)
+;; (D(D(D(inc inc))) inc 5)
+;; (D(D(inc inc inc inc))) inc 5)
+;; (D((inc inc inc inc inc inc inc inc)) inc 5)
+;; ((inc inc inc inc inc inc inc inc) (inc inc inc inc inc inc inc inc) inc 5)
+21
+
+;; 1.42
+(define (compose f g)
+  (lambda (x) (f (g x))))
+
+;; 1.43
+(define (repeated f n)
+  (define (repeated-iter f c)
+    (if (= c 1) f
+        (repeated-iter (compose f f) (- c 1))))
+  (repeated-iter f n))
+
+;; 1.44
+(define (n-smooth n)
+  (repeated smooth n))
+
+(((n-smooth 5) square) 2)
+;Value: 4.000010666666668
+
+;; 1.46
+(define (n-root n r x)
+  (fixed-point ((repeated average-damp r) (lambda (y) (/ x (pow y (- n 1))))) 2.0))
+
+(define (pow b p)
+  (if (= p 1) b
+      (if (even? p) (pow (square b) (/ p 2))
+      (* b (pow (square b) (/ (- p 1) 2))))))
+
+(n-root 2 2 4) ;; find the square root, use average damp chained 2 times, find root of 4
+2.
+;Value: 2.
+#+end_src
+
+#+BEGIN_QUOTE
+Several of the numerical methods described in this chapter are instances of an extremely general computational strategy known as iterative improvement. 
+
+Iterative improvement says that, to compute something, we start with an initial guess for the answer, test if the guess is good enough, and otherwise improve the guess and continue the process using the improved guess as the new guess. 
+#+END_QUOTE
 
 
 
+One catch is that in scheme, you cannot define a named procedure and return it directly
+eg:
 
+#+begin_src scheme
+;; this works
+(define (x-inc x)
+  (lambda (y)
+    (+ x y)))
 
+((x-inc 2) 3)
+; 5
 
+;; however this doesn't work
+(define (x-inc x)
+  (define (x-inc2 y)
+    (+ x y)))
+((x-inc 2) 3)
+;The object #[constant 12 #x2] is not applicable.
 
+;; if you want to return the named procedure, use this:
+(define (x-inc x)
+  (define (x-inc2 y)
+    (+ x y))
+  (lambda (y) (x-inc2 y)))
 
+((x-inc 2) 3)
+;Value: 5
 
+;; 1.46
+(define (iterative-improvement good-enough? improve-guess)
+  (define (improve guess)
+    (let ((next-value (improve-guess guess)))
+      (display next-value)
+      (newline)
+      (if (good-enough? guess next-value)
+          next-value
+          (improve next-value))))
+  (lambda (guess) (improve guess)))
 
+(define (new-fixed-point f first-guess)
+  ((iterative-improvement good-enough? f) first-guess))
 
+(define (new-golden-ration)
+  (new-fixed-point (lambda (x) (average x (+ 1 (/ 1 x)))) 1.0))
 
-
-        1.3.4 Procedures as Returned Values
-
-
-
- 
-
-
+#+end_src
 
 * Reserved
 

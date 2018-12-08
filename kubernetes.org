@@ -85,8 +85,8 @@ Some of the projects under the cncf:
   - for distributed tracing
 - fluentd
   - for logging
-  - vitess
-    - for storage
+- vitess
+  - for storage
 
 this set of CNCF projects can cover the entire lifecycle of an application, from its execution using container runtimes, to its monitoring and logging
 

@@ -1477,7 +1477,7 @@ we have different notes for both fellas
 #+ATTR_ORG: :height 400
 [[./assets/ucbOS_32.png]]
 
-this won't work - A leaves a noteA, B leaves a noteA, nobody buys any milk.
+this won't work - A leaves a noteA, B leaves a noteB, nobody buys any milk.
 this reduces the probability of synchronization problem but it can still happen
 
 original unix had these a lot

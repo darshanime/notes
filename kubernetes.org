@@ -3877,9 +3877,6 @@ We have 2 types of pods (each with a sidecar provided by the Kubernetes team. Th
   - Kubernetes already has it's own spec for this - called device plugin
 - smoke test suite
 
-
-
-
 ** External Provisioner - https://github.com/kubernetes-csi/external-provisioner
 
 Ref: https://kubernetes-csi.github.io/docs/CSI-Kubernetes.html
@@ -3906,7 +3903,7 @@ It is a sidecar container that registers the CSI driver with the kubelet and add
 
 
 The kubelet runs on every node and is responsible for making the CSI calls ~NodePublish~ and ~NodeUnpublish~. 
-Important document - https://github.com/kubernetes/community/blob/master/contributors/design-proposals/storage/container-storage-interface.md
+Very important document - https://github.com/kubernetes/community/blob/master/contributors/design-proposals/storage/container-storage-interface.md
 
 
 The design docs say that there will be an in-tree csi plugin:
@@ -3921,3 +3918,73 @@ Provision/delete and attach/detach must be handled by some external component th
 #+END_QUOTE
 
 So, we have external provisioner and external attacher respectively. 
+
+** Mount Propagation
+ref: https://medium.com/kokster/kubernetes-mount-propagation-5306c36a4a2d
+Mount Propagation, was introduced in Kubernetes v1.8
+
+The filesystem that we browse is called the VFS - virtual file system. The File system (or more accurately the VFS) hides the complexity of writing to the actual physical location on the disk. 
+
+The VFS has this struct in mount.h
+
+#+begin_src c
+struct vfsmount {
+        struct list_head mnt_hash;
+        struct vfsmount *mnt_parent;    /* fs we are mounted on */
+        struct dentry *mnt_mountpoint;  /* dentry of mountpoint */
+        struct dentry *mnt_root;        /* root of the mounted
+                                           tree*/
+        struct super_block *mnt_sb;     /* pointer to superblock */
+        struct list_head mnt_mounts;    /* list of children,
+                                           anchored here */
+        struct list_head mnt_child;     /* and going through their
+                                           mnt_child */
+        atomic_t mnt_count;
+        int mnt_flags;
+        char *mnt_devname;              /* Name of device e.g. 
+                                           /dev/dsk/hda1 */
+        struct list_head mnt_list;
+};
+#+end_src
+
+Look at ~dentry~ first
+
+The ~dentry~ struct is used to represent "inode, file name, parent directory, other files in same directory (siblings), and sub-directory"
+
+
+#+begin_src c
+struct dentry {
+        struct inode *d_inode;
+        struct dentry *d_parent;
+        struct qstr d_name;
+        struct list_head d_subdirs;  /* sub-directories/files     */
+        struct list_head d_child;    /* sibling directories/files */
+        ...
+}
+#+end_src
+In the ~vfsmount~ struct from earlier, ~mnt_mountpoint~ and ~mnt_root~ are of type ~dentry~. 
+When the OS mounts, a ~vfsmount~ is created with ~mnt_mountpoint~ set to ~/~
+
+#+BEGIN_QUOTE
+This operation of creating vfsmount entry for a specific dentry is what is commonly referred to as Mounting. 
+A tree of dentry structs form the file-system.
+
+                          root
+                         /    \
+                       tmp    usr
+                       /
+                      m1
+                     /  \
+                   tmp  usr 
+                   /
+                  m1
+#+END_QUOTE
+
+~dentry~ struct is used when the ~cd~ is invoked
+
+So, mount is just the creating of the ~vfsmount~ and ~dentry~ data structures. Since it is only that, all these are valid:
+- mount a device at one path - the simplest case
+- mount a device multiple times at different paths - different vfsmount, different dentry
+- mount a device multiple times at same paths - different vfsmount, same dentry
+- mount a directory at another path
+

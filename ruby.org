@@ -1,0 +1,174 @@
+* Ruby
+
+Ruby is an interpreted language with dynamic typing used for scripting mostly. 
+
+#+begin_src ruby
+puts "hello there"
+#+end_src
+
+is the hello world
+
+#+begin_src ruby
+puts "hello, #{1 + 1}"
+# 2
+#+end_src
+
+You can put expressions inside the `#{}` and they will be evaluated. 
+#+begin_src ruby
+days = "Mon Tue Wed Thu Fri Sat Sun"
+puts "Here are the days: #{days}"
+#+end_src
+
+Use triple quotes to write multiline strings. 
+
+#+begin_src ruby
+fat_cat = """
+I'll do a list:
+\t* Cat food
+\t* Fishies
+\t* Catnip\n\t* Grass
+"""
+# this will print
+# I'll do a list:
+#        * Cat food
+#        * Fishies
+#        * Catnip
+#        * Grass
+#+end_src
+
+~puts~ is simply ~print~ with a newline
+
+Get user input:
+
+#+begin_src ruby
+print "how old are you"
+age = gets.chomp
+puts "okay so you are #{age} years old"
+#+end_src
+
+You can convert the string to integer using 
+~age = gets.chomp.to_i~, similarly, ~to_f~ makes it a float
+
+You can accept the arguments from the user
+
+#+begin_src ruby
+first, second, third = ARGV
+
+puts "Your first variable is: #{first}" # here, first has the 1st argument for eg
+#+end_src
+
+To accept input, one should use ~$stdin.gets.chomp~
+
+
+We can read a file using:
+
+#+begin_src ruby
+filename = ARGV.first # or file_again = $stdin.gets.chomp
+txt = open(filename)
+puts txt.read
+#+end_src
+
+
+** Methods
+
+#+begin_src ruby
+def foo(x)
+  x*2
+end
+#+end_src
+
+The last statement is the return type.
+Calling is ~foo 2~, or ~foo(2)~
+
+
+Recall what blocks are, they are a block of code, that can be executed. 
+All methods accept an implicit block. You can insert it whereever needed with the ~yield~ keyword
+
+#+begin_src ruby
+def surround
+  puts '{'
+  yield
+  puts '}'
+end
+
+puts surround { puts 'hello world' }
+#=> {
+#=> hello world
+#=> }
+#+end_src
+
+The block can also be converted to a ~proc~ object, which can be called with ~.call~ invocation.
+
+#+begin_src ruby
+def guests(&block)
+  block.class #=> Proc
+  block.call(4)
+end
+#+end_src
+
+The arguments passed to call are given to the block
+
+#+begin_src ruby
+def guests(&block)
+  block.class #=> Proc
+  block.call(4)
+end
+
+guests { |n| "You have #{n} guests." }
+# => "You have 4 guests."
+#+end_src
+
+By convention, all methods that return booleans end with a question mark.
+
+By convention, if a method name ends with an exclamation mark, it does something destructive like mutate the receiver. Many methods have a ! version to make a change, and a non-! version to just return a new changed version. 
+Like we saw in ~reverse!~
+
+** Classes
+
+Classes can be defined with a ~class~ keyword
+
+* Ruby misc
+~2+2~
+The ~+~ symbol is just syntactic sugar for the calling the ~+~ function on the number
+So, these are equivalent 
+
+#+begin_src ruby
+puts 2+2
+puts 2.+ 2
+#+end_src
+
+Note, in ruby, the syntax to call functions is:
+~fn_name [<arg1> <arg2> ... ]~
+
+
+For loop are like this elsewhere, 
+
+#+begin_src ruby
+for counter in 1..5
+  puts "iteration #{counter}"
+end
+#+end_src
+
+In ruby, they look like this:
+#+begin_src ruby
+(1..5).each do |counter|
+  puts "iteration #{counter}"
+end
+#+end_src
+
+This is a block. 
+The 'each' method of a range runs the block once for each element of the range.
+The block is passed a counter as a parameter.
+
+The lambda nature of blocks is more easily visible by alternative equivalent form:
+
+~(1..5).each { |counter| puts "iteration #{counter}" }~
+
+But the general syntax to follow is:
+
+#+begin_src ruby
+array.each do |foo|
+  puts foo
+end
+#+end_src
+

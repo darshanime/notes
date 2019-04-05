@@ -56,12 +56,16 @@ Eg: reader, marshaler etc
 Another example:
 
 #+begin_src go
+package main
+
+import "fmt"
 
 type Office int
 const (
     Boston Office = iota
     NewYork
 )
+var officePlace = [2]string{"Boston", "New York"}
 
 func (o Office) String() string {
     return "Google, " + officePlace[o]

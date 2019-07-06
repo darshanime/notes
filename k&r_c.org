@@ -288,7 +288,7 @@ we also have signed or unsigned ints
 signed means the varialbe has sign, can be negative
 unsigned means only 0 and positive
 
-so, in 1 byte, unsigned can be 0 t0 256
+so, in 1 byte, unsigned can be 0 to 255
 and signed can be -128 - 127
 
 the header files limits.h and float.h contain symbolic constants for all these sizes

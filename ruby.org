@@ -125,7 +125,166 @@ Like we saw in ~reverse!~
 
 ** Classes
 
-Classes can be defined with a ~class~ keyword
+Classes can be defined with a ~class~ keyword.
+There are:
+- class variables ~@@foo~, which are shared by all instances of this class.
+- instance variables ~@foo~, which can be initialized anywhere, belong to the particular instance of the class
+
+
+Basic setter:
+#+begin_src ruby
+def name=(name)
+    @name = name
+  end
+#+end_src
+
+Basic initializer:
+#+begin_src ruby
+ def initialize(name, age = 0)
+    # Assign the argument to the 'name' instance variable for the instance.
+    @name = name
+    # If no age given, we will fall back to the default in the arguments list.
+    @age = age
+  end
+#+end_src
+
+Basic getter method
+#+begin_src ruby
+  def name
+    @name
+  end
+#+end_src
+
+Example:
+#+begin_src ruby
+class Foo
+  def initialize(name, age=0)
+    @name = name
+  end
+
+  def getName
+    @name
+  end
+end
+
+f = Foo.new "Foobar"
+puts f.getName
+# Foobar
+#+end_src
+
+
+The getter/setter is such a pattern that there are shortcuts to auto create them:
+
+~attr_reader :name~
+
+So, this works now:
+
+#+begin_src ruby
+class Foo
+  attr_reader :name
+  def initialize(name, age=0)
+    @name = name
+  end
+
+  def getName
+    @name
+  end
+end
+
+f = Foo.new "Foobar"
+puts f.getName
+puts f.name
+# Foobar
+# Foobar
+#+end_src
+
+Note, when I call ~f.name = "bar"~, I am actually doing ~f.name=("bar")~ aka ~f.name= "bar"~
+So I better have a method called ~name=~
+
+Another example:
+#+begin_src ruby
+class Person
+  attr_reader :name
+
+  def initialize(name)
+    @name = name
+  end
+
+  def name=(name)
+    @name = name
+  end
+end
+
+john = Person.new("John")
+john.name = "Jim"
+puts john.name # => Jim
+#+end_src
+
+It can also be a single line ~attr_accessor :name~
+
+A class method uses self to distinguish from instance methods.
+ It can only be called on the class, not an instance.
+#+begin_src ruby
+class Human
+ def self.say(msg)
+   puts msg
+ end
+end
+
+puts Human.say "hello"
+# hello
+#+end_src
+
+
+Variable's scopes are defined by the way we name them.
+Variables that start with $ have global scope.
+
+#+begin_src ruby
+$var = "I'm a global var"
+defined? $var #=> "global-variable"
+#+end_src
+
+Variables that start with @ have instance scope.
+
+#+begin_src ruby
+@var = "I'm an instance var"
+defined? @var #=> "instance-variable"
+#+end_src
+
+Variables that start with @@ have class scope.
+#+begin_src ruby
+@@var = "I'm a class var"
+defined? @@var #=> "class variable"
+#+end_src
+
+Variables that start with a capital letter are constants.
+#+begin_src ruby
+Var = "I'm a constant"
+defined? Var #=> "constant"
+#+end_src
+
+
+** Modules
+
+Including modules binds their methods to the class instances.
+
+#+begin_src ruby
+class Person
+  include ModuleExample
+end
+#+end_src
+
+Extending modules binds their methods to the class itself.
+#+begin_src ruby
+class Book
+  extend ModuleExample
+end
+#+end_src
+
+
+
+
+
 
 * Ruby misc
 ~2+2~

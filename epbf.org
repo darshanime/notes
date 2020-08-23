@@ -1,0 +1,255 @@
+* eBPF
+
+Made by Daniel Borkmann
+Alexei Starovoitov
+
+
+**** BCC
+
+**** bpftrace
+
+**** ply
+
+**** LLVM
+
+**** kprobes
+Kernel dynamic instrumentation for Linux
+
+**** uprobes
+user level dynamic instrumentation for Linux
+
+**** tracepoints
+Linux tracing
+
+**** perf
+
+**** ftrace
+
+**** bpf
+
+**** field of dynamic instrumentation
+The tools of which include dtrace, systemtap, bcc, bpftrace, and other dynamic tracers.
+
+**** ltt
+the first linux tracer
+
+**** dprobes
+first dynamic instrumentation technology. this let to kprobes which is in use today. 
+
+
+**** systemtap
+
+**** ktap
+a high level tracer that helped build support in linux for VM based tracers
+
+
+** Part I - Technologies
+
+*** Chapter 1 - Introduction
+BPF - Berkeley Packet Filter
+
+Alexei rewrote it and expanded it to eBPF
+Daniel Borkmann included it in the Kernel.
+
+BPF has an instruction set, storage objects and helper functions. 
+It is like a VM due to its virtual instruction set specification. 
+
+These instructions are executed by a BPF runtine inside the Linux kernel, which includes an interpreter and JIT compiler for turning BPF instructions into native instructions for execution. This is very similar to Python. 
+
+There is a verifier too which makes sure that the ebpf program doesn't crash the kernel or have infinite loops etc. 
+
+3 main uses:
+- networking - cilium
+- observability - this book, node exporter
+- security - falco
+
+
+
+**** Tracing
+Tracing is event based recording - a type of instrumentation. eg strace records and prints system call events. strace is a type of special purpose tracing tool which only traces system calls. 
+There are some tools that do not trace events, but measure events using fixed statistical counters and then print summaries - eg top
+
+Programmatic tracers can run small programs on the events to do custom on the fly statistical summaries. 
+
+**** Sampling
+These tools take a subset of measurements to paint a coarse picture of the target. Eg ~profile~ can take a sample of running code every 10ms for eg. 
+
+**** BCC, bpftrace
+Since bpf has a virtual instruction set, you can either code bpf instructions directly or else use some frontends - the main ones for tracing are BCC and bpftrace. 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /var/folders/t4/722gxsyj4qb_lpfwv9pz5dqh0000gn/T/screenshot.png @ 2020-08-23 13:09:51
+[[file:assets/screenshot_2020-08-23_13-09-51.png]]
+
+
+See how libbcc is used to instrument the events with bpf programs. 
+There must be a compiler to compile the code to instruction set and load it into the kernel. 
+Also, libbpf is used to read the data?
+
+BCC - bpf compiler collection
+it provides a C programming environment for writing bpc code in python, lua, cpp. 
+
+bpftrace is a newer frontend - it provides a high level language for developing bpf tools. 
+
+There is another bpf frontend that is being developed - ply
+It is designed to be lightweight and not need many dependencies. 
+
+iovisor is a LF project that houses the bcc and bpftrace projects
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /var/folders/t4/722gxsyj4qb_lpfwv9pz5dqh0000gn/T/screenshot.png @ 2020-08-23 13:25:57
+[[file:assets/screenshot_2020-08-23_13-25-57.png]]
+
+
+**** kprobers, uprobes
+There are both dynamic instrumentation tools. 
+BPC tracing, tracing in general actually depends on events - the events are either reported directly or there is some post processing done on them. 
+How do you generate these events? They may be static - always emitted, or dynamic - we can ask the kernel to start emitting them
+kprobe and uprobe help us to dynamically start or stop emition of these events - they give us to ability to insert instrumentation points into live software in prod. 
+
+uprobes were added in 2012. kprobes was added in 2004. 
+
+Some kprobe and uprobe examples:
+
+kprobe:vfs_read --> instrument the beginning of the kernel vfs_read() function
+kretprobe:vfs_read --> instrument the return of the kernel vfs_read function
+uprobe:/bin/bash:read-line --> instrument the beginning of the readline function in /bin/bash
+uretprobe:/bin/bash:read-line --> instrument the return of the readline function in /bin/bash
+
+
+***** static instrumentation
+The problem with dynamic instrumentation is that if the function is renamed/removed etc, the bpf tool will break. 
+The alternative is to use static instrumentation - where the code has hardcoded event names - called tracepoints and USDT (user level statically defined tracing) for user-level static instrumentation
+
+eg:
+
+tracepoint:syscalls:sys_enter_open -- instrument the open(2) syscall
+usdt:/usr/sbin/mysqld:mysql:query_start -- instrument the query_start probe from /usr/sbin/mysqld
+
+**** example - bpftrace
+Okay, we can use bpftrace to trace the tracepoint for open() syscall. 
+
+bpftrace -e 'tracepoint:syscalls:sys_enter_open { printf("%s %s\n", comm, str(args->filename)); }'
+
+
+BCC tools are more full fledged utilities, bpftrace is just a one liner in comparison. 
+
+*** Chapter 2 - Technology Background
+
+We will learn about - origins of bpf, frame pointer stack walking, how to read flame graphs, use of kprobes and uprobes, tracepoints, usdt probes, dynamic usdt, PMCs, BTF and other BPF stack walkers.
+
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /var/folders/t4/722gxsyj4qb_lpfwv9pz5dqh0000gn/T/screenshot.png @ 2020-08-23 15:08:28
+[[file:assets/screenshot_2020-08-23_15-08-28.png]]
+
+Just like Python, bpf has it's own bytecode that is interpreted by a interpreter. In 2011, a JIT compiler was added to compile the bytecode to native code
+
+Original BPF had this:
+- 32 bit registers
+- 2 registers
+- scratch memory with 16 memory slots
+- program counter
+
+
+ebpf has:
+- 64 bit registers
+- flexible map storage
+- can call some restricted kernel functions
+
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /var/folders/t4/722gxsyj4qb_lpfwv9pz5dqh0000gn/T/screenshot.png @ 2020-08-23 15:16:46
+[[file:assets/screenshot_2020-08-23_15-16-46.png]]
+
+
+Loading and unloading the bpf programs happens via ~bpf~ syscall
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /var/folders/t4/722gxsyj4qb_lpfwv9pz5dqh0000gn/T/screenshot.png @ 2020-08-23 15:19:56
+[[file:assets/screenshot_2020-08-23_15-19-56.png]]
+
+bpf program can use helper functions for getting kernel state, bpf maps for storage. bpf program is executed on events, which includes kprobes, uprobes and tracepoints. 
+
+BPF can make things fast by doing the computations on the events in the kernel space itself. Earlier, we had to get the events outside and then do the calculations. 
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /var/folders/t4/722gxsyj4qb_lpfwv9pz5dqh0000gn/T/screenshot.png @ 2020-08-23 15:24:47
+[[file:assets/screenshot_2020-08-23_15-24-47.png]]
+
+
+bpftool can be used to print the instructions and also see the currently loaded bpf programs. 
+
+**** bpf helper functions
+
+A bpf function cannot call arbitrary kernel functions, only some helper functions. 
+
+| function                             | desc                                                          |
+|--------------------------------------+---------------------------------------------------------------|
+| bpf_map_lookup_elem(map, key)        | find a key in a map and returns its value (pointer)           |
+| bpf_map_update_elem(map, key, flags) | update the value of the entry selected by key                 |
+| bpf_map_delete_elem(map, key)        | delete the entry selected by key from the map                 |
+| bpf_probe_read(dst, size, src)       | safely read size bytes from address src and store in dst      |
+| bpf_ktime_get_ns                     | return the time since boot in ns                              |
+| bpf_trace_printfk                    | debugging helper that writes to tracefs trace                 |
+| bpf_get_current_pid_tgid             | return a u64 containing the current tgid (user space pid) etc |
+
+
+You can copy memory from kernel space and user space too. 
+To read random memory, bpf programs must use bpf_probe_read()
+
+there are some bpf syscall commands too:
+
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /var/folders/t4/722gxsyj4qb_lpfwv9pz5dqh0000gn/T/screenshot.png @ 2020-08-23 17:04:45
+[[file:assets/screenshot_2020-08-23_17-04-45.png]]
+
+Different types of bpf programs:
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /var/folders/t4/722gxsyj4qb_lpfwv9pz5dqh0000gn/T/screenshot.png @ 2020-08-23 19:10:05
+[[file:assets/screenshot_2020-08-23_19-10-05.png]]
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /var/folders/t4/722gxsyj4qb_lpfwv9pz5dqh0000gn/T/screenshot.png @ 2020-08-23 19:10:46
+[[file:assets/screenshot_2020-08-23_19-10-46.png]]
+#+ATTR_ORG: :width 400
+#+ATTR_ORG: :height 400
+#+DOWNLOADED: /var/folders/t4/722gxsyj4qb_lpfwv9pz5dqh0000gn/T/screenshot.png @ 2020-08-23 19:10:49
+[[file:assets/screenshot_2020-08-23_19-10-49.png]]
+
+For concurrency control, bpf has locks - spin locks - mainly to guard against parallel update of maps etc. 
+
+There is also atomic add instruction, map in map that can update entire maps atomically. 
+
+bpf introduced commands to expose bpf programs and maps via virtual file system - mounted on /sys/fs/bpf generally. 
+
+This is called pinning. It allows user level programs to interact with a running bpf program - read and write the bpf maps. 
+
+BTF - BPF Type Format
+This is the metadata about the bpf program so that we can get more info about source code - like line numbers etc. 
+BTF is also becoming a general purpose format for describing all kernel data structures. 
+
+**** Stack trace walking
+
+Stacks are useful to profile where execution time is spent. 
+bpf provides special map types for recording stack traces and can fetch them using frame pointer based stack walks. 
+
+Techniques:
+- Frame pointer based stacks
+  - Here, we assume that the RBP register has the head of the linked list of stack frames. This won't work on all platforms, but does in x86_64
+- debuginfo
+  - this works by including metadata files that include line numbers etc. These files however can be large.
+- Last Branch Record
+  - These are intel processor feature to store the stack. It has a limited capacity and bpf does not support this as of now.
+- ORC
+
+
+
+

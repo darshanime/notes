@@ -1,0 +1,58 @@
+* Design Patterns
+
+** composition over inheritance
+There are some ideas that are widely applicable in software development. One such idea is, favoring composition over inheritance (java style inheritance for example). 
+
+The issue with java style inheritance is, it's rigid; if the parent has a behavior (method), _all_ children of that parent have to have that behavior. 
+
+Consider some class Foo:
+#+ATTR_ORG: :width 400
+#+ATTR_HTML: :width 400
+[[file:assets/2022-06-11_12-21-46_screenshot.png]]
+
+
+All the children it has, they must implement both a() and b(). Now, it is possible that even though all the subclasses of the same children, they might have some differences amongst themselves, let’s say some of them have another method c() as well.
+
+There can be various ways to incorporate that method:
+
+
+*** Using an interface
+#+ATTR_ORG: :width 400
+#+ATTR_HTML: :width 400
+[[file:assets/2022-06-11_12-22-02_screenshot.png]]
+
+This works, but we are losing code reusibility. If there are some multiple subclasses that need a particular type of behaviour, each has to implement it separately.
+
+*** Adding ~c()~ to parent class - foo
+#+ATTR_ORG: :width 400
+#+ATTR_HTML: :width 400
+[[file:assets/2022-06-11_12-22-19_screenshot.png]]
+
+
+We can add that method to parent class, maybe with some default behaviour, and the children can override that with no-op if required.
+
+This is bad because we broke previously working classes, and also have to remember to overwrite the implementation for all future subclasses.
+
+*** Using delegation
+
+We want to separate the behavior that changes from the behavior that remains constant, aka we want to encapsulate the changing behavior into a separate class.
+
+In this case, we can add an instance variable to the Foo class, that is of the type C.
+
+Adding an instance variable
+
+#+ATTR_ORG: :width 400
+#+ATTR_HTML: :width 400
+[[file:assets/2022-06-11_12-23-27_screenshot.png]]
+
+The type of the instance variable can be an interface. The method c() will just invoke the interface method on the instance variable. To make sure that the instance variable is always set, we can provide 2 constructors, one which accepts the instance variable and the other that sets the default value for it.
+
+This way, we can even change the behavior of the class at runtime by using getters and setters for that instance variable.
+
+Here, we are using delegation to delegate the behavior to another class. This gives us code reusibility and also doesn’t break existing code.
+
+*** Composition
+
+In instance variable example, we are using composition to compose our parent class with the right behaviors as required.
+
+

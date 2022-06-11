@@ -1,4 +1,5 @@
 * Design Patterns
+Patters allow us to separate the part of the application that changes from the other parts, so that a new change does not break the old stuff. This is done via encapsulation, decoupling, delegation, composition.
 
 ** composition over inheritance
 There are some ideas that are widely applicable in software development. One such idea is, favoring composition over inheritance (java style inheritance for example). 
@@ -55,4 +56,102 @@ Here, we are using delegation to delegate the behavior to another class. This gi
 
 In instance variable example, we are using composition to compose our parent class with the right behaviors as required.
 
+
+#+begin_src java
+
+// abstract duck class, with an instance variable
+public abstract class Duck {
+  Flyable fly;
+
+  abstract void squeak();
+
+  void doFly() {
+    this.fly.doFly();
+  };
+}
+
+
+// interface defining the behavior
+public interface Flyable {
+  void doFly();
+}
+
+
+// slow fly is a kind of a flyable behavior
+public class SlowFly implements Flyable {
+
+  @Override
+  public void doFly() {
+    System.out.println("made a slow flight");
+  }
+}
+
+
+
+// no fly is another kind of flyable behavior
+public class NoFly implements Flyable {
+
+  @Override
+  public void doFly() {
+    System.out.println("cannot fly");
+  }
+}
+
+
+// rubber duck cannot fly, so is composed with nofly
+public class RubberDuck extends Duck {
+  @Override
+  void squeak() {
+    System.out.println("rubber duck squeaks");
+  }
+
+  public RubberDuck() {
+    this.fly = new NoFly();
+  }
+
+}
+
+
+// wood duck can fly if it is given a flyable
+public class WoodDuck extends Duck {
+
+  public WoodDuck(Flyable f) {
+    this.fly = f;
+  }
+
+  public WoodDuck() {
+    this.fly = new NoFly();
+  }
+
+  @Override
+  void squeak() {
+    System.out.println("wood duck grrs");
+  }
+}
+
+
+public class DesignPatterns {
+  public static void main(String[] args) {
+    Flyable slowFly = new SlowFly();
+
+    Duck woodDuck = new WoodDuck(slowFly); // giving the woodduck a flyable behavior
+    woodDuck.squeak();
+    woodDuck.doFly();
+
+    Duck rubberDuck = new RubberDuck(); // whereas the rubber duck cannot fly
+    rubberDuck.squeak();
+    rubberDuck.doFly();
+  }
+}
+
+#+end_src
+
+Points to note:
+- type of the instance variable for the fly behavior is an interface, not a concrete class type - this gives us more flexibility. It is always good to ~program to an interface, not a concrete type~. (the interface here can be a superclass too)
+- composition allows us to change the fly behavior dynamically, via the getters and setters on the instance variable
+- composition is a ~has a~ relationship (rubber duck has a flyable behavior), whereas inheritance is a ~is a~ relationship
+- composition allows us to use delegation
+  - we delegated the logic of the flying to a separate class
+  - this allows us to add new flying behaviors and assign it to old classes dynamically (decoupling b/w behavior and duck class)
+- this is called the ~strategy pattern~, because we have a family of behaviors, as defined by the implementors of the flyable behavior and our strategy is to delegate some of our behavior to those classes
 
